@@ -181,7 +181,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `ui/SettingsScreen.kt` | Ajustes | A `line/.../ui/SettingsScreen.kt` |
 | `ui/LockScreen.kt` | overlay de bloqueo | C `line/.../ui/LockScreen.kt` |
 | `ui/Pro.kt` | `ProDialog` | A `line/.../ui/Pro.kt` |
-| `ui/ShareScreen.kt` | vista previa y botones de compartir | A `line/.../ui/ShareScreen.kt` |
+| `ui/ShareScreen.kt` | la hoja de compartir: vista previa y dos acciones; no es un destino | A `line/.../ui/ShareScreen.kt` |
 | `ui/SharePage.kt` | `renderSharePages`: la página punteada como imagen | A `line/.../share/ShareCard.kt` |
 
 `shared/src/commonMain/composeResources/font/literata_regular.ttf` y su licencia en
@@ -631,7 +631,7 @@ texto de más de 500 se acepta tal cual.
 | `SHARE_W` / `SHARE_H` | `1080` / `1350` px | `ui/SharePage.kt` |
 | `GRID_UNIT` | `24.dp`, por `max(1, fontScale)` | `ui/theme/Grid.kt` |
 | `WIDE_SCREEN_FROM` | `600.dp` | `ui/theme/Theme.kt` |
-| `MAX_CONTENT_WIDTH` | `640.dp` (SPEC §5; si `docs/pantallas.md` 1 fija otro, manda ese y se corrige aquí) | `ui/theme/Theme.kt` |
+| `MAX_CONTENT_WIDTH` | `576.dp`: 24 columnas de puntos (`docs/pantallas.md` 1.1 y 21) | `ui/theme/Theme.kt` |
 | `PARSE_BUDGET_MS` / `SEARCH_BUDGET_MS` | `1000` / `200` (test 26) | `PerfTest.kt` |
 | `QUESTION_COUNT` | `60` (v1.1) | `i18n/Strings.kt` |
 | `INDEX_ICONS` | los 12 de 12.9 (v1.2) | `model/Collections.kt` |
@@ -1417,8 +1417,9 @@ fun activeCover(s: Settings, isPro: Boolean): Cover = Cover.of(s.cover).takeIf {
 fun activePaper(s: Settings, isPro: Boolean): Paper = Paper.of(s.paper).takeIf { canUse(it, isPro) } ?: Paper.Dotted
 ```
 
-- La portada tiñe la cabecera y la barra inferior, los widgets (`cover` de `widget.json`) y, en v1.1,
-  la cubierta del libro. El papel es fondo: nunca cambia el tamaño ni la posición de una línea.
+- La portada tiñe solo el punto de la fecha de hoy, la marca de la pestaña activa, los widgets
+  (`cover` de `widget.json`) y, en v1.1, la cubierta del libro (`docs/pantallas.md` 1.2). El papel
+  es fondo: nunca cambia el tamaño ni la posición de una línea.
 - Todas se previsualizan sin comprar sobre una pantalla de ejemplo. Guardar una Pro sin `isPro` abre
   el `ProDialog` y no cambia `settings`.
 - **Si se pierde Pro** (un reembolso), la portada y el papel activos vuelven a los gratis porque la app

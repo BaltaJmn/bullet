@@ -205,7 +205,7 @@ símbolos del método no se traducen en ningún idioma (`docs/textos.md`).
   primer fotograma (#21). El día nace vacío. Deslizar en horizontal o tocar la fecha cambia de día, y
   los días pasados se editan igual que hoy.
 - **No se hace:** rejilla de horas; copiar a hoy las tareas abiertas de ayer. En su lugar, una línea
-  discreta, "Ayer quedaron N abiertas", que lleva a Revisar.
+  discreta, "Quedan N abiertas de días anteriores", que lleva a Revisar.
 - **Issues:** #19, #21.
 
 ### 2.6 Monthly Log
@@ -465,12 +465,17 @@ tokens y cada pantalla están en `docs/pantallas.md`.
 
 - Fondo crema `#FBF8F3` en claro y `#17150F` en oscuro. Nunca blanco puro ni negro puro. Claro u
   oscuro lo decide el sistema, sin ajuste propio.
+- **Una rejilla de 24 dp** bajo toda la interfaz: interlineado, márgenes, alturas de fila y dianas son
+  múltiplos de 24, y la columna de bullets cae sobre una columna de puntos.
 - **Cuatro papeles** detrás de las listas: **punteado** (gratis y de serie, el del cuaderno de bujo),
   rayado, cuadrícula y liso (Pro, #49). El papel es fondo: nunca cambia el tamaño ni la posición de
   una línea, para que las capturas y la accesibilidad no dependan de él.
 - **Ocho portadas** con los ocho pasteles de la familia y sus mismos hex: salvia (gratis y de serie),
-  rosa, melocotón, mantequilla, menta, cielo, pervinca y lila. La portada tiñe la cabecera y la barra
-  inferior, los widgets y, en v1.1, la cubierta del libro. Acento salvia `#6FAE9B`.
+  rosa, melocotón, mantequilla, menta, cielo, pervinca y lila. La portada tiñe solo el punto de la
+  fecha de hoy, la marca de la pestaña activa, los widgets y, en v1.1, la cubierta del libro.
+- El acento de las acciones de texto es `primary`: `#3F7A69` en claro y `#8FC9B6` en oscuro. El
+  `#6FAE9B` de las hermanas se queda en 2,4:1 sobre el papel y no llega a AA; por lo mismo, el texto
+  secundario pasa de `#8B8479` a `#736D63` en claro.
 - Radios de 18 a 32 dp, bordes de 1 dp en vez de sombras. Sin tarjetas: el papel es el lienzo.
 - **Sin rojo en ninguna parte.** Una tarea abierta es una tarea abierta, no un suspenso; migrada
   cinco veces es una pregunta, no una alarma.
@@ -498,15 +503,18 @@ cambia de tamaño con la escala de fuente del sistema; el texto sí.
 
 ### Tipografía
 
-**Una sola tipografía para toda la app**: **Literata** (licencia OFL, pensada para leer en pantalla),
-empaquetada para que el texto y los glifos se vean igual en las dos plataformas, la misma que usa Purl
-para el texto del usuario. Jerarquía por tamaño y peso, no por familias. Los widgets usan la fuente
-del sistema.
+**Dos voces.** La tinta del usuario (cada bullet y la cabecera de cada página: la fecha, el mes, el
+título de una colección) en **Literata** (licencia OFL, pensada para leer en pantalla), la única fuente
+empaquetada, la misma que usa Purl para el texto del usuario. La interfaz (pestañas, ajustes,
+etiquetas, avisos) en la fuente del sistema. Así se distingue a simple vista lo que escribió el usuario
+de lo que dice la app. Sin negrita ni cursiva en la tinta. Los widgets usan la fuente del sistema.
 
 ### Navegación
 
 - **Cuatro destinos fijos en la barra inferior, y nada más**: Hoy, Mes, Futuro e Índice, en ese orden
-  (#19).
+  (#19). Pestañas de texto, sin iconos.
+- La cabecera de Hoy lleva flechas visibles al día anterior y al siguiente, además del gesto: nadie
+  tiene que adivinar un gesto.
 - Colección, Revisar, Buscar, Clave, Ajustes y Pro se abren en pila sobre la barra, cada una con su
   `BackHandler`. Diez destinos en total; ninguno fuera de esa lista.
 - Sin librería de navegación: un `enum Screen` en `App.kt`, como las hermanas.
@@ -521,7 +529,8 @@ Son los únicos de la app; una pantalla nueva los reutiliza en vez de inventar u
 2. **Pulsación larga** sobre una entrada abre la hoja de estados y signifiers: migrar, programar,
    descartar, los tres signifiers, editar y borrar.
 3. **Deslizar en horizontal** cambia de día en Hoy.
-4. **Arrastrar** reordena dentro del mismo día o colección.
+4. **Arrastrar** reordena dentro del mismo día o colección. Empieza con la pulsación larga y mover el
+   dedo; soltar sin mover abre la hoja.
 
 Tocar el texto lo edita en línea, sin otra pantalla (#23).
 
@@ -537,9 +546,10 @@ Tocar el texto lo edita en línea, sin otra pantalla (#23).
 ### Pantallas grandes
 
 Corte en **600 dp**, igual en Android y en iOS por su clase de tamaño equivalente (#34). Por encima,
-Hoy y Mes limitan la columna de texto a **640 dp** centrada, el Índice pasa a dos columnas, el Future
-Log a una rejilla de bloques, y Ajustes y el diálogo Pro van en un panel centrado. Sin diseños
-propios de tableta más allá de eso.
+cada página mide como mucho **576 dp** (24 columnas de puntos) y se centra, con el papel siguiendo a
+los lados; el Índice y el Future Log se abren en doble página, dos columnas como un cuaderno abierto;
+y Ajustes y el diálogo Pro van en un panel centrado del mismo ancho. Sin diseños propios de tableta
+más allá de eso.
 
 ### Principios
 
@@ -573,7 +583,8 @@ la línea no vuelve.
 La retención de un bujo no la fabrica una notificación: la fabrica que cerrar el mes sea agradable.
 
 - Durante el día, capturar es una línea y un Intro.
-- Al día siguiente, si quedaron tareas abiertas, Hoy enseña una línea: "Ayer quedaron N abiertas".
+- Al día siguiente, si quedaron tareas abiertas, Hoy enseña una línea: "Quedan N abiertas de días
+  anteriores".
 - Al cambiar de mes, Hoy y Mes enseñan "Febrero sin cerrar: N abiertas", y el mes que llega enseña
   "N entradas del Future Log esperan".
 - Todas son **líneas dentro de la pantalla, nunca modales ni notificaciones**, y llevan a Revisar.
@@ -1260,7 +1271,7 @@ con el andamiaje (#10), el calendario se alarga aunque el código esté terminad
    definición de Google, no una frase suya.
 10. **ASO sin datos en cuatro idiomas.** La competencia de la keyword solo está medida en inglés.
 11. **Tableta y horizontal** multiplican las pantallas que revisar y exigen capturas de iPad. Se
-    contiene con una columna de 640 dp y dos o tres reglas de reparto (§5).
+    contiene con una página de 576 dp y dos o tres reglas de reparto (§5).
 
 ### Correcciones de datos hechas durante la investigación
 
