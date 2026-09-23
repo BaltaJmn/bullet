@@ -3,10 +3,14 @@ package com.baltajmn.bullet.data
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.JournalJson
+import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.SCHEMA_VERSION
+import com.baltajmn.bullet.model.capture
 import com.baltajmn.bullet.model.logicalDate
+import com.baltajmn.bullet.model.newId
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
@@ -120,6 +124,21 @@ object BobbinRepository {
     /** "Today" everywhere in the app (docs/tecnico.md 6.1). `App.kt` recalls this on every `ON_RESUME`. */
     @OptIn(ExperimentalTime::class)
     fun today(): LocalDate = logicalDate(Clock.System.now(), TimeZone.currentSystemDefault(), journal.settings.dayStartHour)
+
+    /**
+     * UI entry point for docs/tecnico.md 6.2 "Crear": reads the clock and a fresh id, then hands off
+     * to [Journal.capture]. Returns whether it actually saved, so the capture row knows whether to
+     * clear itself: "Con el campo vacío o solo prefijos, Intro no hace nada" (docs/pantallas.md 5.2).
+     */
+    @OptIn(ExperimentalTime::class)
+    fun capture(input: String, place: Place, picked: Bullet? = null): Boolean {
+        var saved = false
+        edit { j ->
+            j.capture(input, place, picked, now = Clock.System.now().toEpochMilliseconds(), newId = newId("e", j.entries.map { it.id }.toSet()))
+                ?.also { saved = true }
+        }
+        return saved
+    }
 
     /**
      * Runs [steps] on the raw JSON, keeps a "pre-migration" copy before touching anything, and

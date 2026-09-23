@@ -1,13 +1,18 @@
 package com.baltajmn.bullet
 
 import com.baltajmn.bullet.model.Bullet
+import com.baltajmn.bullet.model.Entry
+import com.baltajmn.bullet.model.Journal
+import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.Signifier
+import com.baltajmn.bullet.model.capture
 import com.baltajmn.bullet.model.rapidParse
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlinx.datetime.LocalDate
 
-/** docs/tecnico.md 6.2, test 10 (#20). */
+/** docs/tecnico.md 6.2, test 10 (#20, #21). */
 class RapidParseTest {
 
     @Test
@@ -105,5 +110,26 @@ class RapidParseTest {
     fun aPastedLineBreakBecomesASpace() {
         val parsed = rapidParse("first\nsecond")!!
         assertEquals("first second", parsed.text)
+    }
+
+    // docs/tecnico.md 6.2 "Crear", used by ui/TodayScreen.kt (#21).
+    @Test
+    fun captureAddsAnOpenEntryAtTheNextOrderOfItsPlace() {
+        val place = Place.Daily(LocalDate.parse("2026-09-22"))
+        val existing = Entry(id = "e-1", text = "primero", place = place, order = 0, createdAt = 1L, updatedAt = 1L)
+        val j = Journal(entries = listOf(existing))
+
+        val result = j.capture("- segundo", place, picked = null, now = 2L, newId = "e-2")!!
+        val added = result.entries.single { it.id == "e-2" }
+        assertEquals(Bullet.NOTE, added.bullet)
+        assertEquals("segundo", added.text)
+        assertEquals(1, added.order)
+    }
+
+    @Test
+    fun captureReturnsNullAndChangesNothingWhenThereIsNothingToSave() {
+        val place = Place.Daily(LocalDate.parse("2026-09-22"))
+        val j = Journal()
+        assertNull(j.capture("- ", place, picked = null, now = 1L, newId = "e-1"))
     }
 }

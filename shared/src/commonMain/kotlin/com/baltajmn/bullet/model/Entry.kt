@@ -6,6 +6,9 @@ import kotlinx.serialization.Serializable
 /** Applied when capturing and when editing, never when reading or importing (docs/tecnico.md 4.1). */
 const val TEXT_LIMIT = 500
 
+/** The capture row's counter only shows past this many code points (docs/pantallas.md 5.2). */
+const val COUNTER_FROM = 450
+
 /** A closed set on purpose: the three bullets of the method, nothing else (docs/tecnico.md 11). */
 @Serializable
 enum class Bullet {
@@ -59,6 +62,9 @@ fun Entry.normalized(): Entry =
 fun Entry.toggleDone(): Entry =
     if (bullet != Bullet.TASK) this
     else copy(status = if (status == TaskStatus.DONE) TaskStatus.OPEN else TaskStatus.DONE)
+
+/** Screen order within one place (docs/tecnico.md 6.3): `order`, then `createdAt`, then `id`. */
+val ENTRY_ORDER: Comparator<Entry> = compareBy({ it.order }, { it.createdAt }, { it.id })
 
 /** An entry is always a single line: every line break becomes a space (docs/tecnico.md 4.1). */
 fun String.oneLine(): String = replace("\r\n", " ").replace('\n', ' ').replace('\r', ' ')

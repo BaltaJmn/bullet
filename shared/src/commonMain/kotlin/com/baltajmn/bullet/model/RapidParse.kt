@@ -50,3 +50,24 @@ fun rapidParse(input: String, picked: Bullet? = null): Parsed? {
     if (text.isEmpty()) return null
     return Parsed(bullet ?: picked ?: Bullet.TASK, signifiers, text)
 }
+
+/**
+ * The entry [rapidParse] describes, added to [place] (docs/tecnico.md 6.2 "Crear"): OPEN, its text
+ * clamped to [TEXT_LIMIT], and the next order at that place. [now] and [newId] come from the caller
+ * (`BobbinRepository`) so this stays as pure as every other function in `model/` (6). Returns null,
+ * changing nothing, when [input] has nothing left to save.
+ */
+fun Journal.capture(input: String, place: Place, picked: Bullet?, now: Long, newId: String): Journal? {
+    val parsed = rapidParse(input, picked) ?: return null
+    val entry = Entry(
+        id = newId,
+        bullet = parsed.bullet,
+        text = parsed.text.clampCodePoints(TEXT_LIMIT),
+        signifiers = parsed.signifiers,
+        place = place,
+        order = nextOrder(place),
+        createdAt = now,
+        updatedAt = now,
+    )
+    return copy(entries = entries + entry)
+}

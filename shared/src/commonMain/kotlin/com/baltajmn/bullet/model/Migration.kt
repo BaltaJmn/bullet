@@ -98,6 +98,20 @@ fun Journal.migrationCount(id: String): Int {
     }
 }
 
+/**
+ * Everything that belongs to [d] (docs/tecnico.md 6.5): its Daily Log first, then the calendar
+ * line of that day in its Monthly Log. Hoy (#21), the widget (6.13) and the day review (6.6) all
+ * read a day through this one function instead of querying [Place] shapes on their own.
+ */
+fun Journal.ofDay(d: LocalDate): List<Entry> {
+    val daily = entries.filter { !it.gone && it.place == Place.Daily(d) }.sortedWith(ENTRY_ORDER)
+    val calendarLine = entries.filter { !it.gone && it.place == Place.Monthly(monthOf(d), d.day) }.sortedWith(ENTRY_ORDER)
+    return daily + calendarLine
+}
+
+/** OPEN tasks of [ofDay]. */
+fun Journal.openTasksOfDay(d: LocalDate): List<Entry> = ofDay(d).filter { it.bullet == Bullet.TASK && it.status == TaskStatus.OPEN }
+
 /** Open tasks on days of [monthOf] `d` that come before `d`: Daily(d') and the calendar line Monthly(m, day'). */
 fun Journal.openTasksBefore(d: LocalDate): List<Entry> {
     val m = monthOf(d)
@@ -121,5 +135,5 @@ fun Journal.openTasksOfMonth(m: YearMonth): List<Entry> = entries.filter { e ->
         }
 }
 
-/** One past the highest [Entry.order] already at [place], so a landed entry goes to the end. */
-private fun Journal.nextOrder(place: Place): Int = (entries.filter { it.place == place }.maxOfOrNull { it.order } ?: -1) + 1
+/** One past the highest [Entry.order] already at [place], so a landed entry goes to the end. Also used by [Journal.capture] (RapidParse.kt). */
+internal fun Journal.nextOrder(place: Place): Int = (entries.filter { it.place == place }.maxOfOrNull { it.order } ?: -1) + 1

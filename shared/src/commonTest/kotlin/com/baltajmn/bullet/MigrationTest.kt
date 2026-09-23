@@ -8,7 +8,9 @@ import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.discard
 import com.baltajmn.bullet.model.migrate
 import com.baltajmn.bullet.model.migrationCount
+import com.baltajmn.bullet.model.ofDay
 import com.baltajmn.bullet.model.openTasksBefore
+import com.baltajmn.bullet.model.openTasksOfDay
 import com.baltajmn.bullet.model.openTasksOfMonth
 import com.baltajmn.bullet.model.schedule
 import kotlin.test.Test
@@ -149,5 +151,29 @@ class MigrationTest {
         val j = Journal(entries = listOf(daily, calendarLine, monthTask, otherMonth, done))
 
         assertEquals(setOf("e-1", "e-2", "e-3"), j.openTasksOfMonth(m).map { it.id }.toSet())
+    }
+
+    // docs/tecnico.md 6.5, used by ui/TodayScreen.kt (#21).
+    @Test
+    fun ofDayListsTheDailyLogFirstThenTheCalendarLineOfThatDay() {
+        val d = LocalDate.parse("2026-09-22")
+        val calendarLine = task("e-1", Place.Monthly(YearMonth.parse("2026-09"), day = 22))
+        val daily = task("e-2", Place.Daily(d))
+        val otherDay = task("e-3", Place.Daily(LocalDate.parse("2026-09-21")))
+        val skeleton = task("e-4", Place.Daily(d)).copy(gone = true)
+        val j = Journal(entries = listOf(calendarLine, daily, otherDay, skeleton))
+
+        assertEquals(listOf("e-2", "e-1"), j.ofDay(d).map { it.id })
+    }
+
+    @Test
+    fun openTasksOfDayOnlyKeepsOpenTasksOfOfDay() {
+        val d = LocalDate.parse("2026-09-22")
+        val open = task("e-1", Place.Daily(d))
+        val done = task("e-2", Place.Daily(d), status = TaskStatus.DONE)
+        val note = task("e-3", Place.Daily(d), bullet = Bullet.NOTE)
+        val j = Journal(entries = listOf(open, done, note))
+
+        assertEquals(listOf("e-1"), j.openTasksOfDay(d).map { it.id })
     }
 }
