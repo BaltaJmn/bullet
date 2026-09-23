@@ -6,6 +6,9 @@ import androidx.compose.runtime.setValue
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.JournalJson
 import com.baltajmn.bullet.model.SCHEMA_VERSION
+import com.baltajmn.bullet.model.logicalDate
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -14,6 +17,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -111,6 +116,10 @@ object BobbinRepository {
     fun dismissCorrupt() {
         corrupt = false
     }
+
+    /** "Today" everywhere in the app (docs/tecnico.md 6.1). `App.kt` recalls this on every `ON_RESUME`. */
+    @OptIn(ExperimentalTime::class)
+    fun today(): LocalDate = logicalDate(Clock.System.now(), TimeZone.currentSystemDefault(), journal.settings.dayStartHour)
 
     /**
      * Runs [steps] on the raw JSON, keeps a "pre-migration" copy before touching anything, and
