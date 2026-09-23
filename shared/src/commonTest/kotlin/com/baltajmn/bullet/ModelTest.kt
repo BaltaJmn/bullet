@@ -1,23 +1,38 @@
 package com.baltajmn.bullet
 
+import com.baltajmn.bullet.model.BulletCollection
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Entry
+import com.baltajmn.bullet.model.Journal
+import com.baltajmn.bullet.model.JournalJson
 import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.Settings
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.TEXT_LIMIT
 import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.clampCodePoints
 import com.baltajmn.bullet.model.codePointCount
+import com.baltajmn.bullet.model.firstDayOfWeek
+import com.baltajmn.bullet.model.logicalDate
+import com.baltajmn.bullet.model.nextDayStart
 import com.baltajmn.bullet.model.normalized
 import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.model.toggleDone
+import com.baltajmn.bullet.model.weekStarts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
@@ -155,5 +170,93 @@ class ModelTest {
         val cut = text.clampCodePoints(TEXT_LIMIT)
         assertEquals(TEXT_LIMIT, cut.codePointCount())
         assertTrue(cut.endsWith(SMILE))
+    }
+
+    // 1. Serialization: the Journal half.
+    @Test
+    fun emptyJournalRoundTripsToTheExactMinimalJson() {
+        val encoded = JournalJson.encodeToString(Journal.serializer(), Journal())
+        assertEquals("""{"schemaVersion":1,"entries":[],"collections":[]}""", encoded)
+        assertEquals(Journal(), JournalJson.decodeFromString(Journal.serializer(), encoded))
+    }
+
+    @Test
+    fun journalOmitsDefaultsButAlwaysKeepsTheContainerFields() {
+        val plain = Entry(
+            id = "e-11111111",
+            text = "simple",
+            place = Place.Daily(LocalDate.parse("2026-09-22")),
+            createdAt = 1L,
+            updatedAt = 1L,
+        )
+        val j = Journal(entries = listOf(plain))
+        val encoded = JournalJson.encodeToString(Journal.serializer(), j)
+
+        assertEquals(j, JournalJson.decodeFromString(Journal.serializer(), encoded))
+        assertTrue("\"schemaVersion\":1" in encoded)
+        assertTrue("\"collections\":[]" in encoded)
+        assertFalse("\"settings\"" in encoded)
+        assertFalse("\"from\"" in encoded)
+        assertFalse("\"gone\"" in encoded)
+        assertFalse("\"signifiers\"" in encoded)
+        assertFalse("\"order\"" in encoded)
+        assertFalse("\"bullet\"" in encoded)
+        assertFalse("\"status\"" in encoded)
+    }
+
+    @Test
+    fun journalRoundTripKeepsEntriesAndCollections() {
+        val text = "Dijo \"vale\" $SMILE café"
+        val j = Journal(
+            entries = listOf(entry(Place.Daily(LocalDate.parse("2026-09-22")), text = text)),
+            collections = listOf(BulletCollection(id = "c-1d2e7a40", title = "Lecturas", createdAt = 1L)),
+        )
+        val encoded = JournalJson.encodeToString(Journal.serializer(), j)
+        assertEquals(j, JournalJson.decodeFromString(Journal.serializer(), encoded))
+    }
+
+    // 3. Logical day and week.
+    @Test
+    fun dayStartsAtFourByDefault() {
+        assertEquals(LocalDate.parse("2026-09-22"), logicalDate(LocalDateTime(2026, 9, 23, 2, 30)))
+        assertEquals(LocalDate.parse("2026-09-22"), logicalDate(LocalDateTime(2026, 9, 23, 3, 59)))
+        assertEquals(LocalDate.parse("2026-09-23"), logicalDate(LocalDateTime(2026, 9, 23, 4, 0)))
+    }
+
+    @Test
+    fun dayStartHourZeroMeansMidnight() {
+        assertEquals(LocalDate.parse("2026-09-23"), logicalDate(LocalDateTime(2026, 9, 23, 0, 0), dayStartHour = 0))
+    }
+
+    @OptIn(ExperimentalTime::class)
+    @Test
+    fun daylightSavingDoesNotMoveTheCutoff() {
+        // Europe/Madrid jumps from 02:00 to 03:00 on 2027-03-28: the wall clock never reads between
+        // them, but the 04:00 cutoff still falls where the local clock says, not by subtracting hours.
+        val madrid = TimeZone.of("Europe/Madrid")
+        assertEquals(LocalDate.parse("2027-03-27"), logicalDate(Instant.parse("2027-03-28T00:59:59Z"), madrid, dayStartHour = 4))
+        assertEquals(LocalDate.parse("2027-03-27"), logicalDate(Instant.parse("2027-03-28T01:00:00Z"), madrid, dayStartHour = 4))
+        assertEquals(LocalDate.parse("2027-03-28"), logicalDate(Instant.parse("2027-03-28T02:00:00Z"), madrid, dayStartHour = 4))
+    }
+
+    @OptIn(ExperimentalTime::class)
+    @Test
+    fun nextDayStartIsDayStartHourTheFollowingDay() {
+        val tz = TimeZone.of("Europe/Madrid")
+        val next = nextDayStart(LocalDate.parse("2026-09-23"), 4, tz)
+        assertEquals(LocalDateTime(2026, 9, 24, 4, 0), next.toLocalDateTime(tz))
+    }
+
+    @Test
+    fun firstDayOfWeekFallsBackToTheSystemOnlyWhenNull() {
+        assertEquals(DayOfWeek.TUESDAY, firstDayOfWeek(Settings(firstDayOfWeek = null), DayOfWeek.TUESDAY))
+        assertEquals(DayOfWeek.SUNDAY, firstDayOfWeek(Settings(firstDayOfWeek = 7), DayOfWeek.MONDAY))
+    }
+
+    @Test
+    fun weekStartsListsTheDaysThatBeginAWeekUnderEachFirstDay() {
+        val sep = YearMonth.parse("2026-09")
+        assertEquals(setOf(7, 14, 21, 28), weekStarts(sep, DayOfWeek.MONDAY))
+        assertEquals(setOf(6, 13, 20, 27), weekStarts(sep, DayOfWeek.SUNDAY))
     }
 }
