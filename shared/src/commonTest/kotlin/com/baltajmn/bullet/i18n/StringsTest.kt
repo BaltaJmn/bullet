@@ -185,6 +185,13 @@ class StringsTest {
     }
 
     @Test
+    fun glyphNameCoversEverySignifier() {
+        assertEquals(S.signifierPriority, S.glyphName(Signifier.PRIORITY))
+        assertEquals(S.signifierInspiration, S.glyphName(Signifier.INSPIRATION))
+        assertEquals(S.signifierExplore, S.glyphName(Signifier.EXPLORE))
+    }
+
+    @Test
     fun entryDescriptionOrdersSignifiersAndCasesThem() {
         // signifierPriority/Inspiration/Explore are plain vals, frozen like bulletEvent above, so
         // the expected text is built from them directly rather than a literal in one language.

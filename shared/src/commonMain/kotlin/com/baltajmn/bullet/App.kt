@@ -18,6 +18,7 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.baltajmn.bullet.data.BobbinRepository
+import com.baltajmn.bullet.ui.theme.BobbinTheme
 import kotlinx.coroutines.launch
 
 /**
@@ -40,7 +41,7 @@ fun App() {
     // Nothing to pop yet: the stack grows as the real screens replace this placeholder.
     BackHandler(false) {}
 
-    MaterialTheme {
+    BobbinTheme {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             when (screen) {
                 Screen.Today -> Text("Bobbin", modifier = Modifier.align(Alignment.Center))

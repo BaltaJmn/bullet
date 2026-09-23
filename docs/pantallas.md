@@ -230,7 +230,7 @@ la interfaz; los del método son glifos (1.5). La barra de pestañas no lleva ni
 | `SETTINGS` | dos líneas (0.14, y) (0.86, y) en y = 0.34 y 0.62, con un círculo lleno de radio 0.11 en x = 0.66 y x = 0.38 | `a11ySettings` (Ajustes) |
 | `SEARCH` | círculo de radio 0.24 en (0.44, 0.44); línea (0.62, 0.62) (0.84, 0.84) | `a11ySearch` (Buscar en el diario) |
 | `KEY` | polilínea (0.32, 0.36) (0.36, 0.24) (0.50, 0.18) (0.64, 0.24) (0.68, 0.36) (0.60, 0.46) (0.50, 0.52) (0.50, 0.62); círculo lleno de radio 0.06 en (0.50, 0.80) | `a11yKey` (Clave de símbolos) |
-| `MORE` | tres círculos llenos de radio 0.07 en (0.22, 0.50), (0.50, 0.50) y (0.78, 0.50) | `a11yMore` (Más acciones) |
+| `MORE` | tres círculos llenos de radio 0.07 en (0.22, 0.50), (0.50, 0.50) y (0.78, 0.50) | `a11yMoreActions` (Más acciones) |
 | `CHECK` | (0.22, 0.52) (0.42, 0.72) (0.78, 0.30) | ninguno: el estado lo dice la fila |
 
 Un icono que no responde en un extremo (la flecha del día siguiente en mañana, la del mes siguiente en

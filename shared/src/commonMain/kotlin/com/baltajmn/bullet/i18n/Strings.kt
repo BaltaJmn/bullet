@@ -319,6 +319,13 @@ object S {
         }
     }
 
+    /** docs/pantallas.md 1.5: the name of a signifier's glyph, for the screen reader. */
+    fun glyphName(signifier: Signifier): String = when (signifier) {
+        Signifier.PRIORITY -> signifierPriority
+        Signifier.INSPIRATION -> signifierInspiration
+        Signifier.EXPLORE -> signifierExplore
+    }
+
     // --- 5. Hoy -------------------------------------------------------------------------------
 
     val prefixHint = t(
