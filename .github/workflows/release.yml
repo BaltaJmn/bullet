@@ -1,0 +1,34 @@
+name: Release to Play
+
+# Tag driven on purpose: every push to main would burn a versionCode and spam the
+# testers with a build nobody asked for. You tag when you mean to ship.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      track:
+        description: Play track to publish to
+        type: choice
+        options: [alpha, internal, beta, production]
+        default: alpha
+
+jobs:
+  release:
+    # The whole sequence lives in BaltaJmn/ci because the four sibling apps need the same one.
+    # Secrets are listed one by one, never with `secrets: inherit`: this repository also holds
+    # the App Store Connect ones, which have nothing to do here.
+    uses: BaltaJmn/ci/.github/workflows/android-play-release.yml@main
+    with:
+      package-name: com.baltajmn.bullet
+      # No signer-cn: Bobbin's upload key is generated with CN=Baltasar, the shared workflow's
+      # default value (store/ci.md).
+      gradle-tasks: ':shared:testAndroidHostTest :androidApp:bundleRelease'
+      track: ${{ inputs.track || 'alpha' }}
+      whatsnew-dir: store/whatsnew
+    secrets:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}

@@ -1,0 +1,43 @@
+name: Tests
+
+# Cheap gate, not a release. Runs the shared tests on both toolchains: the JVM run is the fast
+# one, the Kotlin/Native run is the only thing that proves iosMain still compiles and links.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  jvm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew :shared:testAndroidHostTest
+
+  ios:
+    # macOS minutes bill ten to one, so this job stays on main and pull requests only, which is
+    # what the `on:` block above already limits it to.
+    #
+    # macos-26 and not macos-15: ui-uikit of Compose references UIViewLayoutRegion, a UIKit class
+    # that only exists from the iOS 26 SDK on, so the older image links the tests with undefined
+    # symbols. The image has to carry an Xcode at least as new as the one the app is built with.
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      # Same tests, linked as a Kotlin/Native binary. The linker options in shared/build.gradle.kts
+      # read `xcode-select -p`, so whatever Xcode the runner image ships with is the one used.
+      - run: ./gradlew :shared:iosSimulatorArm64Test

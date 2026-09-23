@@ -1,0 +1,40 @@
+name: Store listings
+
+# Separate from release.yml on purpose: the listing changes far more often than the app, and it
+# has no reason to drag a Gradle build or to spend a versionCode.
+on:
+  workflow_dispatch:
+    inputs:
+      accion:
+        description: What to do on Play
+        type: choice
+        # The one that does not write, by default. Uploading the listing is a public-facing change
+        # and gets picked on purpose, not by leaving the dropdown as it was.
+        options: [estado, subir]
+        default: estado
+  push:
+    paths: ['store/listings/**']
+
+jobs:
+  listings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # On a push only the limits are checked: a text that runs over its cap shows up here, not in
+      # the Console with the save button dead and no reason why.
+      - run: python tools/play-listing/subir.py
+
+      - if: github.event_name == 'workflow_dispatch'
+        run: pip install google-api-python-client google-auth
+
+      # Manual only, and only when asked. Uploading the listing is a public-facing change and the
+      # title also goes through Play review, so it never fires on a push to main.
+      - if: github.event_name == 'workflow_dispatch'
+        run: python tools/play-listing/subir.py --${{ inputs.accion }}
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
