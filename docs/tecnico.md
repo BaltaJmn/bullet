@@ -788,24 +788,28 @@ enlazada por `from`. Nada se mueve solo: ni ayer a hoy, ni un mes al siguiente, 
 mes que llega.
 
 ```kotlin
-fun Journal.migrate(id: String, to: Place, now: Long, newId: String): Journal?
-fun Journal.schedule(id: String, month: YearMonth, day: Int?, now: Long, newId: String): Journal?
+fun Journal.migrate(id: String, to: Place, today: LocalDate, now: Long, newId: String): Journal?
+fun Journal.schedule(id: String, month: YearMonth, day: Int?, today: LocalDate, now: Long, newId: String): Journal?
 fun Journal.discard(id: String, now: Long): Journal?
 fun Journal.migrationCount(id: String): Int
 ```
+
+`today` decide qué es "hoy" y "el mes actual" para las reglas de abajo: sin él ninguna de las dos
+funciones podría rechazar nada por fecha sin llamar a `Clock.System` por su cuenta, que la cabecera de
+esta sección prohíbe (#13).
 
 Devuelven `null` si la acción se rechaza, y entonces no cambia nada.
 
 - **`migrate`** con una tarea `OPEN`: el original pasa a `MIGRATED`; se añade una copia con `newId`,
   el mismo `bullet`, `text` y `signifiers`, `status = OPEN`, `place = to`, `order` al final de `to`,
   `createdAt = updatedAt = now` y `from = id`. Se rechaza si `to` es el mismo lugar, un día anterior a
-  hoy, un mes anterior al actual o una colección archivada.
+  `today`, un mes anterior a `monthOf(today)` o una colección archivada.
 - **`migrate` con un evento o una nota** (solo lo usa la revisión del Future Log, 6.5): se **mueve**
   la misma entrada, sin copia ni cadena: cambia `place`, `order` y `updatedAt`. Un evento no tiene
   estado "migrado" que dejar atrás.
 - **`schedule`**: como `migrate` hacia `Future(month, day)`, con el original en `SCHEDULED`. Se rechaza
-  si `month` no es posterior al mes actual o está a más de `FUTURE_MONTHS_MAX`, o si `day` no está en
-  `1..monthDays(month)` (el 31 en un mes de 30 no crea nada).
+  si `month` no es posterior a `monthOf(today)` o está a más de `FUTURE_MONTHS_MAX`, o si `day` no está
+  en `1..monthDays(month)` (el 31 en un mes de 30 no crea nada).
 - **`discard`**: el original pasa a `IRRELEVANT`. Sin copia.
 - **`migrationCount(id)`**: recorre `from` desde la entrada hacia atrás y cuenta los saltos. Si un
   `from` apunta a un `id` que no está, cuenta ese salto y para. Se protege de ciclos (un fichero editado
