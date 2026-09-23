@@ -78,7 +78,7 @@ Arrancar todo esto antes de escribir una línea de código. Ninguno depende del 
 ## Fase 2. Infraestructura
 
 - [x] Repositorio `BaltaJmn/bullet`, público. Los minutos de Actions no se facturan.
-- [ ] **[código] Andamiaje y CI**: los cuatro workflows de line con los cambios de `docs/tecnico.md`
+- [x] **[código] Andamiaje y CI**: los cuatro workflows de line con los cambios de `docs/tecnico.md`
       9. (#9)
 - [ ] **[autor] Crear el almacén de subida.** Un comando, y el `CN=Baltasar` no es opcional: es lo que
       comprueba el workflow compartido (`ci.md`).
