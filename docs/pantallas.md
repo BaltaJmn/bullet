@@ -802,7 +802,7 @@ derecha de la fila de iconos. Sin barra de progreso, sin porcentajes.
 
 - Título `reflectTitle(periodo)`: Releer septiembre (mes) o Releer hasta hoy (día y días anteriores).
 - El periodo en modo lectura, con el aspecto de sus páginas: por cada día con entradas, su fecha
-  `weekdayDay` en `Eyebrow` (LUNES 14) y sus entradas; en un mes, después, `calendarTitle`
+  `dayTitle` en `Eyebrow` (LUNES 14) y sus entradas; en un mes, después, `calendarTitle`
   (CALENDARIO) con las líneas de día que tienen algo, y `monthTasks`. Sin gestos, sin ningún número.
 - Al final, un campo de nota en `Ink` con el glifo de nota en gris y la pista `reflectHint(periodo)`
   (Una nota sobre este mes, si quieres). En v1.1 la pista es la pregunta del día (23.3).
@@ -883,8 +883,8 @@ eventos y notas), con el origen `fromFuture(mes, día?)` (FUTURO, 14 DE SEPTIEMB
 - **Campo** en la fila de título: `Ink`, sin borde, con el foco y el teclado al abrir, pista
   `searchHint` (Una palabra o una #etiqueta), `CLOSE` a la derecha cuando tiene texto (vacía). Los
   resultados salen mientras se escribe; la tecla de buscar del teclado solo lo baja.
-- **Filtros**, en una o varias filas: `filterOpen` (Abiertas, con el punto), `filterPriority`
-  (Prioridad), `filterInspiration` (Inspiración), `filterExplore` (Explorar), cada uno con su glifo y
+- **Filtros**, en una o varias filas: `filterOpen` (Abiertas, con el punto), `signifierPriority`
+  (Prioridad), `signifierInspiration` (Inspiración), `signifierExplore` (Explorar), cada uno con su glifo y
   su nombre en `Body`, 48 de alto. Activo: `onBackground` con la marca de 2 dp; inactivo:
   `onSurfaceVariant`. Se combinan con Y.
 - **Grupos.** Etiqueta en `Eyebrow`, en una fila de `2u` que se toca para abrir su página: un día,
@@ -1024,7 +1024,7 @@ Secciones: `sectionDay` (DÍA), `sectionReminder` (RECORDATORIO), `sectionPrivac
 
 - **Vista previa.** Una página de muestra del ancho de la columna de texto y `8u` de alto, radio 12,
   borde 1 dp `outline`, con el papel y la portada que se están mirando: el punto de la portada y
-  `previewDate` (Miércoles 23) en `PageTitle`, dos entradas fijas (`previewTask`: Comprar tinta, tarea;
+  `dayTitle` de un miércoles 23 (Miércoles 23) en `PageTitle`, dos entradas fijas (`previewTask`: Comprar tinta, tarea;
   `previewEvent`: Cena con Ana, evento) y `tabToday` (Hoy) con la marca de 2 dp de la portada.
 - **Portadas.** Ocho círculos de 32 dp en dianas de 48, en dos filas de cuatro, en el orden de
   `docs/tecnico.md` 5. El que se está mirando lleva un anillo de 2 dp `onBackground` a 3 dp; el
@@ -1407,8 +1407,8 @@ Ajustes, COPIA: `syncRow` (Sincronizar) con interruptor. Subtítulo: `syncOff` (
 (Con iCloud Drive) o `syncFile(nombre)` (Con bobbin-sync.json, en la carpeta que elegiste), y
 `syncLast(hora)` (Última vez, 18:40). Encender sin Pro abre el `ProDialog`; en Android abre el selector
 del sistema. Conflicto (`docs/tecnico.md` 12.7): diálogo `syncConflictTitle` (Los dos lados han
-cambiado) con `syncConflictText`, y tres botones apilados: `syncKeepThis` (Quedarme con este
-teléfono), `syncKeepOther` (Quedarme con el otro) y `syncMerge` (Juntar los dos), que enseña el resumen
+cambiado) con `syncConflictText`, y tres botones apilados: `syncKeepThis` (Usar este
+teléfono), `syncKeepOther` (Usar el otro) y `syncMerge` (Juntar los dos), que enseña el resumen
 de 15.2 antes de aplicar. Nunca fusión silenciosa.
 
 ### 23.8 Resumen del año (v1.2, #70, Pro)
