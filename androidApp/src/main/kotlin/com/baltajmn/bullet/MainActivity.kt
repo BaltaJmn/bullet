@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.fragment.app.FragmentActivity
+import com.baltajmn.bullet.data.AndroidContext
 
 // FragmentActivity and not ComponentActivity: Lock.android.kt needs a fragment host for the
 // biometric prompt (#39), and changing the base class after screens exist costs more than
@@ -12,6 +13,7 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        AndroidContext.init(this)
         setContent { App() }
     }
 }
