@@ -70,7 +70,155 @@ _Pendiente: lo escribe #3._
 
 ## 7. Monetización
 
-_Pendiente: lo escribe #2._
+### El dato que decide el modelo
+
+Igual que en las tres hermanas: **un usuario cuesta 0 EUR al mes**. Sin backend, sin cuentas, sin IA,
+sin almacenamiento nuestro. Una suscripción no tendría nada que sostener, y en esta categoría la
+suscripción es justo lo que se reprocha: el plan gratis de TickTick "casi no tiene sentido", Notion
+bloquea el contenido al no renovar y cobra sin reembolso prorrateado, Reflectly llega a 59,99 $ al año.
+El mercado ya trata "sin suscripción" como argumento de venta (Things 3, las opciones de compra única
+de BujoFlow y Diarium).
+
+**Decisión: una compra única no consumible como único producto de pago.** Producto `bullet_pro` en
+RevenueCat, entitlement `pro`, las dos tiendas de una vez. **Sin suscripción, sin consumibles y sin
+anuncios, en ningún plan y en ninguna versión.**
+
+### El eje del paywall
+
+Los ejes obvios rompen el método:
+
+- Limitar **entradas, colecciones o meses** castiga el hábito diario que se quiere enganchar y cobra
+  por escribir en tu propio cuaderno. Reseñas de una estrella.
+- Limitar **la migración, la revisión o el Future Log** es cobrar el método, que es la promesa del
+  producto y lo que la app oficial no da.
+- No limitar **nada** deja la app sin producto que vender.
+
+**Se cobran los adornos y las superficies. Nunca el método ni el contenido.** Es la misma regla de
+Purl, traducida: el cuaderno entero es gratis; se paga por vestirlo (portadas y papeles), por llevarlo
+fuera de la app (widgets de pago, libro en PDF, captura desde fuera) y por lo que tiene coste real de
+construir (sincronización).
+
+| Gratis para siempre | Pro en v1.0 | Pro en v1.1 | Pro en v1.2 |
+|---|---|---|---|
+| El método completo: rapid logging, tres bullets, cinco estados, tres signifiers | Siete de las ocho portadas (#49) | Libro del cuaderno en PDF (#68) | Sincronización por iCloud Drive o una carpeta de Drive (#69) |
+| Hoy, Mes, Future Log e Índice | Papeles rayado, cuadrícula y liso (#49) | Captura desde fuera: Ajustes rápidos y Atajos de iOS (#67) | Resumen del año en texto (#70) |
+| Colecciones ilimitadas | Colecciones de seguimiento desde la segunda (#50) | | |
+| Revisión y migración diaria y mensual, reflexión | Widget del mes, Android e iOS (#51) | | |
+| Clave de símbolos | Widget de pantalla de bloqueo, iOS (#52) | | |
+| Búsqueda con filtros | | | |
+| Recordatorio de reflexión y bloqueo con biometría | | | |
+| Widget de hoy | | | |
+| Compartir un día, un mes o una colección | | | |
+| Exportar e importar (JSON y Markdown) y copia del sistema | | | |
+| Una portada (salvia) y el papel punteado | | | |
+| Un seguimiento | | | |
+| v1.1: threading, nuevo cuaderno anual, preguntas de reflexión, fechas en lenguaje natural | | | |
+| v1.2: variaciones del índice, importar de las apps hermanas | | | |
+
+La distinción que hay que escribir para que la regla no se coma a sí misma: **exportar tus datos no
+se cobra nunca; el libro en PDF maquetado no es una exportación de datos, es un producto**. Quien solo
+quiere sus datos los tiene gratis y reimportables, en JSON y en Markdown legible con los símbolos del
+método.
+
+El seguimiento gratis es la perilla, igual que `FREE_HABIT_LIMIT` en Quilt: está para que todo el
+mundo vea el formato antes de pagar, y el número se mide, no es un dogma (`FREE_TRACKER_LIMIT = 1`,
+cuenta los seguimientos que existen ahora: archivar uno no libera hueco, borrarlo sí).
+
+**Si se pierde Pro** (un reembolso), no se rompe nada ni se pierde una línea: la portada y el papel
+activos vuelven a los gratis sin tocar el diario (#49), los seguimientos que ya existen siguen
+legibles y editables y solo no se puede crear otro, y los widgets Pro pasan a su estado bloqueado.
+
+### Lo que no se cobra nunca
+
+1. **El método.** Migrar, programar, revisar, reflexionar, el Future Log y el Índice. Cobrar la
+   migración sería cobrar lo único que distingue un Bullet Journal de una lista de tareas.
+2. **El número de entradas, colecciones o meses.** Ni tope ni aviso.
+3. **Exportar e importar.** Los datos atrapados son una de las quejas grandes de la categoría (§1), y
+   aquí pesan más porque el diario es de uno.
+4. **El recordatorio y el bloqueo.** Cobrar por proteger un diario es la misma señal de desconfianza
+   que cobrar por la copia.
+5. **Compartir.** Cada página compartida es marketing gratis.
+
+### Precio
+
+La escalera real de la familia, leída de sus repositorios:
+
+| App | Escaparate |
+|---|---|
+| Quilt | 4,99 EUR |
+| Purl | 5,99 EUR en v1.0, 8,99 EUR desde v1.1 |
+| MoodTraker | 7,99 EUR |
+| **Bobbin** | **7,99 EUR en v1.0, 9,99 EUR desde v1.1** |
+
+**Decisión: 7,99 EUR en v1.0.** Menos de la mitad de un cuaderno de papel bueno, por debajo de los
+9,99 $ de Things 3 y muy por debajo de cualquier compra única del sector (BujoFlow, 29,99 $; Daylio de
+por vida, 59,99 $). Y un solo año de cualquier suscripción de la categoría ya cuesta más: TickTick
+35,99 $, Daylio 35,99 $, Journey 29,99 $, Day One Silver 49,99 $. Bobbin sale más caro que Purl porque
+el paquete de pago de v1.0 es más ancho (portadas, papeles, seguimientos y dos widgets) y porque el
+método entero, gratis, ya vale más que el cuaderno de una línea.
+
+**Sube a 9,99 EUR en v1.1**, el día que sale el libro del cuaderno en PDF (#68). La subida se debe a
+que el libro añade coste de desarrollo real, no a estrategia de precios. **Quien compra antes de la
+subida conserva Pro para siempre, con todo lo que llegue después, sin recargo**: es un no consumible,
+la compra es de por vida y no por versión, y en RevenueCat subir el precio es tocar el panel, no el
+código.
+
+**Sin descuento de lanzamiento ni oferta por tiempo limitado.** El precio de salida es el precio final
+de v1.0: un descuento vende la rebaja, no el producto, y enseña a esperar a la siguiente.
+
+**Precios regionales activados en las dos tiendas desde el primer día**, no solo EUR y USD: es lo
+único que hace que "asequible" no sea solo una palabra fuera de la eurozona, y no cuesta una línea de
+código. Precio base en España; el resto de países, por la conversión automática de cada tienda
+(#7, #47).
+
+### Lo que llega al bolsillo
+
+```
+7,99 EUR escaparate            9,99 EUR escaparate
+/ 1,21 (IVA 21%)  = 6,60 EUR   / 1,21 (IVA 21%)  = 8,26 EUR
+- 15 % comisión   = 5,61 EUR   - 15 % comisión   = 7,02 EUR netos
+```
+
+| Objetivo | Ventas/mes a 7,99 | Descargas/mes a 7,99 | Ventas/mes a 9,99 | Descargas/mes a 9,99 |
+|---|---|---|---|---|
+| 500 EUR | ~90 | ~3.600 | ~72 | ~2.880 |
+| 1.000 EUR | ~179 | ~7.160 | ~143 | ~5.720 |
+| 3.000 EUR | ~535 | ~21.400 | ~428 | ~17.120 |
+
+Descargas calculadas al 2,5 % de conversión, la hipótesis de trabajo de la familia, no un dato medido
+de esta categoría. La comisión del 15 % exige el Small Business Program en Apple y el primer millón en
+Google.
+
+### Reglas
+
+1. **El plan gratis es la prueba.** No existen pruebas gratuitas para compras únicas.
+2. **El paywall aparece al chocar con un límite real** (#48): elegir una portada o un papel Pro, crear
+   el segundo seguimiento, tocar un widget Pro colocado sin Pro, generar el PDF, usar la captura desde
+   fuera, activar la sincronización o abrir el resumen del año. La única entrada que no es un choque
+   es la fila "Bobbin Pro" de Ajustes, para quien quiere comprar a propósito. **Nunca al arrancar,
+   nunca tras un número de usos.** Es el `ProDialog` de las hermanas: qué incluye, precio leído de la
+   tienda (nunca un número fijo en el código), "compra única, sin suscripción" visible sin scroll,
+   comprar, restaurar y cerrar. Cerrar sin comprar deja todo como estaba.
+3. **"Restaurar compras" siempre visible** en Ajustes y dentro del diálogo, también con Pro activo.
+   Requisito de Apple.
+4. **El estado de compra nunca bloquea contenido.** Se guarda en local el último derecho conocido tras
+   cada consulta a RevenueCat; sin red o con el servicio caído, se conserva. Ninguna pantalla espera a
+   RevenueCat para pintarse. Y borrar el diario desde Ajustes no borra el derecho Pro (#33).
+5. **Nada de anuncios.**
+6. **RevenueCat KMP**, un producto no consumible, las dos tiendas de una vez (#47).
+7. **Small Business Program de Apple solicitado antes de subir la primera build a revisión**: 15 % en
+   vez de 30 %. Si la cuenta no está inscrita cuando llegan las primeras ventas, esas se cobran al
+   30 %. Lo solicita el autor en #7.
+8. **Venta cruzada discreta**: una sección "Más apps" en Ajustes con una fila por app hermana
+   publicada en la tienda de esa plataforma (`SIBLINGS` en `data/AppInfo.kt`); si no hay ninguna, la
+   sección no aparece. Sin banners, sin notificaciones, sin cruzar datos entre apps.
+
+### Cuándo tocaría una suscripción
+
+Solo si aparece un coste recurrente real: nube propia, IA o impresión física del cuaderno. Y aun
+entonces, compra única para la app y cobro aparte solo para el servicio con coste, nunca convertir en
+suscripción el método ni el diario. La sincronización de v1.2 no lo reabre: va sobre la nube del
+propio usuario (iCloud Drive o una carpeta que él elige), sin servidor nuestro.
 
 ---
 
