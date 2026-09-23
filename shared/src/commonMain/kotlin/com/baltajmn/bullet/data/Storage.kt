@@ -1,5 +1,20 @@
 package com.baltajmn.bullet.data
 
+import kotlinx.serialization.json.JsonObject
+
+/**
+ * SCHEMA_STEPS[i] converts a journal from schema i+1 to i+2. Each step is independent, receives
+ * and returns a JsonObject, sets the new schemaVersion and fills any field that version added with
+ * its own default, never with null (docs/tecnico.md 6.14). Empty until a schema change ships; the
+ * mechanism itself is proven in tests with steps of its own (test 21).
+ */
+val SCHEMA_STEPS: List<(JsonObject) -> JsonObject> = emptyList()
+
+/** Applies [steps] one at a time (1 to 2, 2 to 3...), never with a direct jump to the final schema,
+ * so each step is tested alone and a new one lands without touching the others. */
+fun migrateSchema(json: JsonObject, steps: List<(JsonObject) -> JsonObject> = SCHEMA_STEPS): JsonObject =
+    steps.fold(json) { acc, step -> step(acc) }
+
 /**
  * The diary file and its previous version, in the app's private storage and never in the App
  * Group: widgets only ever see widget.json (docs/tecnico.md 4.2).

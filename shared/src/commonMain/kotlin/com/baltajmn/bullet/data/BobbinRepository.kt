@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.JournalJson
+import com.baltajmn.bullet.model.SCHEMA_VERSION
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -14,6 +15,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Single source of truth. The whole diary is one JSON file (docs/tecnico.md 6.14); state changes
@@ -33,18 +39,51 @@ object BobbinRepository {
     var corrupt by mutableStateOf(false)
         private set
 
+    /** The file's schemaVersion is higher than this build knows. The file was never touched. */
+    var updateNeeded by mutableStateOf(false)
+        private set
+
+    /** A schema conversion step threw. The file is exactly as it was, in its old format. */
+    var migrationFailed by mutableStateOf(false)
+        private set
+
     // Default, not Main: persisting never touches Compose state, and a Main dispatcher is not
     // guaranteed to exist outside a real app (host tests have none).
     private val scope by lazy { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
     private val writeLock = Mutex()
     private var files: JournalFiles = Storage
+
+    /** Set on updateNeeded or migrationFailed: nothing can be written until the next successful load. */
+    private var readOnly = false
     private var written: Journal? = null
 
-    /** Reads the diary, falling back to the backup, and never writes over a file it could not read. */
-    fun load(files: JournalFiles = Storage) {
+    /**
+     * Reads the diary, falling back to the backup, and never writes over a file it could not read
+     * or understand (docs/tecnico.md 6.14). [steps] is a parameter, not always [SCHEMA_STEPS], so
+     * the whole mechanism can be proven with steps of its own before any real one ever ships.
+     */
+    fun load(files: JournalFiles = Storage, steps: List<(JsonObject) -> JsonObject> = SCHEMA_STEPS) {
         this.files = files
+        updateNeeded = false
+        migrationFailed = false
+        readOnly = false
+
         val main = files.read()
-        var loaded = decode(main)
+        val rawVersion = main?.let(::peekSchemaVersion)
+
+        if (rawVersion != null && rawVersion > SCHEMA_VERSION) {
+            updateNeeded = true
+            readOnly = true
+            return
+        }
+
+        var loaded = if (rawVersion != null && rawVersion < SCHEMA_VERSION) {
+            migrateOldFormat(files, main, steps)
+        } else {
+            decode(main)
+        }
+        if (migrationFailed) return
+
         var previous: String? = null
         if (loaded == null) {
             previous = files.readPrevious()
@@ -73,6 +112,34 @@ object BobbinRepository {
         corrupt = false
     }
 
+    /**
+     * Runs [steps] on the raw JSON, keeps a "pre-migration" copy before touching anything, and
+     * writes the converted diary back so the next load sees the current schema directly. A step
+     * that throws, or a result that will not decode, leaves journal.json exactly as it was: nothing
+     * is written before every step and the final decode have already succeeded.
+     */
+    private fun migrateOldFormat(files: JournalFiles, raw: String, steps: List<(JsonObject) -> JsonObject>): Journal? {
+        return try {
+            files.keepCopy("pre-migration", raw)
+            val rawObject = Json.parseToJsonElement(raw).jsonObject
+            val migrated = migrateSchema(rawObject, steps)
+            val decoded = JournalJson.decodeFromJsonElement(Journal.serializer(), migrated)
+            files.write(encode(decoded))
+            decoded
+        } catch (e: Exception) {
+            runCatching { files.restoreMain(raw) }
+            migrationFailed = true
+            readOnly = true
+            null
+        }
+    }
+
+    private fun peekSchemaVersion(text: String): Int? = try {
+        Json.parseToJsonElement(text).jsonObject["schemaVersion"]?.jsonPrimitive?.intOrNull ?: SCHEMA_VERSION
+    } catch (e: Exception) {
+        null
+    }
+
     /** [change] returning null leaves the diary untouched: the caller decided there was nothing to do. */
     fun edit(change: (Journal) -> Journal?) {
         val next = change(journal) ?: return
@@ -84,6 +151,7 @@ object BobbinRepository {
     suspend fun flush() = persist()
 
     private suspend fun persist() = writeLock.withLock {
+        if (readOnly) return@withLock
         val snapshot = journal
         if (snapshot === written) return@withLock
         val ok = withContext(Dispatchers.IO) { runCatching { files.write(encode(snapshot)) }.isSuccess }

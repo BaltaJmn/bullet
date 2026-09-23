@@ -9,7 +9,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-// = 1 + SCHEMA_STEPS.size once the store's migration steps land (#15, docs/tecnico.md 6.14).
+// = 1 + SCHEMA_STEPS.size (SCHEMA_STEPS lives in data/Storage.kt, #15, docs/tecnico.md 6.14).
+// It stays a plain constant, not a computed one: model/ never depends on data/.
 const val SCHEMA_VERSION = 1
 const val REMINDER_DEFAULT_HOUR = 21
 const val REMINDER_DEFAULT_MINUTE = 0
