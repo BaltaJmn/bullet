@@ -1,0 +1,45 @@
+*.iml
+.kotlin
+.gradle
+**/build/
+xcuserdata
+!src/**/build/
+local.properties
+.idea
+.DS_Store
+captures
+.externalNativeBuild
+.cxx
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+node_modules/
+
+# Firma de release: nunca al repositorio. El repositorio es publico.
+keystore.properties
+keystore/
+*.jks
+*.keystore
+*.p12
+
+# Claves de App Store Connect y cuentas de servicio de Google: viven en los secretos de GitHub.
+*.p8
+*service-account*.json
+*service_account*.json
+play-*.json
+
+# Configuracion con claves de terceros.
+google-services.json
+GoogleService-Info.plist
+.env
+.env.*
+
+# Diario de demostracion de las capturas: fotos propias y salida generada.
+tools/demo/fotos/
+tools/demo/salida/
+
+# Worktrees de los agentes de Claude Code.
+.claude/worktrees/
