@@ -1,0 +1,4 @@
+<resources>
+    <!-- Placeholder hasta que docs/tecnico.md 8.1 traiga los colores y la variante de noche (#16-18). -->
+    <style name="Theme.Bobbin" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

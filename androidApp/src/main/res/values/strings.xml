@@ -1,0 +1,4 @@
+<resources>
+    <!-- Bobbin no se traduce: se lee igual en los cinco idiomas (SPEC.md 8). -->
+    <string name="app_name">Bobbin</string>
+</resources>

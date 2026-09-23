@@ -1,0 +1,18 @@
+// Team ID de la cuenta de Apple Developer (App Store Connect > Membership > Team ID).
+// Vacio hasta que exista la cuenta: sin el, Xcode no puede firmar ni archivar.
+TEAM_ID=
+
+PRODUCT_NAME=Bobbin
+
+// El identificador es irreversible en cuanto se sube la primera build a App Store Connect,
+// igual que el applicationId de Android. Se deja igual que Android a proposito.
+APP_BUNDLE_ID=com.baltajmn.bullet
+PRODUCT_BUNDLE_IDENTIFIER=$(APP_BUNDLE_ID)
+
+// MARKETING_VERSION va en paralelo con versionName de Android. Es el numero que se ve en la ficha.
+// CURRENT_PROJECT_VERSION no hay que tocarlo para publicar: release-ios.yml lo pisa con
+// github.run_number al archivar, que es lo unico que garantiza que no se repita dentro de una misma
+// MARKETING_VERSION. El valor de aqui solo lo usa un archivado a mano desde Xcode, y ese si hay que
+// subirlo, porque App Store Connect rechaza un build repetido.
+CURRENT_PROJECT_VERSION=1
+MARKETING_VERSION=1.0.0

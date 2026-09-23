@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Compose Multiplatform refuses to start without this: it caps the display link at 60 Hz
+	     on ProMotion iPhones. See androidx.compose.ui.uikit.PlistSanityCheck. -->
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDisplayName</key>
+	<string>Bobbin</string>
+	<!-- Sin esta clave LocalAuthentication no puede usar Face ID. Traducciones en <lang>.lproj. -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>To open your journal with Face ID when the lock is on.</string>
+	<!-- La app no usa cifrado propio, solo HTTPS del sistema. Sin esta clave App Store Connect
+	     pregunta por el cumplimiento de exportacion en cada build y la retiene hasta responder. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<!-- El widget y los enlaces abren la app con bobbin://. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.baltajmn.bullet</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>bobbin</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>es</string>
+		<string>pt</string>
+		<string>de</string>
+		<string>fr</string>
+	</array>
+</dict>
+</plist>
