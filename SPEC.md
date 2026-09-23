@@ -945,6 +945,7 @@ model/Journal.kt         entries, collections, settings, schemaVersion; solo ope
 model/DayClock.kt        día lógico (04:00 por defecto), meses, primer día de la semana
 model/Migration.kt       migrate, schedule, discard, migrationCount; una entrada por llamada, nunca una lista
 model/RapidParse.kt      prefijos de bullet y signifier
+model/Collections.kt     colecciones, índice, hilo y seguimientos
 data/Storage.kt          expect: journal.json atómico, .bak, cuarentena y migración de esquema
 data/BobbinRepository.kt fuente única de verdad, estado Compose, escritor único
 data/Search.kt           filtro en memoria con plegado de acentos y #etiquetas
@@ -954,7 +955,10 @@ data/Merge.kt            fusión por id: importar y, en v1.2, sincronizar
 data/Zip.kt              zip STORED de escritura y lectura con CRC32, puro común
 data/Export.kt           journal.json y un Markdown por mes y por colección
 data/FilePicker.kt       expect: elegir fichero para importar y destino para exportar
-data/Backup.kt           expect: fecha de la última copia y reglas de la copia del sistema
+data/Backup.kt           expect: qué queda fuera de la copia del sistema
+data/Prefs.kt            expect: lo que vive fuera del diario (derecho Pro, valoración ya pedida)
+data/StoreReview.kt      expect: la petición de valoración del sistema
+data/Route.kt            a qué pantalla pide ir un widget, un enlace o la notificación
 data/Lock.kt             expect: biometría con respaldo al código, multitarea oculta
 data/Reminders.kt        expect: el recordatorio de reflexión
 data/Sharing.kt          expect: imagen de página punteada o texto, y hoja de compartir
@@ -977,6 +981,8 @@ ui/KeyScreen.kt          la clave de símbolos
 ui/SettingsScreen.kt     ajustes, borrar datos, Pro, más apps
 ui/LockScreen.kt         overlay, se pinta antes que cualquier otra pantalla
 ui/Pro.kt                ProDialog, el paywall de las hermanas
+ui/ShareScreen.kt        vista previa de compartir
+ui/SharePage.kt          la página punteada como imagen
 ```
 
 Fuera de `commonMain`: los widgets de Android en `androidMain/.../widget/` (Glance), y los de iOS en
@@ -1041,12 +1047,15 @@ compartido solo hay esto:
   "month": "2026-09",
   "monthMask": "110110011101111011101000000000",
   "reviewPending": true,
-  "isPro": false
+  "isPro": false,
+  "cover": "sage",
+  "dayStartHour": 4
 }
 ```
 
 `monthMask` tiene un carácter por día del mes, `1` si ese día tiene entradas, para el widget del mes.
-Ni un carácter de texto del diario. `BobbinStore.swift` decodifica estos campos y nada más: no hay
+`cover` es el id de la portada activa y `dayStartHour` le dice al widget cuándo cambia el día sin abrir
+la app. Ni un carácter de texto del diario. `BobbinStore.swift` decodifica estos campos y nada más: no hay
 modelo del diario en Swift que mantener en paridad, y no hay forma de que un widget lea ni borre una
 entrada. Un campo nuevo se añade en `WidgetState` y en `BobbinStore.swift` en el mismo commit, con un
 fichero de ejemplo común que decodifican las dos plataformas en sus tests.
