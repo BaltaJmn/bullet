@@ -171,6 +171,11 @@ Log.
 | `undo`* | | Undo | Deshacer | Desfazer | Rückgängig | Annuler |
 | `working` | | One moment... | Un momento... | Um momento... | Einen Moment... | Un instant... |
 
+`taskCount(n)` y `entryCount(n)` (decisión de #16, sin fila propia porque no tienen texto fijo: son
+"$n " mas la palabra de la fila 2 de la tabla de la regla del metodo 3, tarea o entrada) dan el
+conteo generico ("3 tareas", "1 entrada") para donde haga falta uno suelto, fuera de una pantalla
+concreta.
+
 ## 3. Navegación y cabeceras
 
 | Clave | Parámetros | en | es | pt | de | fr |
@@ -241,7 +246,9 @@ Los títulos de página de Futuro y del Índice son `tabFuture` y `tabIndex`; el
 
 - `wentToFuture` con día usa `abbrDate`; si el mes no es del año en curso, `abbrDateWithYear`
   ("Futuro, 14 oct 2027"). Sin día, "Futuro, " y `monthYear`. Una colección de destino se cita por su
-  título, sin texto alrededor.
+  título, sin texto alrededor. Decisión de #16: como `Strings.kt` no lleva reloj, "el año en curso"
+  no lo decide la función; `wentToFuture(month, day, withYear)` recibe ese booleano ya calculado por
+  quien la llama.
 - `migratedTimes` solo se enseña desde `MIGRATION_SHOWN_FROM` (2). Con 1, por si acaso: Migrated once,
   Migrada 1 vez, Migrada 1 vez, Einmal migriert, Migrée 1 fois.
 - Nombre de cada glifo (`glyphName`, `docs/pantallas.md` 1.5), para el lector de pantalla:
@@ -501,12 +508,19 @@ filas (`o`, `-`, `*`, `!`, `?`, `>`) son los del método, iguales en los cinco i
   `nuevas` y `actualizadas` son 0, la fila de "nada nuevo". Si `iguales` es 0, la frase acaba tras las
   nuevas y actualizadas, antes de "No se borra nada.".
 - `importDone(n)` cuenta `added + updated`, con su frase propia para 0: importar la copia que ya se
-  tiene no cambia nada, y "0 cambios" suena a fallo.
+  tiene no cambia nada, y "0 cambios" suena a fallo. El singular (decisión de #16, fila `cambio` de
+  la regla del método 3) es "1 change", "1 cambio", "1 alteração", "1 Änderung", "1 modification".
 - `importIsSibling` recibe el nombre de la app reconocida (`Purl`, `MoodTraker` o `Quilt`, 4.5) y
   vale para v1.0 y v1.1; en v1.2 la importación se desvía (sección 24).
 - `wipeConfirmTitle` lleva dentro `wipeWord` del mismo idioma, y la comparación es con `fold`
   (`docs/pantallas.md` 15.4): en alemán vale "löschen" o "loschen".
 - Exportar no tiene más textos: `exportFailed` con `ok`; cancelar no enseña nada.
+- Decisión de #16, las mismas tres frases en singular en los otros cuatro idiomas, siguiendo la
+  fila `entrada` de la regla del método 3: en "1 new entry", "1 newer than yours", "1 was already
+  here"; pt "1 entrada nova", "1 mais recente que as suas", "1 já estava aqui"; de "1 neuer
+  Eintrag", "1, der neuer ist als deine", "1 war schon da"; fr "1 nouvelle entrée", "1 plus récente
+  que les tiennes", "1 était déjà là". El alemán mantiene la coma de la frase relativa también en
+  singular.
 
 ## 16. Bloqueo y avisos de carga
 
@@ -696,6 +710,12 @@ semana y los meses son los de `weekdayNames` y `monthNames`, comparados con `fol
 | Día y mes en cifras | 3/14 | 14/3 | 14/3 | 14.3. | 14/3 |
 
 En inglés, "3/14" es mes y día; en los otros cuatro, día y mes. `dateHint` recibe el idioma de `S`.
+
+Decisión de #16: de esta tabla, `Strings.kt` solo expone como funciones las tres palabras sueltas y
+sin ambigüedad (`dateWordToday`, `dateWordTomorrow`, `dateWordDayAfterTomorrow`); los patrones de
+varias formas por idioma ("on the 14th, the 14th", "March 14, 14 March"...) se quedan en esta tabla
+para que `model/DateHint.kt` (#66) los lea directamente de aquí, porque reconocerlos es lógica de
+párser, no una cadena que traducir.
 
 ### Siri y Atajos (iOS)
 
