@@ -955,7 +955,8 @@ instalación, nunca al arrancar ni tras un error.
 fun Journal.createCollection(title: String, now: Long, newId: String, kind: CollectionKind = NOTES): Journal?
 fun Journal.renameCollection(id: String, title: String, now: Long): Journal?
 fun Journal.archiveCollection(id: String, archived: Boolean, now: Long): Journal
-fun Journal.deleteCollection(id: String): Journal
+fun Journal.deleteCollection(id: String, now: Long): Journal
+fun Journal.restoreCollection(collection: BulletCollection): Journal
 fun Journal.indexItems(monthTitle: (YearMonth) -> String): List<IndexItem>
 fun filterIndex(items: List<IndexItem>, query: String): List<IndexItem>
 ```
@@ -968,9 +969,15 @@ plataforma y `model/` no lee ninguna (6). La pantalla le pasa `S::monthTitle`.
 - Renombrar cambia `title` y `updatedAt`, **nunca** `createdAt`: el orden del Índice no se mueve.
 - Archivar pone `archived` y la lleva al bloque plegado del Índice sin tocar ninguna entrada. Una
   colección archivada no es destino de migración.
-- Borrar quita la colección y sus entradas, con la regla del esqueleto de 6.4 para las que son origen
-  de una migración, y con el mismo Deshacer de `UNDO_MS`. Si otra colección tenía `threadFrom` a la
-  borrada, pasa a apuntar al `threadFrom` de esta: el hilo se engancha por encima del hueco.
+- Borrar quita la colección y sus entradas, cada entrada por `delete` y por separado, con la regla del
+  esqueleto de 6.4 para las que son origen de una migración, y con el mismo Deshacer de `UNDO_MS`. Si
+  otra colección tenía `threadFrom` a la borrada, pasa a apuntar al `threadFrom` de esta: el hilo se
+  engancha por encima del hueco.
+- Deshacer ese borrado vuelve al `Journal` de antes si nada más ha escrito entre medias. Si sí, la
+  reparación estrecha es `restoreCollection(coleccion)` más un `restoreDeleted` por entrada:
+  `restoreCollection` **no recibe una lista**, porque ninguna función de `model/` la recibe (10, test
+  9). Convertir un gesto en sus varias escrituras es trabajo de `BobbinRepository`, no una firma que
+  cualquiera pueda llamar con una lista propia.
 - Una colección es destino válido de `migrate` (`InCollection(id)`) igual que un mes.
 
 `IndexItem` es un mes o una colección:
@@ -1886,7 +1893,8 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
    un id que no está cuenta un salto; un ciclo no cuelga; borrar el original deja un esqueleto sin texto
    y la copia conserva su recuento; borrar después la copia elimina el esqueleto; deshacer dentro del
    plazo restaura posición y estado; crear una colección, migrar a ella una tarea de hoy y la cadena de
-   `from` sigue completa.
+   `from` sigue completa; borrar una colección deja esqueleto solo en las que son origen de una
+   migración; borrar la del medio de un hilo engancha la siguiente a la anterior.
 8. **Revisión y reflexión** (#26, #27, #28): `openTasksBefore`, `openTasksOfDay`, `openTasksOfMonth` y
    `unclosedMonth` sobre un diario fijo, que nunca señala el mes actual; las tareas con cada acción
    quedan cada una en su estado, y "a una colección" entra con #30; recalcular la cola tras decidir
@@ -1895,10 +1903,12 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
    un prefijo escrito en ella se queda como texto; saltar no crea nada; con tres entradas del Future
    Log del mes, `futureWaiting` cuenta 3 y baja de una en una al decidir; cambiar de mes sin abrir el
    Mes no toca ninguna.
-9. **Sin acciones masivas** (`androidHostTest`, #13, #27, #64): por reflexión de la JVM sobre
-   `MigrationKt` y `CollectionsKt`, ningún método público tiene un parámetro `Collection`, `Iterable`,
-   `Sequence` ni array, y ninguno se llama `*All`. El receptor `Journal` no es una colección.
-   `CollectionsKt` entra en el test con #30, que es quien crea el fichero.
+9. **Sin acciones masivas** (`androidHostTest`, #13, #27, #30, #64): por reflexión de la JVM sobre
+   `MigrationKt` y `CollectionsKt`, ninguna función que **escriba** en el diario (las que devuelven un
+   `Journal`) tiene un parámetro `Collection`, `Iterable`, `Sequence` ni array, y ninguna función
+   pública se llama `*All`. El receptor de una de ellas no es una colección. Una consulta que recibe
+   una lista para leerla, como `filterIndex(items, query)`, no decide nada sobre ninguna entrada:
+   prohibirla confundiría la regla con su forma.
 10. **Captura rápida** (#20, #21): cada prefijo solo; `"* - texto"` y `"- * texto"` dan la misma nota
     con prioridad; `"* ! ? o texto"` da un evento con los tres signifiers; `"-5 grados"` y `"hola - x"`
     son tareas; `"- - x"` es una nota con texto `"- x"`; `"- "` y `"* "` solos devuelven `null`; el

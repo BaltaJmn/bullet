@@ -61,6 +61,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.baltajmn.bullet.data.BobbinRepository
+import com.baltajmn.bullet.data.UndoKind
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.COUNTER_FROM
@@ -508,9 +509,13 @@ fun NoticeLine(text: String, actionLabel: String? = null, action: (() -> Unit)? 
     }
 }
 
-/** docs/pantallas.md 5.8: `entryDeleted` and `undo`, shown while `BobbinRepository.pendingUndo` is set. */
+/**
+ * docs/pantallas.md 5.8: `undo` and what went, shown while `BobbinRepository.pendingUndo` is set. The
+ * text follows the kind, so the same line serves an entry (#23) and a whole collection (#30).
+ */
 @Composable
 fun UndoBanner(onUndo: () -> Unit) {
+    val kind = BobbinRepository.pendingUndo?.kind ?: return
     val line = MaterialTheme.colorScheme.outlineVariant
     Row(
         Modifier.fillMaxWidth().height(gridUnit * 2)
@@ -518,7 +523,8 @@ fun UndoBanner(onUndo: () -> Unit) {
             .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(S.entryDeleted, style = Type.Body, modifier = Modifier.padding(start = 24.dp).weight(1f))
+        val what = if (kind == UndoKind.COLLECTION) S.collectionDeleted else S.entryDeleted
+        Text(what, style = Type.Body, modifier = Modifier.padding(start = 24.dp).weight(1f))
         TextAction(S.undo, onUndo)
         Spacer(Modifier.width(16.dp))
     }

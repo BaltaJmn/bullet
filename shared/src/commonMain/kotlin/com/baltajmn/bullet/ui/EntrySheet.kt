@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -24,7 +27,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.baltajmn.bullet.data.BobbinRepository
@@ -43,6 +49,7 @@ import com.baltajmn.bullet.model.futureMonths
 import com.baltajmn.bullet.model.migrationCount
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.model.monthOf
+import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import kotlinx.datetime.DateTimeUnit
@@ -55,7 +62,7 @@ private const val SHEET_MAX_WIDTH_DP = 576
  * Which of docs/pantallas.md 5.7's destination selectors is standing in for the actions, in the sheet
  * (#22) and in Revisar (#27): the selector "sustituye a las acciones en el mismo sitio".
  */
-enum class Destination { NONE, MIGRATE, SCHEDULE }
+enum class Destination { NONE, MIGRATE, SCHEDULE, COLLECTION }
 
 /** The status actions [entry]'s own state allows (docs/pantallas.md 5.6's table). An event or a note offers none. */
 enum class StatusAction { MIGRATE, SCHEDULE, DISCARD, REOPEN, GO_TO_COPY }
@@ -107,8 +114,15 @@ fun EntrySheet(
                         onMigrate = { mode = Destination.MIGRATE },
                         onSchedule = { mode = Destination.SCHEDULE },
                     )
-                    Destination.MIGRATE -> MigrateDestinations(entry, today, onBack = { mode = Destination.NONE }, onDone = onClose)
+                    Destination.MIGRATE -> MigrateDestinations(
+                        entry,
+                        today,
+                        onBack = { mode = Destination.NONE },
+                        onCollections = { mode = Destination.COLLECTION },
+                        onDone = onClose,
+                    )
                     Destination.SCHEDULE -> ScheduleDestinations(entry, today, onBack = { mode = Destination.NONE }, onDone = onClose)
+                    Destination.COLLECTION -> CollectionDestinations(entry, journal, onBack = { mode = Destination.MIGRATE }, onDone = onClose)
                 }
                 Spacer(Modifier.height(gridUnit))
             }
@@ -212,12 +226,11 @@ fun SheetRow(glyph: (@Composable () -> Unit)?, label: String, trailing: (@Compos
 }
 
 /**
- * docs/pantallas.md 5.7, "Migrar": Hoy, Mañana, tareas de este mes y un día de este mes. "A una
- * colección" waits for #30, which is what gives the sheet an actual list of collections to migrate
- * into and a way to create one on the spot.
+ * docs/pantallas.md 5.7, "Migrar": Hoy, Mañana, tareas de este mes, un día de este mes y a una
+ * colección, which opens the list of them in the same place (#30).
  */
 @Composable
-fun MigrateDestinations(entry: Entry, today: LocalDate, onBack: () -> Unit, onDone: () -> Unit) {
+fun MigrateDestinations(entry: Entry, today: LocalDate, onBack: () -> Unit, onCollections: () -> Unit, onDone: () -> Unit) {
     val tomorrow = today.plus(1, DateTimeUnit.DAY)
     val thisMonth = Place.Monthly(monthOf(today))
     var dayText by remember { mutableStateOf("") }
@@ -251,6 +264,53 @@ fun MigrateDestinations(entry: Entry, today: LocalDate, onBack: () -> Unit, onDo
             }
         }
         error?.let { Text(it, style = Type.Secondary, modifier = Modifier.padding(start = 72.dp)) }
+        SheetRow(glyph = null, label = S.toCollection, onClick = onCollections)
+    }
+}
+
+/**
+ * docs/pantallas.md 5.7, "A una colección": the collections that are not archived, by creation order,
+ * and a capture row that creates one and migrates to it in the same gesture. An archived one is not
+ * offered, and `migrate` refuses it anyway (docs/tecnico.md 6.4).
+ */
+@Composable
+fun CollectionDestinations(entry: Entry, journal: Journal, onBack: () -> Unit, onDone: () -> Unit) {
+    var title by remember { mutableStateOf("") }
+
+    Column {
+        SheetRow(glyph = null, label = S.back, onClick = onBack)
+        journal.collections.filterNot { it.archived }.sortedBy { it.createdAt }.forEach { collection ->
+            if (entry.place != Place.InCollection(collection.id)) {
+                SheetRow(
+                    glyph = null,
+                    label = collection.title,
+                    onClick = { if (BobbinRepository.migrate(entry.id, Place.InCollection(collection.id))) onDone() },
+                )
+            }
+        }
+        Row(Modifier.fillMaxWidth().heightIn(min = gridUnit * 2).padding(start = 72.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f)) {
+                if (title.isEmpty()) {
+                    Text(S.newCollection, style = Type.Body.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                }
+                BasicTextField(
+                    value = title,
+                    onValueChange = { title = it.oneLine() },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = Type.Body,
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            val id = BobbinRepository.createCollection(title)
+                            if (id != null && BobbinRepository.migrate(entry.id, Place.InCollection(id))) onDone()
+                        },
+                    ),
+                )
+            }
+            Spacer(Modifier.width(24.dp))
+        }
     }
 }
 

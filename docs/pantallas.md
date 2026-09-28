@@ -675,7 +675,7 @@ Solo en el mes actual. Todas las que apliquen, en este orden, enteras en `primar
   vez de medir la última línea base a mano. Sin números de página.
 - Tocar un mes abre la pestaña Mes en ese mes. Tocar una colección abre COLLECTION.
 - **Crear.** Tras el último elemento activo, dos filas de captura: `newCollection` (Nueva colección) y
-  `newTracker` (Nuevo seguimiento). Solo piden el título: Intro lo crea (`createCollection`, con
+  `newTracker` (Nuevo seguimiento), que llega con #50 junto con los seguimientos y su puerta de Pro. Solo piden el título: Intro lo crea (`createCollection`, con
   `kind = TRACKER` en la segunda) y abre la colección con su captura enfocada. Sin plantillas ni campos
   más. Sin Pro y con un seguimiento ya creado (`canCreateTracker` falso), tocar `newTracker` abre el
   `ProDialog` en vez de enfocar el campo, y no se crea nada.

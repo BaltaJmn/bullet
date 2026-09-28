@@ -4,23 +4,29 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.baltajmn.bullet.model.Bullet
+import com.baltajmn.bullet.model.CollectionKind
 import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.JournalJson
 import com.baltajmn.bullet.model.Place
-import com.baltajmn.bullet.model.Settings
 import com.baltajmn.bullet.model.SCHEMA_VERSION
+import com.baltajmn.bullet.model.Settings
 import com.baltajmn.bullet.model.Signifier
+import com.baltajmn.bullet.model.archiveCollection
 import com.baltajmn.bullet.model.capture
 import com.baltajmn.bullet.model.captureNote
+import com.baltajmn.bullet.model.createCollection
 import com.baltajmn.bullet.model.delete
+import com.baltajmn.bullet.model.deleteCollection
 import com.baltajmn.bullet.model.discard
 import com.baltajmn.bullet.model.editText
 import com.baltajmn.bullet.model.logicalDate
 import com.baltajmn.bullet.model.migrate
 import com.baltajmn.bullet.model.newId
+import com.baltajmn.bullet.model.renameCollection
 import com.baltajmn.bullet.model.reopen
 import com.baltajmn.bullet.model.reorder
+import com.baltajmn.bullet.model.restoreCollection
 import com.baltajmn.bullet.model.restoreDeleted
 import com.baltajmn.bullet.model.schedule
 import com.baltajmn.bullet.model.toggleDone
@@ -54,7 +60,22 @@ const val UNDO_MS = 5_000L
  * snapshot, for the common case where nothing else changed meanwhile; [deleted] is the entry
  * itself, in case something did and only it needs putting back.
  */
-class PendingUndo internal constructor(internal val before: Journal, internal val after: Journal, val deleted: Entry)
+/** What the undo line is offering to put back (docs/pantallas.md 5.8): its text says which. */
+enum class UndoKind { ENTRY, COLLECTION }
+
+/**
+ * One undoable delete. [before] is the whole diary as it was, which is what [BobbinRepository.undo]
+ * restores when nothing else has written since; [restore] is the narrower repair for when something
+ * has, and each kind of delete brings its own (docs/tecnico.md 6.4, 6.7).
+ */
+class PendingUndo internal constructor(
+    internal val before: Journal,
+    internal val after: Journal,
+    val kind: UndoKind,
+    /** The entry an entry delete removed. Null when a whole collection went. */
+    val deleted: Entry?,
+    internal val restore: (Journal) -> Journal,
+)
 
 /**
  * Single source of truth. The whole diary is one JSON file (docs/tecnico.md 6.14); state changes
@@ -212,7 +233,26 @@ object BobbinRepository {
         val original = journal.entries.find { it.id == id && !it.gone } ?: return
         val before = journal
         edit { j -> j.delete(id, now()) }
-        pendingUndo = PendingUndo(before, journal, original)
+        armUndo(before, UndoKind.ENTRY, original) { it.restoreDeleted(original) }
+    }
+
+    /**
+     * Deleting a collection takes its entries with it (docs/tecnico.md 6.7), so the narrow repair has to
+     * put back the collection and every entry that was in it, not one entry.
+     */
+    fun deleteCollection(id: String) {
+        val gone = journal.collections.find { it.id == id } ?: return
+        val its = journal.entries.filter { it.place == Place.InCollection(id) }
+        val before = journal
+        edit { j -> j.deleteCollection(id, now()) }
+        armUndo(before, UndoKind.COLLECTION, deleted = null) { current ->
+            its.fold(current.restoreCollection(gone)) { j, e -> j.restoreDeleted(e) }
+        }
+    }
+
+    /** No confirmation for a delete, but [UNDO_MS] to take it back (docs/pantallas.md 5.8). */
+    private fun armUndo(before: Journal, kind: UndoKind, deleted: Entry?, restore: (Journal) -> Journal) {
+        pendingUndo = PendingUndo(before, journal, kind, deleted, restore)
         val token = ++undoToken
         scope.launch {
             delay(UNDO_MS)
@@ -220,17 +260,34 @@ object BobbinRepository {
         }
     }
 
+    /** Only the title and `updatedAt` change, never `createdAt`: the Index keeps its order (docs/tecnico.md 6.7). */
+    fun renameCollection(id: String, title: String) = edit { j -> j.renameCollection(id, title, now()) }
+
+    /** Archiving touches no entry at all (docs/tecnico.md 6.7). */
+    fun archiveCollection(id: String, archived: Boolean) = edit { j -> j.archiveCollection(id, archived, now()) }
+
+    /** Returns the new collection's id, or null when the title was empty (docs/tecnico.md 6.7). */
+    fun createCollection(title: String, kind: CollectionKind = CollectionKind.NOTES): String? {
+        var made: String? = null
+        edit { j ->
+            val id = newId("c", j.collections.map { it.id }.toSet())
+            j.createCollection(title, now(), id, kind)?.also { made = id }
+        }
+        return made
+    }
+
     /**
      * Restores exactly [PendingUndo.before] when nothing else has changed the diary since the
-     * delete, or just [PendingUndo.deleted] back into the current one, at its old order and status,
-     * when something has (docs/tecnico.md 6.4). A second delete replaces [pendingUndo] outright
+     * delete, or runs [PendingUndo.restore] on the current one when something has: the entry back at
+     * its old order and status, or the collection with everything that was in it (docs/tecnico.md 6.4,
+     * 6.7). A second delete replaces [pendingUndo] outright
      * (docs/pantallas.md 5.8): the first one's own snapshot is gone, so there is nothing left for
      * its timer to clear.
      */
     fun undo() {
         val pending = pendingUndo ?: return
         pendingUndo = null
-        val restored = if (journal === pending.after) pending.before else journal.restoreDeleted(pending.deleted)
+        val restored = if (journal === pending.after) pending.before else pending.restore(journal)
         journal = restored
         scope.launch { persist() }
     }

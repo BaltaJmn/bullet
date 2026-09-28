@@ -37,6 +37,7 @@ import com.baltajmn.bullet.model.FUTURE_MONTHS_MAX
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.monthOf
+import com.baltajmn.bullet.ui.CollectionScreen
 import com.baltajmn.bullet.ui.FutureReviewScreen
 import com.baltajmn.bullet.ui.FutureScreen
 import com.baltajmn.bullet.ui.Glyph
@@ -78,6 +79,8 @@ fun App() {
     // the Future Log one of 11.4, which has no scope because its queue is the Future Log itself.
     var reviewScope by remember { mutableStateOf<ReviewScope?>(null) }
     var reviewFutureLog by remember { mutableStateOf(false) }
+    var openCollection by remember { mutableStateOf<String?>(null) }
+    var collectionJustCreated by remember { mutableStateOf(false) }
     // Coming back to the foreground is the only guaranteed moment a backgrounded app can catch a
     // day change (docs/tecnico.md 6.1, test 38). If Hoy was showing today, it follows to the new
     // one, and Mes to the new month; a past day or month someone was reading stays put.
@@ -93,6 +96,13 @@ fun App() {
     // At most one screen open above the tab bar (docs/pantallas.md 3): each one owns its own
     // BackHandler, so one that still has a sheet or a dialog of its own open can close that first.
     var overlay by remember { mutableStateOf<Screen?>(null) }
+
+    /** [created] is true only straight from the Index's own capture row, which is when it opens focused. */
+    fun goToCollection(id: String, created: Boolean) {
+        openCollection = id
+        collectionJustCreated = created
+        overlay = Screen.COLLECTION
+    }
 
     fun openReview(scope: ReviewScope) {
         reviewScope = scope
@@ -113,7 +123,7 @@ fun App() {
                 val away = monthOf(today).monthsUntil(place.month)
                 if (away > futureShown) futureShown = minOf(away, FUTURE_MONTHS_MAX)
             }
-            is Place.InCollection -> Unit
+            is Place.InCollection -> goToCollection(place.id, created = false)
         }
     }
 
@@ -143,8 +153,8 @@ fun App() {
                             onSearch = { overlay = Screen.SEARCH },
                             onSettings = { overlay = Screen.SETTINGS },
                             onOpenMonth = { tab = Screen.MONTH; viewedMonth = it },
-                            // Opening a collection is #30, which is what can create one.
-                            onOpenCollection = { overlay = Screen.COLLECTION },
+                            onOpenCollection = { goToCollection(it, created = false) },
+                            onCreated = { goToCollection(it, created = true) },
                         )
                         Screen.FUTURE -> FutureScreen(
                             today = today,
@@ -175,11 +185,19 @@ fun App() {
             }
 
             overlay?.let { screen ->
-                val dismiss = { overlay = null; reviewFutureLog = false; reviewScope = null }
+                val dismiss = { overlay = null; reviewFutureLog = false; reviewScope = null; openCollection = null }
                 val scope = reviewScope
+                val collection = openCollection
                 when {
                     screen == Screen.REVIEW && reviewFutureLog -> FutureReviewScreen(today = today, onClose = dismiss)
                     screen == Screen.REVIEW && scope != null -> ReviewScreen(scope = scope, today = today, onClose = dismiss)
+                    screen == Screen.COLLECTION && collection != null -> CollectionScreen(
+                        id = collection,
+                        today = today,
+                        justCreated = collectionJustCreated,
+                        onBack = dismiss,
+                        onNavigateTo = { place -> dismiss(); goTo(place) },
+                    )
                     else -> PlaceholderOverlay(screen, dismiss)
                 }
             }

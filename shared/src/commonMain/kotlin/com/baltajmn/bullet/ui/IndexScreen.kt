@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,6 +32,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
@@ -37,6 +41,7 @@ import com.baltajmn.bullet.model.CollectionKind
 import com.baltajmn.bullet.model.IndexItem
 import com.baltajmn.bullet.model.filterIndex
 import com.baltajmn.bullet.model.indexItems
+import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import com.baltajmn.bullet.ui.theme.paper
@@ -47,7 +52,7 @@ import kotlinx.datetime.YearMonth
  * collections, in the order they were started. Never alphabetical, and with no page number anywhere,
  * because this paper has no physical pages to number.
  *
- * The rows that create a collection and a tracker, and opening one, land with #30 and #50.
+ * The `newTracker` row lands with #50, which is what brings trackers and the Pro gate of 6.18.
  */
 @Composable
 fun IndexScreen(
@@ -55,6 +60,7 @@ fun IndexScreen(
     onSettings: () -> Unit,
     onOpenMonth: (YearMonth) -> Unit,
     onOpenCollection: (String) -> Unit,
+    onCreated: (String) -> Unit,
 ) {
     val journal = BobbinRepository.journal
     val items = journal.indexItems(S::monthTitle)
@@ -86,6 +92,14 @@ fun IndexScreen(
 
             active.forEach { item -> IndexRow(item) { open(item, onOpenMonth, onOpenCollection) } }
 
+            // Only the title, and Intro creates it and opens it with its capture focused
+            // (docs/pantallas.md 9). Hidden while filtering, like the archived block.
+            if (query.isEmpty()) {
+                NewCollectionRow { title ->
+                    BobbinRepository.createCollection(title)?.let(onCreated)
+                }
+            }
+
             if (archived.isNotEmpty()) {
                 Spacer(Modifier.height(gridUnit))
                 Row(
@@ -113,6 +127,29 @@ fun IndexScreen(
 private fun open(item: IndexItem, onOpenMonth: (YearMonth) -> Unit, onOpenCollection: (String) -> Unit) = when (item) {
     is IndexItem.Month -> onOpenMonth(item.month)
     is IndexItem.Collection -> onOpenCollection(item.id)
+}
+
+/** docs/pantallas.md 9: the capture row that creates a collection. It asks for a title and nothing else. */
+@Composable
+private fun NewCollectionRow(onCreate: (String) -> Unit) {
+    var value by remember { mutableStateOf("") }
+    Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.weight(1f).padding(start = 48.dp, end = 24.dp)) {
+            if (value.isEmpty()) {
+                Text(S.newCollection, style = Type.Ink.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+            }
+            BasicTextField(
+                value = value,
+                onValueChange = { value = it.oneLine() },
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = Type.Ink,
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { onCreate(value); value = "" }),
+            )
+        }
+    }
 }
 
 /** docs/pantallas.md 9: the filter, with `CLOSE` on the right once it has something to clear. */

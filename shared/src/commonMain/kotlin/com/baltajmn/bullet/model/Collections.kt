@@ -89,3 +89,48 @@ fun Journal.archiveCollection(id: String, archived: Boolean, now: Long): Journal
     if (target.archived == archived) return this
     return copy(collections = collections.map { if (it.id == id) it.copy(archived = archived, updatedAt = now) else it })
 }
+
+/**
+ * Creates a collection (docs/tecnico.md 6.7). It asks for the title and nothing else: no template, no
+ * fields, no kind to pick beyond notes or tracker. An empty title creates nothing.
+ */
+fun Journal.createCollection(
+    title: String,
+    now: Long,
+    newId: String,
+    kind: CollectionKind = CollectionKind.NOTES,
+): Journal? {
+    val clean = title.oneLine().trim().clampCodePoints(COLLECTION_TITLE_MAX)
+    if (clean.isEmpty()) return null
+    val made = BulletCollection(id = newId, title = clean, createdAt = now, kind = kind)
+    return copy(collections = collections + made)
+}
+
+/**
+ * Deletes a collection and its entries (docs/tecnico.md 6.7). Each entry goes through [Journal.delete]
+ * one at a time, so an entry that is the original of a migration leaves its skeleton behind and the copy
+ * that landed elsewhere keeps its link (6.4).
+ *
+ * A collection that continued this one in a thread hangs from whatever this one hung from: the thread
+ * joins over the hole instead of breaking in two.
+ */
+fun Journal.deleteCollection(id: String, now: Long): Journal {
+    val target = collections.find { it.id == id } ?: return this
+    val mine = entries.filter { it.place == Place.InCollection(id) && !it.gone }.map { it.id }
+    var next = this
+    for (entryId in mine) next = next.delete(entryId, now) ?: next
+    return next.copy(
+        collections = next.collections
+            .filterNot { it.id == id }
+            .map { if (it.threadFrom == id) it.copy(threadFrom = target.threadFrom, updatedAt = now) else it },
+    )
+}
+
+/**
+ * Puts the collection itself back after [deleteCollection], for the Deshacer of docs/tecnico.md 6.7.
+ * Its entries come back one at a time through [Journal.restoreDeleted]: nothing in `model/` takes a
+ * list of entries, so turning one gesture into its several writes is the repository's job, not a
+ * signature anyone could call with a list of their own.
+ */
+fun Journal.restoreCollection(collection: BulletCollection): Journal =
+    if (collections.any { it.id == collection.id }) this else copy(collections = collections + collection)

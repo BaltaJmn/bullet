@@ -212,12 +212,22 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit) {
                         ReviewAction(S.reviewSchedule, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.SCHEDULED) }) {
                             mode = Destination.SCHEDULE
                         }
+                        ReviewAction(S.reviewToCollection, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) {
+                            mode = Destination.COLLECTION
+                        }
                         ReviewAction(S.reviewDiscard, glyph = { DiscardGlyph() }) { BobbinRepository.discard(entry.id) }
                     }
                     // Both pickers move exactly one task and then the next one is on screen: the queue
                     // no longer holds the decided one.
-                    Destination.MIGRATE -> MigrateDestinations(entry, today, onBack = { mode = Destination.NONE }, onDone = { mode = Destination.NONE })
+                    Destination.MIGRATE -> MigrateDestinations(
+                        entry,
+                        today,
+                        onBack = { mode = Destination.NONE },
+                        onCollections = { mode = Destination.COLLECTION },
+                        onDone = { mode = Destination.NONE },
+                    )
                     Destination.SCHEDULE -> ScheduleDestinations(entry, today, onBack = { mode = Destination.NONE }, onDone = { mode = Destination.NONE })
+                    Destination.COLLECTION -> CollectionDestinations(entry, journal, onBack = { mode = Destination.NONE }, onDone = { mode = Destination.NONE })
                 }
             }
             Spacer(Modifier.height(gridUnit * 2))
