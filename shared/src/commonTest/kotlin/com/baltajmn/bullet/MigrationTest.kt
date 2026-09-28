@@ -4,6 +4,7 @@ import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.capture
@@ -12,8 +13,8 @@ import com.baltajmn.bullet.model.delete
 import com.baltajmn.bullet.model.discard
 import com.baltajmn.bullet.model.editText
 import com.baltajmn.bullet.model.futureBlock
-import com.baltajmn.bullet.model.futureWaiting
 import com.baltajmn.bullet.model.futureMonths
+import com.baltajmn.bullet.model.futureWaiting
 import com.baltajmn.bullet.model.migrate
 import com.baltajmn.bullet.model.migrationCount
 import com.baltajmn.bullet.model.ofDay
@@ -23,9 +24,11 @@ import com.baltajmn.bullet.model.openTasksOfMonth
 import com.baltajmn.bullet.model.reopen
 import com.baltajmn.bullet.model.reorder
 import com.baltajmn.bullet.model.restoreDeleted
+import com.baltajmn.bullet.model.reviewQueue
 import com.baltajmn.bullet.model.schedule
 import com.baltajmn.bullet.model.toggleDone
 import com.baltajmn.bullet.model.toggleSignifier
+import com.baltajmn.bullet.model.unclosedMonth
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -460,5 +463,74 @@ class MigrationTest {
         // Ni el lugar ni el estado de ninguna se han movido por haberlas contado.
         assertEquals(listOf(Place.Future(sep, 14), Place.Future(sep)), j.entries.map { it.place })
         assertTrue(j.entries.all { it.status == TaskStatus.OPEN })
+    }
+
+    // 8. Revision (#27): las cuatro acciones que existen hoy dejan cada tarea en su estado, y la cola
+    // se vuelve a calcular del diario, asi que salir a medias y volver solo ofrece las que quedan.
+    @Test
+    fun eachReviewActionLeavesItsOwnTaskInItsStateAndTouchesNoOther() {
+        val today = LocalDate.parse("2026-09-22")
+        val sep = YearMonth.parse("2026-09")
+        val scope = ReviewScope.Month(sep)
+        var j = Journal(
+            entries = listOf(
+                task("e-1", Place.Daily(LocalDate.parse("2026-09-03"))),
+                task("e-2", Place.Daily(LocalDate.parse("2026-09-04"))),
+                task("e-3", Place.Monthly(sep, 5)),
+                task("e-4", Place.Monthly(sep)),
+            ),
+        )
+        // La cola sale en el orden de la pagina: por dia, y las que no tienen dia al final.
+        assertEquals(listOf("e-1", "e-2", "e-3", "e-4"), j.reviewQueue(scope).map { it.id })
+
+        j = j.toggleDone("e-1", now = 1L)!!
+        j = j.migrate("e-2", Place.Daily(LocalDate.parse("2026-10-01")), today = today, now = 2L, newId = "n-1")!!
+        j = j.schedule("e-3", YearMonth.parse("2026-11"), day = null, today = today, now = 3L, newId = "n-2")!!
+        j = j.discard("e-4", now = 4L)!!
+
+        assertEquals(TaskStatus.DONE, j.entries.single { it.id == "e-1" }.status)
+        assertEquals(TaskStatus.MIGRATED, j.entries.single { it.id == "e-2" }.status)
+        assertEquals(TaskStatus.SCHEDULED, j.entries.single { it.id == "e-3" }.status)
+        assertEquals(TaskStatus.IRRELEVANT, j.entries.single { it.id == "e-4" }.status)
+        // Ninguna accion ha tocado el texto de nadie, ni ha movido el original de su sitio.
+        assertTrue(j.entries.filter { it.id.startsWith("e-") }.all { it.text == "tarea" })
+        assertEquals(Place.Monthly(sep, 5), j.entries.single { it.id == "e-3" }.place)
+        // Septiembre queda cerrado: la cola de su alcance esta vacia (docs/pantallas.md 11.3).
+        assertTrue(j.reviewQueue(scope).isEmpty())
+    }
+
+    @Test
+    fun leavingAReviewHalfWayThroughComesBackToOnlyWhatIsStillOpen() {
+        val today = LocalDate.parse("2026-09-22")
+        val sep = YearMonth.parse("2026-09")
+        val scope = ReviewScope.Month(sep)
+        var j = Journal(
+            entries = listOf(
+                task("e-1", Place.Monthly(sep, 1)),
+                task("e-2", Place.Monthly(sep, 2)),
+                task("e-3", Place.Monthly(sep, 3)),
+            ),
+        )
+        j = j.toggleDone("e-1", now = 1L)!!
+        j = j.discard("e-2", now = 2L)!!
+
+        // No hay progreso guardado en ninguna parte: la cola es la consulta del alcance, otra vez.
+        assertEquals(listOf("e-3"), j.reviewQueue(scope).map { it.id })
+    }
+
+    // La linea "sin cerrar" senala el mes pasado mas antiguo que sigue abierto, nunca el actual.
+    @Test
+    fun unclosedMonthIsTheOldestPastMonthWithOpenTasks() {
+        val today = LocalDate.parse("2026-09-22")
+        val julyOpen = task("e-1", Place.Monthly(YearMonth.parse("2026-07"), 4))
+        val augustOpen = task("e-2", Place.Daily(LocalDate.parse("2026-08-11")))
+        val septemberOpen = task("e-3", Place.Monthly(YearMonth.parse("2026-09")))
+
+        assertEquals(YearMonth.parse("2026-07"), Journal(entries = listOf(julyOpen, augustOpen, septemberOpen)).unclosedMonth(today))
+        // Julio cerrado: pasa a senalar agosto.
+        val julyDone = julyOpen.copy(status = TaskStatus.DONE)
+        assertEquals(YearMonth.parse("2026-08"), Journal(entries = listOf(julyDone, augustOpen, septemberOpen)).unclosedMonth(today))
+        // Solo queda abierto el mes actual: un mes no llega tarde hasta que se acaba.
+        assertNull(Journal(entries = listOf(julyDone, augustOpen.copy(status = TaskStatus.DONE), septemberOpen)).unclosedMonth(today))
     }
 }

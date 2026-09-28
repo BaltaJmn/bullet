@@ -139,7 +139,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `model/Place.kt` | `Place` sellado y su serializador | N |
 | `model/Journal.kt` | `Journal`, `BulletCollection`, `CollectionKind`, `TrackerRow`, `Settings`, `JournalJson`, `newId`, operaciones puras de entrada | N |
 | `model/DayClock.kt` | `logicalDate`, `nextDayStart`, `monthOf`, `monthDays`, `weekStarts`, `firstDayOfWeek` | A `line/.../model/DayClock.kt` |
-| `model/Migration.kt` | `migrate`, `schedule`, `discard`, `migrationCount`, `openTasksBefore`, `openTasksOfDay`, `openTasksOfMonth`, `unclosedMonth`, `futureWaiting` | N |
+| `model/Migration.kt` | `migrate`, `schedule`, `discard`, `migrationCount`, `placeDay`, `PAGE_ORDER`, `openTasksBefore`, `openTasksOfDay`, `openTasksOfMonth`, `unclosedMonth`, `futureBlock`, `futureWaiting`, `ReviewScope`, `reviewQueue` | N |
 | `model/RapidParse.kt` | `rapidParse` | N |
 | `model/Collections.kt` | colecciones, índice, hilo, seguimientos, `FREE_TRACKER_LIMIT` | N |
 | `data/Storage.kt` | `interface JournalFiles`, `expect object Storage`, `load`, `SCHEMA_STEPS` | A `line/.../data/Storage.kt` |
@@ -169,7 +169,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `ui/BulletGlyph.kt` | los glifos del método en `Canvas` | N |
 | `ui/Icons.kt` | los pocos iconos de la cabecera | A `line/.../ui/Icons.kt` |
 | `ui/EntryList.kt` | la lista de entradas y el campo de captura, compartidos por Hoy, Mes y Colección | N; el campo, A `line/.../ui/LineField.kt` |
-| `ui/EntrySheet.kt` | la hoja de la pulsación larga | N |
+| `ui/EntrySheet.kt` | la hoja de la pulsación larga y el selector de destino de 5.7, que comparte con Revisar | N |
 | `ui/TodayScreen.kt` | Hoy | N, con el patrón de foco de `line/.../ui/TodayScreen.kt` |
 | `ui/MonthScreen.kt` | Mes | N |
 | `ui/FutureScreen.kt` | Futuro | N |
@@ -919,7 +919,9 @@ gráfica. Un campo de nota opcional; "Guardar" crea una `NOTE` con ese texto (6.
 "Saltar" pasa al paso 2 sin crear nada. En v1.1, una pregunta opcional junto al campo (12.3).
 
 **Paso 2, una tarea cada vez** (#27). La cola se recalcula de la consulta del alcance cada vez que se
-abre, en el orden de su lugar (fecha, y después `order`). Cinco acciones, cada una sobre una sola
+abre, en el orden de su lugar (fecha, y después `order`): eso es `reviewQueue(alcance)`, que ordena
+por `PAGE_ORDER`. Los tres alcances caen dentro de un solo mes, así que ordenar por día basta y no
+hay un segundo mes que deshaga el empate. Cinco acciones, cada una sobre una sola
 tarea:
 
 1. Marcar hecha (`toggleDone`).
@@ -1875,14 +1877,16 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
    plazo restaura posición y estado; crear una colección, migrar a ella una tarea de hoy y la cadena de
    `from` sigue completa.
 8. **Revisión y reflexión** (#26, #27, #28): `openTasksBefore`, `openTasksOfDay`, `openTasksOfMonth` y
-   `unclosedMonth` sobre un diario fijo; cinco tareas con las cinco acciones quedan cada una en su
-   estado; recalcular la cola tras decidir dos deja solo las otras tres; guardar una reflexión crea una
+   `unclosedMonth` sobre un diario fijo, que nunca señala el mes actual; las tareas con cada acción
+   quedan cada una en su estado, y "a una colección" entra con #30; recalcular la cola tras decidir
+   dos deja solo las otras tres; guardar una reflexión crea una
    `NOTE` en `Monthly(m, null)`; saltar no crea nada; con tres entradas del Future Log del mes,
    `futureWaiting` cuenta 3 y baja de una en una al decidir; cambiar de mes sin abrir el Mes no toca
    ninguna.
 9. **Sin acciones masivas** (`androidHostTest`, #13, #27, #64): por reflexión de la JVM sobre
    `MigrationKt` y `CollectionsKt`, ningún método público tiene un parámetro `Collection`, `Iterable`,
    `Sequence` ni array, y ninguno se llama `*All`. El receptor `Journal` no es una colección.
+   `CollectionsKt` entra en el test con #30, que es quien crea el fichero.
 10. **Captura rápida** (#20, #21): cada prefijo solo; `"* - texto"` y `"- * texto"` dan la misma nota
     con prioridad; `"* ! ? o texto"` da un evento con los tres signifiers; `"-5 grados"` y `"hola - x"`
     son tareas; `"- - x"` es una nota con texto `"- x"`; `"- "` y `"* "` solos devuelven `null`; el

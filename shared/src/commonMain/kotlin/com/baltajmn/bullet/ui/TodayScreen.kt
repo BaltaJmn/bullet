@@ -36,9 +36,12 @@ import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.model.ofDay
 import com.baltajmn.bullet.model.openTasksBefore
+import com.baltajmn.bullet.model.openTasksOfMonth
+import com.baltajmn.bullet.model.unclosedMonth
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import com.baltajmn.bullet.ui.theme.paper
@@ -60,7 +63,7 @@ fun TodayScreen(
     onKey: () -> Unit,
     onSearch: () -> Unit,
     onSettings: () -> Unit,
-    onReview: () -> Unit,
+    onReview: (ReviewScope) -> Unit,
     onNavigateTo: (Place) -> Unit,
 ) {
     val journal = BobbinRepository.journal
@@ -208,16 +211,19 @@ private fun SubtitleRow(day: LocalDate, isToday: Boolean, onBackToToday: () -> U
 
 /** One notice at a time is never the rule here (docs/pantallas.md 6.3): every line that applies shows, in order. */
 @Composable
-private fun NoticeStrip(journal: Journal, today: LocalDate, onReview: () -> Unit) {
+private fun NoticeStrip(journal: Journal, today: LocalDate, onReview: (ReviewScope) -> Unit) {
     if (BobbinRepository.corrupt) {
         NoticeLine(S.noticeCorrupt, S.ok, BobbinRepository::dismissCorrupt)
     }
     if (BobbinRepository.saveFailed) {
         NoticeLine(S.noticeSaveFailed)
     }
+    journal.unclosedMonth(today)?.let { month ->
+        NoticeLine(S.unclosedMonth(month, journal.openTasksOfMonth(month).size), action = { onReview(ReviewScope.Month(month)) })
+    }
     val earlier = journal.openTasksBefore(today)
     if (earlier.isNotEmpty()) {
-        NoticeLine(S.earlierOpen(earlier.size), action = onReview)
+        NoticeLine(S.earlierOpen(earlier.size), action = { onReview(ReviewScope.Earlier(today)) })
     }
 }
 

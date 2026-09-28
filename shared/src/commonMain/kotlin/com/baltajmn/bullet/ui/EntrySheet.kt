@@ -51,7 +51,11 @@ import kotlinx.datetime.plus
 
 private const val SHEET_MAX_WIDTH_DP = 576
 
-private enum class SheetMode { ACTIONS, MIGRATE, SCHEDULE }
+/**
+ * Which of docs/pantallas.md 5.7's destination selectors is standing in for the actions, in the sheet
+ * (#22) and in Revisar (#27): the selector "sustituye a las acciones en el mismo sitio".
+ */
+enum class Destination { NONE, MIGRATE, SCHEDULE }
 
 /** The status actions [entry]'s own state allows (docs/pantallas.md 5.6's table). An event or a note offers none. */
 enum class StatusAction { MIGRATE, SCHEDULE, DISCARD, REOPEN, GO_TO_COPY }
@@ -83,7 +87,7 @@ fun EntrySheet(
     onEdit: (String) -> Unit,
     onGoToCopy: (Place) -> Unit,
 ) {
-    var mode by remember(entry.id) { mutableStateOf(SheetMode.ACTIONS) }
+    var mode by remember(entry.id) { mutableStateOf(Destination.NONE) }
 
     ModalBottomSheet(
         onDismissRequest = onClose,
@@ -94,17 +98,17 @@ fun EntrySheet(
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
             Column(Modifier.widthIn(max = SHEET_MAX_WIDTH_DP.dp).fillMaxWidth().padding(horizontal = 24.dp)) {
                 when (mode) {
-                    SheetMode.ACTIONS -> ActionsContent(
+                    Destination.NONE -> ActionsContent(
                         entry = entry,
                         journal = journal,
                         onClose = onClose,
                         onEdit = onEdit,
                         onGoToCopy = onGoToCopy,
-                        onMigrate = { mode = SheetMode.MIGRATE },
-                        onSchedule = { mode = SheetMode.SCHEDULE },
+                        onMigrate = { mode = Destination.MIGRATE },
+                        onSchedule = { mode = Destination.SCHEDULE },
                     )
-                    SheetMode.MIGRATE -> MigrateDestinations(entry, today, onBack = { mode = SheetMode.ACTIONS }, onDone = onClose)
-                    SheetMode.SCHEDULE -> ScheduleDestinations(entry, today, onBack = { mode = SheetMode.ACTIONS }, onDone = onClose)
+                    Destination.MIGRATE -> MigrateDestinations(entry, today, onBack = { mode = Destination.NONE }, onDone = onClose)
+                    Destination.SCHEDULE -> ScheduleDestinations(entry, today, onBack = { mode = Destination.NONE }, onDone = onClose)
                 }
                 Spacer(Modifier.height(gridUnit))
             }
@@ -195,7 +199,7 @@ private fun EntryPreview(entry: Entry) {
 
 /** One row of the sheet (docs/pantallas.md 5.6): the glyph in the bullet column, the name in `Body` from x72. */
 @Composable
-private fun SheetRow(glyph: (@Composable () -> Unit)?, label: String, trailing: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
+fun SheetRow(glyph: (@Composable () -> Unit)?, label: String, trailing: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = gridUnit * 2).clickable(role = Role.Button, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
@@ -213,7 +217,7 @@ private fun SheetRow(glyph: (@Composable () -> Unit)?, label: String, trailing: 
  * into and a way to create one on the spot.
  */
 @Composable
-private fun MigrateDestinations(entry: Entry, today: LocalDate, onBack: () -> Unit, onDone: () -> Unit) {
+fun MigrateDestinations(entry: Entry, today: LocalDate, onBack: () -> Unit, onDone: () -> Unit) {
     val tomorrow = today.plus(1, DateTimeUnit.DAY)
     val thisMonth = Place.Monthly(monthOf(today))
     var dayText by remember { mutableStateOf("") }
@@ -250,9 +254,13 @@ private fun MigrateDestinations(entry: Entry, today: LocalDate, onBack: () -> Un
     }
 }
 
-/** docs/pantallas.md 5.7, "Programar": an optional day, then a month per row, six at a time up to [FUTURE_MONTHS_MAX]. */
+/**
+ * docs/pantallas.md 5.7, "Programar": an optional day, then a month per row, six at a time up to
+ * [FUTURE_MONTHS_MAX]. The picker is "el mismo en la hoja, en Revisar y en el Nuevo cuaderno" (5.7),
+ * so the review of #27 opens this one instead of growing a second month list.
+ */
 @Composable
-private fun ScheduleDestinations(entry: Entry, today: LocalDate, onBack: () -> Unit, onDone: () -> Unit) {
+fun ScheduleDestinations(entry: Entry, today: LocalDate, onBack: () -> Unit, onDone: () -> Unit) {
     var dayText by remember { mutableStateOf("") }
     var shown by remember { mutableStateOf(FUTURE_MONTHS) }
     var error by remember { mutableStateOf<String?>(null) }

@@ -35,12 +35,14 @@ import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.FUTURE_MONTHS
 import com.baltajmn.bullet.model.FUTURE_MONTHS_MAX
 import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.monthOf
-import com.baltajmn.bullet.ui.Glyph
 import com.baltajmn.bullet.ui.FutureReviewScreen
 import com.baltajmn.bullet.ui.FutureScreen
+import com.baltajmn.bullet.ui.Glyph
 import com.baltajmn.bullet.ui.GlyphButton
 import com.baltajmn.bullet.ui.MonthScreen
+import com.baltajmn.bullet.ui.ReviewScreen
 import com.baltajmn.bullet.ui.TodayScreen
 import com.baltajmn.bullet.ui.theme.BobbinTheme
 import com.baltajmn.bullet.ui.theme.Type
@@ -71,8 +73,9 @@ fun App() {
     var futureShown by remember { mutableStateOf(FUTURE_MONTHS) }
     // The place a link just pointed at, until the page that owns it has scrolled to it (docs/pantallas.md 5.5).
     var linkTo by remember { mutableStateOf<Place?>(null) }
-    // Which review REVIEW is showing. #26 only opens the Future Log one; #27 turns this into the
-    // scope of docs/tecnico.md 6.6, which the other three lines pick.
+    // Which review REVIEW is showing: a scope from one of the three lines of docs/tecnico.md 6.6, or
+    // the Future Log one of 11.4, which has no scope because its queue is the Future Log itself.
+    var reviewScope by remember { mutableStateOf<ReviewScope?>(null) }
     var reviewFutureLog by remember { mutableStateOf(false) }
     // Coming back to the foreground is the only guaranteed moment a backgrounded app can catch a
     // day change (docs/tecnico.md 6.1, test 38). If Hoy was showing today, it follows to the new
@@ -89,6 +92,12 @@ fun App() {
     // At most one screen open above the tab bar (docs/pantallas.md 3): each one owns its own
     // BackHandler, so one that still has a sheet or a dialog of its own open can close that first.
     var overlay by remember { mutableStateOf<Screen?>(null) }
+
+    fun openReview(scope: ReviewScope) {
+        reviewScope = scope
+        reviewFutureLog = false
+        overlay = Screen.REVIEW
+    }
 
     /** A migrated or scheduled task's link (docs/pantallas.md 5.5): the tab that owns [place], pointed at it. Colección joins with #30. */
     fun goTo(place: Place) {
@@ -126,7 +135,7 @@ fun App() {
                             onKey = { overlay = Screen.KEY },
                             onSearch = { overlay = Screen.SEARCH },
                             onSettings = { overlay = Screen.SETTINGS },
-                            onReview = { overlay = Screen.REVIEW },
+                            onReview = ::openReview,
                             onNavigateTo = ::goTo,
                         )
                         Screen.FUTURE -> FutureScreen(
@@ -146,7 +155,8 @@ fun App() {
                             onSearch = { overlay = Screen.SEARCH },
                             onSettings = { overlay = Screen.SETTINGS },
                             onNavigateTo = ::goTo,
-                            onFutureReview = { overlay = Screen.REVIEW; reviewFutureLog = true },
+                            onReview = ::openReview,
+                            onFutureReview = { reviewScope = null; reviewFutureLog = true; overlay = Screen.REVIEW },
                             linkTo = linkTo,
                             onLinkHandled = { linkTo = null },
                         )
@@ -157,11 +167,12 @@ fun App() {
             }
 
             overlay?.let { screen ->
-                val dismiss = { overlay = null; reviewFutureLog = false }
-                if (screen == Screen.REVIEW && reviewFutureLog) {
-                    FutureReviewScreen(today = today, onClose = dismiss)
-                } else {
-                    PlaceholderOverlay(screen, dismiss)
+                val dismiss = { overlay = null; reviewFutureLog = false; reviewScope = null }
+                val scope = reviewScope
+                when {
+                    screen == Screen.REVIEW && reviewFutureLog -> FutureReviewScreen(today = today, onClose = dismiss)
+                    screen == Screen.REVIEW && scope != null -> ReviewScreen(scope = scope, today = today, onClose = dismiss)
+                    else -> PlaceholderOverlay(screen, dismiss)
                 }
             }
         }

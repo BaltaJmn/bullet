@@ -36,12 +36,15 @@ import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.i18n.systemFirstDayOfWeek
 import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.entriesAt
 import com.baltajmn.bullet.model.firstDayOfWeek
 import com.baltajmn.bullet.model.futureWaiting
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.model.monthsWithContent
+import com.baltajmn.bullet.model.openTasksOfMonth
+import com.baltajmn.bullet.model.unclosedMonth
 import com.baltajmn.bullet.model.weekStarts
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
@@ -67,6 +70,7 @@ fun MonthScreen(
     onSearch: () -> Unit,
     onSettings: () -> Unit,
     onNavigateTo: (Place) -> Unit,
+    onReview: (ReviewScope) -> Unit,
     onFutureReview: () -> Unit,
     linkTo: Place?,
     onLinkHandled: () -> Unit,
@@ -110,9 +114,14 @@ fun MonthScreen(
                 Text(viewedMonth.year.toString(), style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
             }
 
-            // The notice strip of docs/pantallas.md 7.2, only in the current month. The "sin cerrar"
-            // line joins it with #27, once unclosedMonth exists.
+            // The notice strip of docs/pantallas.md 7.2, only in the current month.
             if (viewedMonth == currentMonth) {
+                journal.unclosedMonth(today)?.let { month ->
+                    NoticeLine(
+                        S.unclosedMonth(month, journal.openTasksOfMonth(month).size),
+                        action = { onReview(ReviewScope.Month(month)) },
+                    )
+                }
                 val waiting = journal.futureWaiting(today)
                 if (waiting.isNotEmpty() && journal.settings.futureSeen != currentMonth) {
                     NoticeLine(S.futureWaiting(waiting.size), action = onFutureReview)

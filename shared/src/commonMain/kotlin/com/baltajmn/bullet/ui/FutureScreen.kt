@@ -31,7 +31,7 @@ import com.baltajmn.bullet.model.FUTURE_MONTHS_MAX
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.futureBlock
-import com.baltajmn.bullet.model.futureDay
+import com.baltajmn.bullet.model.placeDay
 import com.baltajmn.bullet.model.futureMonths
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.ui.theme.Type
@@ -134,11 +134,11 @@ private fun FutureBlock(
     var dayText by remember(month) { mutableStateOf("") }
     var error by remember(month) { mutableStateOf<String?>(null) }
     val block = journal.futureBlock(month)
-    val (dated, undated) = block.partition { it.futureDay != null }
+    val (dated, undated) = block.partition { it.placeDay != null }
 
     // Their order is the calendar's, so these rows are not draggable: no EntryListSection here.
     dated.forEach { entry ->
-        val day = entry.futureDay ?: return@forEach
+        val day = entry.placeDay ?: return@forEach
         DatedRow(
             modifier = scrollHereWhen(linkTo == entry.place, onLinkHandled),
             date = { DayNumber(LocalDate(month.year, month.month, day)) },

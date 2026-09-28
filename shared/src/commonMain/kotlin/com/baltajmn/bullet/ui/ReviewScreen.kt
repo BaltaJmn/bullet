@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
@@ -37,16 +38,19 @@ import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.MIGRATION_SHOWN_FROM
 import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.TaskStatus
-import com.baltajmn.bullet.model.futureDay
 import com.baltajmn.bullet.model.futureMonth
 import com.baltajmn.bullet.model.futureWaiting
 import com.baltajmn.bullet.model.migrationCount
 import com.baltajmn.bullet.model.monthOf
+import com.baltajmn.bullet.model.placeDay
+import com.baltajmn.bullet.model.reviewQueue
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.YearMonth
 
 /**
  * The Future Log review (docs/pantallas.md 11.4, docs/tecnico.md 6.5, #26), opened from the
@@ -82,17 +86,7 @@ fun FutureReviewScreen(today: LocalDate, onClose: () -> Unit) {
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).paper()) {
-            Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
-                GlyphButton(Glyph.CLOSE, S.close, onClose)
-                Spacer(Modifier.weight(1f))
-                if (queue.isNotEmpty()) {
-                    Text(
-                        S.reviewPosition(minOf(decided + 1, total), total),
-                        style = Type.Secondary,
-                        modifier = Modifier.padding(end = 24.dp),
-                    )
-                }
-            }
+            ReviewHeader(onClose, position = if (queue.isEmpty()) null else S.reviewPosition(minOf(decided + 1, total), total))
 
             val entry = queue.firstOrNull()
             if (entry == null) {
@@ -102,7 +96,7 @@ fun FutureReviewScreen(today: LocalDate, onClose: () -> Unit) {
                 Box(Modifier.padding(start = 40.dp)) { TextAction(S.close, onClose) }
             } else {
                 Text(
-                    S.fromFuture(entry.futureMonth ?: currentMonth, entry.futureDay),
+                    S.fromFuture(entry.futureMonth ?: currentMonth, entry.placeDay),
                     style = Type.Eyebrow,
                     modifier = Modifier.padding(start = 48.dp),
                 )
@@ -118,7 +112,7 @@ fun FutureReviewScreen(today: LocalDate, onClose: () -> Unit) {
 
                 // The day travels with the entry only if it is a day of this month: "Pasar al
                 // calendario" of a September entry seen in October has no day to keep (6.5).
-                val toDay = entry.futureDay?.takeIf { entry.futureMonth == currentMonth }
+                val toDay = entry.placeDay?.takeIf { entry.futureMonth == currentMonth }
                 ReviewAction(S.futureToCalendar, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) {
                     BobbinRepository.migrate(entry.id, Place.Monthly(currentMonth, toDay))
                 }
@@ -134,6 +128,95 @@ fun FutureReviewScreen(today: LocalDate, onClose: () -> Unit) {
         if (BobbinRepository.pendingUndo != null) {
             UndoBanner(onUndo = BobbinRepository::undo)
         }
+    }
+}
+
+/**
+ * Step 2 of a review (docs/pantallas.md 11.2, docs/tecnico.md 6.6, #27): one open task at a time, five
+ * actions, and nothing anywhere that decides two. The queue comes from [reviewQueue] every
+ * recomposition, so leaving half way through and coming back offers only what is still open: each
+ * action already changed its own task, and there is no progress to save.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit) {
+    BackHandler(true, onClose)
+    val journal = BobbinRepository.journal
+    val queue = journal.reviewQueue(scope)
+    val total = remember { journal.reviewQueue(scope).size }
+    val decided = (total - queue.size).coerceIn(0, total)
+
+    // The destination picker replaces the actions in the same place (docs/pantallas.md 5.7), and a new
+    // task always starts back at the actions.
+    var mode by remember { mutableStateOf(Destination.NONE) }
+    val entry = queue.firstOrNull()
+    LaunchedEffect(entry?.id) { mode = Destination.NONE }
+
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper()) {
+            ReviewHeader(onClose, position = if (entry == null) null else S.reviewPosition(minOf(decided + 1, total), total))
+
+            if (entry == null) {
+                Spacer(Modifier.height(gridUnit))
+                // A Month review that ends with nothing open is a closed month (docs/pantallas.md 11.3).
+                // Asking for the rating the first time one closes is #56.
+                val done = (scope as? ReviewScope.Month)?.let { S.monthClosed(it.month) } ?: S.reviewAllDecided
+                Text(done, style = Type.Body, modifier = Modifier.padding(start = 48.dp))
+                Spacer(Modifier.height(gridUnit))
+                Box(Modifier.padding(start = 40.dp)) { TextAction(S.close, onClose) }
+            } else {
+                Text(originOf(entry), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
+                Spacer(Modifier.height(gridUnit))
+                ReviewEntry(entry)
+                val count = journal.migrationCount(entry.id)
+                if (count >= MIGRATION_SHOWN_FROM) {
+                    // The only pressure the method applies, and it presses towards a different decision.
+                    Text(S.migratedTimes(count), style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
+                }
+                Spacer(Modifier.height(gridUnit * 2))
+
+                when (mode) {
+                    Destination.NONE -> {
+                        ReviewAction(S.reviewDone, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.DONE) }) {
+                            BobbinRepository.toggleDone(entry.id)
+                        }
+                        ReviewAction(S.reviewMigrate, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) {
+                            mode = Destination.MIGRATE
+                        }
+                        ReviewAction(S.reviewSchedule, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.SCHEDULED) }) {
+                            mode = Destination.SCHEDULE
+                        }
+                        ReviewAction(S.reviewDiscard, glyph = { DiscardGlyph() }) { BobbinRepository.discard(entry.id) }
+                    }
+                    // Both pickers move exactly one task and then the next one is on screen: the queue
+                    // no longer holds the decided one.
+                    Destination.MIGRATE -> MigrateDestinations(entry, today, onBack = { mode = Destination.NONE }, onDone = { mode = Destination.NONE })
+                    Destination.SCHEDULE -> ScheduleDestinations(entry, today, onBack = { mode = Destination.NONE }, onDone = { mode = Destination.NONE })
+                }
+            }
+            Spacer(Modifier.height(gridUnit * 2))
+        }
+        if (BobbinRepository.pendingUndo != null) {
+            UndoBanner(onUndo = BobbinRepository::undo)
+        }
+    }
+}
+
+/** docs/pantallas.md 11.2: where the task under review comes from, in `Eyebrow`. */
+private fun originOf(entry: Entry): String = when (val p = entry.place) {
+    is Place.Daily -> S.fromDay(p.date)
+    is Place.Monthly -> if (p.day == null) S.fromMonthTasks(p.month) else S.fromCalendar(LocalDate(p.month.year, p.month.month, p.day))
+    is Place.Future -> S.fromFuture(p.month, p.day)
+    is Place.InCollection -> ""
+}
+
+/** The header of docs/pantallas.md 11: `CLOSE` on the left, and the position on the right while there is a task. */
+@Composable
+private fun ReviewHeader(onClose: () -> Unit, position: String?) {
+    Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
+        GlyphButton(Glyph.CLOSE, S.close, onClose)
+        Spacer(Modifier.weight(1f))
+        if (position != null) Text(position, style = Type.Secondary, modifier = Modifier.padding(end = 24.dp))
     }
 }
 

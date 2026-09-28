@@ -149,8 +149,23 @@ fun Journal.monthsWithContent(): Set<YearMonth> = entries.mapNotNullTo(mutableSe
     }
 }
 
-/** The day of a Future Log entry, null for the block's list of tasks without one (docs/tecnico.md 4.1). */
-val Entry.futureDay: Int? get() = (place as? Place.Future)?.day
+/**
+ * The day [Entry.place] points at inside its own month (docs/tecnico.md 4.1): a `Daily`'s date, or the
+ * calendar line of a `Monthly` or a `Future`. Null for a list that has no day, and for a collection,
+ * which is not a month.
+ */
+val Entry.placeDay: Int? get() = when (val p = place) {
+    is Place.Daily -> p.date.day
+    is Place.Monthly -> p.day
+    is Place.Future -> p.day
+    is Place.InCollection -> null
+}
+
+/**
+ * How one month's entries sit on the page (docs/tecnico.md 6.5, 6.6): by day, the ones with no day
+ * after every dated one, and then [ENTRY_ORDER]. A Future Log block and a review queue are both this.
+ */
+val PAGE_ORDER: Comparator<Entry> = compareBy<Entry> { it.placeDay ?: Int.MAX_VALUE }.then(ENTRY_ORDER)
 
 /**
  * One Future Log block (docs/pantallas.md 8, docs/tecnico.md 6.5): the `Future(m, dia)` by day
@@ -159,7 +174,7 @@ val Entry.futureDay: Int? get() = (place as? Place.Future)?.day
  */
 fun Journal.futureBlock(m: YearMonth): List<Entry> = entries
     .filter { !it.gone && it.place.let { p -> p is Place.Future && p.month == m } }
-    .sortedWith(compareBy<Entry> { it.futureDay ?: Int.MAX_VALUE }.then(ENTRY_ORDER))
+    .sortedWith(PAGE_ORDER)
 
 /** The month of a Future Log entry (docs/tecnico.md 4.1). */
 val Entry.futureMonth: YearMonth? get() = (place as? Place.Future)?.month
@@ -177,3 +192,39 @@ fun Journal.futureWaiting(today: LocalDate): List<Entry> {
         .sorted()
         .flatMap { m -> futureBlock(m).filter { it.bullet != Bullet.TASK || it.status == TaskStatus.OPEN } }
 }
+
+/**
+ * The oldest past month that still has open tasks (docs/tecnico.md 6.4): what Hoy and Mes put in their
+ * "sin cerrar" line, and the month a `Month` review closes. The current month is never it: a month is
+ * not late until it is over.
+ */
+fun Journal.unclosedMonth(today: LocalDate): YearMonth? = monthsWithContent()
+    .filter { it < monthOf(today) }
+    .sorted()
+    .firstOrNull { openTasksOfMonth(it).isNotEmpty() }
+
+/**
+ * What a review walks (docs/tecnico.md 6.6). Every scope lives inside one month, which is why
+ * [PAGE_ORDER] is enough to order a queue: there is no second month to break the tie.
+ */
+sealed interface ReviewScope {
+    /** The whole of [month], from the line "Agosto sin cerrar: N abiertas" of Hoy and Mes. */
+    data class Month(val month: YearMonth) : ReviewScope
+
+    /** The days of this month before [today], from the line "Quedan N abiertas de dias anteriores" of Hoy. */
+    data class Earlier(val today: LocalDate) : ReviewScope
+
+    /** Those and [today]'s own, from the reminder and from `bobbin://review`. */
+    data class Day(val today: LocalDate) : ReviewScope
+}
+
+/**
+ * The queue of [scope], recomputed from the diary every time (docs/tecnico.md 6.6): each of the five
+ * actions changes the task's own state, so a review left half way through simply asks this again and
+ * the ones already decided are no longer open. Nothing keeps a progress of its own.
+ */
+fun Journal.reviewQueue(scope: ReviewScope): List<Entry> = when (scope) {
+    is ReviewScope.Month -> openTasksOfMonth(scope.month)
+    is ReviewScope.Earlier -> openTasksBefore(scope.today)
+    is ReviewScope.Day -> openTasksBefore(scope.today) + openTasksOfDay(scope.today)
+}.sortedWith(PAGE_ORDER)
