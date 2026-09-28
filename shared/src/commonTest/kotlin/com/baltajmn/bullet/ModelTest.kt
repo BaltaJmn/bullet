@@ -12,8 +12,11 @@ import com.baltajmn.bullet.model.TEXT_LIMIT
 import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.clampCodePoints
 import com.baltajmn.bullet.model.codePointCount
+import com.baltajmn.bullet.model.entriesAt
 import com.baltajmn.bullet.model.firstDayOfWeek
 import com.baltajmn.bullet.model.logicalDate
+import com.baltajmn.bullet.model.monthDays
+import com.baltajmn.bullet.model.monthsWithContent
 import com.baltajmn.bullet.model.nextDayStart
 import com.baltajmn.bullet.model.normalized
 import com.baltajmn.bullet.model.oneLine
@@ -258,5 +261,36 @@ class ModelTest {
         val sep = YearMonth.parse("2026-09")
         assertEquals(setOf(7, 14, 21, 28), weekStarts(sep, DayOfWeek.MONDAY))
         assertEquals(setOf(6, 13, 20, 27), weekStarts(sep, DayOfWeek.SUNDAY))
+    }
+
+    // 4. Mes y Future Log (#24, #25).
+    @Test
+    fun monthDaysCountsTwentyEightTwentyNineThirtyAndThirtyOne() {
+        assertEquals(28, monthDays(YearMonth.parse("2026-02")))
+        assertEquals(29, monthDays(YearMonth.parse("2028-02")))
+        assertEquals(30, monthDays(YearMonth.parse("2026-04")))
+        assertEquals(31, monthDays(YearMonth.parse("2026-01")))
+    }
+
+    @Test
+    fun anEntryWithADayIsNeverAmongTheMonthTasksWithoutOne() {
+        val sep = YearMonth.parse("2026-09")
+        val j = Journal(entries = listOf(entry(Place.Monthly(sep, 3)).copy(id = "e-1"), entry(Place.Monthly(sep)).copy(id = "e-2")))
+        assertEquals(listOf("e-2"), j.entriesAt(Place.Monthly(sep)).map { it.id })
+        assertEquals(listOf("e-1"), j.entriesAt(Place.Monthly(sep, 3)).map { it.id })
+    }
+
+    // Mes' back arrow stops at the oldest of these (docs/pantallas.md 7.1, docs/tecnico.md 6.7).
+    @Test
+    fun onlyDailyAndMonthlyEntriesMakeAMonthWithContent() {
+        val j = Journal(
+            entries = listOf(
+                entry(Place.Daily(LocalDate.parse("2026-07-14"))).copy(id = "e-1"),
+                entry(Place.Monthly(YearMonth.parse("2026-08"), 3)).copy(id = "e-2"),
+                entry(Place.Future(YearMonth.parse("2026-05"))).copy(id = "e-3"),
+                entry(Place.Monthly(YearMonth.parse("2026-04"))).copy(id = "e-4", gone = true, text = ""),
+            ),
+        )
+        assertEquals(setOf(YearMonth.parse("2026-07"), YearMonth.parse("2026-08")), j.monthsWithContent())
     }
 }

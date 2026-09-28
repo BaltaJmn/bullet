@@ -103,11 +103,7 @@ fun Journal.migrationCount(id: String): Int {
  * line of that day in its Monthly Log. Hoy (#21), the widget (6.13) and the day review (6.6) all
  * read a day through this one function instead of querying [Place] shapes on their own.
  */
-fun Journal.ofDay(d: LocalDate): List<Entry> {
-    val daily = entries.filter { !it.gone && it.place == Place.Daily(d) }.sortedWith(ENTRY_ORDER)
-    val calendarLine = entries.filter { !it.gone && it.place == Place.Monthly(monthOf(d), d.day) }.sortedWith(ENTRY_ORDER)
-    return daily + calendarLine
-}
+fun Journal.ofDay(d: LocalDate): List<Entry> = entriesAt(Place.Daily(d)) + entriesAt(Place.Monthly(monthOf(d), d.day))
 
 /** OPEN tasks of [ofDay]. */
 fun Journal.openTasksOfDay(d: LocalDate): List<Entry> = ofDay(d).filter { it.bullet == Bullet.TASK && it.status == TaskStatus.OPEN }
@@ -137,3 +133,16 @@ fun Journal.openTasksOfMonth(m: YearMonth): List<Entry> = entries.filter { e ->
 
 /** One past the highest [Entry.order] already at [place], so a landed entry goes to the end. Also used by [Journal.capture] (RapidParse.kt). */
 internal fun Journal.nextOrder(place: Place): Int = (entries.filter { it.place == place }.maxOfOrNull { it.order } ?: -1) + 1
+
+/**
+ * The "meses con contenido" of docs/tecnico.md 6.7: any non skeleton entry in a `Daily` of the month
+ * or in `Monthly(m, *)`. The Future Log does not make a month. Mes stops its back arrow at the
+ * earliest one (docs/pantallas.md 7.1).
+ */
+fun Journal.monthsWithContent(): Set<YearMonth> = entries.mapNotNullTo(mutableSetOf()) { e ->
+    when (val p = e.place) {
+        is Place.Daily -> monthOf(p.date).takeUnless { e.gone }
+        is Place.Monthly -> p.month.takeUnless { e.gone }
+        else -> null
+    }
+}

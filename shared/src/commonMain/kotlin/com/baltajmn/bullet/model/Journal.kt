@@ -180,5 +180,8 @@ private fun List<Entry>.dropOrphanSkeletons(): List<Entry> {
     }
 }
 
+/** What sits at exactly [place], skeletons left out, in screen order (docs/tecnico.md 6.3): a `Monthly(m, 3)` is never among `Monthly(m, null)`. */
+fun Journal.entriesAt(place: Place): List<Entry> = entries.filter { it.place == place && !it.gone }.sortedWith(ENTRY_ORDER)
+
 /** The entry a migration or a schedule landed, if it is still there (docs/tecnico.md 6.3): the non skeleton entry whose `from` is [id]. */
 fun copyOf(j: Journal, id: String): Entry? = j.entries.find { it.from == id && !it.gone }

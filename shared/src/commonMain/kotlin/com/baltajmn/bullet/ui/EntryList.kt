@@ -7,9 +7,11 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -28,9 +30,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
@@ -49,6 +53,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -70,10 +75,11 @@ import com.baltajmn.bullet.model.rapidParse
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import kotlin.math.abs
+import kotlinx.datetime.LocalDate
 
 /**
  * The entry list and the capture row (docs/pantallas.md 5, docs/tecnico.md 3): shared by Hoy (#21,
- * #22), and later by Mes (#24) and Colección (#30).
+ * #22) and Mes (#24), and later by Futuro (#25) and Colección (#30).
  */
 
 /** Gesture 4 (docs/pantallas.md 4): past this much vertical travel after the long press, it's a drag, not a tap that opens the sheet. */
@@ -302,9 +308,11 @@ private fun EntryEditField(initial: String, onSave: (String) -> Unit, modifier: 
  * The capture row (docs/pantallas.md 5.2, 5.3): the next empty row of the page, a live glyph that
  * follows `rapidParse` as it types, and the three way Task/Event/Note selector above the keyboard.
  * Never a signifier here (docs/pantallas.md 5.3, #22): those only come from the sheet, once created.
+ * [autoFocus] is false for the one always there at the end of Mes: that page opens "sin foco ni
+ * teclado" (docs/pantallas.md 7.1), unlike Hoy (#21) or a day of Mes opened on purpose.
  */
 @Composable
-fun CaptureRow(place: Place, dayKey: Any) {
+fun CaptureRow(place: Place, dayKey: Any, autoFocus: Boolean = true) {
     // A new day, month block or collection is a new field: neither its text nor its focus carries
     // over from another one.
     key(dayKey) {
@@ -314,9 +322,11 @@ fun CaptureRow(place: Place, dayKey: Any) {
         val focus = remember { FocusRequester() }
         val keyboard = LocalSoftwareKeyboardController.current
 
-        LaunchedEffect(Unit) {
-            focus.requestFocus()
-            keyboard?.show()
+        if (autoFocus) {
+            LaunchedEffect(Unit) {
+                focus.requestFocus()
+                keyboard?.show()
+            }
         }
 
         val parsed = rapidParse(value.text, picked)
@@ -387,6 +397,61 @@ fun CaptureRow(place: Place, dayKey: Any) {
 fun TextAction(label: String, onClick: () -> Unit) {
     Box(Modifier.heightIn(min = 40.dp).clickable(role = Role.Button, onClick = onClick).padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
         Text(label, style = Type.Body.copy(color = MaterialTheme.colorScheme.primary))
+    }
+}
+
+/**
+ * A row of a page with the date column of docs/pantallas.md 1.4 (Mes, Futuro): [date] fills 0..48
+ * (nothing for a continuation row), and [content] starts at 48, so an [EntryRow] inside lands its
+ * signifiers, bullet and text 48dp further right without knowing a date column exists.
+ */
+@Composable
+fun DatedRow(modifier: Modifier = Modifier, date: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
+    Row(modifier.fillMaxWidth()) {
+        Box(Modifier.width(48.dp)) { date?.invoke() }
+        Column(Modifier.weight(1f), content = content)
+    }
+}
+
+/** The date column itself (docs/pantallas.md 1.4, 7.1): the number right aligned in 0..24 with tabular digits, the weekday initial centered in 24..48. */
+@Composable
+fun DayNumber(date: LocalDate, isToday: Boolean = false) {
+    Row(Modifier.height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            date.day.toString(),
+            style = Type.Body.copy(
+                color = if (isToday) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontFeatureSettings = "tnum",
+            ),
+            textAlign = TextAlign.End,
+            modifier = Modifier.width(24.dp),
+        )
+        Text(S.weekdayInitial()[date.dayOfWeek.ordinal], style = Type.Secondary, textAlign = TextAlign.Center, modifier = Modifier.width(24.dp))
+    }
+}
+
+/** The icon row of a tab without `KEY` (docs/pantallas.md 3.2): `SEARCH` and `SETTINGS`. `SHARE` joins with #43. */
+@Composable
+fun TabHeaderIcons(onSearch: () -> Unit, onSettings: () -> Unit) {
+    Row(Modifier.fillMaxWidth().height(gridUnit * 2), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+        GlyphButton(Glyph.SEARCH, S.a11ySearch, onSearch)
+        GlyphButton(Glyph.SETTINGS, S.a11ySettings, onSettings)
+    }
+}
+
+/** docs/pantallas.md 5.8: `entryDeleted` and `undo`, shown while `BobbinRepository.pendingUndo` is set. */
+@Composable
+fun UndoBanner(onUndo: () -> Unit) {
+    val line = MaterialTheme.colorScheme.outlineVariant
+    Row(
+        Modifier.fillMaxWidth().height(gridUnit * 2)
+            .background(MaterialTheme.colorScheme.background)
+            .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(S.entryDeleted, style = Type.Body, modifier = Modifier.padding(start = 24.dp).weight(1f))
+        TextAction(S.undo, onUndo)
+        Spacer(Modifier.width(16.dp))
     }
 }
 

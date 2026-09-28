@@ -28,8 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
@@ -63,6 +61,7 @@ fun TodayScreen(
     onSearch: () -> Unit,
     onSettings: () -> Unit,
     onReview: () -> Unit,
+    onNavigateTo: (Place) -> Unit,
 ) {
     val journal = BobbinRepository.journal
     val isToday = viewedDay == today
@@ -74,11 +73,6 @@ fun TodayScreen(
     // Only one entry edits or opens its sheet at a time; #22, #23.
     var editingId by remember { mutableStateOf<String?>(null) }
     var sheetEntryId by remember { mutableStateOf<String?>(null) }
-
-    fun goToCopy(place: Place) {
-        // Mes, Futuro and Colección don't exist yet (#24, #25, #30): only a Daily landing is reachable.
-        if (place is Place.Daily) onViewedDayChange(place.date)
-    }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper()) {
@@ -112,7 +106,7 @@ fun TodayScreen(
                 onSaveEdit = { id, text -> BobbinRepository.editText(id, text); editingId = null },
                 onLongPress = { sheetEntryId = it },
                 onToggleDone = { BobbinRepository.toggleDone(it) },
-                onNavigateTo = ::goToCopy,
+                onNavigateTo = onNavigateTo,
                 onReorder = BobbinRepository::reorder,
             )
 
@@ -130,7 +124,7 @@ fun TodayScreen(
                     onSaveEdit = { id, text -> BobbinRepository.editText(id, text); editingId = null },
                     onLongPress = { sheetEntryId = it },
                     onToggleDone = { BobbinRepository.toggleDone(it) },
-                    onNavigateTo = ::goToCopy,
+                    onNavigateTo = onNavigateTo,
                     onReorder = BobbinRepository::reorder,
                 )
             }
@@ -154,7 +148,7 @@ fun TodayScreen(
             today = today,
             onClose = { sheetEntryId = null },
             onEdit = { editingId = it },
-            onGoToCopy = ::goToCopy,
+            onGoToCopy = onNavigateTo,
         )
     }
 }
@@ -240,22 +234,6 @@ private fun NoticeLine(text: String, actionLabel: String? = null, action: (() ->
                 TextAction(actionLabel, action)
             }
         }
-    }
-}
-
-/** docs/pantallas.md 5.8: `entryDeleted` and `undo`, shown while `BobbinRepository.pendingUndo` is set. */
-@Composable
-private fun UndoBanner(onUndo: () -> Unit) {
-    val line = MaterialTheme.colorScheme.outlineVariant
-    Row(
-        Modifier.fillMaxWidth().height(gridUnit * 2)
-            .background(MaterialTheme.colorScheme.background)
-            .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(S.entryDeleted, style = Type.Body, modifier = Modifier.padding(start = 24.dp).weight(1f))
-        TextAction(S.undo, onUndo)
-        Spacer(Modifier.width(16.dp))
     }
 }
 

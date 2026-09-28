@@ -10,6 +10,9 @@ import kotlinx.datetime.YearMonth
 /** Two-letter code of the device language. */
 expect fun systemLanguage(): String
 
+/** The device locale's own first day of the week: what `firstDayOfWeek` falls back to without a setting (#24). */
+expect fun systemFirstDayOfWeek(): DayOfWeek
+
 /** The languages the app ships. Anything else falls back to English. */
 internal val SUPPORTED = listOf("en", "es", "pt", "de", "fr")
 

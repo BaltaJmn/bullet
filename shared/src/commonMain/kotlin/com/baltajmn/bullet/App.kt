@@ -32,8 +32,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.ui.Glyph
 import com.baltajmn.bullet.ui.GlyphButton
+import com.baltajmn.bullet.ui.MonthScreen
 import com.baltajmn.bullet.ui.TodayScreen
 import com.baltajmn.bullet.ui.theme.BobbinTheme
 import com.baltajmn.bullet.ui.theme.Type
@@ -42,9 +45,8 @@ import kotlinx.coroutines.launch
 
 /**
  * Ten destinations and no more (SPEC 5, docs/pantallas.md 3): four tabs at the bottom, and
- * everything else opens as a single screen above them. Only [TODAY] has a real page so far
- * (#21); the rest land issue by issue and show a bare placeholder with just their title until
- * then.
+ * everything else opens as a single screen above them. [TODAY] and [MONTH] have a real page (#21,
+ * #24); the rest land issue by issue and show a bare placeholder with just their title until then.
  */
 enum class Screen { TODAY, MONTH, FUTURE, INDEX, COLLECTION, REVIEW, SEARCH, KEY, SETTINGS, PRO }
 
@@ -59,19 +61,31 @@ fun App() {
 
     var today by remember { mutableStateOf(BobbinRepository.today()) }
     var viewedDay by remember { mutableStateOf(today) }
+    var viewedMonth by remember { mutableStateOf(monthOf(today)) }
     // Coming back to the foreground is the only guaranteed moment a backgrounded app can catch a
     // day change (docs/tecnico.md 6.1, test 38). If Hoy was showing today, it follows to the new
-    // one; a past day someone was reading stays put.
+    // one, and Mes to the new month; a past day or month someone was reading stays put.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         val wasToday = viewedDay == today
+        val wasThisMonth = viewedMonth == monthOf(today)
         today = BobbinRepository.today()
         if (wasToday) viewedDay = today
+        if (wasThisMonth) viewedMonth = monthOf(today)
     }
 
     var tab by remember { mutableStateOf(Screen.TODAY) }
     // At most one screen open above the tab bar (docs/pantallas.md 3): each one owns its own
     // BackHandler, so one that still has a sheet or a dialog of its own open can close that first.
     var overlay by remember { mutableStateOf<Screen?>(null) }
+
+    /** A migrated or scheduled task's link (docs/pantallas.md 5.5): the tab that owns [place], pointed at it. Futuro and Colección join with #25 and #30. */
+    fun goTo(place: Place) {
+        when (place) {
+            is Place.Daily -> { tab = Screen.TODAY; viewedDay = place.date }
+            is Place.Monthly -> { tab = Screen.MONTH; viewedMonth = place.month }
+            is Place.Future, is Place.InCollection -> Unit
+        }
+    }
 
     // Nothing left to pop once the overlay is closed: Mes, Futuro e Índice fall back to Hoy, and
     // Hoy looking at another day falls back to today. On today, in Hoy, this lets the system close
@@ -93,6 +107,15 @@ fun App() {
                             onSearch = { overlay = Screen.SEARCH },
                             onSettings = { overlay = Screen.SETTINGS },
                             onReview = { overlay = Screen.REVIEW },
+                            onNavigateTo = ::goTo,
+                        )
+                        Screen.MONTH -> MonthScreen(
+                            today = today,
+                            viewedMonth = viewedMonth,
+                            onViewedMonthChange = { viewedMonth = it },
+                            onSearch = { overlay = Screen.SEARCH },
+                            onSettings = { overlay = Screen.SETTINGS },
+                            onNavigateTo = ::goTo,
                         )
                         else -> PlaceholderTab(tab)
                     }
@@ -148,7 +171,7 @@ private fun tabLabel(screen: Screen): String = when (screen) {
     else -> error("$screen is not a tab")
 }
 
-/** Mes, Futuro e Índice until #24, #25 and #29 give them a real page. */
+/** Futuro e Índice until #25 and #29 give them a real page. */
 @Composable
 private fun PlaceholderTab(screen: Screen) {
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
