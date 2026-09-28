@@ -1,10 +1,12 @@
 package com.baltajmn.bullet.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,12 +32,14 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
@@ -47,6 +51,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
@@ -64,28 +69,39 @@ import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.model.rapidParse
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
+import kotlin.math.abs
 
 /**
  * The entry list and the capture row (docs/pantallas.md 5, docs/tecnico.md 3): shared by Hoy (#21,
  * #22), and later by Mes (#24) and Colección (#30).
  */
 
+/** Gesture 4 (docs/pantallas.md 4): past this much vertical travel after the long press, it's a drag, not a tap that opens the sheet. */
+private val DRAG_SLOP = 12.dp
+
 /**
- * One entry (docs/pantallas.md 5.1). The glyph is the only tap target (gesture 1): it toggles an
- * open or done task, follows a migrated or scheduled one to [copyOf], and does nothing for a note,
- * an event or a discarded task, whose "diana no existe". A long press anywhere on the row opens the
- * sheet (gesture 2, #22); the direct tap-to-edit gesture of 5.4 lands with #23, once dragging to
- * reorder needs the same row to tell the two gestures apart.
+ * One entry (docs/pantallas.md 5.1). The glyph is gesture 1: it toggles an open or done task,
+ * follows a migrated or scheduled one to [copyOf], and does nothing for a note, an event or a
+ * discarded task, whose "diana no existe". Tapping the text edits it in line (gesture "tocar el
+ * texto", 5.4, #23). A long press that stays still opens the sheet (gesture 2, #22); one that then
+ * moves past [DRAG_SLOP] lifts the row instead (gesture 4, #23) and reports its travel to
+ * [onDragChanged] for [EntryListSection] to reorder live.
  */
 @Composable
 fun EntryRow(
     entry: Entry,
     journal: Journal,
     isEditing: Boolean,
+    onStartEdit: () -> Unit,
     onSaveEdit: (String) -> Unit,
     onLongPress: () -> Unit,
     onToggleDone: () -> Unit,
     onNavigateTo: (Place) -> Unit,
+    isDragged: Boolean = false,
+    dragOffsetPx: Float = 0f,
+    onDragStart: () -> Unit = {},
+    onDragChanged: (Float) -> Unit = {},
+    onDragFinished: () -> Unit = {},
 ) {
     val landedCopy = if (entry.bullet == Bullet.TASK && entry.status in setOf(TaskStatus.MIGRATED, TaskStatus.SCHEDULED)) {
         copyOf(journal, entry.id)
@@ -97,10 +113,39 @@ fun EntryRow(
         landedCopy != null -> ({ onNavigateTo(landedCopy.place) })
         else -> null
     }
+    val dragSlopPx = with(LocalDensity.current) { DRAG_SLOP.toPx() }
+    val base = Modifier.fillMaxWidth().heightIn(min = gridUnit * 2)
+    val rowModifier = if (isDragged) {
+        base.zIndex(1f).graphicsLayer { translationY = dragOffsetPx }
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outline)
+    } else {
+        base
+    }
 
     Row(
-        Modifier.fillMaxWidth().heightIn(min = gridUnit * 2)
-            .pointerInput(entry.id) { detectTapGestures(onLongPress = { onLongPress() }) },
+        rowModifier.pointerInput(entry.id) {
+            var total = 0f
+            var dragging = false
+            detectDragGesturesAfterLongPress(
+                onDragStart = { total = 0f; dragging = false },
+                onDrag = { change, amount ->
+                    change.consume()
+                    if (!dragging) {
+                        total += amount.y
+                        if (abs(total) > dragSlopPx) {
+                            dragging = true
+                            onDragStart()
+                            onDragChanged(total)
+                        }
+                    } else {
+                        onDragChanged(amount.y)
+                    }
+                },
+                onDragEnd = { if (dragging) onDragFinished() else onLongPress() },
+                onDragCancel = { if (dragging) onDragFinished() },
+            )
+        },
     ) {
         Row(Modifier.widthIn(min = 48.dp), horizontalArrangement = Arrangement.End) {
             entry.signifiers.sortedBy { it.ordinal }.forEach { SignifierGlyph(it) }
@@ -111,13 +156,18 @@ fun EntryRow(
         if (isEditing) {
             EntryEditField(entry.text, onSave = onSaveEdit, modifier = Modifier.fillMaxWidth().weight(1f))
         } else {
-            EntryText(entry, wentToText(landedCopy?.place, journal), modifier = Modifier.padding(top = 2.dp).weight(1f))
+            EntryText(
+                entry,
+                wentToText(landedCopy?.place, journal),
+                onClick = onStartEdit,
+                modifier = Modifier.padding(top = 2.dp).weight(1f),
+            )
         }
     }
 }
 
 @Composable
-private fun EntryText(entry: Entry, wentTo: String?, modifier: Modifier = Modifier) {
+private fun EntryText(entry: Entry, wentTo: String?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val dimmed = entry.bullet == Bullet.TASK && entry.status in setOf(TaskStatus.DONE, TaskStatus.MIGRATED, TaskStatus.SCHEDULED)
     val struck = entry.status == TaskStatus.IRRELEVANT
     val base = if (dimmed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onBackground
@@ -131,7 +181,69 @@ private fun EntryText(entry: Entry, wentTo: String?, modifier: Modifier = Modifi
             withStyle(SpanStyle(color = secondary)) { append(wentTo) }
         }
     }
-    Text(text, style = Type.Ink, modifier = modifier)
+    Text(text, style = Type.Ink, modifier = modifier.clickable(role = Role.Button, onClick = onClick))
+}
+
+/**
+ * One place's entries, draggable to reorder (docs/pantallas.md 4's gesture 4, #23): the list makes
+ * room row by row as the lifted one passes, and nothing is written until the finger lifts
+ * ([onReorder] then gets the ids in their new order). [entries] is assumed already sorted by
+ * [com.baltajmn.bullet.model.ENTRY_ORDER].
+ */
+@Composable
+fun EntryListSection(
+    entries: List<Entry>,
+    place: Place,
+    journal: Journal,
+    editingId: String?,
+    onStartEdit: (String) -> Unit,
+    onSaveEdit: (String, String) -> Unit,
+    onLongPress: (String) -> Unit,
+    onToggleDone: (String) -> Unit,
+    onNavigateTo: (Place) -> Unit,
+    onReorder: (Place, List<String>) -> Unit,
+) {
+    val ids = entries.map { it.id }
+    var order by remember(ids) { mutableStateOf(ids) }
+    var draggingId by remember { mutableStateOf<String?>(null) }
+    var dragOffset by remember { mutableStateOf(0f) }
+    val rowHeightPx = with(LocalDensity.current) { (gridUnit * 2).toPx() }
+    val byId = entries.associateBy { it.id }
+
+    Column {
+        order.forEach { id ->
+            val entry = byId[id] ?: return@forEach
+            EntryRow(
+                entry = entry,
+                journal = journal,
+                isEditing = id == editingId,
+                onStartEdit = { onStartEdit(id) },
+                onSaveEdit = { text -> onSaveEdit(id, text) },
+                onLongPress = { onLongPress(id) },
+                onToggleDone = { onToggleDone(id) },
+                onNavigateTo = onNavigateTo,
+                isDragged = id == draggingId,
+                dragOffsetPx = dragOffset,
+                onDragStart = { draggingId = id; dragOffset = 0f },
+                onDragChanged = { delta ->
+                    dragOffset += delta
+                    val from = order.indexOf(id)
+                    var to = from
+                    while (dragOffset - (to - from) * rowHeightPx > rowHeightPx / 2 && to < order.lastIndex) to++
+                    while (dragOffset - (to - from) * rowHeightPx < -rowHeightPx / 2 && to > 0) to--
+                    if (to != from) {
+                        order = order.toMutableList().also { it.removeAt(from); it.add(to, id) }
+                        dragOffset -= (to - from) * rowHeightPx
+                    }
+                },
+                onDragFinished = {
+                    draggingId = null
+                    dragOffset = 0f
+                    if (order != ids) onReorder(place, order)
+                },
+            )
+        }
+    }
 }
 
 /** docs/pantallas.md 5.1: where a migrated or scheduled task's copy landed, or null once it no longer exists. */

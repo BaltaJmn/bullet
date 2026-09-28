@@ -18,11 +18,14 @@ import com.baltajmn.bullet.model.openTasksBefore
 import com.baltajmn.bullet.model.openTasksOfDay
 import com.baltajmn.bullet.model.openTasksOfMonth
 import com.baltajmn.bullet.model.reopen
+import com.baltajmn.bullet.model.reorder
+import com.baltajmn.bullet.model.restoreDeleted
 import com.baltajmn.bullet.model.schedule
 import com.baltajmn.bullet.model.toggleDone
 import com.baltajmn.bullet.model.toggleSignifier
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.datetime.LocalDate
@@ -289,6 +292,62 @@ class MigrationTest {
         val j = Journal(entries = listOf(task("e-1", Place.Daily(LocalDate.parse("2026-09-22")), status = TaskStatus.MIGRATED), landed))
         assertEquals(landed, copyOf(j, "e-1"))
         assertNull(copyOf(j, "e-missing"))
+    }
+
+    // Reordenar y deshacer (docs/tecnico.md 6.3, 6.4), #23.
+    @Test
+    fun reorderRewritesOrderZeroToNMinusOneAtThatPlaceOnly() {
+        val place = Place.Daily(LocalDate.parse("2026-09-22"))
+        val elsewhere = Place.Daily(LocalDate.parse("2026-09-23"))
+        val a = task("e-1", place, text = "a").copy(order = 0)
+        val b = task("e-2", place, text = "b").copy(order = 1)
+        val c = task("e-3", place, text = "c").copy(order = 2)
+        val other = task("e-4", elsewhere, text = "other").copy(order = 0)
+        val j = Journal(entries = listOf(a, b, c, other))
+
+        val result = j.reorder(place, listOf("e-3", "e-1", "e-2"), now = 9L)
+        val byId = result.entries.associateBy { it.id }
+        assertEquals(1, byId.getValue("e-1").order)
+        assertEquals(2, byId.getValue("e-2").order)
+        assertEquals(0, byId.getValue("e-3").order)
+        assertEquals(0, byId.getValue("e-4").order)
+    }
+
+    @Test
+    fun reorderOnlyTouchesUpdatedAtOnEntriesWhoseOrderActuallyChanges() {
+        val place = Place.Daily(LocalDate.parse("2026-09-22"))
+        val a = task("e-1", place).copy(order = 0, updatedAt = 1L)
+        val b = task("e-2", place).copy(order = 1, updatedAt = 1L)
+        val j = Journal(entries = listOf(a, b))
+
+        // e-1 stays first: its order does not change, so updatedAt must not move either.
+        val result = j.reorder(place, listOf("e-1", "e-2"), now = 99L)
+        val byId = result.entries.associateBy { it.id }
+        assertEquals(1L, byId.getValue("e-1").updatedAt)
+        assertEquals(1L, byId.getValue("e-2").updatedAt)
+    }
+
+    @Test
+    fun restoreDeletedReinsertsAFullyRemovedEntry() {
+        val original = task("e-1", Place.Daily(LocalDate.parse("2026-09-22")), text = "vuelve")
+        val j = Journal(entries = listOf(task("e-2", Place.Daily(LocalDate.parse("2026-09-22")))))
+
+        val result = j.restoreDeleted(original)
+        assertEquals(setOf("e-1", "e-2"), result.entries.map { it.id }.toSet())
+        assertEquals("vuelve", result.entries.single { it.id == "e-1" }.text)
+    }
+
+    @Test
+    fun restoreDeletedReplacesASkeletonLeftInItsPlace() {
+        val original = task("e-1", Place.Daily(LocalDate.parse("2026-09-22")), text = "vuelve", status = TaskStatus.DONE)
+        val skeleton = original.copy(gone = true, text = "")
+        val j = Journal(entries = listOf(skeleton, task("e-2", Place.Daily(LocalDate.parse("2026-09-23")))))
+
+        val result = j.restoreDeleted(original)
+        val restored = result.entries.single { it.id == "e-1" }
+        assertEquals("vuelve", restored.text)
+        assertEquals(TaskStatus.DONE, restored.status)
+        assertFalse(restored.gone)
     }
 
     // docs/tecnico.md 6.5, the schedule picker of ui/EntrySheet.kt (#22, and Futuro later with #24, #25).

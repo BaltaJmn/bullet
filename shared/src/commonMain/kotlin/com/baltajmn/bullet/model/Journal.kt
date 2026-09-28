@@ -148,6 +148,28 @@ fun Journal.delete(id: String, now: Long): Journal? {
     return copy(entries = afterRemoval.dropOrphanSkeletons())
 }
 
+/**
+ * Rewrites [ids]' order to 0..n-1 at [place] (docs/tecnico.md 6.3): dragging an entry (gesture 4,
+ * #23). An id not in [ids], or not at [place], keeps its own order. Only entries whose order
+ * actually changes get `updatedAt = now`.
+ */
+fun Journal.reorder(place: Place, ids: List<String>, now: Long): Journal {
+    val newOrder = ids.withIndex().associate { (i, id) -> id to i }
+    return copy(
+        entries = entries.map { e ->
+            val next = newOrder[e.id]
+            if (e.place == place && next != null && next != e.order) e.copy(order = next, updatedAt = now) else e
+        },
+    )
+}
+
+/**
+ * What Deshacer reinserts when something else changed the diary between the delete and the undo
+ * (docs/tecnico.md 6.4): [original] exactly as it was, dropping whatever [Journal.delete] left in
+ * its place (a skeleton, or nothing at all).
+ */
+fun Journal.restoreDeleted(original: Entry): Journal = copy(entries = entries.filterNot { it.id == original.id } + original)
+
 private fun List<Entry>.dropOrphanSkeletons(): List<Entry> {
     var current = this
     while (true) {

@@ -28,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
@@ -101,36 +103,43 @@ fun TodayScreen(
             }
 
             Spacer(Modifier.height(gridUnit))
-            daily.forEach { entry ->
-                EntryRow(
-                    entry = entry,
-                    journal = journal,
-                    isEditing = entry.id == editingId,
-                    onSaveEdit = { text -> BobbinRepository.editText(entry.id, text); editingId = null },
-                    onLongPress = { sheetEntryId = entry.id },
-                    onToggleDone = { BobbinRepository.toggleDone(entry.id) },
-                    onNavigateTo = ::goToCopy,
-                )
-            }
+            EntryListSection(
+                entries = daily,
+                place = Place.Daily(viewedDay),
+                journal = journal,
+                editingId = editingId,
+                onStartEdit = { editingId = it },
+                onSaveEdit = { id, text -> BobbinRepository.editText(id, text); editingId = null },
+                onLongPress = { sheetEntryId = it },
+                onToggleDone = { BobbinRepository.toggleDone(it) },
+                onNavigateTo = ::goToCopy,
+                onReorder = BobbinRepository::reorder,
+            )
 
             CaptureRow(place = Place.Daily(viewedDay), dayKey = viewedDay)
 
             if (calendarLine.isNotEmpty()) {
                 Spacer(Modifier.height(gridUnit))
                 Text(S.calendarToday.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
-                calendarLine.forEach { entry ->
-                    EntryRow(
-                        entry = entry,
-                        journal = journal,
-                        isEditing = entry.id == editingId,
-                        onSaveEdit = { text -> BobbinRepository.editText(entry.id, text); editingId = null },
-                        onLongPress = { sheetEntryId = entry.id },
-                        onToggleDone = { BobbinRepository.toggleDone(entry.id) },
-                        onNavigateTo = ::goToCopy,
-                    )
-                }
+                EntryListSection(
+                    entries = calendarLine,
+                    place = Place.Monthly(monthOf(viewedDay), viewedDay.day),
+                    journal = journal,
+                    editingId = editingId,
+                    onStartEdit = { editingId = it },
+                    onSaveEdit = { id, text -> BobbinRepository.editText(id, text); editingId = null },
+                    onLongPress = { sheetEntryId = it },
+                    onToggleDone = { BobbinRepository.toggleDone(it) },
+                    onNavigateTo = ::goToCopy,
+                    onReorder = BobbinRepository::reorder,
+                )
             }
             Spacer(Modifier.height(gridUnit * 2))
+        }
+        // Above the tab bar or the accessory row, whichever is at the bottom right now
+        // (docs/pantallas.md 5.8): both sit right after this weighted column in the layout.
+        if (BobbinRepository.pendingUndo != null) {
+            UndoBanner(onUndo = BobbinRepository::undo)
         }
     }
 
@@ -231,6 +240,22 @@ private fun NoticeLine(text: String, actionLabel: String? = null, action: (() ->
                 TextAction(actionLabel, action)
             }
         }
+    }
+}
+
+/** docs/pantallas.md 5.8: `entryDeleted` and `undo`, shown while `BobbinRepository.pendingUndo` is set. */
+@Composable
+private fun UndoBanner(onUndo: () -> Unit) {
+    val line = MaterialTheme.colorScheme.outlineVariant
+    Row(
+        Modifier.fillMaxWidth().height(gridUnit * 2)
+            .background(MaterialTheme.colorScheme.background)
+            .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(S.entryDeleted, style = Type.Body, modifier = Modifier.padding(start = 24.dp).weight(1f))
+        TextAction(S.undo, onUndo)
+        Spacer(Modifier.width(16.dp))
     }
 }
 
