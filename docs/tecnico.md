@@ -1868,7 +1868,9 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
    lee como `OPEN`, y `toggleDone` no les cambia nada; `oneLine` cambia `\n` y `\r\n` por un espacio;
    `clampCodePoints(500)` con un emoji justo en el borde no parte la pareja; `limitEdit` al tope inserta
    solo lo que cabe y conserva el final; un texto de 600 importado se puede acortar y no alargar.
-3. **Día lógico y semana** (#12, #19, #32): 2026-09-23 02:30 es el 22; 03:59 es el 22; 04:00 es el 23;
+3. **Día lógico, semana y ajustes** (#12, #19, #32): cada ajuste tiene su valor por defecto desde la
+   instalación, y `Journal.settings` entero sobrevive a la ida y vuelta del JSON, que es lo que hace que
+   viaje en la exportación (#44); 2026-09-23 02:30 es el 22; 03:59 es el 22; 04:00 es el 23;
    con `dayStartHour = 0`, 00:00 es el 23; el cambio de hora de 2027-03-28 en Europe/Madrid no mueve el
    corte; `nextDayStart` del 2026-09-23 con 4 es el 2026-09-24 04:00 local. Cambiar `dayStartHour` no
    cambia ninguna entrada del `Journal`. `firstDayOfWeek` con `null` da el del sistema; con 7, domingo.
