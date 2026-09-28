@@ -35,6 +35,7 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
@@ -341,13 +342,44 @@ object BobbinRepository {
         scope.launch { persist() }
     }
 
+    /**
+     * Leaves an empty diary on this phone (docs/pantallas.md 15.4, #33): `journal.json`, its `.bak`,
+     * every named copy and the quarantine folder go, and an empty diary is written in their place, so
+     * the app carries on in Hoy without a restart.
+     *
+     * It does **not** touch the Pro entitlement, which lives in `Prefs` and not in the diary: losing
+     * something already paid for is the first thing Bobbin exists to avoid. It also drops any pending
+     * undo, whose snapshot is exactly the diary that was asked to go.
+     */
+    fun wipe(): Job {
+        pendingUndo = null
+        undoToken++
+        corrupt = false
+        journal = Journal()
+        // Deleting the files and writing the empty diary are one critical section: between the two,
+        // another writer taking the lock would put a copy of the diary that was just deleted back on
+        // disk. The returned [Job] is when the disk is actually in that state.
+        return scope.launch {
+            writeLock.withLock {
+                withContext(Dispatchers.IO) { runCatching { files.wipe() } }
+                written = null
+                writeLocked()
+            }
+        }
+        // Clearing widget.json so no widget keeps showing a deleted diary is #40, which is what creates
+        // the file: there is nothing there to clear yet.
+    }
+
     /** Writes the latest state now. Going to the background calls this. */
     suspend fun flush() = persist()
 
-    private suspend fun persist() = writeLock.withLock {
-        if (readOnly) return@withLock
+    private suspend fun persist() = writeLock.withLock { writeLocked() }
+
+    /** The write itself. The caller already holds [writeLock], so [wipe] can delete and rewrite as one. */
+    private suspend fun writeLocked() {
+        if (readOnly) return
         val snapshot = journal
-        if (snapshot === written) return@withLock
+        if (snapshot === written) return
         val ok = withContext(Dispatchers.IO) { runCatching { files.write(encode(snapshot)) }.isSuccess }
         if (ok) {
             written = snapshot

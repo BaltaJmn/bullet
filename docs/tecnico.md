@@ -1363,9 +1363,14 @@ perdería; así, siempre se escribe la última instantánea. `saveFailed` pinta 
 Hoy; el siguiente cambio reintenta. `afterSave` escribe `widget.json` (6.13) y llama a
 `Reminders.sync()` si cambió un ajuste del recordatorio. `App.kt` llama a `flush()` en `ON_STOP`.
 
-**Borrar todos los datos** (#33): `flush()`, `Storage.wipe()`, `journal = Journal()`, `write` del
-diario vacío, `syncWidgets`, `Reminders.sync()` (queda apagado) y vuelta a Hoy sin reiniciar. No toca
-`Prefs`: el derecho Pro y "valoración ya pedida" sobreviven.
+**Borrar todos los datos** (#33): `BobbinRepository.wipe()` pone `journal = Journal()` y, en el hilo de
+escritura, hace `Storage.wipe()` y el `write` del diario vacío **dentro de una sola sección crítica**
+del escritor único. Las dos cosas juntas y no una detrás de otra: entre ellas, otro escritor que cogiera
+el cerrojo dejaría otra vez en disco una copia del diario que se acaba de borrar, y por eso no hace
+falta un `flush()` antes. Después, `syncWidgets` y `Reminders.sync()` (que queda apagado). Devuelve el
+`Job` de ese trabajo, que es cuando el disco ya está así; la pantalla no lo espera, porque el diario en
+memoria ya está vacío y se vuelve a Hoy sin reiniciar. No toca `Prefs`: el derecho Pro y "valoración ya
+pedida" sobreviven.
 
 ### 6.15 Bloqueo
 
@@ -1964,7 +1969,9 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
     una tarea `DONE` no vuelve a `OPEN` con una copia vieja que la tiene abierta y más reciente; gana el
     `updatedAt` más reciente; los contadores `added`, `updated` y `same` cuadran; los ajustes de la copia
     solo se aplican con el diario vacío; nada del dispositivo desaparece.
-23. **Almacén en disco** (`androidHostTest`, #14, #33): con `rootOverride` a una carpeta temporal, un
+23. **Almacén en disco** (`androidHostTest`, #14, #33): tras `BobbinRepository.wipe()`, `journal.json`
+    existe con un diario vacío dentro y no queda ni `.bak`, ni copia con nombre, ni carpeta `corrupt/`;
+    con `rootOverride` a una carpeta temporal, un
     `journal.tmp.json` a medias y un `journal.json` ilegible cargan la `.bak`; un corte simulado entre
     escribir el `.tmp` y el rename conserva el último estado válido; la cuarentena mueve los dos a
     `corrupt/`; `wipe` no deja nada en la carpeta.

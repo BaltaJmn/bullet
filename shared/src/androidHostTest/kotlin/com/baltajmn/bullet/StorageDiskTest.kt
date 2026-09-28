@@ -10,6 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 
 // 23. Almacen en disco (#14, #33).
 class StorageDiskTest {
@@ -97,5 +98,37 @@ class StorageDiskTest {
         Storage.wipe()
 
         assertTrue(dir.listFiles().orEmpty().isEmpty())
+    }
+
+    /**
+     * #33: borrar todos los datos deja un diario vacio escrito en su sitio, y ni un resto del anterior
+     * ni de la cuarentena. Se comprueba sobre el disco de verdad porque lo que la issue promete es
+     * justo lo que queda en el disco.
+     */
+    @Test
+    fun wipingFromSettingsLeavesAnEmptyDiaryWrittenAndNoRemains() = runBlocking {
+        File(dir, "journal.json").writeText("garbage")
+        File(dir, "journal.bak.json").writeText("garbage too")
+        Storage.quarantine()
+        Storage.write(good)
+        Storage.keepCopy("pre-import", good)
+        BobbinRepository.load()
+        assertEquals("kept", BobbinRepository.journal.entries.single().text)
+
+        // wipe borra y reescribe fuera del hilo; su Job es cuando el disco ya esta asi.
+        BobbinRepository.wipe().join()
+
+        assertTrue(BobbinRepository.journal.entries.isEmpty())
+        assertFalse(BobbinRepository.corrupt)
+
+        val written = File(dir, "journal.json")
+        assertTrue(written.exists(), "journal.json tiene que existir con el diario vacio dentro")
+        val text = written.readText()
+        assertTrue(text.contains("\"entries\":[]"), "el diario escrito no esta vacio: $text")
+        assertFalse(text.contains("kept"))
+
+        assertFalse(File(dir, "journal.bak.json").exists())
+        assertFalse(File(dir, "journal.pre-import.json").exists())
+        assertFalse(File(dir, "corrupt").exists())
     }
 }

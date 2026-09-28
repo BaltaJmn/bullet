@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -32,16 +33,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.baltajmn.bullet.data.AppInfo
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.PRIVACY_URL
 import com.baltajmn.bullet.data.SIBLINGS
+import com.baltajmn.bullet.data.fold
 import com.baltajmn.bullet.data.storeUrl
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.i18n.systemFirstDayOfWeek
 import com.baltajmn.bullet.model.firstDayOfWeek
+import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import com.baltajmn.bullet.ui.theme.paper
@@ -58,8 +62,7 @@ internal const val DIALOG_MAX_WIDTH_DP = 576
  * only Pro lives outside, in `Prefs`.
  *
  * The rows that need machinery of their own arrive with it: `lockRow` (#39), the notebook's covers and
- * papers (#49), export and import (#44, #45), Bobbin Pro and restoring a purchase (#47, #48), and the
- * wipe row (#33).
+ * papers (#49), export and import (#44, #45), and Bobbin Pro and restoring a purchase (#47, #48).
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -124,6 +127,10 @@ fun SettingsScreen(onBack: () -> Unit) {
             SettingsRow(title = S.privacyRow, subtitle = null, onClick = { AppInfo.open(PRIVACY_URL) })
             SettingsRow(title = S.version(AppInfo.version), subtitle = null, onClick = null)
 
+            // On its own at the end, after 2u, in onBackground and never in red (docs/pantallas.md 14).
+            Spacer(Modifier.height(gridUnit * 2))
+            SettingsRow(title = S.wipeRow, subtitle = S.wipeSubtitle, onClick = { dialog = SettingsDialog.WIPE })
+
             Spacer(Modifier.height(gridUnit * 2))
         }
     }
@@ -150,10 +157,19 @@ fun SettingsScreen(onBack: () -> Unit) {
             },
             onClose = { dialog = null },
         )
+        SettingsDialog.WIPE -> WipeDialog(
+            onClose = { dialog = null },
+            onWipe = {
+                BobbinRepository.wipe()
+                dialog = null
+                // Back to Hoy with an empty diary, without restarting (docs/pantallas.md 15.4).
+                onBack()
+            },
+        )
     }
 }
 
-private enum class SettingsDialog { DAY_START, WEEK_START }
+private enum class SettingsDialog { DAY_START, WEEK_START, WIPE }
 
 /** A section label in `Eyebrow` with `2u` of air above it (docs/pantallas.md 14). */
 @Composable
@@ -185,6 +201,49 @@ private fun SettingsRow(
             trailing()
         }
     }
+}
+
+/**
+ * docs/pantallas.md 15.4, #33: two steps and no red anywhere. The first says what goes and what stays;
+ * the second asks for the word, so nothing is deleted by one mistaken tap. `wipeAction` only responds
+ * once the field, folded with [fold], is the word in that language.
+ */
+@Composable
+private fun WipeDialog(onClose: () -> Unit, onWipe: () -> Unit) {
+    var confirming by remember { mutableStateOf(false) }
+    var typed by remember { mutableStateOf("") }
+    val word = S.wipeWord
+
+    AlertDialog(
+        onDismissRequest = onClose,
+        modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH_DP.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 0.dp,
+        title = { Text(if (confirming) S.wipeConfirmTitle(word) else S.wipeTitle, style = Type.Body) },
+        text = {
+            if (confirming) {
+                BasicTextField(
+                    value = typed,
+                    onValueChange = { typed = it.oneLine() },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = Type.Ink,
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
+                    singleLine = true,
+                )
+            } else {
+                Text(S.wipeText, style = Type.Body)
+            }
+        },
+        confirmButton = {
+            if (confirming) {
+                DialogAction(S.wipeAction, enabled = fold(typed.trim()) == fold(word), onClick = onWipe)
+            } else {
+                DialogAction(S.wipeContinue) { confirming = true }
+            }
+        },
+        dismissButton = { DialogAction(S.cancel, onClick = onClose) },
+    )
 }
 
 internal class Choice(val label: String, val current: Boolean, val onPick: () -> Unit)
