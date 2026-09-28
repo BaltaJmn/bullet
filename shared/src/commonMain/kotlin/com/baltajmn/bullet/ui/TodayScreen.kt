@@ -221,21 +221,6 @@ private fun NoticeStrip(journal: Journal, today: LocalDate, onReview: () -> Unit
     }
 }
 
-@Composable
-private fun NoticeLine(text: String, actionLabel: String? = null, action: (() -> Unit)? = null) {
-    Row(Modifier.fillMaxWidth().padding(start = 48.dp).height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
-        if (action != null && actionLabel == null) {
-            // The whole line is the action (unclosed month, earlier open tasks): pantallas 6.3.
-            Text(text, style = Type.Body.copy(color = MaterialTheme.colorScheme.primary), modifier = Modifier.clickable(role = Role.Button, onClick = action))
-        } else {
-            Text(text, style = Type.Body)
-            if (actionLabel != null && action != null) {
-                Spacer(Modifier.width(8.dp))
-                TextAction(actionLabel, action)
-            }
-        }
-    }
-}
 
 /** Gesture 3 (docs/pantallas.md 4): 72dp of horizontal travel commits a day change; a plain tap still falls through. */
 private fun Modifier.pointerInputHorizontalSwipe(

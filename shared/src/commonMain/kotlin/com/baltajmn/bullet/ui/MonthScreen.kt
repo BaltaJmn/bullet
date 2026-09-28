@@ -38,6 +38,7 @@ import com.baltajmn.bullet.i18n.systemFirstDayOfWeek
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.entriesAt
 import com.baltajmn.bullet.model.firstDayOfWeek
+import com.baltajmn.bullet.model.futureWaiting
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.model.monthsWithContent
@@ -66,6 +67,7 @@ fun MonthScreen(
     onSearch: () -> Unit,
     onSettings: () -> Unit,
     onNavigateTo: (Place) -> Unit,
+    onFutureReview: () -> Unit,
     linkTo: Place?,
     onLinkHandled: () -> Unit,
 ) {
@@ -107,6 +109,16 @@ fun MonthScreen(
             Row(Modifier.fillMaxWidth().height(gridUnit), verticalAlignment = Alignment.CenterVertically) {
                 Text(viewedMonth.year.toString(), style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
             }
+
+            // The notice strip of docs/pantallas.md 7.2, only in the current month. The "sin cerrar"
+            // line joins it with #27, once unclosedMonth exists.
+            if (viewedMonth == currentMonth) {
+                val waiting = journal.futureWaiting(today)
+                if (waiting.isNotEmpty() && journal.settings.futureSeen != currentMonth) {
+                    NoticeLine(S.futureWaiting(waiting.size), action = onFutureReview)
+                }
+            }
+
             Spacer(Modifier.height(gridUnit))
 
             val weekLine = MaterialTheme.colorScheme.outlineVariant

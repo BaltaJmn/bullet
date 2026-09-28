@@ -12,6 +12,7 @@ import com.baltajmn.bullet.model.delete
 import com.baltajmn.bullet.model.discard
 import com.baltajmn.bullet.model.editText
 import com.baltajmn.bullet.model.futureBlock
+import com.baltajmn.bullet.model.futureWaiting
 import com.baltajmn.bullet.model.futureMonths
 import com.baltajmn.bullet.model.migrate
 import com.baltajmn.bullet.model.migrationCount
@@ -397,5 +398,67 @@ class MigrationTest {
             ),
         )
         assertEquals(listOf("e-3", "e-2", "e-1", "e-4"), j.futureBlock(nov).map { it.id })
+    }
+
+    // 8. El aviso del Future Log (#26): cuenta lo que sigue esperando y baja al decidir, una a una.
+    @Test
+    fun futureWaitingCountsThisMonthAndEarlierAndNotWhatComesLater() {
+        val today = LocalDate.parse("2026-09-22")
+        val sep = YearMonth.parse("2026-09")
+        val j = Journal(
+            entries = listOf(
+                task("e-1", Place.Future(sep, 14)),
+                task("e-2", Place.Future(YearMonth.parse("2026-08"))),
+                task("e-3", Place.Future(sep), status = TaskStatus.IRRELEVANT),
+                task("e-4", Place.Future(sep, 3), bullet = Bullet.NOTE),
+                task("e-5", Place.Future(YearMonth.parse("2026-10"), 1)),
+            ),
+        )
+        // Agosto antes de septiembre; dentro de un mes, por día. Una tarea descartada ya no espera,
+        // una nota sí: no tiene estado que la cierre.
+        assertEquals(listOf("e-2", "e-4", "e-1"), j.futureWaiting(today).map { it.id })
+        assertEquals(3, j.futureWaiting(today).size)
+    }
+
+    @Test
+    fun eachDecisionTakesOneEntryOutOfFutureWaitingAndNoneOfTheOthers() {
+        val today = LocalDate.parse("2026-09-22")
+        val sep = YearMonth.parse("2026-09")
+        var j = Journal(
+            entries = listOf(
+                task("e-1", Place.Future(sep, 14)),
+                task("e-2", Place.Future(sep)),
+                task("e-3", Place.Future(sep, 20)),
+            ),
+        )
+        assertEquals(3, j.futureWaiting(today).size)
+
+        // Pasar al calendario: migrate a Monthly, con el día si la entrada es de este mes.
+        j = j.migrate("e-1", Place.Monthly(sep, 14), today = today, now = 1L, newId = "e-4")!!
+        assertEquals(listOf("e-3", "e-2"), j.futureWaiting(today).map { it.id })
+
+        // Descartar.
+        j = j.discard("e-3", now = 2L)!!
+        assertEquals(listOf("e-2"), j.futureWaiting(today).map { it.id })
+
+        // Dejarla no escribe nada: la entrada sigue esperando, y quien la dejó lo recuerda solo
+        // durante su sesión de revisión (ui/ReviewScreen.kt).
+        assertEquals(listOf("e-2"), j.futureWaiting(today).map { it.id })
+    }
+
+    // Cambiar de mes sin abrir el Mes no toca ninguna entrada: la línea es pasiva (docs/tecnico.md 6.5).
+    @Test
+    fun readingFutureWaitingInALaterMonthChangesNothing() {
+        val sep = YearMonth.parse("2026-09")
+        val j = Journal(entries = listOf(task("e-1", Place.Future(sep, 14)), task("e-2", Place.Future(sep))))
+
+        val august = j.futureWaiting(LocalDate.parse("2026-08-31"))
+        val october = j.futureWaiting(LocalDate.parse("2026-10-01"))
+
+        assertTrue(august.isEmpty())
+        assertEquals(listOf("e-1", "e-2"), october.map { it.id })
+        // Ni el lugar ni el estado de ninguna se han movido por haberlas contado.
+        assertEquals(listOf(Place.Future(sep, 14), Place.Future(sep)), j.entries.map { it.place })
+        assertTrue(j.entries.all { it.status == TaskStatus.OPEN })
     }
 }

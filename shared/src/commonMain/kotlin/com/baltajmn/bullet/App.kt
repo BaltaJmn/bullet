@@ -37,6 +37,7 @@ import com.baltajmn.bullet.model.FUTURE_MONTHS_MAX
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.ui.Glyph
+import com.baltajmn.bullet.ui.FutureReviewScreen
 import com.baltajmn.bullet.ui.FutureScreen
 import com.baltajmn.bullet.ui.GlyphButton
 import com.baltajmn.bullet.ui.MonthScreen
@@ -70,6 +71,9 @@ fun App() {
     var futureShown by remember { mutableStateOf(FUTURE_MONTHS) }
     // The place a link just pointed at, until the page that owns it has scrolled to it (docs/pantallas.md 5.5).
     var linkTo by remember { mutableStateOf<Place?>(null) }
+    // Which review REVIEW is showing. #26 only opens the Future Log one; #27 turns this into the
+    // scope of docs/tecnico.md 6.6, which the other three lines pick.
+    var reviewFutureLog by remember { mutableStateOf(false) }
     // Coming back to the foreground is the only guaranteed moment a backgrounded app can catch a
     // day change (docs/tecnico.md 6.1, test 38). If Hoy was showing today, it follows to the new
     // one, and Mes to the new month; a past day or month someone was reading stays put.
@@ -142,6 +146,7 @@ fun App() {
                             onSearch = { overlay = Screen.SEARCH },
                             onSettings = { overlay = Screen.SETTINGS },
                             onNavigateTo = ::goTo,
+                            onFutureReview = { overlay = Screen.REVIEW; reviewFutureLog = true },
                             linkTo = linkTo,
                             onLinkHandled = { linkTo = null },
                         )
@@ -151,7 +156,14 @@ fun App() {
                 TabBar(active = tab, onSelect = { tab = it })
             }
 
-            overlay?.let { PlaceholderOverlay(it) { overlay = null } }
+            overlay?.let { screen ->
+                val dismiss = { overlay = null; reviewFutureLog = false }
+                if (screen == Screen.REVIEW && reviewFutureLog) {
+                    FutureReviewScreen(today = today, onClose = dismiss)
+                } else {
+                    PlaceholderOverlay(screen, dismiss)
+                }
+            }
         }
     }
 }

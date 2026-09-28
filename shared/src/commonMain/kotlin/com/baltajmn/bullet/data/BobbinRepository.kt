@@ -8,6 +8,7 @@ import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.JournalJson
 import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.Settings
 import com.baltajmn.bullet.model.SCHEMA_VERSION
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.capture
@@ -184,6 +185,9 @@ object BobbinRepository {
 
     /** Empty after `trim` leaves the entry exactly as it was (docs/pantallas.md 5.4). */
     fun editText(id: String, text: String) = edit { j -> j.editText(id, text, now()) }
+
+    /** The one way the UI changes an ajuste: `settings { it.copy(futureSeen = m) }`. */
+    fun settings(change: (Settings) -> Settings) = edit { j -> j.copy(settings = change(j.settings)) }
 
     /** Dragging an entry (gesture 4, docs/pantallas.md 4, #23): nothing is written until the finger lifts. */
     fun reorder(place: Place, ids: List<String>) = edit { j -> j.reorder(place, ids, now()) }

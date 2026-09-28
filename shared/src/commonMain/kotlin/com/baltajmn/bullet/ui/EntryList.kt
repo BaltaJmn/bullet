@@ -488,6 +488,26 @@ fun TabHeaderIcons(onSearch: () -> Unit, onSettings: () -> Unit) {
     }
 }
 
+/**
+ * A line of a notice strip (docs/pantallas.md 6.3, 7.2): plain text, text with an action beside it, or
+ * a whole line that is the action. Shared by Hoy (#21) and Mes (#26).
+ */
+@Composable
+fun NoticeLine(text: String, actionLabel: String? = null, action: (() -> Unit)? = null) {
+    Row(Modifier.fillMaxWidth().padding(start = 48.dp).height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
+        if (action != null && actionLabel == null) {
+            // The whole line is the action (unclosed month, earlier open tasks): pantallas 6.3.
+            Text(text, style = Type.Body.copy(color = MaterialTheme.colorScheme.primary), modifier = Modifier.clickable(role = Role.Button, onClick = action))
+        } else {
+            Text(text, style = Type.Body)
+            if (actionLabel != null && action != null) {
+                Spacer(Modifier.width(8.dp))
+                TextAction(actionLabel, action)
+            }
+        }
+    }
+}
+
 /** docs/pantallas.md 5.8: `entryDeleted` and `undo`, shown while `BobbinRepository.pendingUndo` is set. */
 @Composable
 fun UndoBanner(onUndo: () -> Unit) {

@@ -846,6 +846,8 @@ derecha de la fila de iconos. Sin barra de progreso, sin porcentajes.
   hoja (Reabrir).
 - Decidir enseña la tarea siguiente al instante. La cola se recalcula al abrir, así que las ya
   decididas no vuelven. Ningún botón decide más de una.
+- El `n` de `reviewPosition` se cuenta al abrir y no se mueve: decidir saca la tarea de la consulta
+  del alcance, así que contarla en vivo encogería el total por debajo de la posición.
 
 ### 11.3 Fin
 

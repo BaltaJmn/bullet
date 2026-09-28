@@ -667,6 +667,10 @@ Todas las funciones de `model/` y de los ficheros puros de `data/` reciben la fe
 generador de ids como parámetro. Nada de `Clock.System` dentro: se prueban con fechas fijas, como en
 la familia. `BobbinRepository` es quien lee el reloj y llama.
 
+Los ajustes se cambian siempre por `BobbinRepository.settings { it.copy(...) }`, nunca copiando el
+`Journal` desde una pantalla: así el escritor único (6.14) sigue siendo uno solo también para
+ellos.
+
 ### 6.1 Fecha lógica y `DayClock`
 
 ```kotlin

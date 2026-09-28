@@ -160,3 +160,20 @@ val Entry.futureDay: Int? get() = (place as? Place.Future)?.day
 fun Journal.futureBlock(m: YearMonth): List<Entry> = entries
     .filter { !it.gone && it.place.let { p -> p is Place.Future && p.month == m } }
     .sortedWith(compareBy<Entry> { it.futureDay ?: Int.MAX_VALUE }.then(ENTRY_ORDER))
+
+/** The month of a Future Log entry (docs/tecnico.md 4.1). */
+val Entry.futureMonth: YearMonth? get() = (place as? Place.Future)?.month
+
+/**
+ * What the Future Log still holds for this month or an earlier one (docs/tecnico.md 6.5): OPEN tasks,
+ * and events and notes always, by month and then as [futureBlock] orders a block. Mes counts these in
+ * its `futureWaiting` line and the review of #26 walks them one by one. Reading this changes nothing:
+ * the line is passive, so a month can pass without anyone opening Mes and no entry moves.
+ */
+fun Journal.futureWaiting(today: LocalDate): List<Entry> {
+    val current = monthOf(today)
+    return entries.mapNotNullTo(mutableSetOf()) { it.futureMonth }
+        .filter { it <= current }
+        .sorted()
+        .flatMap { m -> futureBlock(m).filter { it.bullet != Bullet.TASK || it.status == TaskStatus.OPEN } }
+}
