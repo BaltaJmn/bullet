@@ -140,7 +140,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `model/Journal.kt` | `Journal`, `BulletCollection`, `CollectionKind`, `TrackerRow`, `Settings`, `JournalJson`, `newId`, operaciones puras de entrada | N |
 | `model/DayClock.kt` | `logicalDate`, `nextDayStart`, `monthOf`, `monthDays`, `weekStarts`, `firstDayOfWeek` | A `line/.../model/DayClock.kt` |
 | `model/Migration.kt` | `migrate`, `schedule`, `discard`, `migrationCount`, `placeDay`, `PAGE_ORDER`, `openTasksBefore`, `openTasksOfDay`, `openTasksOfMonth`, `unclosedMonth`, `futureBlock`, `futureWaiting`, `ReviewScope`, `reviewQueue` | N |
-| `model/RapidParse.kt` | `rapidParse` | N |
+| `model/RapidParse.kt` | `rapidParse`, `capture`, `captureNote` | N |
 | `model/Collections.kt` | colecciones, índice, hilo, seguimientos, `FREE_TRACKER_LIMIT` | N |
 | `data/Storage.kt` | `interface JournalFiles`, `expect object Storage`, `load`, `SCHEMA_STEPS` | A `line/.../data/Storage.kt` |
 | `data/Prefs.kt` | `expect object Prefs`: lo que vive fuera del diario (Pro, valoración pedida) | N |
@@ -914,9 +914,16 @@ Las tres líneas son líneas dentro de la pantalla, nunca modales ni notificacio
 de `widget.json` es que al menos una está puesta. Qué texto lleva cada una, en `docs/textos.md`.
 
 **Paso 1, reflexión** (#28). El periodo entero en modo lectura, sin ningún número, porcentaje ni
-gráfica. Un campo de nota opcional; "Guardar" crea una `NOTE` con ese texto (6.2, con el tope) en
-`Monthly(m, null)` si el alcance es un mes, o en `Monthly(monthOf(today), today.day)` si es un día.
+gráfica: lo que se relee son los `Daily` del periodo (`reviewDays(alcance)`) y, en un mes, después,
+las líneas del calendario y las tareas del mes, que son su propia sección y por eso no se repiten
+arriba. Un campo de nota opcional; "Guardar" crea una `NOTE` con ese texto en `notePlace(alcance)`:
+`Monthly(m, null)` si el alcance es un mes, o `Monthly(monthOf(today), today.day)` si es un día.
 "Saltar" pasa al paso 2 sin crear nada. En v1.1, una pregunta opcional junto al campo (12.3).
+
+Esa nota la crea `captureNote`, no `capture`: el campo pinta un glifo de nota fijo, así que aquí
+**no se consume ningún prefijo** y una reflexión que empiece por "o " conserva esos dos caracteres y
+sigue siendo una nota. Lo demás es la receta de 6.2: una línea lógica, el tope de 500 y el
+siguiente `order` de ese lugar.
 
 **Paso 2, una tarea cada vez** (#27). La cola se recalcula de la consulta del alcance cada vez que se
 abre, en el orden de su lugar (fecha, y después `order`): eso es `reviewQueue(alcance)`, que ordena
@@ -1879,10 +1886,11 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
 8. **Revisión y reflexión** (#26, #27, #28): `openTasksBefore`, `openTasksOfDay`, `openTasksOfMonth` y
    `unclosedMonth` sobre un diario fijo, que nunca señala el mes actual; las tareas con cada acción
    quedan cada una en su estado, y "a una colección" entra con #30; recalcular la cola tras decidir
-   dos deja solo las otras tres; guardar una reflexión crea una
-   `NOTE` en `Monthly(m, null)`; saltar no crea nada; con tres entradas del Future Log del mes,
-   `futureWaiting` cuenta 3 y baja de una en una al decidir; cambiar de mes sin abrir el Mes no toca
-   ninguna.
+   dos deja solo las otras tres; `reviewDays` solo lista los días del periodo que tienen algo; guardar
+   una reflexión crea una `NOTE` en `Monthly(m, null)`, y en la línea del día si el alcance es un día;
+   un prefijo escrito en ella se queda como texto; saltar no crea nada; con tres entradas del Future
+   Log del mes, `futureWaiting` cuenta 3 y baja de una en una al decidir; cambiar de mes sin abrir el
+   Mes no toca ninguna.
 9. **Sin acciones masivas** (`androidHostTest`, #13, #27, #64): por reflexión de la JVM sobre
    `MigrationKt` y `CollectionsKt`, ningún método público tiene un parámetro `Collection`, `Iterable`,
    `Sequence` ni array, y ninguno se llama `*All`. El receptor `Journal` no es una colección.

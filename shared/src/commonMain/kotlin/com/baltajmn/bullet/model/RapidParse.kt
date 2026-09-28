@@ -73,3 +73,26 @@ fun Journal.capture(input: String, place: Place, picked: Bullet?, now: Long, new
     )
     return copy(entries = entries + entry)
 }
+
+/**
+ * The reflection note of docs/pantallas.md 11.1 and docs/tecnico.md 6.6. Not [capture]: that field
+ * paints a fixed note glyph, so no prefix is consumed and nothing anyone types can turn the note into
+ * a task or an event, and a note that starts with "o " keeps those two characters. Everything else is
+ * the same recipe of 6.2: one logical line, the [TEXT_LIMIT] cap, the next order at that place, and
+ * null when there is nothing left to save.
+ */
+fun Journal.captureNote(input: String, place: Place, now: Long, newId: String): Journal? {
+    if (!place.dayExists) return null
+    val text = input.oneLine().trim()
+    if (text.isEmpty()) return null
+    val note = Entry(
+        id = newId,
+        bullet = Bullet.NOTE,
+        text = text.clampCodePoints(TEXT_LIMIT),
+        place = place,
+        order = nextOrder(place),
+        createdAt = now,
+        updatedAt = now,
+    )
+    return copy(entries = entries + note)
+}

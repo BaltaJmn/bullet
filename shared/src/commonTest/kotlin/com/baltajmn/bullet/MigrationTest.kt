@@ -8,6 +8,7 @@ import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.capture
+import com.baltajmn.bullet.model.captureNote
 import com.baltajmn.bullet.model.copyOf
 import com.baltajmn.bullet.model.delete
 import com.baltajmn.bullet.model.discard
@@ -17,6 +18,7 @@ import com.baltajmn.bullet.model.futureMonths
 import com.baltajmn.bullet.model.futureWaiting
 import com.baltajmn.bullet.model.migrate
 import com.baltajmn.bullet.model.migrationCount
+import com.baltajmn.bullet.model.notePlace
 import com.baltajmn.bullet.model.ofDay
 import com.baltajmn.bullet.model.openTasksBefore
 import com.baltajmn.bullet.model.openTasksOfDay
@@ -24,6 +26,7 @@ import com.baltajmn.bullet.model.openTasksOfMonth
 import com.baltajmn.bullet.model.reopen
 import com.baltajmn.bullet.model.reorder
 import com.baltajmn.bullet.model.restoreDeleted
+import com.baltajmn.bullet.model.reviewDays
 import com.baltajmn.bullet.model.reviewQueue
 import com.baltajmn.bullet.model.schedule
 import com.baltajmn.bullet.model.toggleDone
@@ -532,5 +535,60 @@ class MigrationTest {
         assertEquals(YearMonth.parse("2026-08"), Journal(entries = listOf(julyDone, augustOpen, septemberOpen)).unclosedMonth(today))
         // Solo queda abierto el mes actual: un mes no llega tarde hasta que se acaba.
         assertNull(Journal(entries = listOf(julyDone, augustOpen.copy(status = TaskStatus.DONE), septemberOpen)).unclosedMonth(today))
+    }
+
+    // 8. Reflexion (#28): guardar deja una nota en el Monthly Log del periodo, saltar no crea nada.
+    @Test
+    fun aSavedReflectionIsANoteInTheReviewedMonthAndSkippingCreatesNothing() {
+        val sep = YearMonth.parse("2026-09")
+        val today = LocalDate.parse("2026-09-22")
+        val start = Journal(entries = listOf(task("e-1", Place.Monthly(sep, 3))))
+
+        val monthScope: ReviewScope = ReviewScope.Month(sep)
+        val saved = start.captureNote("Un mes de mudanza", monthScope.notePlace(), now = 1L, newId = "e-2")!!
+        val note = saved.entries.single { it.id == "e-2" }
+        assertEquals(Bullet.NOTE, note.bullet)
+        assertEquals(Place.Monthly(sep), note.place)
+        assertEquals("Un mes de mudanza", note.text)
+
+        // El alcance de un dia la deja en la linea de ese dia del calendario.
+        val dayScope: ReviewScope = ReviewScope.Day(today)
+        assertEquals(Place.Monthly(sep, 22), dayScope.notePlace())
+
+        // Saltar es no llamar: con el campo vacio o en blanco, no se crea nada.
+        assertNull(start.captureNote("", monthScope.notePlace(), now = 1L, newId = "e-2"))
+        assertNull(start.captureNote("   ", monthScope.notePlace(), now = 1L, newId = "e-2"))
+    }
+
+    // El campo de reflexion pinta un glifo de nota fijo, asi que un prefijo escrito es parte de la nota.
+    @Test
+    fun aReflectionKeepsAPrefixAsTextInsteadOfBecomingAnEvent() {
+        val sep = YearMonth.parse("2026-09")
+        val j = Journal().captureNote("o de pronto llego octubre", Place.Monthly(sep), now = 1L, newId = "e-1")!!
+        val note = j.entries.single()
+        assertEquals(Bullet.NOTE, note.bullet)
+        assertEquals("o de pronto llego octubre", note.text)
+        assertTrue(note.signifiers.isEmpty())
+    }
+
+    // Lo que se relee son los Daily del periodo: el calendario y las tareas del mes son otra seccion.
+    @Test
+    fun reviewDaysListsOnlyTheDaysOfThePeriodThatHaveSomething() {
+        val sep = YearMonth.parse("2026-09")
+        val today = LocalDate.parse("2026-09-04")
+        val j = Journal(
+            entries = listOf(
+                task("e-1", Place.Daily(LocalDate.parse("2026-09-02"))),
+                task("e-2", Place.Daily(LocalDate.parse("2026-09-04"))),
+                task("e-3", Place.Monthly(sep, 3)),
+                task("e-4", Place.Daily(LocalDate.parse("2026-08-31"))),
+            ),
+        )
+        assertEquals(listOf(2, 4), j.reviewDays(ReviewScope.Month(sep)).map { it.first.day })
+        // Earlier deja fuera hoy; Day lo incluye.
+        assertEquals(listOf(2), j.reviewDays(ReviewScope.Earlier(today)).map { it.first.day })
+        assertEquals(listOf(2, 4), j.reviewDays(ReviewScope.Day(today)).map { it.first.day })
+        // La linea del calendario del dia 3 no hace que el dia 3 salga como dia releido.
+        assertTrue(j.reviewDays(ReviewScope.Month(sep)).none { it.first.day == 3 })
     }
 }

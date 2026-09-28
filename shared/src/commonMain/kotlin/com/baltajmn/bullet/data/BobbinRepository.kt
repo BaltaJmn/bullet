@@ -12,6 +12,7 @@ import com.baltajmn.bullet.model.Settings
 import com.baltajmn.bullet.model.SCHEMA_VERSION
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.capture
+import com.baltajmn.bullet.model.captureNote
 import com.baltajmn.bullet.model.delete
 import com.baltajmn.bullet.model.discard
 import com.baltajmn.bullet.model.editText
@@ -185,6 +186,16 @@ object BobbinRepository {
 
     /** Empty after `trim` leaves the entry exactly as it was (docs/pantallas.md 5.4). */
     fun editText(id: String, text: String) = edit { j -> j.editText(id, text, now()) }
+
+    /** The reflection note of a review (docs/tecnico.md 6.6). Returns whether it saved, like [capture]. */
+    fun captureNote(text: String, place: Place): Boolean {
+        var saved = false
+        edit { j ->
+            j.captureNote(text, place, now = now(), newId = newId("e", j.entries.map { it.id }.toSet()))
+                ?.also { saved = true }
+        }
+        return saved
+    }
 
     /** The one way the UI changes an ajuste: `settings { it.copy(futureSeen = m) }`. */
     fun settings(change: (Settings) -> Settings) = edit { j -> j.copy(settings = change(j.settings)) }

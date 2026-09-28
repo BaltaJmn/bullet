@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,21 +32,36 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Entry
+import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.MIGRATION_SHOWN_FROM
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.ReviewScope
+import com.baltajmn.bullet.model.TEXT_LIMIT
 import com.baltajmn.bullet.model.TaskStatus
+import com.baltajmn.bullet.model.entriesAt
 import com.baltajmn.bullet.model.futureMonth
 import com.baltajmn.bullet.model.futureWaiting
+import com.baltajmn.bullet.model.limitEdit
 import com.baltajmn.bullet.model.migrationCount
+import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.model.monthOf
+import com.baltajmn.bullet.model.notePlace
+import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.model.placeDay
+import com.baltajmn.bullet.model.reviewDays
 import com.baltajmn.bullet.model.reviewQueue
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
@@ -142,6 +159,15 @@ fun FutureReviewScreen(today: LocalDate, onClose: () -> Unit) {
 fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit) {
     BackHandler(true, onClose)
     val journal = BobbinRepository.journal
+
+    // Step 1 comes first and only once: rereading the period is what earns the right to decide
+    // (docs/pantallas.md 11.1, #28). Saltar and Guardar both land here.
+    var reread by remember { mutableStateOf(false) }
+    if (!reread) {
+        ReflectStep(scope, journal, onClose = onClose, onDone = { reread = true })
+        return
+    }
+
     val queue = journal.reviewQueue(scope)
     val total = remember { journal.reviewQueue(scope).size }
     val decided = (total - queue.size).coerceIn(0, total)
@@ -198,6 +224,112 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit) {
         }
         if (BobbinRepository.pendingUndo != null) {
             UndoBanner(onUndo = BobbinRepository::undo)
+        }
+    }
+}
+
+/**
+ * Step 1 of a review (docs/pantallas.md 11.1, docs/tecnico.md 6.6, #28): the whole period in reading
+ * mode, an optional note, and a bar with one action. No count, no percentage and no chart anywhere:
+ * what the month was is the entries themselves, not a score of them.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun ReflectStep(scope: ReviewScope, journal: Journal, onClose: () -> Unit, onDone: () -> Unit) {
+    BackHandler(true, onClose)
+    val month = (scope as? ReviewScope.Month)?.month
+    var note by remember { mutableStateOf("") }
+
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper()) {
+            ReviewHeader(onClose, position = null)
+            Text(
+                if (month != null) S.reflectTitle(month) else S.reflectTitle(),
+                style = Type.PageTitle,
+                modifier = Modifier.padding(start = 48.dp),
+            )
+            Spacer(Modifier.height(gridUnit))
+
+            journal.reviewDays(scope).forEach { (date, entries) ->
+                Text(S.dayTitle(date).uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
+                entries.forEach { ReadOnlyRow(it) }
+                Spacer(Modifier.height(gridUnit))
+            }
+
+            // Only a month has a calendar and tasks of its own to reread.
+            if (month != null) {
+                val calendar = (1..monthDays(month)).flatMap { journal.entriesAt(Place.Monthly(month, it)) }
+                if (calendar.isNotEmpty()) {
+                    Text(S.calendarTitle.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
+                    calendar.forEach { ReadOnlyRow(it) }
+                    Spacer(Modifier.height(gridUnit))
+                }
+                val tasks = journal.entriesAt(Place.Monthly(month))
+                if (tasks.isNotEmpty()) {
+                    Text(S.monthTasks.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
+                    tasks.forEach { ReadOnlyRow(it) }
+                    Spacer(Modifier.height(gridUnit))
+                }
+            }
+
+            NoteField(note, hint = if (month != null) S.reflectHint(month) else S.reflectHint()) { note = it }
+            Spacer(Modifier.height(gridUnit * 2))
+        }
+
+        // One action, on the left: Saltar with the field empty, Guardar y seguir with text in it.
+        val line = MaterialTheme.colorScheme.outlineVariant
+        Row(
+            Modifier.fillMaxWidth().height(gridUnit * 2)
+                .background(MaterialTheme.colorScheme.background)
+                .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Spacer(Modifier.width(40.dp))
+            if (note.isBlank()) {
+                TextAction(S.skip, onDone)
+            } else {
+                TextAction(S.saveAndGo) {
+                    BobbinRepository.captureNote(note, scope.notePlace())
+                    onDone()
+                }
+            }
+        }
+    }
+}
+
+/** An entry in reading mode (docs/pantallas.md 11.1): the anatomy of 5.1 with no gesture on it at all. */
+@Composable
+private fun ReadOnlyRow(entry: Entry) {
+    Row(Modifier.fillMaxWidth().heightIn(min = gridUnit * 2).padding(end = 24.dp)) {
+        Row(Modifier.widthIn(min = 48.dp), horizontalArrangement = Arrangement.End) {
+            entry.signifiers.sortedBy { it.ordinal }.forEach { SignifierGlyph(it) }
+        }
+        BulletGlyph(entry.bullet, entry.status)
+        Text(entry.text, style = Type.Ink, modifier = Modifier.padding(top = 2.dp).weight(1f))
+    }
+}
+
+/** The reflection field (docs/pantallas.md 11.1): the note glyph in grey, and a prefix stays text. */
+@Composable
+private fun NoteField(value: String, hint: String, onChange: (String) -> Unit) {
+    var field by remember { mutableStateOf(TextFieldValue(value)) }
+    Row(Modifier.fillMaxWidth().heightIn(min = gridUnit * 2)) {
+        Spacer(Modifier.width(48.dp))
+        BulletGlyph(Bullet.NOTE, TaskStatus.OPEN, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Box(Modifier.weight(1f)) {
+            if (field.text.isEmpty()) Text(hint, style = Type.Ink.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+            BasicTextField(
+                value = field,
+                onValueChange = { new ->
+                    val edit = limitEdit(field.text.oneLine(), new.text.oneLine(), new.selection.end, TEXT_LIMIT)
+                    field = TextFieldValue(edit.text, TextRange(edit.cursor))
+                    onChange(edit.text)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = Type.Ink,
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
+            )
         }
     }
 }

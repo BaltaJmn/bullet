@@ -228,3 +228,30 @@ fun Journal.reviewQueue(scope: ReviewScope): List<Entry> = when (scope) {
     is ReviewScope.Earlier -> openTasksBefore(scope.today)
     is ReviewScope.Day -> openTasksBefore(scope.today) + openTasksOfDay(scope.today)
 }.sortedWith(PAGE_ORDER)
+
+/**
+ * What a review rereads before deciding anything (docs/pantallas.md 11.1): the Daily Log of each day
+ * of the period that has something, oldest first. The calendar lines and the month's tasks are their
+ * own section of that page, so they are not repeated here. Every scope is one month, so this walks
+ * days, never months.
+ */
+fun Journal.reviewDays(scope: ReviewScope): List<Pair<LocalDate, List<Entry>>> {
+    val month: YearMonth
+    val lastDay: Int
+    when (scope) {
+        is ReviewScope.Month -> { month = scope.month; lastDay = monthDays(scope.month) }
+        is ReviewScope.Earlier -> { month = monthOf(scope.today); lastDay = scope.today.day - 1 }
+        is ReviewScope.Day -> { month = monthOf(scope.today); lastDay = scope.today.day }
+    }
+    return (1..lastDay).mapNotNull { day ->
+        val date = LocalDate(month.year, month.month, day)
+        entriesAt(Place.Daily(date)).takeIf { it.isNotEmpty() }?.let { date to it }
+    }
+}
+
+/** Where a reflection note lands (docs/tecnico.md 6.6): the month's tasks for a month, that day's calendar line for a day. */
+fun ReviewScope.notePlace(): Place = when (this) {
+    is ReviewScope.Month -> Place.Monthly(month)
+    is ReviewScope.Earlier -> Place.Monthly(monthOf(today), today.day)
+    is ReviewScope.Day -> Place.Monthly(monthOf(today), today.day)
+}
