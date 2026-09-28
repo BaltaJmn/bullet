@@ -44,6 +44,7 @@ import com.baltajmn.bullet.ui.Glyph
 import com.baltajmn.bullet.ui.GlyphButton
 import com.baltajmn.bullet.ui.IndexScreen
 import com.baltajmn.bullet.ui.KeyScreen
+import com.baltajmn.bullet.ui.SearchScreen
 import com.baltajmn.bullet.ui.SettingsScreen
 import com.baltajmn.bullet.ui.MonthScreen
 import com.baltajmn.bullet.ui.ReviewScreen
@@ -195,6 +196,12 @@ fun App() {
                     screen == Screen.REVIEW && scope != null -> ReviewScreen(scope = scope, today = today, onClose = dismiss)
                     screen == Screen.KEY -> KeyScreen(onBack = dismiss)
                     screen == Screen.SETTINGS -> SettingsScreen(onBack = dismiss)
+                    screen == Screen.SEARCH -> SearchScreen(
+                        today = today,
+                        onBack = dismiss,
+                        onOpenGroup = { place -> dismiss(); goTo(place) },
+                        onNavigateTo = { place -> dismiss(); goTo(place) },
+                    )
                     screen == Screen.COLLECTION && collection != null -> CollectionScreen(
                         id = collection,
                         today = today,
@@ -252,7 +259,7 @@ private fun tabLabel(screen: Screen): String = when (screen) {
     else -> error("$screen is not a tab")
 }
 
-/** Buscar y Pro, cada una con su issue. */
+/** Pro, con #48. */
 @Composable
 private fun PlaceholderTab(screen: Screen) {
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {

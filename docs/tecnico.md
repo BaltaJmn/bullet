@@ -1925,8 +1925,11 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
     convierte en espacio.
 11. **Búsqueda** (#35): `"cafe"` encuentra `"Café"`, `"cafe"` y un `"Café"` descompuesto (NFD);
     `"strasse"` encuentra `"Straße"`; el filtro `OPEN` excluye hechas, migradas, programadas y
-    descartadas; `"#viaje"` encuentra `"Billetes #viaje"` y no `"viajero"`; los grupos salen por lugar,
-    del más reciente al más antiguo; los esqueletos no salen.
+    descartadas, y una nota tampoco es una tarea abierta; `"#viaje"` encuentra `"Billetes #viaje"` y no
+    `"viajero"` ni `"#viajes"`, y una etiqueta se corta en el primer carácter que no es de ella;
+    los filtros se combinan con Y; los grupos salen por lugar, del más reciente al más antiguo, y las
+    colecciones después de todos los de fecha; los esqueletos no salen; una consulta en blanco sin
+    filtros no devuelve nada, y con filtros devuelve lo que los cumple.
 12. **Estado de los widgets** (#40, #41, #42, #51, #52): `widgetState` de un diario fijo es exactamente
     `WIDGET_SAMPLE`; el JSON no contiene ningún texto de entrada ni título de colección; `open`, `done` y
     `events` cuentan `Daily` y la línea del calendario de hoy; `widgetView` con la fecha de ayer da ceros
