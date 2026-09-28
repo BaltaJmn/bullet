@@ -1909,8 +1909,10 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
    pública se llama `*All`. El receptor de una de ellas no es una colección. Una consulta que recibe
    una lista para leerla, como `filterIndex(items, query)`, no decide nada sobre ninguna entrada:
    prohibirla confundiría la regla con su forma.
-10. **Captura rápida** (#20, #21): cada prefijo solo; `"* - texto"` y `"- * texto"` dan la misma nota
-    con prioridad; `"* ! ? o texto"` da un evento con los tres signifiers; `"-5 grados"` y `"hola - x"`
+10. **Captura rápida y primer arranque** (#20, #21, #31): un `Journal` recién creado acepta su primer
+    bullet sin tocar ningún ajuste, y sus ajustes siguen siendo los de por defecto después; `Screen`
+    tiene exactamente los diez destinos de `docs/pantallas.md` 3, así que ninguno es una bienvenida ni
+    un tutorial; cada prefijo solo; `"* - texto"` y `"- * texto"` dan la misma nota con prioridad; `"* ! ? o texto"` da un evento con los tres signifiers; `"-5 grados"` y `"hola - x"`
     son tareas; `"- - x"` es una nota con texto `"- x"`; `"- "` y `"* "` solos devuelven `null`; el
     selector da el bullet sin prefijo y el prefijo gana al selector; un salto de línea pegado se
     convierte en espacio.

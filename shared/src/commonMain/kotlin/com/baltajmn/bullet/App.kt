@@ -43,6 +43,7 @@ import com.baltajmn.bullet.ui.FutureScreen
 import com.baltajmn.bullet.ui.Glyph
 import com.baltajmn.bullet.ui.GlyphButton
 import com.baltajmn.bullet.ui.IndexScreen
+import com.baltajmn.bullet.ui.KeyScreen
 import com.baltajmn.bullet.ui.MonthScreen
 import com.baltajmn.bullet.ui.ReviewScreen
 import com.baltajmn.bullet.ui.TodayScreen
@@ -191,6 +192,7 @@ fun App() {
                 when {
                     screen == Screen.REVIEW && reviewFutureLog -> FutureReviewScreen(today = today, onClose = dismiss)
                     screen == Screen.REVIEW && scope != null -> ReviewScreen(scope = scope, today = today, onClose = dismiss)
+                    screen == Screen.KEY -> KeyScreen(onBack = dismiss)
                     screen == Screen.COLLECTION && collection != null -> CollectionScreen(
                         id = collection,
                         today = today,
@@ -248,7 +250,7 @@ private fun tabLabel(screen: Screen): String = when (screen) {
     else -> error("$screen is not a tab")
 }
 
-/** Buscar, Clave, Ajustes, Pro, Colección: cada una con su issue. */
+/** Buscar, Ajustes y Pro, cada una con su issue. */
 @Composable
 private fun PlaceholderTab(screen: Screen) {
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
@@ -268,7 +270,6 @@ private fun PlaceholderOverlay(screen: Screen, onBack: () -> Unit) {
     // Buscar (pantallas.md 12) and Colección (10) have no fixed title of their own; Colección is
     // also unreachable yet, with no Índice, Buscar result or migrated link to open it from.
     val title = when (screen) {
-        Screen.KEY -> S.keyTitle
         Screen.SETTINGS -> S.settingsTitle
         Screen.PRO -> S.proTitle
         Screen.REVIEW -> S.reflectTitle()
