@@ -671,7 +671,8 @@ Solo en el mes actual. Todas las que apliquen, en este orden, enteras en `primar
   una línea de puntos guía, círculos de 1,5 dp cada 6 dp en `onSurfaceVariant` sobre la línea base,
   de 8 dp tras el título a 8 dp antes de la etiqueta; a la derecha, en `Secondary`, `indexMonth` (Mes),
   `indexCollection` (Colección) o `indexTracker` (Seguimiento). Un título largo hace salto de línea y
-  los puntos guía van en su última línea. Sin números de página.
+  los puntos guía van en su última línea: la fila alinea por abajo, que es donde acaba el título, en
+  vez de medir la última línea base a mano. Sin números de página.
 - Tocar un mes abre la pestaña Mes en ese mes. Tocar una colección abre COLLECTION.
 - **Crear.** Tras el último elemento activo, dos filas de captura: `newCollection` (Nueva colección) y
   `newTracker` (Nuevo seguimiento). Solo piden el título: Intro lo crea (`createCollection`, con

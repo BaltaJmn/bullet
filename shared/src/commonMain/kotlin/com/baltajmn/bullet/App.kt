@@ -41,6 +41,7 @@ import com.baltajmn.bullet.ui.FutureReviewScreen
 import com.baltajmn.bullet.ui.FutureScreen
 import com.baltajmn.bullet.ui.Glyph
 import com.baltajmn.bullet.ui.GlyphButton
+import com.baltajmn.bullet.ui.IndexScreen
 import com.baltajmn.bullet.ui.MonthScreen
 import com.baltajmn.bullet.ui.ReviewScreen
 import com.baltajmn.bullet.ui.TodayScreen
@@ -52,9 +53,9 @@ import kotlinx.datetime.monthsUntil
 
 /**
  * Ten destinations and no more (SPEC 5, docs/pantallas.md 3): four tabs at the bottom, and
- * everything else opens as a single screen above them. [TODAY], [MONTH] and [FUTURE] have a real
- * page (#21, #24, #25); the rest land issue by issue and show a bare placeholder with just their
- * title until then.
+ * everything else opens as a single screen above them. The four tabs have a real page (#21, #24,
+ * #25, #29); the rest land issue by issue and show a bare placeholder with just their title until
+ * then.
  */
 enum class Screen { TODAY, MONTH, FUTURE, INDEX, COLLECTION, REVIEW, SEARCH, KEY, SETTINGS, PRO }
 
@@ -137,6 +138,13 @@ fun App() {
                             onSettings = { overlay = Screen.SETTINGS },
                             onReview = ::openReview,
                             onNavigateTo = ::goTo,
+                        )
+                        Screen.INDEX -> IndexScreen(
+                            onSearch = { overlay = Screen.SEARCH },
+                            onSettings = { overlay = Screen.SETTINGS },
+                            onOpenMonth = { tab = Screen.MONTH; viewedMonth = it },
+                            // Opening a collection is #30, which is what can create one.
+                            onOpenCollection = { overlay = Screen.COLLECTION },
                         )
                         Screen.FUTURE -> FutureScreen(
                             today = today,
@@ -222,7 +230,7 @@ private fun tabLabel(screen: Screen): String = when (screen) {
     else -> error("$screen is not a tab")
 }
 
-/** Índice until #29 gives it a real page. */
+/** Buscar, Clave, Ajustes, Pro, Colección: cada una con su issue. */
 @Composable
 private fun PlaceholderTab(screen: Screen) {
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {

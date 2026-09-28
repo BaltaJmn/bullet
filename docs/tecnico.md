@@ -141,7 +141,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `model/DayClock.kt` | `logicalDate`, `nextDayStart`, `monthOf`, `monthDays`, `weekStarts`, `firstDayOfWeek` | A `line/.../model/DayClock.kt` |
 | `model/Migration.kt` | `migrate`, `schedule`, `discard`, `migrationCount`, `placeDay`, `PAGE_ORDER`, `openTasksBefore`, `openTasksOfDay`, `openTasksOfMonth`, `unclosedMonth`, `futureBlock`, `futureWaiting`, `ReviewScope`, `reviewQueue` | N |
 | `model/RapidParse.kt` | `rapidParse`, `capture`, `captureNote` | N |
-| `model/Collections.kt` | colecciones, índice, hilo, seguimientos, `FREE_TRACKER_LIMIT` | N |
+| `model/Collections.kt` | `COLLECTION_TITLE_MAX`, `IndexItem`, `indexItems`, `filterIndex`, colecciones, índice, hilo, seguimientos, `FREE_TRACKER_LIMIT` | N |
 | `data/Storage.kt` | `interface JournalFiles`, `expect object Storage`, `load`, `SCHEMA_STEPS` | A `line/.../data/Storage.kt` |
 | `data/Prefs.kt` | `expect object Prefs`: lo que vive fuera del diario (Pro, valoración pedida) | N |
 | `data/BobbinRepository.kt` | `object BobbinRepository`: estado, escritor único, deshacer, Pro | A `line/.../data/LineRepository.kt` |
@@ -956,9 +956,12 @@ fun Journal.createCollection(title: String, now: Long, newId: String, kind: Coll
 fun Journal.renameCollection(id: String, title: String, now: Long): Journal?
 fun Journal.archiveCollection(id: String, archived: Boolean, now: Long): Journal
 fun Journal.deleteCollection(id: String): Journal
-fun Journal.indexItems(): List<IndexItem>
+fun Journal.indexItems(monthTitle: (YearMonth) -> String): List<IndexItem>
 fun filterIndex(items: List<IndexItem>, query: String): List<IndexItem>
 ```
+
+`indexItems` recibe `monthTitle` en vez de llamar a `S.monthTitle`: el idioma del aparato es
+plataforma y `model/` no lee ninguna (6). La pantalla le pasa `S::monthTitle`.
 
 - Crear pide solo el título: `oneLine`, `trim`, `clampCodePoints(COLLECTION_TITLE_MAX)`; vacío se
   rechaza. Sin plantillas ni campos adicionales. `NOTES` por defecto.
@@ -1868,8 +1871,9 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
    o 24; un bloque de Futuro sale por día ascendente y deja al final las entradas sin día, sin los
    esqueletos.
 5. **Índice y colecciones** (#29, #30): el orden de creación no cambia al renombrar; un mes sin entradas
-   no aparece; un mes con solo entradas del Future Log no aparece; el filtro encuentra "Lecturas" con
-   "LECTURAS" y "Canción" con "cancion"; las archivadas van al final; un seguimiento de tres páginas sale
+   no aparece; un mes con solo entradas del Future Log no aparece; un esqueleto tampoco hace mes; el
+   filtro encuentra "Lecturas" con "LECTURAS", "Canción" con "cancion" y "Straße" con "strasse", y una
+   consulta en blanco no filtra nada; las archivadas van al final; un seguimiento de tres páginas sale
    una vez; borrar una colección del medio de un hilo engancha la siguiente a la anterior; un título
    vacío no crea nada.
 6. **Migrar, programar y descartar** (#13, #22, #25): migrar deja el original `MIGRATED` con su texto
