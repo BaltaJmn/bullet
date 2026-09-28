@@ -94,3 +94,69 @@ fun newId(prefix: String, taken: Set<String> = emptySet()): String {
         if (id !in taken) return id
     }
 }
+
+// --- Estados y signifiers (docs/tecnico.md 6.3), used by ui/EntrySheet.kt (#22) --------------------
+
+/** OPEN to DONE and back; anything else is rejected (docs/tecnico.md 6.3's table). */
+fun Journal.toggleDone(id: String, now: Long): Journal? {
+    val e = entries.find { it.id == id && !it.gone } ?: return null
+    if (e.bullet != Bullet.TASK || e.status !in setOf(TaskStatus.OPEN, TaskStatus.DONE)) return null
+    return copy(entries = entries.map { if (it.id == id) it.toggleDone().copy(updatedAt = now) else it })
+}
+
+/** DONE or IRRELEVANT back to OPEN. A MIGRATED or SCHEDULED task never reopens: its copy already exists. */
+fun Journal.reopen(id: String, now: Long): Journal? {
+    val e = entries.find { it.id == id && !it.gone } ?: return null
+    if (e.bullet != Bullet.TASK || e.status !in setOf(TaskStatus.DONE, TaskStatus.IRRELEVANT)) return null
+    return copy(entries = entries.map { if (it.id == id) it.copy(status = TaskStatus.OPEN, updatedAt = now) else it })
+}
+
+/** Puts or removes [s]. Any entry, not only a task, and any status: the sheet offers it everywhere. */
+fun Journal.toggleSignifier(id: String, s: Signifier, now: Long): Journal? {
+    val e = entries.find { it.id == id && !it.gone } ?: return null
+    val signifiers = if (s in e.signifiers) e.signifiers - s else e.signifiers + s
+    return copy(entries = entries.map { if (it.id == id) it.copy(signifiers = signifiers, updatedAt = now) else it })
+}
+
+/**
+ * [String.oneLine] and [limitEdit] against the entry's own previous text, same as typing it
+ * (docs/pantallas.md 5.4): pasting something far longer than [TEXT_LIMIT] still clamps. Empty after
+ * `trim` does not save, so the caller's field keeps showing the entry exactly as it was.
+ */
+fun Journal.editText(id: String, text: String, now: Long): Journal? {
+    val e = entries.find { it.id == id && !it.gone } ?: return null
+    val oneLined = text.oneLine()
+    val edited = limitEdit(e.text, oneLined, oneLined.length).text.trim()
+    if (edited.isEmpty()) return null
+    return copy(entries = entries.map { if (it.id == id) it.copy(text = edited, updatedAt = now) else it })
+}
+
+/**
+ * Removes [id] (docs/tecnico.md 6.4). Nothing pointing at it: dropped outright. Something's `from`
+ * still pointing at it: kept as a skeleton (`gone = true`, no text, no signifiers) so that entry
+ * keeps its link and its [migrationCount]. Deleting the last thing that pointed at a skeleton removes
+ * it too, in the same change, cascading through a chain of skeletons if that empties another one.
+ */
+fun Journal.delete(id: String, now: Long): Journal? {
+    entries.find { it.id == id && !it.gone } ?: return null
+    val isReferenced = entries.any { it.id != id && it.from == id }
+    val afterRemoval = if (isReferenced) {
+        entries.map { if (it.id == id) it.copy(gone = true, text = "", signifiers = emptySet(), updatedAt = now) else it }
+    } else {
+        entries.filterNot { it.id == id }
+    }
+    return copy(entries = afterRemoval.dropOrphanSkeletons())
+}
+
+private fun List<Entry>.dropOrphanSkeletons(): List<Entry> {
+    var current = this
+    while (true) {
+        val referenced = current.mapNotNull { it.from }.toSet()
+        val next = current.filterNot { it.gone && it.id !in referenced }
+        if (next.size == current.size) return next
+        current = next
+    }
+}
+
+/** The entry a migration or a schedule landed, if it is still there (docs/tecnico.md 6.3): the non skeleton entry whose `from` is [id]. */
+fun copyOf(j: Journal, id: String): Entry? = j.entries.find { it.from == id && !it.gone }

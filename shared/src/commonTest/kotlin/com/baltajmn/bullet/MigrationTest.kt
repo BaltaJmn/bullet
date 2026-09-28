@@ -4,18 +4,27 @@ import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.TaskStatus
+import com.baltajmn.bullet.model.copyOf
+import com.baltajmn.bullet.model.delete
 import com.baltajmn.bullet.model.discard
+import com.baltajmn.bullet.model.editText
+import com.baltajmn.bullet.model.futureMonths
 import com.baltajmn.bullet.model.migrate
 import com.baltajmn.bullet.model.migrationCount
 import com.baltajmn.bullet.model.ofDay
 import com.baltajmn.bullet.model.openTasksBefore
 import com.baltajmn.bullet.model.openTasksOfDay
 import com.baltajmn.bullet.model.openTasksOfMonth
+import com.baltajmn.bullet.model.reopen
 import com.baltajmn.bullet.model.schedule
+import com.baltajmn.bullet.model.toggleDone
+import com.baltajmn.bullet.model.toggleSignifier
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
 
@@ -175,5 +184,121 @@ class MigrationTest {
         val j = Journal(entries = listOf(open, done, note))
 
         assertEquals(listOf("e-1"), j.openTasksOfDay(d).map { it.id })
+    }
+
+    // Estados y signifiers (docs/tecnico.md 6.3), #22.
+    @Test
+    fun toggleDoneFlipsOpenAndDoneOnlyForATask() {
+        val place = Place.Daily(LocalDate.parse("2026-09-22"))
+        val open = Journal(entries = listOf(task("e-1", place)))
+        assertEquals(TaskStatus.DONE, open.toggleDone("e-1", now = 1L)!!.entries.single().status)
+
+        val done = Journal(entries = listOf(task("e-1", place, status = TaskStatus.DONE)))
+        assertEquals(TaskStatus.OPEN, done.toggleDone("e-1", now = 1L)!!.entries.single().status)
+
+        val migrated = Journal(entries = listOf(task("e-1", place, status = TaskStatus.MIGRATED)))
+        assertNull(migrated.toggleDone("e-1", now = 1L))
+
+        val note = Journal(entries = listOf(task("e-1", place, bullet = Bullet.EVENT)))
+        assertNull(note.toggleDone("e-1", now = 1L))
+    }
+
+    @Test
+    fun reopenOnlyAcceptsDoneOrIrrelevant() {
+        val place = Place.Daily(LocalDate.parse("2026-09-22"))
+        val done = Journal(entries = listOf(task("e-1", place, status = TaskStatus.DONE)))
+        assertEquals(TaskStatus.OPEN, done.reopen("e-1", now = 1L)!!.entries.single().status)
+
+        val irrelevant = Journal(entries = listOf(task("e-1", place, status = TaskStatus.IRRELEVANT)))
+        assertEquals(TaskStatus.OPEN, irrelevant.reopen("e-1", now = 1L)!!.entries.single().status)
+
+        val migrated = Journal(entries = listOf(task("e-1", place, status = TaskStatus.MIGRATED)))
+        assertNull(migrated.reopen("e-1", now = 1L))
+
+        val open = Journal(entries = listOf(task("e-1", place)))
+        assertNull(open.reopen("e-1", now = 1L))
+    }
+
+    @Test
+    fun toggleSignifierPutsAndRemovesOnAnyEntry() {
+        val place = Place.Daily(LocalDate.parse("2026-09-22"))
+        val j = Journal(entries = listOf(task("e-1", place, bullet = Bullet.NOTE)))
+        val withPriority = j.toggleSignifier("e-1", Signifier.PRIORITY, now = 1L)!!
+        assertEquals(setOf(Signifier.PRIORITY), withPriority.entries.single().signifiers)
+        val withoutPriority = withPriority.toggleSignifier("e-1", Signifier.PRIORITY, now = 2L)!!
+        assertEquals(emptySet(), withoutPriority.entries.single().signifiers)
+    }
+
+    @Test
+    fun editTextSavesOneLinedAndClampedTextButNotWhenEmptyAfterTrim() {
+        val place = Place.Daily(LocalDate.parse("2026-09-22"))
+        val j = Journal(entries = listOf(task("e-1", place, text = "vieja")))
+
+        val edited = j.editText("e-1", "linea uno\nlinea dos", now = 1L)!!
+        assertEquals("linea uno linea dos", edited.entries.single().text)
+
+        assertNull(j.editText("e-1", "   ", now = 1L))
+    }
+
+    @Test
+    fun deleteDropsAnEntryNothingPointsAt() {
+        val j = Journal(entries = listOf(task("e-1", Place.Daily(LocalDate.parse("2026-09-22")))))
+        assertEquals(0, j.delete("e-1", now = 1L)!!.entries.size)
+    }
+
+    @Test
+    fun deletingAMigratedOriginalLeavesASkeletonAndKeepsTheCopyAndItsChain() {
+        val today = LocalDate.parse("2026-09-22")
+        val original = task("e-1", Place.Daily(today), status = TaskStatus.MIGRATED)
+        val landed = task("e-2", Place.Monthly(YearMonth.parse("2026-10")), from = "e-1")
+        val j = Journal(entries = listOf(original, landed))
+
+        val result = j.delete("e-1", now = 5L)!!
+        val skeleton = result.entries.single { it.id == "e-1" }
+        assertTrue(skeleton.gone)
+        assertEquals("", skeleton.text)
+        assertEquals(emptySet(), skeleton.signifiers)
+        assertEquals(1, result.migrationCount("e-2"))
+        assertEquals(landed, copyOf(result, "e-1"))
+    }
+
+    @Test
+    fun deletingTheLastThingPointingAtASkeletonRemovesItToo() {
+        val e1 = task("e-1", Place.Daily(LocalDate.parse("2026-01-01"))).copy(gone = true, text = "")
+        val e2 = task("e-2", Place.Daily(LocalDate.parse("2026-01-02")), from = "e-1")
+        val j = Journal(entries = listOf(e1, e2))
+
+        val result = j.delete("e-2", now = 1L)!!
+        assertEquals(emptyList(), result.entries)
+    }
+
+    @Test
+    fun deletingACascadesThroughAChainOfSkeletons() {
+        val e1 = task("e-1", Place.Daily(LocalDate.parse("2026-01-01"))).copy(gone = true, text = "")
+        val e2 = task("e-2", Place.Daily(LocalDate.parse("2026-01-02")), from = "e-1").copy(gone = true, text = "")
+        val e3 = task("e-3", Place.Daily(LocalDate.parse("2026-01-03")), from = "e-2")
+        val j = Journal(entries = listOf(e1, e2, e3))
+
+        val result = j.delete("e-3", now = 1L)!!
+        assertEquals(emptyList(), result.entries)
+    }
+
+    @Test
+    fun copyOfFindsTheNonSkeletonEntryWhoseFromIsId() {
+        val landed = task("e-2", Place.Daily(LocalDate.parse("2026-09-23")), from = "e-1")
+        val j = Journal(entries = listOf(task("e-1", Place.Daily(LocalDate.parse("2026-09-22")), status = TaskStatus.MIGRATED), landed))
+        assertEquals(landed, copyOf(j, "e-1"))
+        assertNull(copyOf(j, "e-missing"))
+    }
+
+    // docs/tecnico.md 6.5, the schedule picker of ui/EntrySheet.kt (#22, and Futuro later with #24, #25).
+    @Test
+    fun futureMonthsStartsTheMonthAfterTodayAndCountsN() {
+        val today = LocalDate.parse("2026-03-05")
+        assertEquals(
+            listOf("2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09"),
+            futureMonths(today, 6).map { it.toString() },
+        )
+        assertEquals(24, futureMonths(today, 24).size)
     }
 }

@@ -8,9 +8,18 @@ import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.JournalJson
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.SCHEMA_VERSION
+import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.capture
+import com.baltajmn.bullet.model.delete
+import com.baltajmn.bullet.model.discard
+import com.baltajmn.bullet.model.editText
 import com.baltajmn.bullet.model.logicalDate
+import com.baltajmn.bullet.model.migrate
 import com.baltajmn.bullet.model.newId
+import com.baltajmn.bullet.model.reopen
+import com.baltajmn.bullet.model.schedule
+import com.baltajmn.bullet.model.toggleDone
+import com.baltajmn.bullet.model.toggleSignifier
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +32,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.YearMonth
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -125,19 +135,54 @@ object BobbinRepository {
     @OptIn(ExperimentalTime::class)
     fun today(): LocalDate = logicalDate(Clock.System.now(), TimeZone.currentSystemDefault(), journal.settings.dayStartHour)
 
+    @OptIn(ExperimentalTime::class)
+    private fun now(): Long = Clock.System.now().toEpochMilliseconds()
+
     /**
      * UI entry point for docs/tecnico.md 6.2 "Crear": reads the clock and a fresh id, then hands off
      * to [Journal.capture]. Returns whether it actually saved, so the capture row knows whether to
      * clear itself: "Con el campo vacío o solo prefijos, Intro no hace nada" (docs/pantallas.md 5.2).
      */
-    @OptIn(ExperimentalTime::class)
     fun capture(input: String, place: Place, picked: Bullet? = null): Boolean {
         var saved = false
         edit { j ->
-            j.capture(input, place, picked, now = Clock.System.now().toEpochMilliseconds(), newId = newId("e", j.entries.map { it.id }.toSet()))
+            j.capture(input, place, picked, now = now(), newId = newId("e", j.entries.map { it.id }.toSet()))
                 ?.also { saved = true }
         }
         return saved
+    }
+
+    // --- Estados, signifiers, migrar, programar, descartar, editar y borrar (docs/tecnico.md 6.3,
+    // 6.4), the UI entry points for ui/EntrySheet.kt (#22). Each reads the clock and a fresh id only
+    // when the model function underneath actually needs one, then hands off to [Journal].
+
+    fun toggleDone(id: String) = edit { j -> j.toggleDone(id, now()) }
+    fun reopen(id: String) = edit { j -> j.reopen(id, now()) }
+    fun toggleSignifier(id: String, s: Signifier) = edit { j -> j.toggleSignifier(id, s, now()) }
+    fun discard(id: String) = edit { j -> j.discard(id, now()) }
+
+    /** Empty after `trim` leaves the entry exactly as it was (docs/pantallas.md 5.4). */
+    fun editText(id: String, text: String) = edit { j -> j.editText(id, text, now()) }
+
+    /**
+     * Removing the original of a migration never breaks its copy: [Journal.delete] keeps a skeleton
+     * instead of dropping it outright (docs/tecnico.md 6.4). No undo banner yet: BobbinRepository
+     * grows one with the rest of #23.
+     */
+    fun delete(id: String) = edit { j -> j.delete(id, now()) }
+
+    /** True only when [Journal.migrate] actually accepted [to] (docs/pantallas.md 5.7): the sheet uses it to know whether to close. */
+    fun migrate(id: String, to: Place): Boolean {
+        var moved = false
+        edit { j -> j.migrate(id, to, today(), now(), newId("e", j.entries.map { it.id }.toSet()))?.also { moved = true } }
+        return moved
+    }
+
+    /** Same as [migrate], towards `Place.Future(month, day)`. */
+    fun schedule(id: String, month: YearMonth, day: Int?): Boolean {
+        var scheduled = false
+        edit { j -> j.schedule(id, month, day, today(), now(), newId("e", j.entries.map { it.id }.toSet()))?.also { scheduled = true } }
+        return scheduled
     }
 
     /**

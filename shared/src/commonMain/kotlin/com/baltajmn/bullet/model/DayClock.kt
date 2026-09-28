@@ -42,3 +42,13 @@ fun firstDayOfWeek(s: Settings, system: DayOfWeek): DayOfWeek = s.firstDayOfWeek
 /** The days of [m] that start a week under [first] (docs/pantallas.md: Month's week separator). */
 fun weekStarts(m: YearMonth, first: DayOfWeek): Set<Int> =
     (1..monthDays(m)).filterTo(mutableSetOf()) { LocalDate(m.year, m.month, it).dayOfWeek == first }
+
+/**
+ * [n] months starting the one right after [today]'s (docs/tecnico.md 6.5): Futuro's own blocks and
+ * the sheet's "Programar" month list (docs/pantallas.md 5.7) both read the future through this one
+ * function instead of walking [YearMonth] on their own.
+ */
+fun futureMonths(today: LocalDate, n: Int): List<YearMonth> {
+    val start = monthOf(today).plus(1, DateTimeUnit.MONTH)
+    return (0 until n).map { start.plus(it, DateTimeUnit.MONTH) }
+}

@@ -239,6 +239,7 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetSample.kt` | `WIDGET_SAMPLE`, el fichero de ejemplo de `widget.json` (test 12 y 36) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/i18n/StringsTest.kt` | test 24 (C `line/.../i18n/StringsTest.kt`) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ThemeTest.kt` | test 25 |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/EntrySheetTest.kt` | `statusActionsFor`, la tabla de 5.6: una nota o un evento nunca ofrecen un estado de tarea (#22) |
 | `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/NoBulkTest.kt` | test 9 |
 | `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/StorageFileTest.kt` | test 23 (A `line/.../StorageTest.kt`) |
 | `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/PerfTest.kt` | test 26 |

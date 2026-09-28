@@ -47,6 +47,19 @@ fun BulletGlyph(
     }
 }
 
+/**
+ * The sheet's own "discard" mark (docs/pantallas.md 5.6, `actionDiscard`): the open dot crossed by
+ * one line. Distinct from [TaskStatus.IRRELEVANT]'s row glyph, which stays a plain dot because the
+ * strike there runs through the entry's text instead (docs/tecnico.md 6.3).
+ */
+@Composable
+fun DiscardGlyph(modifier: Modifier = Modifier, tint: Color = MaterialTheme.colorScheme.onBackground) {
+    Canvas(modifier.size(GLYPH_BOX)) {
+        drawDot(tint, 12f, 12f, 5f)
+        drawLine(tint, 8f to 12f, 16f to 12f)
+    }
+}
+
 /** A signifier mark in its own margin column, same box and stroke as [BulletGlyph]. */
 @Composable
 fun SignifierGlyph(
