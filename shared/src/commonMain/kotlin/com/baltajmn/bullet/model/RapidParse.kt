@@ -55,9 +55,11 @@ fun rapidParse(input: String, picked: Bullet? = null): Parsed? {
  * The entry [rapidParse] describes, added to [place] (docs/tecnico.md 6.2 "Crear"): OPEN, its text
  * clamped to [TEXT_LIMIT], and the next order at that place. [now] and [newId] come from the caller
  * (`BobbinRepository`) so this stays as pure as every other function in `model/` (6). Returns null,
- * changing nothing, when [input] has nothing left to save.
+ * changing nothing, when [input] has nothing left to save or [place] is a day its month does not
+ * have ([dayExists]).
  */
 fun Journal.capture(input: String, place: Place, picked: Bullet?, now: Long, newId: String): Journal? {
+    if (!place.dayExists) return null
     val parsed = rapidParse(input, picked) ?: return null
     val entry = Entry(
         id = newId,

@@ -622,13 +622,17 @@ Solo en el mes actual. Todas las que apliquen, en este orden, enteras en `primar
   cada vez hasta 24; en 24 la acción desaparece.
 - **Bloque.** `monthTitle(m)` en `Eyebrow` (OCTUBRE 2026); las `Future(m, día)` por día ascendente, con
   el día y su inicial en la columna de fecha; después las `Future(m, null)` por `order`, con la columna
-  de fecha vacía; al final, la fila de captura del bloque. Una fila en blanco entre bloques.
+  de fecha vacía; al final, la fila de captura del bloque. Una fila en blanco entre bloques. Las filas
+  con día no se arrastran: su orden es el del calendario, no uno que se recoloque a mano. Las que no
+  tienen día sí, entre ellas (gesto 4).
 - **Captura con día.** En la captura de un bloque, la columna de fecha es un campo numérico de dos
   cifras con la pista `dayField` (día) en `onSurfaceVariant`, 48 x 48. Vacío, la entrada va sin día.
   Un día fuera de `1..monthDays(m)` no crea nada al pulsar Intro y enseña `dayOutOfRange(mes, n)`
   (Noviembre no tiene día 31.) en `Secondary` bajo la fila. Nunca un selector de calendario.
 - El Future Log no avisa ni mueve nada solo. Futuro se abre sin foco.
-- Programar desde cualquier sitio (5.7) aterriza aquí.
+- Programar desde cualquier sitio (5.7) aterriza aquí. El enlace de una tarea programada (5.5) lleva a
+  su bloque aunque esté más lejos de los seis abiertos: la vista se amplía hasta el mes que haga falta,
+  con el tope de 24.
 
 | Estado | Qué se ve |
 |---|---|

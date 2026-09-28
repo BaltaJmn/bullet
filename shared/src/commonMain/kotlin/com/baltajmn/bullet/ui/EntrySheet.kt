@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -27,12 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.baltajmn.bullet.data.BobbinRepository
@@ -292,27 +284,4 @@ private fun ScheduleDestinations(entry: Entry, today: LocalDate, onBack: () -> U
             TextAction(S.showMoreMonths) { shown = minOf(shown + FUTURE_MONTHS, FUTURE_MONTHS_MAX) }
         }
     }
-}
-
-/** A two digit day field (docs/pantallas.md 5.7): digits only, never a calendar picker. */
-@Composable
-private fun DayField(text: String, onChange: (String) -> Unit) {
-    var value by remember(text) { mutableStateOf(TextFieldValue(text, TextRange(text.length))) }
-    BasicTextField(
-        value = value,
-        onValueChange = { new ->
-            val digits = new.text.filter(Char::isDigit).take(2)
-            value = TextFieldValue(digits, TextRange(digits.length))
-            onChange(digits)
-        },
-        modifier = Modifier.width(40.dp),
-        textStyle = Type.Body,
-        cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(),
-        decorationBox = { inner ->
-            if (value.text.isEmpty()) Text(S.dayField, style = Type.Secondary)
-            inner()
-        },
-    )
 }

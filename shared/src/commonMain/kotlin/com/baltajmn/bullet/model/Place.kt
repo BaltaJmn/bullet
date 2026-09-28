@@ -31,6 +31,19 @@ sealed interface Place {
 }
 
 /**
+ * Whether a [Place.Monthly] or [Place.Future] day is a real day of its month (docs/tecnico.md 4.1).
+ * The day is always typed by hand in a numeric field, never picked from a calendar: in a Future Log
+ * block (docs/pantallas.md 8), in the sheet's "Programar" and in "Un dia de este mes" (5.7). Every
+ * writer checks here instead of each rejecting a 31 of November on its own.
+ */
+val Place.dayExists: Boolean
+    get() = when (this) {
+        is Place.Monthly -> day == null || day in 1..monthDays(month)
+        is Place.Future -> day == null || day in 1..monthDays(month)
+        else -> true
+    }
+
+/**
  * Writes and reads [Place] as an object with exactly one place key, plus an optional [day] for
  * [Place.Monthly] and [Place.Future] (docs/tecnico.md 4.1):
  *
@@ -72,10 +85,9 @@ object PlaceSerializer : KSerializer<Place> {
             "daily" -> Place.Daily(LocalDate.parse(obj.getValue("daily").jsonPrimitive.content))
             "monthly", "future" -> {
                 val month = YearMonth.parse(obj.getValue(key).jsonPrimitive.content)
-                if (day != null && day !in 1..month.numberOfDays) {
-                    throw SerializationException("day $day no cabe en $month")
-                }
-                if (key == "monthly") Place.Monthly(month, day) else Place.Future(month, day)
+                val place = if (key == "monthly") Place.Monthly(month, day) else Place.Future(month, day)
+                if (!place.dayExists) throw SerializationException("day $day no cabe en $month")
+                place
             }
             else -> Place.InCollection(obj.getValue("collection").jsonPrimitive.content)
         }

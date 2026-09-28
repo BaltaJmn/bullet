@@ -315,6 +315,8 @@ sealed interface Place {
     data class InCollection(val id: String) : Place
 }
 
+val Place.dayExists: Boolean                     // un 31 de noviembre no es un lugar
+
 @Serializable
 data class Entry(
     val id: String,                              // "e-" + 8 hex
@@ -380,6 +382,12 @@ data class Journal(
 
 val JournalJson = Json { ignoreUnknownKeys = true; encodeDefaults = false; explicitNulls = false }
 ```
+
+El `day` de `Monthly` y `Future` siempre se teclea a mano en un campo numérico, nunca se elige en un
+calendario (`docs/pantallas.md` 5.7 y 8). Por eso el día se comprueba en un solo sitio, `dayExists`, y
+no en cada pantalla: `capture` (6.2), `migrate` y `schedule` (6.4) devuelven `null` sin tocar nada si el
+mes no tiene ese día, y `PlaceSerializer` se niega a decodificarlo. La pantalla enseña
+`dayOutOfRange(mes, n)` porque conoce el mes; el modelo es la red de abajo.
 
 - `BulletCollection` y no `Collection`: una clase `Collection` en el paquete taparía a
   `kotlin.collections.Collection` en todo `model/`. En los documentos se sigue diciendo colección.
@@ -716,7 +724,7 @@ Crear: `Entry(id = newId("e", taken), bullet, text = clampCodePoints(text, TEXT_
 signifiers, place, order = siguiente de ese place, createdAt = now, updatedAt = now)`. El lugar es
 `Daily(hoy o el día visible)` en Hoy, `Monthly(mes, día)` en la línea de un día del Mes,
 `Monthly(mes, null)` en las tareas del mes, `Future(mes, día?)` en Futuro e `InCollection(id)` en una
-colección.
+colección. Un `place` que no pasa `dayExists` (4.1) devuelve `null`: no se crea nada.
 
 **Tope de 500 y parejas suplentes.** Se cuenta en puntos de código, no en unidades UTF-16, con las
 funciones de `line/.../model/Text.kt`, copiadas a `model/Entry.kt`:
@@ -1844,7 +1852,8 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
 4. **Mes y Future Log** (#24, #25): `monthDays` de 2026-02, 2028-02, 2026-04 y 2026-01 da 28, 29, 30 y
    31; `weekStarts` de 2026-09 con lunes da 7, 14, 21 y 28, y con domingo, 6, 13, 20 y 27; una
    `Monthly(m, 3)` no está entre las tareas sin día; `futureMonths` en 2026-03 empieza en 2026-04 y da 6
-   o 24.
+   o 24; un bloque de Futuro sale por día ascendente y deja al final las entradas sin día, sin los
+   esqueletos.
 5. **Índice y colecciones** (#29, #30): el orden de creación no cambia al renombrar; un mes sin entradas
    no aparece; un mes con solo entradas del Future Log no aparece; el filtro encuentra "Lecturas" con
    "LECTURAS" y "Canción" con "cancion"; las archivadas van al final; un seguimiento de tres páginas sale
@@ -1853,8 +1862,9 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
 6. **Migrar, programar y descartar** (#13, #22, #25): migrar deja el original `MIGRATED` con su texto
    intacto y crea una copia `OPEN` en el destino con `from`; programar a diciembre desde marzo crea
    `Future(diciembre)` con el original `SCHEDULED`; programar al 31 de un mes de 30 devuelve `null` y no
-   cambia nada; descartar no crea copia; migrar una tarea no abierta o al mismo lugar devuelve `null`;
-   migrar un evento del Future Log lo mueve sin copia.
+   cambia nada, y lo mismo `migrate` y `capture` hacia ese día, mientras los tres aceptan el 30;
+   descartar no crea copia; migrar una tarea no abierta o al mismo lugar devuelve `null`; migrar un
+   evento del Future Log lo mueve sin copia.
 7. **Cadena y borrado** (#13, #23, #30): tres migraciones seguidas dan `migrationCount` 3; un `from` a
    un id que no está cuenta un salto; un ciclo no cuelga; borrar el original deja un esqueleto sin texto
    y la copia conserva su recuento; borrar después la copia elimina el esqueleto; deshacer dentro del

@@ -66,6 +66,8 @@ fun MonthScreen(
     onSearch: () -> Unit,
     onSettings: () -> Unit,
     onNavigateTo: (Place) -> Unit,
+    linkTo: Place?,
+    onLinkHandled: () -> Unit,
 ) {
     val journal = BobbinRepository.journal
     val currentMonth = monthOf(today)
@@ -125,6 +127,7 @@ fun MonthScreen(
                         Row(
                             Modifier.fillMaxWidth()
                                 .then(if (isToday) Modifier.bringIntoViewRequester(todayRow) else Modifier)
+                                .then(scrollHereWhen(linkTo == place, onLinkHandled))
                                 .clickable(role = Role.Button, onClick = openCapture),
                         ) {
                             DayNumber(date, isToday)
@@ -153,7 +156,7 @@ fun MonthScreen(
             Spacer(Modifier.height(gridUnit))
             Text(S.monthTasks.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
             val tasksPlace = Place.Monthly(viewedMonth)
-            DatedRow {
+            DatedRow(modifier = scrollHereWhen(linkTo == tasksPlace, onLinkHandled)) {
                 EntryListSection(
                     entries = journal.entriesAt(tasksPlace),
                     place = tasksPlace,

@@ -15,12 +15,14 @@ const val FUTURE_MONTHS_MAX = 24
  * Migrates a single TASK: the original becomes MIGRATED and a copy with [newId] opens at [to],
  * linked back by [from]. An EVENT or a NOTE has no "migrated" status to leave behind, so it is
  * moved in place instead: only the Future Log review uses that branch (6.5). Returns null, changing
- * nothing, when [to] is the entry's own place, an earlier day or month than [today], an archived
- * collection, or the entry is not an open task (docs/tecnico.md 6.4).
+ * nothing, when [to] is the entry's own place, a day its month does not have ([dayExists]), an
+ * earlier day or month than [today], an archived collection, or the entry is not an open task
+ * (docs/tecnico.md 6.4).
  */
 fun Journal.migrate(id: String, to: Place, today: LocalDate, now: Long, newId: String): Journal? {
     val original = entries.find { it.id == id && !it.gone } ?: return null
     if (original.place == to) return null
+    if (!to.dayExists) return null
     if (to is Place.Daily && to.date < today) return null
     if (to is Place.Monthly && to.month < monthOf(today)) return null
     if (to is Place.InCollection && collections.find { it.id == to.id }?.archived == true) return null
@@ -55,8 +57,8 @@ fun Journal.schedule(id: String, month: YearMonth, day: Int?, today: LocalDate, 
     if (original.bullet != Bullet.TASK || original.status != TaskStatus.OPEN) return null
     val currentMonth = monthOf(today)
     if (month <= currentMonth || currentMonth.monthsUntil(month) > FUTURE_MONTHS_MAX) return null
-    if (day != null && day !in 1..monthDays(month)) return null
     val to = Place.Future(month, day)
+    if (!to.dayExists) return null
     if (original.place == to) return null
 
     val scheduled = original.copy(status = TaskStatus.SCHEDULED, updatedAt = now)
@@ -146,3 +148,15 @@ fun Journal.monthsWithContent(): Set<YearMonth> = entries.mapNotNullTo(mutableSe
         else -> null
     }
 }
+
+/** The day of a Future Log entry, null for the block's list of tasks without one (docs/tecnico.md 4.1). */
+val Entry.futureDay: Int? get() = (place as? Place.Future)?.day
+
+/**
+ * One Future Log block (docs/pantallas.md 8, docs/tecnico.md 6.5): the `Future(m, dia)` by day
+ * ascending and then the `Future(m, null)` by `order`, which is how Futuro paints a month and how
+ * the Future Log review (#26) walks it.
+ */
+fun Journal.futureBlock(m: YearMonth): List<Entry> = entries
+    .filter { !it.gone && it.place.let { p -> p is Place.Future && p.month == m } }
+    .sortedWith(compareBy<Entry> { it.futureDay ?: Int.MAX_VALUE }.then(ENTRY_ORDER))

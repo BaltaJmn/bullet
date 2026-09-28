@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +54,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -310,9 +313,11 @@ private fun EntryEditField(initial: String, onSave: (String) -> Unit, modifier: 
  * Never a signifier here (docs/pantallas.md 5.3, #22): those only come from the sheet, once created.
  * [autoFocus] is false for the one always there at the end of Mes: that page opens "sin foco ni
  * teclado" (docs/pantallas.md 7.1), unlike Hoy (#21) or a day of Mes opened on purpose.
+ * [beforeSave] returning false refuses the capture without clearing the field: a Future Log block
+ * uses it for a day its month does not have, which "no crea nada al pulsar Intro" (8, #25).
  */
 @Composable
-fun CaptureRow(place: Place, dayKey: Any, autoFocus: Boolean = true) {
+fun CaptureRow(place: Place, dayKey: Any, autoFocus: Boolean = true, beforeSave: () -> Boolean = { true }) {
     // A new day, month block or collection is a new field: neither its text nor its focus carries
     // over from another one.
     key(dayKey) {
@@ -335,6 +340,7 @@ fun CaptureRow(place: Place, dayKey: Any, autoFocus: Boolean = true) {
         val count = value.text.codePointCount()
 
         fun submit() {
+            if (!beforeSave()) return
             val saved = BobbinRepository.capture(value.text, place, picked)
             if (saved) {
                 value = TextFieldValue("")
@@ -428,6 +434,49 @@ fun DayNumber(date: LocalDate, isToday: Boolean = false) {
         )
         Text(S.weekdayInitial()[date.dayOfWeek.ordinal], style = Type.Secondary, textAlign = TextAlign.Center, modifier = Modifier.width(24.dp))
     }
+}
+
+/**
+ * docs/pantallas.md 5.5: a link to a migrated or scheduled copy leaves the page "desplazada hasta
+ * ella". The row that owns the linked place takes this modifier with [active] true; it scrolls itself
+ * into view once and calls [onDone], so scrolling by hand afterwards stays where it is left.
+ */
+@Composable
+fun scrollHereWhen(active: Boolean, onDone: () -> Unit): Modifier {
+    val requester = remember { BringIntoViewRequester() }
+    LaunchedEffect(active) {
+        if (active) {
+            requester.bringIntoView()
+            onDone()
+        }
+    }
+    return Modifier.bringIntoViewRequester(requester)
+}
+
+/**
+ * A two digit day field (docs/pantallas.md 5.7, 8): digits only, never a calendar picker. Shared by
+ * the sheet's destination picker (#22) and the date column of a Future Log block's capture (#25).
+ */
+@Composable
+fun DayField(text: String, modifier: Modifier = Modifier.width(40.dp), onChange: (String) -> Unit) {
+    var value by remember(text) { mutableStateOf(TextFieldValue(text, TextRange(text.length))) }
+    BasicTextField(
+        value = value,
+        onValueChange = { new ->
+            val digits = new.text.filter(Char::isDigit).take(2)
+            value = TextFieldValue(digits, TextRange(digits.length))
+            onChange(digits)
+        },
+        modifier = modifier,
+        textStyle = Type.Body,
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(),
+        decorationBox = { inner ->
+            if (value.text.isEmpty()) Text(S.dayField, style = Type.Secondary)
+            inner()
+        },
+    )
 }
 
 /** The icon row of a tab without `KEY` (docs/pantallas.md 3.2): `SEARCH` and `SETTINGS`. `SHARE` joins with #43. */

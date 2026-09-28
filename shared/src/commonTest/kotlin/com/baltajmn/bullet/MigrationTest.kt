@@ -6,10 +6,12 @@ import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.TaskStatus
+import com.baltajmn.bullet.model.capture
 import com.baltajmn.bullet.model.copyOf
 import com.baltajmn.bullet.model.delete
 import com.baltajmn.bullet.model.discard
 import com.baltajmn.bullet.model.editText
+import com.baltajmn.bullet.model.futureBlock
 import com.baltajmn.bullet.model.futureMonths
 import com.baltajmn.bullet.model.migrate
 import com.baltajmn.bullet.model.migrationCount
@@ -26,6 +28,7 @@ import com.baltajmn.bullet.model.toggleSignifier
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.datetime.LocalDate
@@ -350,7 +353,25 @@ class MigrationTest {
         assertFalse(restored.gone)
     }
 
-    // docs/tecnico.md 6.5, the schedule picker of ui/EntrySheet.kt (#22, and Futuro later with #24, #25).
+    // A day typed by hand in a numeric field reaches migrate, capture and schedule alike
+    // (docs/pantallas.md 5.7, 8): none of them may create a 31 of a 30 day month.
+    @Test
+    fun noWriterCreatesADayItsMonthDoesNotHave() {
+        val today = LocalDate.parse("2026-09-22")
+        val nov = YearMonth.parse("2026-11")
+        val j = Journal(entries = listOf(task("e-1", Place.Daily(today))))
+
+        assertNull(j.migrate("e-1", Place.Monthly(nov, 31), today = today, now = 1L, newId = "e-2"))
+        assertNull(j.capture("pasear", Place.Future(nov, 31), picked = null, now = 1L, newId = "e-2"))
+        assertNull(j.schedule("e-1", nov, day = 31, today = today, now = 1L, newId = "e-2"))
+
+        // The 30th of the same month is a real day, so the same three calls go through.
+        assertNotNull(j.migrate("e-1", Place.Monthly(nov, 30), today = today, now = 1L, newId = "e-2"))
+        assertNotNull(j.capture("pasear", Place.Future(nov, 30), picked = null, now = 1L, newId = "e-2"))
+        assertNotNull(j.schedule("e-1", nov, day = 30, today = today, now = 1L, newId = "e-2"))
+    }
+
+    // docs/tecnico.md 6.5, the schedule picker of ui/EntrySheet.kt (#22) and the blocks of Futuro (#25).
     @Test
     fun futureMonthsStartsTheMonthAfterTodayAndCountsN() {
         val today = LocalDate.parse("2026-03-05")
@@ -359,5 +380,22 @@ class MigrationTest {
             futureMonths(today, 6).map { it.toString() },
         )
         assertEquals(24, futureMonths(today, 24).size)
+    }
+
+    // A Future Log block paints the days in order and then what has no day (#25).
+    @Test
+    fun aFutureBlockGoesByDayAndLeavesTheOnesWithoutADayLast() {
+        val nov = YearMonth.parse("2026-11")
+        val j = Journal(
+            entries = listOf(
+                task("e-1", Place.Future(nov)),
+                task("e-2", Place.Future(nov, 14)),
+                task("e-3", Place.Future(nov, 2)),
+                task("e-4", Place.Future(nov)),
+                task("e-5", Place.Future(YearMonth.parse("2026-12"), 1)),
+                task("e-6", Place.Future(nov, 3)).copy(gone = true, text = ""),
+            ),
+        )
+        assertEquals(listOf("e-3", "e-2", "e-1", "e-4"), j.futureBlock(nov).map { it.id })
     }
 }

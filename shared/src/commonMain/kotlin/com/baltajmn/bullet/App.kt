@@ -32,9 +32,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.model.FUTURE_MONTHS
+import com.baltajmn.bullet.model.FUTURE_MONTHS_MAX
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.ui.Glyph
+import com.baltajmn.bullet.ui.FutureScreen
 import com.baltajmn.bullet.ui.GlyphButton
 import com.baltajmn.bullet.ui.MonthScreen
 import com.baltajmn.bullet.ui.TodayScreen
@@ -42,11 +45,13 @@ import com.baltajmn.bullet.ui.theme.BobbinTheme
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import kotlinx.coroutines.launch
+import kotlinx.datetime.monthsUntil
 
 /**
  * Ten destinations and no more (SPEC 5, docs/pantallas.md 3): four tabs at the bottom, and
- * everything else opens as a single screen above them. [TODAY] and [MONTH] have a real page (#21,
- * #24); the rest land issue by issue and show a bare placeholder with just their title until then.
+ * everything else opens as a single screen above them. [TODAY], [MONTH] and [FUTURE] have a real
+ * page (#21, #24, #25); the rest land issue by issue and show a bare placeholder with just their
+ * title until then.
  */
 enum class Screen { TODAY, MONTH, FUTURE, INDEX, COLLECTION, REVIEW, SEARCH, KEY, SETTINGS, PRO }
 
@@ -62,6 +67,9 @@ fun App() {
     var today by remember { mutableStateOf(BobbinRepository.today()) }
     var viewedDay by remember { mutableStateOf(today) }
     var viewedMonth by remember { mutableStateOf(monthOf(today)) }
+    var futureShown by remember { mutableStateOf(FUTURE_MONTHS) }
+    // The place a link just pointed at, until the page that owns it has scrolled to it (docs/pantallas.md 5.5).
+    var linkTo by remember { mutableStateOf<Place?>(null) }
     // Coming back to the foreground is the only guaranteed moment a backgrounded app can catch a
     // day change (docs/tecnico.md 6.1, test 38). If Hoy was showing today, it follows to the new
     // one, and Mes to the new month; a past day or month someone was reading stays put.
@@ -78,12 +86,20 @@ fun App() {
     // BackHandler, so one that still has a sheet or a dialog of its own open can close that first.
     var overlay by remember { mutableStateOf<Screen?>(null) }
 
-    /** A migrated or scheduled task's link (docs/pantallas.md 5.5): the tab that owns [place], pointed at it. Futuro and Colección join with #25 and #30. */
+    /** A migrated or scheduled task's link (docs/pantallas.md 5.5): the tab that owns [place], pointed at it. Colección joins with #30. */
     fun goTo(place: Place) {
+        linkTo = place
         when (place) {
             is Place.Daily -> { tab = Screen.TODAY; viewedDay = place.date }
             is Place.Monthly -> { tab = Screen.MONTH; viewedMonth = place.month }
-            is Place.Future, is Place.InCollection -> Unit
+            is Place.Future -> {
+                tab = Screen.FUTURE
+                // A task can be scheduled further out than the six blocks Futuro opens with, and the
+                // link has to reach the block it actually landed in (docs/pantallas.md 8).
+                val away = monthOf(today).monthsUntil(place.month)
+                if (away > futureShown) futureShown = minOf(away, FUTURE_MONTHS_MAX)
+            }
+            is Place.InCollection -> Unit
         }
     }
 
@@ -109,6 +125,16 @@ fun App() {
                             onReview = { overlay = Screen.REVIEW },
                             onNavigateTo = ::goTo,
                         )
+                        Screen.FUTURE -> FutureScreen(
+                            today = today,
+                            shown = futureShown,
+                            onShownChange = { futureShown = it },
+                            onSearch = { overlay = Screen.SEARCH },
+                            onSettings = { overlay = Screen.SETTINGS },
+                            onNavigateTo = ::goTo,
+                            linkTo = linkTo,
+                            onLinkHandled = { linkTo = null },
+                        )
                         Screen.MONTH -> MonthScreen(
                             today = today,
                             viewedMonth = viewedMonth,
@@ -116,6 +142,8 @@ fun App() {
                             onSearch = { overlay = Screen.SEARCH },
                             onSettings = { overlay = Screen.SETTINGS },
                             onNavigateTo = ::goTo,
+                            linkTo = linkTo,
+                            onLinkHandled = { linkTo = null },
                         )
                         else -> PlaceholderTab(tab)
                     }
@@ -171,7 +199,7 @@ private fun tabLabel(screen: Screen): String = when (screen) {
     else -> error("$screen is not a tab")
 }
 
-/** Futuro e Índice until #25 and #29 give them a real page. */
+/** Índice until #29 gives it a real page. */
 @Composable
 private fun PlaceholderTab(screen: Screen) {
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
