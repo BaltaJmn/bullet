@@ -1325,6 +1325,9 @@ iOS, el de la plantilla de las hermanas. Nada más: la primera imagen es Hoy.
   en iOS vía Compose): `a11yComplete` (Completar) o `a11yReopen` (Reabrir), `actionMigrate`,
   `actionSchedule`, `a11yMoveUp` (Subir) y `a11yMoveDown` (Bajar) como alternativa a arrastrar, y
   `a11yMoreActions` (Más acciones), que abre la hoja. Nada depende solo de la pulsación larga.
+  `actionMigrate` y `actionSchedule` abren la hoja de esa entrada, que es donde se elige el destino;
+  una migrada o programada añade la acción `a11yWentTo` para ir a su copia. Mientras se edita, la
+  entrada deja de ser un nodo único y el campo de texto se lee como tal.
 - **Iconos** con su descripción (sección 2). Pestañas: su nombre y `a11ySelected` en la activa.
 - **Fila de captura**: `a11yCapture` (Nueva entrada) y el tipo elegido en la fila de accesorios.
 - **Mes**: cada fila de día lee `a11yDayRow(día, nombre, n)` (3, jueves, 2 entradas) y su acción es

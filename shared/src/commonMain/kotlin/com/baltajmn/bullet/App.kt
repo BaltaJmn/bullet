@@ -28,6 +28,11 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -297,9 +302,20 @@ fun App() {
     }
 }
 
-/** docs/pantallas.md 3.1: four equal labels, the active one marked, no icons. */
+/**
+ * docs/pantallas.md 3.1: four equal labels, the active one marked, no icons. Their scale stops at 1.5,
+ * so at 200 % the four one-word labels still fit a quarter of the page each.
+ */
 @Composable
 private fun TabBar(active: Screen, onSelect: (Screen) -> Unit) {
+    val density = LocalDensity.current
+    CompositionLocalProvider(LocalDensity provides Density(density.density, minOf(density.fontScale, 1.5f))) {
+        TabRow(active, onSelect)
+    }
+}
+
+@Composable
+private fun TabRow(active: Screen, onSelect: (Screen) -> Unit) {
     val line = MaterialTheme.colorScheme.outlineVariant
     Row(
         Modifier.fillMaxWidth().height(gridUnit * 2)
@@ -312,6 +328,7 @@ private fun TabBar(active: Screen, onSelect: (Screen) -> Unit) {
             val isActive = screen == active
             Box(
                 Modifier.weight(1f).fillMaxHeight()
+                    .semantics { selected = isActive }
                     .clickable(role = Role.Tab, onClick = { onSelect(screen) }),
                 contentAlignment = Alignment.Center,
             ) {

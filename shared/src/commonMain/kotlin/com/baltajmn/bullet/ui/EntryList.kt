@@ -48,6 +48,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
@@ -112,6 +118,8 @@ fun EntryRow(
     onDragStart: () -> Unit = {},
     onDragChanged: (Float) -> Unit = {},
     onDragFinished: () -> Unit = {},
+    onMoveUp: (() -> Unit)? = null,
+    onMoveDown: (() -> Unit)? = null,
 ) {
     val landedCopy = if (entry.bullet == Bullet.TASK && entry.status in setOf(TaskStatus.MIGRATED, TaskStatus.SCHEDULED)) {
         copyOf(journal, entry.id)
@@ -133,8 +141,30 @@ fun EntryRow(
         base
     }
 
+    val wentTo = wentToText(landedCopy?.place, journal)
+    // One node per entry (docs/pantallas.md 22): what it is and says, editing as its main action, and
+    // everything the glyph, the sheet and dragging do as named actions, so nothing needs a long press.
+    val a11y = Modifier.clearAndSetSemantics {
+        contentDescription = S.entryDescription(entry.bullet, entry.status, entry.signifiers, entry.text) +
+            (wentTo?.let { ". ${S.a11yWentTo(it)}" } ?: "")
+        onClick(label = S.actionEdit) { onStartEdit(); true }
+        customActions = buildList {
+            val task = entry.bullet == Bullet.TASK
+            if (task && entry.status == TaskStatus.OPEN) add(CustomAccessibilityAction(S.a11yComplete) { onToggleDone(); true })
+            if (task && entry.status == TaskStatus.DONE) add(CustomAccessibilityAction(S.a11yReopen) { onToggleDone(); true })
+            if (task && entry.status == TaskStatus.OPEN) {
+                add(CustomAccessibilityAction(S.actionMigrate) { onLongPress(); true })
+                add(CustomAccessibilityAction(S.actionSchedule) { onLongPress(); true })
+            }
+            if (landedCopy != null && wentTo != null) add(CustomAccessibilityAction(S.a11yWentTo(wentTo)) { onNavigateTo(landedCopy.place); true })
+            onMoveUp?.let { add(CustomAccessibilityAction(S.a11yMoveUp) { it(); true }) }
+            onMoveDown?.let { add(CustomAccessibilityAction(S.a11yMoveDown) { it(); true }) }
+            add(CustomAccessibilityAction(S.a11yMoreActions) { onLongPress(); true })
+        }
+    }
+
     Row(
-        rowModifier.pointerInput(entry.id) {
+        rowModifier.then(if (isEditing) Modifier else a11y).pointerInput(entry.id) {
             var total = 0f
             var dragging = false
             detectDragGesturesAfterLongPress(
@@ -168,7 +198,7 @@ fun EntryRow(
         } else {
             EntryText(
                 entry,
-                wentToText(landedCopy?.place, journal),
+                wentTo,
                 onClick = onStartEdit,
                 modifier = Modifier.padding(top = 2.dp).weight(1f),
             )
@@ -251,12 +281,17 @@ fun EntryListSection(
                     dragOffset = 0f
                     if (order != ids) onReorder(place, order)
                 },
+                // The accessible alternative to dragging: one place up or down.
+                onMoveUp = order.indexOf(id).takeIf { it > 0 }?.let { i -> { onReorder(place, order.swapped(i, i - 1)) } },
+                onMoveDown = order.indexOf(id).takeIf { it < order.lastIndex }?.let { i -> { onReorder(place, order.swapped(i, i + 1)) } },
             )
         }
     }
 }
 
 /** docs/pantallas.md 5.1: where a migrated or scheduled task's copy landed, or null once it no longer exists. */
+private fun List<String>.swapped(a: Int, b: Int): List<String> = toMutableList().also { it[a] = this[b]; it[b] = this[a] }
+
 internal fun wentToText(place: Place?, journal: Journal): String? = when (place) {
     null -> null
     is Place.Daily -> S.wentToDay(place.date)
@@ -368,6 +403,7 @@ fun CaptureRow(place: Place, dayKey: Any, autoFocus: Boolean = true, focusSignal
                         value = TextFieldValue(edit.text, TextRange(edit.cursor))
                     },
                     modifier = Modifier.fillMaxWidth().focusRequester(focus)
+                        .semantics { contentDescription = S.a11yCapture }
                         .onFocusChanged { focused = it.isFocused }
                         // Intro saves; a hardware Enter must not insert the line break oneLine() would
                         // otherwise have to undo (docs/tecnico.md 6.2).
@@ -400,10 +436,10 @@ fun CaptureRow(place: Place, dayKey: Any, autoFocus: Boolean = true, focusSignal
     }
 }
 
-/** A text action in `primary` (docs/pantallas.md 1.3): 40dp tall, no background. */
+/** A text action in `primary` (docs/pantallas.md 1.3): 48dp tall like every target (22), no background. */
 @Composable
 fun TextAction(label: String, onClick: () -> Unit) {
-    Box(Modifier.heightIn(min = 40.dp).clickable(role = Role.Button, onClick = onClick).padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.heightIn(min = 48.dp).clickable(role = Role.Button, onClick = onClick).padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
         Text(label, style = Type.Body.copy(color = MaterialTheme.colorScheme.primary))
     }
 }

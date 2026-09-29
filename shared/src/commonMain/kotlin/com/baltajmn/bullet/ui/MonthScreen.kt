@@ -33,6 +33,10 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
@@ -155,6 +159,9 @@ fun MonthScreen(
                             Modifier.fillMaxWidth()
                                 .then(if (isToday) Modifier.bringIntoViewRequester(todayRow) else Modifier)
                                 .then(scrollHereWhen(linkTo == place, onLinkHandled))
+                                .clearAndSetSemantics {
+                                    contentDescription = S.a11yDayRow(day, S.weekdayNames()[date.dayOfWeek.ordinal], entries.size)
+                                }
                                 .clickable(role = Role.Button, onClick = openCapture),
                         ) {
                             DayNumber(date, isToday)
@@ -162,7 +169,12 @@ fun MonthScreen(
                     },
                 ) {
                     if (entries.isEmpty() && capturingDay != day) {
-                        Spacer(Modifier.fillMaxWidth().height(gridUnit * 2).clickable(role = Role.Button, onClick = openCapture))
+                        // The day's number already reads and acts for the row: this is only a wider touch.
+                        Spacer(
+                            Modifier.fillMaxWidth().height(gridUnit * 2)
+                                .semantics { hideFromAccessibility() }
+                                .clickable(role = Role.Button, onClick = openCapture),
+                        )
                     }
                     EntryListSection(
                         entries = entries,

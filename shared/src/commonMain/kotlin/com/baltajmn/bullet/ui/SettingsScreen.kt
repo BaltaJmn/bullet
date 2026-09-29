@@ -681,7 +681,7 @@ internal fun ChoiceDialog(title: String, options: List<Choice>, onClose: () -> U
 /** A dialog button in `primary`, never red, whatever it does (docs/pantallas.md 15). */
 @Composable
 internal fun DialogAction(label: String, enabled: Boolean = true, onClick: () -> Unit) {
-    TextButton(onClick = onClick, enabled = enabled) {
+    TextButton(onClick = onClick, enabled = enabled, modifier = Modifier.heightIn(min = 48.dp)) {
         Text(
             label,
             style = Type.Body.copy(
