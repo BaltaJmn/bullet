@@ -146,7 +146,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `data/Prefs.kt` | `expect object Prefs`: lo que vive fuera del diario (Pro, valoración pedida) | N |
 | `data/BobbinRepository.kt` | `object BobbinRepository`: estado, escritor único, deshacer, Pro | A `line/.../data/LineRepository.kt` |
 | `data/Search.kt` | `fold`, `tags`, `search` | A `line/.../data/Search.kt`; `fold` C `line/.../model/Text.kt` |
-| `data/WidgetState.kt` | `WidgetState`, `WidgetJson`, `widgetState`, `widgetView` | A `line/.../data/WidgetState.kt` |
+| `data/WidgetState.kt` | `WidgetState`, `WidgetJson`, `widgetState`, `widgetView`, `shownMask` | A `line/.../data/WidgetState.kt` |
 | `data/Widgets.kt` | `expect fun writeWidgetState`, `expect fun refreshWidgets`, `syncWidgets` | C `line/.../data/Widgets.kt` |
 | `data/Merge.kt` | `merge`, `MergeResult` | N |
 | `data/Zip.kt` | `ZipWriter`, `ZipReader`, `crc32`, `ZipDamaged` | C `line/.../data/Zip.kt` |
@@ -267,7 +267,7 @@ Simulador de iOS (9). Solo va a `androidHostTest` lo que necesita disco real o r
 | `iosApp/iosApp/<lang>.lproj/InfoPlist.strings` | `docs/textos.md` | A line |
 | `iosApp/BobbinWidget/BobbinWidget.swift` | widget de hoy y widget de pantalla de bloqueo, con el mismo `TimelineProvider` | A `line/iosApp/LineWidget/LineWidget.swift` |
 | `iosApp/BobbinWidget/BobbinMonthWidget.swift` | widget del mes | A `line/iosApp/LineWidget/LineYearWidget.swift` |
-| `iosApp/BobbinWidget/BobbinStore.swift` | decodifica `widget.json` y aplica `widgetView`; nada más | A `line/iosApp/LineWidget/LineStore.swift` |
+| `iosApp/BobbinWidget/BobbinStore.swift` | decodifica `widget.json` y aplica `widgetView` y `shownMask`; nada más | A `line/iosApp/LineWidget/LineStore.swift` |
 | `iosApp/BobbinWidget/Assets.xcassets` | `WidgetBackground`, el crema y el oscuro | C line |
 | `iosApp/BobbinWidget/<lang>.lproj/Localizable.strings` | nombre y descripción de cada widget en el selector | A line |
 | `iosApp/BobbinWidget/Info.plist`, `BobbinWidget.entitlements` | 8.3 | A line |
@@ -1263,6 +1263,10 @@ Qué pinta cada widget, en `docs/pantallas.md`:
 | Hoy (Android `TodayWidget`, iOS `BobbinTodayWidget` `systemSmall` y `systemMedium`) | gratis | `open`, `done`, `events` con sus glifos | `bobbin://today?focus` |
 | Mes (Android `MonthWidget`, iOS `BobbinMonthWidget`) | Pro | `monthMask` como rejilla de puntos y `open` | `bobbin://today`; sin `isPro`, estado bloqueado con "Bobbin Pro" y `bobbin://pro` |
 | Pantalla de bloqueo (iOS `BobbinLockWidget`, `accessoryCircular` y `accessoryRectangular`) | Pro | punto y `open`; el rectangular, además `events` | `bobbin://today`; sin `isPro`, bloqueado y `bobbin://pro` |
+
+`shownMask(st)` decide el estado bloqueado del widget del mes en los dos lados con la misma regla:
+la máscara si `isPro`, `null` si no. Kotlin y Swift la tienen cada uno, y el test 36 y `WidgetStateTest`
+prueban que la muestra, sin Pro, da `null`.
 
 El widget de bloqueo usa el mismo `TimelineProvider` que el de hoy. WidgetKit no permite quitar un
 widget del catálogo según una compra, así que sin Pro se ofrece y se pinta bloqueado, como el del mes

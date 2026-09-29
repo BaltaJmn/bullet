@@ -74,3 +74,9 @@ fun widgetView(st: WidgetState, today: LocalDate): WidgetState {
         monthMask = if (sameMonth) st.monthMask else "0".repeat(monthDays(m)),
     )
 }
+
+/**
+ * What the month widget paints (docs/pantallas.md 18.2): the mask with Pro, and null without it, which
+ * is the locked widget. `BobbinStore.shownMask` is the same rule in Swift (test 36).
+ */
+fun shownMask(st: WidgetState?): String? = st?.monthMask?.takeIf { st.isPro }

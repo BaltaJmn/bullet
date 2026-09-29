@@ -2,6 +2,7 @@ package com.baltajmn.bullet
 
 import com.baltajmn.bullet.data.WidgetJson
 import com.baltajmn.bullet.data.WidgetState
+import com.baltajmn.bullet.data.shownMask
 import com.baltajmn.bullet.data.widgetState
 import com.baltajmn.bullet.data.widgetView
 import com.baltajmn.bullet.model.Bullet
@@ -83,4 +84,13 @@ class WidgetStateTest {
     }
 
     private fun LocalDate.plusDays(n: Int) = LocalDate.fromEpochDays(toEpochDays() + n)
+
+    /** #51: without Pro the month widget gets no mask to paint, which is its locked state. */
+    @Test
+    fun theMonthWidgetIsLockedWithoutPro() {
+        val sample = WidgetJson.decodeFromString(WidgetState.serializer(), WIDGET_SAMPLE)
+        assertEquals(null, shownMask(sample))
+        assertEquals(sample.monthMask, shownMask(sample.copy(isPro = true)))
+        assertEquals(null, shownMask(null))
+    }
 }

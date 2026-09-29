@@ -51,6 +51,13 @@ struct CheckBobbinStore {
         let october = BobbinStore.view(st, on: instant("2026-10-01 12:00"))
         expect(october.month, "2026-10", "new month")
         expect(october.monthMask, String(repeating: "0", count: 31), "new month empty mask")
+
+        // The month widget without Pro paints the locked state (#51).
+        expect("\(BobbinStore.shownMask(st) == nil)", "true", "locked without Pro")
+        let pro = BobbinState(date: st.date, open: st.open, done: st.done, events: st.events, month: st.month,
+                              monthMask: st.monthMask, reviewPending: st.reviewPending, isPro: true,
+                              cover: st.cover, dayStartHour: st.dayStartHour)
+        expect(BobbinStore.shownMask(pro) ?? "nil", st.monthMask, "mask with Pro")
         print("all ok")
     }
 }

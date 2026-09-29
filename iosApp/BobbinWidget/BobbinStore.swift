@@ -48,6 +48,10 @@ enum BobbinStore {
         )
     }
 
+    /// The month widget's dots: the mask with Pro, nil without it, which is the locked widget. Kotlin's
+    /// `shownMask` is the same rule.
+    static func shownMask(_ st: BobbinState?) -> String? { st?.isPro == true ? st?.monthMask : nil }
+
     // MARK: - The logical day (docs/tecnico.md 6.1)
 
     static var calendar: Calendar {

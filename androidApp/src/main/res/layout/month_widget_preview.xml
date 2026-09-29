@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Solo para el selector de widgets, que infla RemoteViews y no sabe de Glance (docs/tecnico.md 8.2).
+  Se mantiene a mano: septiembre con la mascara de ejemplo y tres abiertas.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/widget_background"
+    android:padding="8dp">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="24dp"
+        android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/widget_preview_month"
+            android:textColor="@color/widget_muted"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:importantForAccessibility="no"
+            android:src="@drawable/glyph_task" android:tint="@color/widget_on_background" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp"
+            android:text="3" android:textColor="@color/widget_on_background" android:textSize="17sp" android:textStyle="bold" />
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scaleType="fitCenter"
+        android:importantForAccessibility="no"
+        android:src="@drawable/month_widget_preview_dots" />
+</LinearLayout>
