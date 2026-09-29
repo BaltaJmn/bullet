@@ -237,9 +237,62 @@ struct BobbinTodayWidget: Widget {
     }
 }
 
+/// docs/pantallas.md 18.3, Pro and iOS only: monochrome, as the system paints it, numbers and glyphs only.
+private struct LockView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: TodayEntry
+
+    private var pro: Bool { entry.state?.isPro == true }
+
+    var body: some View {
+        content
+            .widgetURL(URL(string: pro ? "bobbin://today" : "bobbin://pro"))
+            .containerBackground(for: .widget) { AccessoryWidgetBackground().opacity(family == .accessoryCircular ? 1 : 0) }
+    }
+
+    @ViewBuilder private var content: some View {
+        let open = entry.state?.open ?? 0
+        let events = entry.state?.events ?? 0
+        switch (family, pro) {
+        case (.accessoryCircular, true):
+            VStack(spacing: -4) {
+                Glyph.task.view(.primary)
+                Text("\(open)").font(.system(size: 20, weight: .medium))
+            }
+        case (.accessoryCircular, false):
+            Image(systemName: "lock")
+        case (_, true):
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 2) { Glyph.task.view(.primary); Text("\(open) \(L.open(open))") }
+                HStack(spacing: 2) { Glyph.event.view(.primary); Text("\(events) \(L.events(events))") }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        case (_, false):
+            VStack(alignment: .leading, spacing: 0) {
+                Text(L.proTitle).font(.headline)
+                Text(L.unlock)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+struct BobbinLockWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "BobbinLockWidget", provider: TodayProvider()) { entry in
+            LockView(entry: entry)
+        }
+        .configurationDisplayName("Open tasks")
+        .description("Today's open tasks on the lock screen")
+        .supportedFamilies([.accessoryCircular, .accessoryRectangular])
+    }
+}
+
 @main
 struct BobbinWidgetBundle: WidgetBundle {
     var body: some Widget {
         BobbinTodayWidget()
+        BobbinMonthWidget()
+        BobbinLockWidget()
     }
 }
