@@ -67,7 +67,7 @@ Arrancar todo esto antes de escribir una línea de código. Ninguno depende del 
 - [ ] **[autor] Solicitar el Small Business Program de Apple** si no está ya activo desde una
       hermana: 15 % en vez de 30 % en las comisiones. Si llega tarde, las primeras ventas se cobran al
       30 %. (#7)
-- [ ] **[autor] Registro DNS de la política**: en **Cloudflare**, que sirve la zona `baltajmn.dev`
+- [x] **[autor] Registro DNS de la política**: en **Cloudflare**, que sirve la zona `baltajmn.dev`
       aunque el dominio se registre en Porkbun, un `CNAME` con host `bullet` y destino
       `baltajmn.github.io`, igual que las hermanas. (#59)
 - [ ] **[autor] Reclutar 16 probadores**, no 12. Empieza por los de Quilt, MoodTraker y Purl: ya

@@ -42,9 +42,8 @@ RevenueCat recibe los datos como encargado del tratamiento, así que no cuenta c
 Play no deja enviar este cuestionario hasta que *Público objetivo* (§3) está hecho: mientras, se
 guarda en borrador con todo lo de arriba.
 
-Play comprueba que la URL de eliminación responde y no deja pasar de página si no. Mientras
-`bullet.baltajmn.dev` no esté publicada, esa pregunta (opcional) se queda sin responder en el
-borrador; se rellena antes de enviar.
+Play comprueba que la URL de eliminación responde y no deja pasar de página si no: la web tiene
+que estar publicada antes de rellenar esa pregunta.
 
 Lo que **no** se marca, y por qué:
 
@@ -107,12 +106,15 @@ The lock (Settings > Privacy) is optional, off by default, and uses the device's
 
 La casilla de acceso completo, contenido de pago incluido, solo se marca con el código puesto, y Play
 no guarda la sección sin ella: la cadena entera (precio, producto activo, promoción, esta sección,
-*Público objetivo*, *Seguridad de los datos*) espera al precio. Los
-códigos salen de una promoción de `bullet_pro` (*Monetizar con Play > Códigos promocionales*), que
-existe solo cuando el producto existe (#47); el CSV se guarda en `~/keys/`, fuera del repositorio, y
-al caducar se crea otra y se cambia el código aquí. Crear la promoción acepta los términos de los
-códigos promocionales de Play. Orden que impone Play: esta sección, luego *Público objetivo*, y solo
-entonces se puede enviar *Seguridad de los datos*.
+*Público objetivo*, *Seguridad de los datos*) espera al precio. Los códigos salen de una promoción de
+`bullet_pro` (*Monetizar con Play > Códigos promocionales*), que existe solo cuando el producto
+existe (#47); el CSV se guarda en `~/keys/`, fuera del repositorio, y al caducar se crea otra y se
+cambia el código aquí. La de ahora es la 131231800: cinco códigos, caduca el 28-09-2027, en
+`~/keys/bobbin-promo-131231800.csv`, y el revisor tiene el primero. El navegador integrado no guarda
+la descarga de *Descargar códigos*: los códigos están en la respuesta de `.../promotions/<id>/codes`
+que pide la página al pulsarlo. Crear la promoción acepta los términos de los códigos promocionales de
+Play. Orden que impone Play: esta sección, luego *Público objetivo*, y solo entonces se puede enviar
+*Seguridad de los datos*.
 
 Permisos del manifiesto fusionado (comprobados sobre el de `assembleDebug`, septiembre de 2026):
 `INTERNET`, `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, `USE_BIOMETRIC` propios;
