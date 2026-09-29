@@ -111,8 +111,8 @@ precio.
 
 | Plataforma | Prefijo | Dónde va |
 |---|---|---|
-| Android | `goog_` | `revenueCatApiKey` en `shared/src/androidMain/.../data/Billing.android.kt` |
-| iOS | `appl_` | `revenueCatApiKey` en `shared/src/iosMain/.../data/Billing.ios.kt` |
+| Android | `goog_` | `revenueCatApiKey` en `shared/src/androidMain/.../billing/Billing.android.kt` |
+| iOS | `appl_` | `revenueCatApiKey` en `shared/src/iosMain/.../billing/Billing.ios.kt` |
 
 Son públicas: viajan dentro del binario y cualquiera puede sacarlas. Van como literal en el código.
 **La clave secreta `sk_...` no sale nunca del panel de RevenueCat**: ni en el código, ni en un secreto
