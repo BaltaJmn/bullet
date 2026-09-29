@@ -37,12 +37,13 @@ class FirstRunTest {
 
     /**
      * "Diez destinos y no mas" (docs/pantallas.md 3). El test es que ninguno de ellos sea una
-     * bienvenida, un tutorial ni un paso de alta: si alguien anade uno, aqui salta.
+     * bienvenida, un tutorial ni un paso de alta: si alguien anade uno, aqui salta. El decimo, PRO,
+     * es el `Paywall`, un dialogo y no una pantalla (docs/tecnico.md 6.16).
      */
     @Test
     fun thereIsNoOnboardingDestination() {
         assertEquals(
-            listOf("TODAY", "MONTH", "FUTURE", "INDEX", "COLLECTION", "REVIEW", "SEARCH", "KEY", "SETTINGS", "PRO"),
+            listOf("TODAY", "MONTH", "FUTURE", "INDEX", "COLLECTION", "REVIEW", "SEARCH", "KEY", "SETTINGS"),
             Screen.entries.map { it.name },
         )
     }

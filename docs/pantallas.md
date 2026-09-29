@@ -249,7 +249,7 @@ App
 |   +-- SEARCH       (icono SEARCH de las cuatro pestañas)
 |   +-- KEY          (icono KEY de Hoy)
 |   +-- SETTINGS     (icono SETTINGS de las cuatro pestañas)
-|   +-- PRO          (ProDialog: un choque de docs/tecnico.md 6.16, la fila de Ajustes o bobbin://pro)
+|   +-- PRO          (ProDialog sobre lo que lo abrió: un choque de docs/tecnico.md 6.16, la fila de Ajustes o bobbin://pro)
 +-- puertas, por encima de todo: bloqueo (sección 16) y avisos de carga (16.2)
 ```
 

@@ -135,7 +135,21 @@ object BobbinRepository {
      * write behind, and a recreated Activity or a reminder firing with the app open would lose it.
      */
     fun ensureLoaded() {
-        if (!loaded) load()
+        if (loaded) return
+        load()
+        // Outside the diary, and absent in host tests, which have no Context for Prefs to read.
+        isPro = runCatching { Prefs.bool(PREF_PRO) }.getOrDefault(false)
+    }
+
+    /**
+     * What the store just said about Pro (docs/tecnico.md 6.16). Kept in Prefs, so without network
+     * the last known answer stands, and passed to the widgets at once.
+     */
+    fun updatePro(active: Boolean) {
+        if (active == isPro) return
+        isPro = active
+        runCatching { Prefs.setBool(PREF_PRO, active) }
+        syncWidgets(journal, active, today())
     }
 
     /**

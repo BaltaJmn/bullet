@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import com.baltajmn.bullet.model.Journal
+import com.baltajmn.bullet.billing.Billing
 import com.baltajmn.bullet.data.readBackup
 import com.baltajmn.bullet.data.merge
 import com.baltajmn.bullet.data.exportZip
@@ -100,6 +101,8 @@ fun SettingsScreen(onBack: () -> Unit) {
     var importDone by remember { mutableStateOf<Int?>(null) }
     var importProblem by remember { mutableStateOf<ImportProblem?>(null) }
     var exportFailed by remember { mutableStateOf(false) }
+    var restoring by remember { mutableStateOf(false) }
+    var restored by remember { mutableStateOf<Boolean?>(null) }
 
     // Read again on every return from the system settings, so granting the permission there shows
     // here without restarting (docs/tecnico.md 6.12).
@@ -236,6 +239,28 @@ fun SettingsScreen(onBack: () -> Unit) {
                 )
             }
 
+            SettingsSection(S.sectionPro)
+            val isPro = BobbinRepository.isPro
+            SettingsRow(
+                title = S.proRow,
+                subtitle = if (isPro) S.proOwned else S.proSubtitle,
+                onClick = if (isPro) null else ({ Paywall.show() }),
+            )
+            // Always, with Pro too: both stores ask for it to be reachable without buying first.
+            SettingsRow(
+                title = S.restoreRow,
+                subtitle = null,
+                onClick = {
+                    if (!restoring) {
+                        restoring = true
+                        uiScope.launch {
+                            restored = Billing.restore()
+                            restoring = false
+                        }
+                    }
+                },
+            )
+
             // "Más apps" only exists while some sister app has a page on this platform (docs/tecnico.md 6.16).
             val siblings = SIBLINGS.filter { it.storeUrl != null }
             if (siblings.isNotEmpty()) {
@@ -283,6 +308,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     }
     importDone?.let { MessageDialog(title = S.importTitle, text = S.importDone(it), onDismiss = { importDone = null }) }
     importProblem?.let { MessageDialog(title = S.importFailedTitle, text = importProblemText(it), onDismiss = { importProblem = null }) }
+    restored?.let { MessageDialog(title = S.restoreRow, text = if (it) S.restoreDone else S.restoreNothing, onDismiss = { restored = null }) }
     if (exportFailed) MessageDialog(title = S.exportRow, text = S.exportFailed, onDismiss = { exportFailed = false })
 
     when (dialog) {

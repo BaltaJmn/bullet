@@ -179,7 +179,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `ui/KeyScreen.kt` | la clave de símbolos | N |
 | `ui/SettingsScreen.kt` | Ajustes | A `line/.../ui/SettingsScreen.kt` |
 | `ui/LockScreen.kt` | overlay de bloqueo | C `line/.../ui/LockScreen.kt` |
-| `ui/Pro.kt` | `ProDialog` | A `line/.../ui/Pro.kt` |
+| `ui/Pro.kt` | `Paywall`, `ProDialog` | A `line/.../ui/Pro.kt` |
 | `ui/ShareScreen.kt` | la hoja de compartir: vista previa y dos acciones; no es un destino | A `line/.../ui/ShareScreen.kt` |
 | `ui/SharePage.kt` | `renderSharePages`: la página punteada como imagen | A `line/.../share/ShareCard.kt` |
 
@@ -239,6 +239,7 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/ZipFileTest.kt` | la mitad del test 14 que necesita un fichero: `unzip -t` del sistema |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/i18n/StringsTest.kt` | test 24 (C `line/.../i18n/StringsTest.kt`) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ThemeTest.kt` | test 25 |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/theme/ProTest.kt` | test 18 y, de #47, que sin respuesta de la tienda se queda el último Pro conocido |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/EntrySheetTest.kt` | `statusActionsFor`, la tabla de 5.6: una nota o un evento nunca ofrecen un estado de tarea (#22) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/data/BobbinRepositoryTest.kt` | `delete` y `undo`: el Deshacer de 5.8, con `MemoryFiles` (#23) |
 | `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/NoBulkTest.kt` | test 9 |
@@ -1439,6 +1440,11 @@ RevenueCat y en las tiendas, **nunca en el código**: subir a 9,99 EUR en v1.1 e
   (`Billing.proPackage()`), "compra única, sin suscripción" visible sin scroll, comprar, restaurar y
   cerrar. "Restaurar compras" siempre visible, también con Pro activo (requisito de Apple), aquí y en
   Ajustes. Cerrar sin comprar deja todo como estaba.
+- `object Paywall { open; show(onPro) }`: el diálogo no es una pantalla de la pila sino una ventana
+  sobre lo que lo abrió, pintada por `App.kt` después de todo salvo `LockScreen`, así que abrirlo desde
+  Ajustes no cierra Ajustes. `onPro` es el choque que lo abrió: si la compra o la restauración salen
+  bien, se cumple; si se cierra sin comprar, se olvida. Con el bloqueo puesto no se pinta hasta
+  desbloquear, porque un diálogo flotaría por encima de `LockScreen`.
 
 **Dónde se abre el paywall**: solo al chocar con un límite real o a propósito.
 
@@ -1452,8 +1458,8 @@ RevenueCat y en las tiendas, **nunca en el código**: subir a 9,99 EUR en v1.1 e
 | Activar la sincronización o abrir el resumen del año (v1.2) | `isPro` |
 | La fila "Bobbin Pro" de Ajustes | a propósito |
 
-**Nunca al arrancar ni tras un número de usos**: `App.kt` arranca siempre en `TODAY` y solo abre
-`PRO` por `Route` o por un choque de la tabla. Una comprobación que falla abre el diálogo y no cambia
+**Nunca al arrancar ni tras un número de usos**: `App.kt` arranca siempre en `TODAY` y solo llama a
+`Paywall.show()` por `Route` o por un choque de la tabla. Una comprobación que falla abre el diálogo y no cambia
 nada del diario.
 
 `SIBLINGS` (`data/AppInfo.kt`): Quilt, Purl y MoodTraker, cada una con la URL de su tienda **solo si
@@ -1968,7 +1974,8 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
 18. **Portadas, papeles y paywall** (#48, #49): `activeCover` con `rose` y sin Pro es `sage`, y con Pro
     vuelve a `rose`, sin cambiar `settings` ni ninguna entrada; un id desconocido es `sage` o `dotted`;
     `canUse` falla para cualquier Pro sin `isPro`; el destino inicial de `App` es `TODAY` y no hay
-    ninguna ruta que abra `PRO` sin un `Link` o un choque.
+    ninguna ruta que abra el `Paywall` sin un `Link` o un choque; cerrarlo sin comprar no cumple el
+    choque que lo abrió.
 19. **Seguimientos** (#50): la página de un mes nuevo tiene las mismas filas, `days` vacíos y
     `threadFrom` a la anterior, y no se guarda hasta la primera marca; con uno existente y sin Pro,
     `canCreateTracker` es falso; archivar no libera hueco y borrar sí; con Pro, sin tope.

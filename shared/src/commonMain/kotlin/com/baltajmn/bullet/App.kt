@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.baltajmn.bullet.billing.Billing
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.Lock
 import com.baltajmn.bullet.data.Reminders
@@ -53,6 +54,8 @@ import com.baltajmn.bullet.ui.LockScreen
 import com.baltajmn.bullet.ui.SearchScreen
 import com.baltajmn.bullet.ui.SettingsScreen
 import com.baltajmn.bullet.ui.MonthScreen
+import com.baltajmn.bullet.ui.Paywall
+import com.baltajmn.bullet.ui.ProDialog
 import com.baltajmn.bullet.ui.ReviewScreen
 import com.baltajmn.bullet.ui.TodayScreen
 import com.baltajmn.bullet.ui.theme.BobbinTheme
@@ -72,7 +75,7 @@ import kotlinx.datetime.monthsUntil
  * #25, #29); the rest land issue by issue and show a bare placeholder with just their title until
  * then.
  */
-enum class Screen { TODAY, MONTH, FUTURE, INDEX, COLLECTION, REVIEW, SEARCH, KEY, SETTINGS, PRO }
+enum class Screen { TODAY, MONTH, FUTURE, INDEX, COLLECTION, REVIEW, SEARCH, KEY, SETTINGS }
 
 private val TABS = listOf(Screen.TODAY, Screen.MONTH, Screen.FUTURE, Screen.INDEX)
 
@@ -85,11 +88,15 @@ fun relocks(lockOn: Boolean, away: Duration?): Boolean = lockOn && away != null 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun App() {
-    remember { BobbinRepository.ensureLoaded() }
+    remember {
+        BobbinRepository.ensureLoaded()
+        Billing.configure()
+    }
     val scope = rememberCoroutineScope()
     // A cold start always asks (docs/tecnico.md 6.15).
     var locked by remember { mutableStateOf(BobbinRepository.journal.settings.lockOn) }
     var backgroundAt by remember { mutableStateOf<TimeSource.Monotonic.ValueTimeMark?>(null) }
+    var proCheck by remember { mutableStateOf(0) }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
         backgroundAt = TimeSource.Monotonic.markNow()
         scope.launch { BobbinRepository.flush() }
@@ -124,7 +131,10 @@ fun App() {
         Reminders.sync()
         // The widgets may be showing yesterday, or a Pro that the store has since confirmed (6.13).
         syncWidgets(BobbinRepository.journal, BobbinRepository.isPro, today)
+        proCheck++
     }
+    // A purchase or a refund on another device (docs/tecnico.md 6.16). A failure keeps the known Pro.
+    LaunchedEffect(proCheck) { Billing.refresh() }
     // The day the reminder offer was shown on (docs/pantallas.md 6.3): it goes with the answer, with
     // the day, or with the process, and `reminderOffered` makes sure it never comes back.
     var reminderOfferOn by remember { mutableStateOf<LocalDate?>(null) }
@@ -166,10 +176,11 @@ fun App() {
     }
 
     // A link from a widget or the notification, whether it started the app or found it running
-    // (docs/tecnico.md 7). Read and cleared at once, so a recomposition never follows it twice.
+    // (docs/tecnico.md 7). Read and cleared at once, so a recomposition never follows it twice. With
+    // the lock on it waits for the unlock, so nothing opens behind the lock screen (docs/pantallas.md 3).
     val link = Route.pending
-    LaunchedEffect(link) {
-        if (link == null) return@LaunchedEffect
+    LaunchedEffect(link, locked) {
+        if (link == null || locked) return@LaunchedEffect
         Route.pending = null
         val now = BobbinRepository.today()
         when (link.screen) {
@@ -180,7 +191,12 @@ fun App() {
                 if (link.focus) focusToday++
             }
             "review" -> openReview(ReviewScope.Day(now))
-            "pro" -> overlay = Screen.PRO
+            "pro" -> {
+                overlay = null
+                tab = Screen.TODAY
+                viewedDay = now
+                Paywall.show()
+            }
         }
     }
 
@@ -238,7 +254,7 @@ fun App() {
                             linkTo = linkTo,
                             onLinkHandled = { linkTo = null },
                         )
-                        else -> PlaceholderTab(tab)
+                        else -> Unit
                     }
                 }
                 TabBar(active = tab, onSelect = { tab = it })
@@ -266,9 +282,13 @@ fun App() {
                         onBack = dismiss,
                         onNavigateTo = { place -> dismiss(); goTo(place) },
                     )
-                    else -> PlaceholderOverlay(screen, dismiss)
+                    // A review or a collection with nothing to show: close instead of an empty page.
+                    else -> LaunchedEffect(screen) { dismiss() }
                 }
             }
+
+            // A dialog is a window of its own and would float over the lock screen, so it waits for the unlock.
+            if (Paywall.open && !locked) ProDialog()
 
             // Painted last, so it covers every screen, sheet and overlay underneath.
             if (locked) LockScreen { locked = false }
@@ -319,38 +339,4 @@ private fun tabLabel(screen: Screen): String = when (screen) {
     Screen.FUTURE -> S.tabFuture
     Screen.INDEX -> S.tabIndex
     else -> error("$screen is not a tab")
-}
-
-/** Pro, con #48. */
-@Composable
-private fun PlaceholderTab(screen: Screen) {
-    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
-        Text(tabLabel(screen), style = Type.PageTitle)
-    }
-}
-
-/**
- * Colección, Revisar, Buscar, Clave, Ajustes y Pro until #23, #26/#27/#28, #35, #31, #32 and #48
- * build them. Each keeps its own [BackHandler], as the real screens will (docs/pantallas.md 3):
- * one that opens a sheet or a dialog of its own can close that first without leaving the screen.
- */
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-private fun PlaceholderOverlay(screen: Screen, onBack: () -> Unit) {
-    BackHandler(true, onBack)
-    // Buscar (pantallas.md 12) and Colección (10) have no fixed title of their own; Colección is
-    // also unreachable yet, with no Índice, Buscar result or migrated link to open it from.
-    val title = when (screen) {
-        Screen.PRO -> S.proTitle
-        Screen.REVIEW -> S.reflectTitle()
-        else -> null
-    }
-    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
-                GlyphButton(Glyph.BACK, S.a11yBack, onBack)
-            }
-            title?.let { Text(it, style = Type.PageTitle, modifier = Modifier.padding(start = 48.dp)) }
-        }
-    }
 }
