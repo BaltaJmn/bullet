@@ -11,6 +11,7 @@ import java.lang.ref.WeakReference
 import com.baltajmn.bullet.data.AndroidContext
 import com.baltajmn.bullet.data.FilePicker
 import com.baltajmn.bullet.data.Lock
+import com.baltajmn.bullet.data.StoreReview
 import com.baltajmn.bullet.data.Reminders
 import com.baltajmn.bullet.data.Route
 import com.baltajmn.bullet.data.parseLink
@@ -34,6 +35,7 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         AndroidContext.init(this)
         Lock.host = WeakReference(this)
+        StoreReview.host = WeakReference(this)
         Reminders.host = WeakReference(this)
         Reminders.launchRequest = { askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS) }
         FilePicker.createDocument = { name -> createBackup.launch(name) }
@@ -58,6 +60,7 @@ class MainActivity : FragmentActivity() {
         Reminders.launchRequest = null
         Reminders.host = null
         Lock.host = null
+        StoreReview.host = null
         super.onDestroy()
     }
 }

@@ -1,5 +1,8 @@
 package com.baltajmn.bullet
 
+import kotlinx.datetime.YearMonth
+import com.baltajmn.bullet.model.ReviewScope
+import com.baltajmn.bullet.data.shouldAskReview
 import com.baltajmn.bullet.data.Link
 import com.baltajmn.bullet.data.nextReminder
 import com.baltajmn.bullet.data.parseLink
@@ -110,5 +113,22 @@ class DataTest {
         assertNull(parseLink("https://today"))
         assertNull(parseLink("line://today"))
         assertNull(parseLink(null))
+    }
+}
+
+/** Test 20 (docs/tecnico.md 10, #56): the rating is asked for once, after the first closed month. */
+class ReviewPromptTest {
+    private val sep = ReviewScope.Month(YearMonth(2026, 9))
+    private val day = ReviewScope.Day(LocalDate(2026, 9, 23))
+
+    @Test
+    fun onlyTheFirstClosedMonthAsks() {
+        assertTrue(shouldAskReview(asked = false, sep, decided = 4, left = 0))
+        // Once asked, a second closed month does not ask again.
+        assertFalse(shouldAskReview(asked = true, sep, decided = 4, left = 0))
+        // Half a review, a review that opened empty and a Day review never ask.
+        assertFalse(shouldAskReview(asked = false, sep, decided = 3, left = 1))
+        assertFalse(shouldAskReview(asked = false, sep, decided = 0, left = 0))
+        assertFalse(shouldAskReview(asked = false, day, decided = 4, left = 0))
     }
 }

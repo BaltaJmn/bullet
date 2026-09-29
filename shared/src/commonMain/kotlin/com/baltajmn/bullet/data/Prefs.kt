@@ -12,5 +12,8 @@ expect object Prefs {
 /** The last Pro entitlement the store confirmed (docs/tecnico.md 6.16). Wiping the diary keeps it. */
 const val PREF_PRO = "pro"
 
+/** Whether the rating was ever asked for (#56): once in the install's life. */
+const val PREF_REVIEW_ASKED = "reviewAsked"
+
 /** Android 13+: whether the notification permission was ever asked, to tell "can ask" from "denied" (6.12). */
 const val PREF_NOTIFY_ASKED = "notifyAsked"

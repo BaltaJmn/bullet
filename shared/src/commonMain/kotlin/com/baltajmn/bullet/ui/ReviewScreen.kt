@@ -42,6 +42,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.baltajmn.bullet.data.BobbinRepository
+import com.baltajmn.bullet.data.askReviewAfter
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Entry
@@ -185,8 +186,9 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit) {
 
             if (entry == null) {
                 Spacer(Modifier.height(gridUnit))
-                // A Month review that ends with nothing open is a closed month (docs/pantallas.md 11.3).
-                // Asking for the rating the first time one closes is #56.
+                // A Month review that ends with nothing open is a closed month (docs/pantallas.md 11.3),
+                // and the first one is when the rating is asked for, once (docs/tecnico.md 6.6).
+                LaunchedEffect(Unit) { askReviewAfter(scope, decided = total, left = 0) }
                 val done = (scope as? ReviewScope.Month)?.let { S.monthClosed(it.month) } ?: S.reviewAllDecided
                 Text(done, style = Type.Body, modifier = Modifier.padding(start = 48.dp))
                 Spacer(Modifier.height(gridUnit))

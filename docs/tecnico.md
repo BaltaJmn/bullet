@@ -155,7 +155,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `data/Lock.kt` | `expect object Lock` | C `line/.../data/Lock.kt` |
 | `data/Reminders.kt` | `expect object Reminders`, `nextReminder`, `NotifyPermission` | A `line/.../data/Reminder.kt` |
 | `data/Sharing.kt` | `expect fun ImageBitmap.encodeToPng()`, `expect object Sharing`, `ShareContent` (`dayShare`, `monthShare`, `collectionShare`), `asciiEntry`, `shareText`, `paginate` | A `line/.../share/Sharing.kt` |
-| `data/StoreReview.kt` | `expect object StoreReview`, `shouldAskReview` | N |
+| `data/StoreReview.kt` | `expect object StoreReview`, `shouldAskReview`, `askReviewAfter` | N |
 | `data/Route.kt` | `object Route`: a qué pantalla pide ir un widget, un enlace o la notificación | A `line/.../data/Route.kt` |
 | `data/AppInfo.kt` | `PRIVACY_URL`, `SIBLINGS`, `expect object AppInfo` | A `line/.../data/AppInfo.kt` |
 | `data/SiblingImport.kt` | v1.2: leer las copias de Purl, MoodTraker y Quilt (4.5, 12.10) | N |
@@ -238,7 +238,7 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/SearchTest.kt` | test 11 |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetSample.kt` | `WIDGET_SAMPLE`, el fichero de ejemplo de `widget.json` (tests 12 y 36) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetStateTest.kt` | test 12: el diario fijo que da exactamente `WIDGET_SAMPLE`, y `shownMask` sin Pro |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/DataTest.kt` | tests 13 y 17, los enlaces `bobbin://` y `relocks` del test 41 |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/DataTest.kt` | tests 13, 17 y 20 (`ReviewPromptTest`), los enlaces `bobbin://` y `relocks` del test 41 |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/BackupTest.kt` | tests 14, 15, 16 y 22: zip, Markdown, validación e importación fusionando |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/theme/ProTest.kt` | test 18 y, de #47, que sin respuesta de la tienda se queda el último Pro conocido |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/StorageTest.kt` | test 21, la mitad común: carga, `.bak` y cuarentena con `MemoryFiles` |
@@ -952,9 +952,11 @@ quedan: no hace falta guardar un progreso aparte. Desde la segunda migración, "
 `migrationCount`. No hay ningún botón ni ruta de código que decida más de una tarea.
 
 Una **revisión mensual completa** es una de alcance `Month(m)` que termina con
-`openTasksOfMonth(m)` vacía. La primera dispara la valoración (#56): si `shouldAskReview(prefs)`,
-se pone `Prefs.reviewAsked = true` y después `StoreReview.request()`. Una sola vez en la vida de la
-instalación, nunca al arrancar ni tras un error.
+`openTasksOfMonth(m)` vacía. La primera dispara la valoración (#56): `askReviewAfter(scope, decided,
+left)` mira `shouldAskReview(asked, scope, decided, left)`, pone `Prefs.reviewAsked = true` y después
+llama a `StoreReview.request()`: la bandera va antes, para que un fallo dentro del diálogo del sistema
+no pueda pedir dos veces. Cuenta solo si se decidió al menos una tarea: una revisión que se abre ya
+vacía no demuestra nada. Una sola vez en la vida de la instalación, nunca al arrancar ni tras un error.
 
 ### 6.7 Índice, colecciones y threading
 

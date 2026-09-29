@@ -73,6 +73,7 @@ kotlin {
             implementation(libs.androidx.core.ktx)
             implementation(libs.glance.appwidget)
             implementation(libs.androidx.biometric)
+            implementation(libs.play.review)
             implementation(libs.androidx.fragment)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
