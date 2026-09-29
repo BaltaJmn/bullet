@@ -112,9 +112,9 @@ decidir.** Copiar el texto al migrar es legítimo; migrar sin que el usuario dec
    #3); bloqueo biométrico gratis (#39); `widget.json` sin texto del diario (#40); formularios que
    declaran que nada sale salvo RevenueCat (#59); la sincronización va solo a la nube del propio
    usuario (#69).
-7. **Lentitud y onboarding eterno** (Notion). Campo enfocado al arrancar (#21); sin tutorial, clave de
-   símbolos opcional (#31); nada obligatorio en Ajustes (#32); rendimiento medido con miles de
-   entradas (#55).
+7. **Lentitud y onboarding eterno** (Notion). Campo enfocado al arrancar (#21); una guía de cuatro
+   pasos que no pide nada y se salta con un toque, clave de símbolos opcional (#31); nada obligatorio
+   en Ajustes (#32); rendimiento medido con miles de entradas (#55).
 8. **Publicidad en el plan gratis** (Daylio). Sin anuncios en ningún plan (#2), declarado en los
    formularios (#59).
 
@@ -135,7 +135,8 @@ categoría) lo atacan #1 y #57 ("Bullet Journal" en el nombre de tienda y catego
 3. **Compra única, sin cuenta, sin anuncios.** En una categoría donde un año de suscripción cuesta más
    que toda la app.
 4. **Android e iOS con el mismo cuidado.** La oficial y buena parte del nicho no están en las dos.
-5. **Escribir cuesta cero toques extra**: la app abre en Hoy con el teclado arriba.
+5. **Escribir cuesta cero toques extra**: la app abre en Hoy con el teclado arriba (la primera vez,
+   tras una guía de cuatro pasos que se salta con un toque).
 6. **Tus datos salen cuando quieras**, en JSON y en Markdown con los símbolos del método, gratis.
 
 ---
@@ -311,8 +312,9 @@ El núcleo crítico. Sin esto no hay método, y automatizarlo sería peor que no
 ### La clave
 
 La *key page* del cuaderno: una pantalla de lectura con los glifos de los tres bullets, los cinco
-estados y los tres signifiers, abierta desde el icono de interrogación de Hoy (#31). Se cierra sin
-marcar nada como visto. Es la única ayuda de la app: no hay tutorial (§6).
+estados y los tres signifiers, cada uno con su nombre de todos los días y el del método (#31). Se
+abre desde Ajustes, en Ayuda, junto a "Ver la guía otra vez". La otra ayuda es la guía del primer
+arranque (§6), y las dos se pueden no abrir nunca.
 
 ---
 
@@ -391,7 +393,7 @@ siguiendo al sistema; teléfono y tableta, vertical y horizontal; tema claro u o
 | Fotos en las entradas | El método es texto. Una foto pesa en la copia, en el zip y en el widget, y no mejora ninguna regla |
 | Cuenta, servidor o sincronización propia | Rompe la promesa de la familia y añade un coste recurrente que obligaría a suscripción (§7) |
 | IA generativa sobre el contenido | Coste recurrente, red, y decide por el usuario lo que el método le pide decidir a él |
-| Onboarding o tutorial | Cero toques antes de escribir. La clave está a un toque para quien la quiera (§2) |
+| Onboarding con alta, permisos, elecciones o pasos obligatorios | Cero configuración antes de escribir. La guía del primer arranque solo enseña cuatro dibujos y se salta con un toque (§6); la clave está en Ajustes para quien la quiera (§2) |
 | Selector de idioma dentro de la app | Las hermanas no lo tienen, y Android 13+ e iOS ya dan idioma por app |
 | `FLAG_SECURE` en Android | Bloquea también las capturas que el propio usuario quiere hacer. `setRecentsScreenshotEnabled(false)` oculta la multitarea sin prohibir nada |
 | Seguimiento de hábitos con estadísticas y recordatorios | Es Quilt. Aquí, un seguimiento de papel, y la ficha remite a la hermana (#50) |
@@ -471,12 +473,14 @@ tokens y cada pantalla están en `docs/pantallas.md`.
   rayado, cuadrícula y liso (Pro, #49). El papel es fondo: nunca cambia el tamaño ni la posición de
   una línea, para que las capturas y la accesibilidad no dependan de él.
 - **Ocho portadas** con los ocho pasteles de la familia y sus mismos hex: salvia (gratis y de serie),
-  rosa, melocotón, mantequilla, menta, cielo, pervinca y lila. La portada tiñe solo el punto de la
-  fecha de hoy, la marca de la pestaña activa, los widgets y, en v1.1, la cubierta del libro.
+  rosa, melocotón, mantequilla, menta, cielo, pervinca y lila. La portada tiñe el punto de la fecha
+  de hoy, el número de hoy en Mes, las casillas de un seguimiento y los widgets, y su lavado va detrás
+  de la pestaña activa y de las tarjetas de aviso; en v1.1, la cubierta del libro.
 - El acento de las acciones de texto es `primary`: `#3F7A69` en claro y `#8FC9B6` en oscuro. El
   `#6FAE9B` de las hermanas se queda en 2,4:1 sobre el papel y no llega a AA; por lo mismo, el texto
   secundario pasa de `#8B8479` a `#736D63` en claro.
-- Radios de 18 a 32 dp, bordes de 1 dp en vez de sombras. Sin tarjetas: el papel es el lienzo.
+- Radios de 12 a 25 dp, bordes de 1 dp en vez de sombras. El papel es el lienzo; solo los avisos van
+  en una tarjeta, sobre el lavado de la portada, para que se distingan de lo escrito.
 - **Sin rojo en ninguna parte.** Una tarea abierta es una tarea abierta, no un suspenso; migrada
   cinco veces es una pregunta, no una alarma.
 
@@ -512,33 +516,37 @@ de lo que dice la app. Sin negrita ni cursiva en la tinta. Los widgets usan la f
 ### Navegación
 
 - **Cuatro destinos fijos en la barra inferior, y nada más**: Hoy, Mes, Futuro e Índice, en ese orden
-  (#19). Pestañas de texto, sin iconos.
+  (#19). Cada pestaña con su icono y su nombre: el icono se reconoce, el nombre se lee.
 - La cabecera de Hoy lleva flechas visibles al día anterior y al siguiente, además del gesto: nadie
   tiene que adivinar un gesto.
-- Colección, Revisar, Buscar, Clave, Ajustes y Pro se abren en pila sobre la barra, cada una con su
-  `BackHandler`. Diez destinos en total; ninguno fuera de esa lista.
+- Lista (o seguimiento), Revisar, Buscar, Ajustes, Clave, la guía y Pro se abren en pila sobre la
+  barra, cada una con su `BackHandler`. Once destinos en total; ninguno fuera de esa lista.
+- **Una barra de escribir fija abajo** en Hoy, Mes, Futuro y cada lista, con Tarea, Evento y Nota a la
+  vista y "En <dónde>" al lado: siempre se sabe qué se escribe y dónde cae.
 - Sin librería de navegación: un `enum Screen` en `App.kt`, como las hermanas.
-- La app arranca siempre en Hoy. Sin splash con lógica ni pantalla de bienvenida. Al volver a primer
-  plano se recalcula el día lógico.
+- La app arranca en Hoy. La primera vez de la instalación, antes, la guía de cuatro pasos (§6). Sin
+  splash con lógica. Al volver a primer plano se recalcula el día lógico.
 
-### Los cuatro gestos
+### Los gestos
 
-Son los únicos de la app; una pantalla nueva los reutiliza en vez de inventar uno:
+Pocos, y ninguno imprescindible: todo lo que hacen está también en un botón o en la hoja.
 
-1. **Tocar el glifo** de una tarea la completa (y otra vez, la reabre).
-2. **Pulsación larga** sobre una entrada abre la hoja de estados y signifiers: migrar, programar,
-   descartar, los tres signifiers, editar y borrar.
-3. **Deslizar en horizontal** cambia de día en Hoy.
-4. **Arrastrar** reordena dentro del mismo día o colección. Empieza con la pulsación larga y mover el
-   dedo; soltar sin mover abre la hoja.
+1. **Tocar el glifo** de una tarea la completa (y otra vez, la reabre), con Deshacer abajo.
+2. **Tocar el texto** de una entrada abre su hoja: hecha, pasar a mañana o a hoy, llevar a otro mes,
+   pasar a otro sitio, descartar, las marcas del margen, editar y borrar. Cada acción dice debajo lo
+   que va a pasar ("Se copia a mañana. Aquí queda una >.").
+3. **Deslizar en horizontal** el título de Hoy cambia de día; las flechas hacen lo mismo.
+4. **Mantener y arrastrar** reordena dentro del mismo día o lista; soltar sin mover abre la hoja.
 
-Tocar el texto lo edita en línea, sin otra pantalla (#23).
+La interfaz habla con verbos de todos los días (pasar, llevar, descartar) y la Clave da el nombre del
+método de cada estado (migrada, programada). Todo cambio de una entrada se puede deshacer durante cinco
+segundos desde el aviso de abajo (#23).
 
 ### Accesibilidad
 
 - TalkBack y VoiceOver leen cada bullet como se ve: tipo, estado y signifiers, en los cinco idiomas
-  ("Tarea completada, prioridad"). Completar, migrar y programar son acciones personalizadas del
-  lector, sin depender de la pulsación larga (#53).
+  ("Tarea completada, prioridad"). La acción principal de cada entrada abre su hoja, y completar y
+  reordenar son acciones personalizadas del lector: nada depende de un gesto (#53).
 - La app se usa entera con la fuente al 200 % sin cortar texto. Todo lo que convive con el teclado
   scrollea con `imePadding()` y `verticalScroll`.
 - Contraste AA en claro y en oscuro. Dianas tocables de 48 dp como mínimo, también el glifo.
@@ -553,7 +561,8 @@ más allá de eso.
 
 ### Principios
 
-1. **Cero toques antes de escribir.** La app abre sobre el teclado.
+1. **Cero configuración antes de escribir.** La app abre sobre el teclado; la guía de la primera vez
+   no pregunta nada.
 2. **Nada se mueve solo.** Lo que cambia de sitio lo ha decidido el usuario.
 3. **Nada de números de progreso.** Esto es un cuaderno, no un cuadro de mandos.
 
@@ -568,13 +577,20 @@ Nada necesita servidor.
 
 ### Primera sesión
 
-Una sola pantalla: Hoy vacío, la fecha, el campo con el foco puesto y, hasta el primer bullet, una
-pista corta con los prefijos (`- nota`, `o evento`, `* prioridad`). Un icono de interrogación abre la
-clave. Sin tutorial, sin elegir portada, sin configurar nada (#31). Cada estado vacío de la app
-invita a escribir su primer contenido, nunca a abrir Ajustes.
+**Una guía de cuatro pasos, y a escribir.** Sin contexto, un bujo digital no se entiende: qué es cada
+símbolo, que tocar el punto la completa, que lo pendiente no se mueve solo, que el mes se repasa. La
+primera vez que se abre la app, cuatro pantallas con un dibujo animado cada una lo enseñan en una
+frase: "Apunta en una línea", "Toca el punto cuando esté hecha", "Lo pendiente lo mueves tú" y "Una vez
+al mes, repasa". No pide nada (ni alta, ni permisos, ni portada), se salta con un toque desde la
+primera, y acaba en Hoy con el teclado arriba. No vuelve sola; Ajustes la ofrece otra vez.
+
+Hoy vacío dice qué hacer ("Nada escrito hoy. Escribe abajo para empezar.") y la barra de escribir
+enseña las tres clases y dónde cae cada línea. Con las primeras entradas, una pista que se cierra
+para siempre explica los dos toques: el punto marca hecha, el texto abre las opciones. Sin elegir
+portada ni configurar nada (#31). Cada estado vacío invita a escribir, nunca a abrir Ajustes.
 
 El recordatorio se ofrece **después** de guardar el primer bullet, una sola vez y dentro de Hoy, como
-una línea discreta ("¿Te aviso para repasar el día a las 21:00?"). El permiso del sistema se pide
+una tarjeta discreta ("¿Te aviso para repasar el día a las 21:00?"). El permiso del sistema se pide
 solo si el usuario dice que sí, y entonces el recordatorio queda encendido (#36, #38). Si no contesta,
 la línea no vuelve.
 
@@ -583,13 +599,14 @@ la línea no vuelve.
 La retención de un bujo no la fabrica una notificación: la fabrica que cerrar el mes sea agradable.
 
 - Durante el día, capturar es una línea y un Intro.
-- Al día siguiente, si quedaron tareas abiertas, Hoy enseña una línea: "Quedan N abiertas de días
-  anteriores".
-- Al cambiar de mes, Hoy y Mes enseñan "Febrero sin cerrar: N abiertas", y el mes que llega enseña
-  "N entradas del Future Log esperan".
-- Todas son **líneas dentro de la pantalla, nunca modales ni notificaciones**, y llevan a Revisar.
+- Al día siguiente, si quedaron tareas abiertas, Hoy enseña una tarjeta: "Quedan N tareas abiertas de
+  días anteriores", con su botón para repasarlas.
+- Al cambiar de mes, Hoy y Mes enseñan "Febrero tiene N tareas sin cerrar", y el mes que llega enseña
+  "N entradas de Futuro esperan a este mes".
+- Todas son **tarjetas dentro de la pantalla, nunca modales ni notificaciones**, y llevan a Revisar.
 - Revisar empieza releyendo el periodo (reflexión) y sigue con una tarea cada vez. Cada decisión es un
-  toque. "Migrada N veces" es la única presión, y es la del método.
+  toque y dice lo que deja en la página; "Decidir luego" la aparta sin tocarla. "Ya la has pasado N
+  veces" es la única presión, y es la del método.
 
 ### El recordatorio de reflexión
 
@@ -978,14 +995,17 @@ billing/Billing.kt       expect: RevenueCat, comprar / restaurar / refrescar, ú
 i18n/Strings.kt          los cinco idiomas en una tabla, obligados por firma
 ui/theme/Theme.kt        papel y tinta, portadas, papeles, Literata, corte de pantalla ancha
 ui/BulletGlyph.kt        los glifos del método, en Canvas
-ui/Icons.kt              los pocos iconos de la barra y la cabecera, en Canvas
-ui/EntryList.kt          la lista y el campo de captura, compartidos por Hoy, Mes y Colección
-ui/EntrySheet.kt         la hoja de la pulsación larga
+ui/Icons.kt              los iconos de las pestañas, la cabecera y las hojas, en Canvas
+ui/Parts.kt              página, cabeceras, botones, tarjetas y el aviso de abajo, compartidos
+ui/Composer.kt           la barra de escribir de Hoy, Mes, Futuro y cada lista
+ui/EntryList.kt          la fila de una entrada y la lista con arrastre, compartidas
+ui/EntrySheet.kt         la hoja de una entrada, una para toda la app
+ui/Guide.kt              la guía del primer arranque
 ui/TodayScreen.kt        Hoy
 ui/MonthScreen.kt        Mes
 ui/FutureScreen.kt       Futuro
 ui/IndexScreen.kt        Índice
-ui/CollectionScreen.kt   una colección, o un seguimiento
+ui/CollectionScreen.kt   una lista, o un seguimiento
 ui/ReviewScreen.kt       reflexión y revisión tarea a tarea
 ui/SearchScreen.kt       búsqueda
 ui/KeyScreen.kt          la clave de símbolos

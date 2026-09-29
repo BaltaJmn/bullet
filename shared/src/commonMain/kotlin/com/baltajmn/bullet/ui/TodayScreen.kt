@@ -1,43 +1,37 @@
 package com.baltajmn.bullet.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.baltajmn.bullet.data.dayShare
-import com.baltajmn.bullet.data.ShareContent
-import com.baltajmn.bullet.data.Reminders
-import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.BobbinRepository
+import com.baltajmn.bullet.data.PREF_HINT_SEEN
+import com.baltajmn.bullet.data.Prefs
+import com.baltajmn.bullet.data.Reminders
+import com.baltajmn.bullet.data.ShareContent
+import com.baltajmn.bullet.data.dayShare
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.Place
@@ -47,27 +41,40 @@ import com.baltajmn.bullet.model.ofDay
 import com.baltajmn.bullet.model.openTasksBefore
 import com.baltajmn.bullet.model.openTasksOfMonth
 import com.baltajmn.bullet.model.unclosedMonth
-import com.baltajmn.bullet.ui.theme.activeCover
 import com.baltajmn.bullet.ui.theme.Type
-import com.baltajmn.bullet.ui.theme.gridUnit
-import com.baltajmn.bullet.ui.theme.page
-import com.baltajmn.bullet.ui.theme.paper
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 
 /**
- * The Daily Log, the page seen the most (docs/pantallas.md 6, #21). [today] is the logical day
- * `App.kt` tracks; [viewedDay] is whichever day this page currently shows: any earlier day, today,
- * or at most tomorrow (a migration target that has to stay reachable, docs/pantallas.md 6.1).
+ * Hoy's one-time hint (docs/pantallas.md 6.3). It goes with "Entendido", or as soon as the dot or the
+ * text are used, since then there is nothing left to explain. Kept per install, like the guide.
+ */
+object TapHint {
+    var seen by mutableStateOf(runCatching { Prefs.bool(PREF_HINT_SEEN) }.getOrDefault(true))
+        private set
+
+    fun dismiss() {
+        if (seen) return
+        seen = true
+        runCatching { Prefs.setBool(PREF_HINT_SEEN, true) }
+    }
+}
+
+/**
+ * The Daily Log, the page seen the most (docs/pantallas.md 6). [today] is the logical day `App.kt`
+ * tracks; [viewedDay] is whichever day this page shows: any earlier day, today, or at most tomorrow.
+ * The composer writes on [viewedDay] and, on today, opens with the keyboard up unless [autoFocus] is
+ * off because the guide is still in front.
  */
 @Composable
 fun TodayScreen(
     today: LocalDate,
     viewedDay: LocalDate,
     onViewedDayChange: (LocalDate) -> Unit,
-    onKey: () -> Unit,
     onSearch: () -> Unit,
     onSettings: () -> Unit,
     onReview: (ReviewScope) -> Unit,
@@ -75,6 +82,7 @@ fun TodayScreen(
     reminderOfferOn: LocalDate?,
     onReminderOffer: (LocalDate?) -> Unit,
     focusSignal: Int,
+    autoFocus: Boolean,
 ) {
     val journal = BobbinRepository.journal
     val isToday = viewedDay == today
@@ -89,207 +97,131 @@ fun TodayScreen(
         }
     }
     val maxDay = today.plus(1, DateTimeUnit.DAY)
-
     val daily = journal.ofDay(viewedDay).filter { it.place is Place.Daily }
     val calendarLine = journal.ofDay(viewedDay).filter { it.place is Place.Monthly }
-
-    // Only one entry edits or opens its sheet at a time; #22, #23.
-    var editingId by remember { mutableStateOf<String?>(null) }
-    var sheetEntryId by remember { mutableStateOf<String?>(null) }
     var sharing by remember { mutableStateOf<ShareContent?>(null) }
+    val scroll = rememberScrollState()
+    val scope = rememberCoroutineScope()
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
-            HeaderIcons(
-                onKey = onKey,
-                onSearch = onSearch,
-                onSettings = onSettings,
-                onShare = if (journal.ofDay(viewedDay).isNotEmpty()) ({ sharing = dayShare(journal, viewedDay) }) else null,
+    Page(
+        tab = true,
+        scroll = scroll,
+        bottom = {
+            Composer(
+                place = Place.Daily(viewedDay),
+                today = today,
+                autoFocus = autoFocus && isToday,
+                focusSignal = focusSignal,
+                // The new line is the last one: bring it into sight above the composer.
+                onSaved = { scope.launch { delay(60); scroll.animateScrollTo(scroll.maxValue) } },
             )
-            TitleRow(
-                day = viewedDay,
-                isToday = isToday,
-                canGoForward = viewedDay < maxDay,
-                onPrevious = { onViewedDayChange(viewedDay.minus(1, DateTimeUnit.DAY)) },
-                onNext = { if (viewedDay < maxDay) onViewedDayChange(viewedDay.plus(1, DateTimeUnit.DAY)) },
-                onSwipedBack = { if (viewedDay < maxDay) onViewedDayChange(viewedDay.plus(1, DateTimeUnit.DAY)) },
-                onSwipedForward = { onViewedDayChange(viewedDay.minus(1, DateTimeUnit.DAY)) },
-                onReturnToToday = { onViewedDayChange(today) },
-            )
-            SubtitleRow(viewedDay, isToday) { onViewedDayChange(today) }
+        },
+    ) {
+        TopBar(onSearch, onSettings)
+        PageHead(
+            title = S.dayTitle(viewedDay),
+            subtitle = S.daySubtitle(viewedDay, today),
+            dot = isToday,
+            action = if (isToday) null else S.backToToday to { onViewedDayChange(today) },
+            // Gesture 3 (docs/pantallas.md 4): swiping the title changes the day.
+            titleModifier = Modifier.pointerInputHorizontalSwipe(
+                viewedDay,
+                threshold = 72.dp,
+                onSwipeRight = { onViewedDayChange(viewedDay.minus(1, DateTimeUnit.DAY)) },
+                onSwipeLeft = { if (viewedDay < maxDay) onViewedDayChange(viewedDay.plus(1, DateTimeUnit.DAY)) },
+            ),
+        ) {
+            GlyphButton(Glyph.BACK, S.a11yPreviousDay, { onViewedDayChange(viewedDay.minus(1, DateTimeUnit.DAY)) })
+            if (viewedDay < maxDay) {
+                GlyphButton(Glyph.FORWARD, S.a11yNextDay, { onViewedDayChange(viewedDay.plus(1, DateTimeUnit.DAY)) })
+            } else {
+                Spacer(Modifier.width(48.dp))
+            }
+        }
 
-            if (journal.entries.isEmpty()) {
-                Spacer(Modifier.height(gridUnit))
-                Text(S.prefixHint, style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
-            } else if (isToday) {
-                NoticeStrip(
-                    journal = journal,
-                    today = today,
-                    onReview = onReview,
-                    offerReminder = reminderOfferOn == today,
-                    onOfferAnswered = { yes ->
-                        onReminderOffer(null)
-                        if (yes) {
-                            Reminders.requestPermission { granted ->
-                                // Without the permission the reminder stays off (docs/tecnico.md 6.12).
-                                if (granted) {
-                                    BobbinRepository.settings { it.copy(reminderOn = true) }
-                                    Reminders.sync()
-                                }
+        if (isToday) {
+            Notices(
+                journal = journal,
+                today = today,
+                onReview = onReview,
+                offerReminder = reminderOfferOn == today,
+                onOfferAnswered = { yes ->
+                    onReminderOffer(null)
+                    if (yes) {
+                        Reminders.requestPermission { granted ->
+                            // Without the permission the reminder stays off (docs/tecnico.md 6.12).
+                            if (granted) {
+                                BobbinRepository.settings { it.copy(reminderOn = true) }
+                                Reminders.sync()
                             }
                         }
-                    },
-                )
-            }
-
-            Spacer(Modifier.height(gridUnit))
-            EntryListSection(
-                entries = daily,
-                place = Place.Daily(viewedDay),
-                journal = journal,
-                editingId = editingId,
-                onStartEdit = { editingId = it },
-                onSaveEdit = { id, text -> BobbinRepository.editText(id, text); editingId = null },
-                onLongPress = { sheetEntryId = it },
-                onToggleDone = { BobbinRepository.toggleDone(it) },
-                onNavigateTo = onNavigateTo,
-                onReorder = BobbinRepository::reorder,
+                    }
+                },
             )
-
-            CaptureRow(place = Place.Daily(viewedDay), dayKey = viewedDay, focusSignal = focusSignal)
-
-            if (calendarLine.isNotEmpty()) {
-                Spacer(Modifier.height(gridUnit))
-                Text(S.calendarToday.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
-                EntryListSection(
-                    entries = calendarLine,
-                    place = Place.Monthly(monthOf(viewedDay), viewedDay.day),
-                    journal = journal,
-                    editingId = editingId,
-                    onStartEdit = { editingId = it },
-                    onSaveEdit = { id, text -> BobbinRepository.editText(id, text); editingId = null },
-                    onLongPress = { sheetEntryId = it },
-                    onToggleDone = { BobbinRepository.toggleDone(it) },
-                    onNavigateTo = onNavigateTo,
-                    onReorder = BobbinRepository::reorder,
-                )
-            }
-            Spacer(Modifier.height(gridUnit * 2))
         }
-        // Above the tab bar or the accessory row, whichever is at the bottom right now
-        // (docs/pantallas.md 5.8): both sit right after this weighted column in the layout.
-        if (BobbinRepository.pendingUndo != null) {
-            UndoBanner(onUndo = BobbinRepository::undo)
+
+        Spacer(Modifier.heightIn(min = 10.dp))
+        if (daily.isEmpty()) {
+            EmptyText("${S.dayEmpty(viewedDay, today)} ${S.writeBelow}")
+        } else {
+            EntryListSection(daily, Place.Daily(viewedDay), journal, today, onNavigateTo)
         }
+        if (isToday && daily.isNotEmpty() && !TapHint.seen) HintCard(S.hintTap, TapHint::dismiss)
+
+        if (calendarLine.isNotEmpty()) {
+            Eyebrow(S.calendarToday)
+            EntryListSection(calendarLine, Place.Monthly(monthOf(viewedDay), viewedDay.day), journal, today, onNavigateTo)
+        }
+        if (daily.isNotEmpty() || calendarLine.isNotEmpty()) ShareRow(S.shareDay) { sharing = dayShare(journal, viewedDay) }
     }
 
     sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
-
-    val sheetEntry = sheetEntryId?.let { id -> journal.entries.find { it.id == id && !it.gone } }
-    if (sheetEntryId != null && sheetEntry == null) {
-        // The entry closed the sheet on itself (deleted from elsewhere): nothing left to show.
-        sheetEntryId = null
-    } else if (sheetEntry != null) {
-        EntrySheet(
-            entry = sheetEntry,
-            journal = journal,
-            today = today,
-            onClose = { sheetEntryId = null },
-            onEdit = { editingId = it },
-            onGoToCopy = onNavigateTo,
-        )
-    }
 }
 
+/** Every notice that applies shows, in order (docs/pantallas.md 6.3). */
 @Composable
-private fun HeaderIcons(onKey: () -> Unit, onSearch: () -> Unit, onSettings: () -> Unit, onShare: (() -> Unit)?) {
-    Row(Modifier.fillMaxWidth().height(gridUnit * 2), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-        // SHARE only when the day has something on it (docs/pantallas.md 6.1).
-        if (onShare != null) GlyphButton(Glyph.SHARE, S.a11yShare, onShare)
-        GlyphButton(Glyph.KEY, S.a11yKey, onKey)
-        GlyphButton(Glyph.SEARCH, S.a11ySearch, onSearch)
-        GlyphButton(Glyph.SETTINGS, S.a11ySettings, onSettings)
-    }
-}
-
-@Composable
-private fun TitleRow(
-    day: LocalDate,
-    isToday: Boolean,
-    canGoForward: Boolean,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
-    onSwipedBack: () -> Unit,
-    onSwipedForward: () -> Unit,
-    onReturnToToday: () -> Unit,
-) {
-    // Gesture 3 (docs/pantallas.md 4): 72dp of horizontal travel, at scale 1, commits a day change.
-    // Scoped to the title row only, per the issue: the entry list keeps its own vertical scroll.
-    val swipeThreshold = 72.dp
-    Row(
-        Modifier.fillMaxWidth().height(gridUnit * 2)
-            .pointerInputHorizontalSwipe(day, threshold = swipeThreshold, onSwipeRight = onSwipedBack, onSwipeLeft = onSwipedForward),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (isToday) {
-            Box(Modifier.padding(start = 12.dp).size(8.dp).background(activeCover(BobbinRepository.journal.settings, BobbinRepository.isPro).color, shape = CircleShape))
-            Spacer(Modifier.width(16.dp))
-        } else {
-            Spacer(Modifier.width(36.dp))
-        }
-        Text(
-            S.dayTitle(day),
-            style = Type.PageTitle,
-            modifier = Modifier.weight(1f).clickable(enabled = !isToday, role = Role.Button, onClick = onReturnToToday),
-        )
-        GlyphButton(Glyph.BACK, S.a11yPreviousDay, onPrevious)
-        if (canGoForward) GlyphButton(Glyph.FORWARD, S.a11yNextDay, onNext) else Spacer(Modifier.width(48.dp))
-    }
-}
-
-@Composable
-private fun SubtitleRow(day: LocalDate, isToday: Boolean, onBackToToday: () -> Unit) {
-    Row(Modifier.fillMaxWidth().height(gridUnit), verticalAlignment = Alignment.CenterVertically) {
-        Text(S.monthYear(monthOf(day)), style = Type.Secondary, modifier = Modifier.padding(start = 48.dp).weight(1f))
-        if (!isToday) TextAction(S.backToToday, onBackToToday)
-    }
-}
-
-/** One notice at a time is never the rule here (docs/pantallas.md 6.3): every line that applies shows, in order. */
-@Composable
-private fun NoticeStrip(
+private fun Notices(
     journal: Journal,
     today: LocalDate,
     onReview: (ReviewScope) -> Unit,
     offerReminder: Boolean,
     onOfferAnswered: (Boolean) -> Unit,
 ) {
-    if (BobbinRepository.corrupt) {
-        NoticeLine(S.noticeCorrupt, S.ok, BobbinRepository::dismissCorrupt)
-    }
-    if (BobbinRepository.saveFailed) {
-        NoticeLine(S.noticeSaveFailed)
-    }
+    if (BobbinRepository.corrupt) NoticeCard(S.noticeCorrupt, actions = listOf(S.ok to BobbinRepository::dismissCorrupt))
+    if (BobbinRepository.saveFailed) NoticeCard(S.noticeSaveFailed)
     if (offerReminder) {
         val settings = journal.settings
-        // Two answers do not fit on the notice's one line, so they go on the line under it.
-        Column(Modifier.fillMaxWidth().padding(start = 48.dp, end = 24.dp)) {
-            Text(S.offerReminder(settings.reminderHour, settings.reminderMinute), style = Type.Body)
-            Row(Modifier.offset(x = (-8).dp)) {
-                TextAction(S.notNow) { onOfferAnswered(false) }
-                TextAction(S.yes) { onOfferAnswered(true) }
-            }
-        }
+        NoticeCard(
+            S.offerReminder(settings.reminderHour, settings.reminderMinute),
+            actions = listOf(S.yes to { onOfferAnswered(true) }, S.notNow to { onOfferAnswered(false) }),
+        )
     }
     journal.unclosedMonth(today)?.let { month ->
-        NoticeLine(S.unclosedMonth(month, journal.openTasksOfMonth(month).size), action = { onReview(ReviewScope.Month(month)) })
+        NoticeCard(
+            S.unclosedMonth(month, journal.openTasksOfMonth(month).size),
+            S.unclosedBody,
+            listOf(S.reviewMonth(month) to { onReview(ReviewScope.Month(month)) }),
+        )
     }
     val earlier = journal.openTasksBefore(today)
     if (earlier.isNotEmpty()) {
-        NoticeLine(S.earlierOpen(earlier.size), action = { onReview(ReviewScope.Earlier(today)) })
+        NoticeCard(S.earlierOpen(earlier.size), S.earlierBody, listOf(S.reviewEarlier to { onReview(ReviewScope.Earlier(today)) }))
     }
 }
 
+/** Sharing a page (docs/pantallas.md 17), at its foot: it is something done with the page, not a way in. */
+@Composable
+fun ShareRow(label: String, onClick: () -> Unit) {
+    Row(
+        Modifier.padding(start = HEAD_START, top = 18.dp).heightIn(min = 44.dp).clip(RoundedCornerShape(18.dp))
+            .clickable(role = Role.Button, onClick = onClick).padding(start = 6.dp, end = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        GlyphIcon(Glyph.SHARE, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(8.dp))
+        Text(label, style = Type.Label.copy(color = MaterialTheme.colorScheme.primary, fontSize = 14.sp))
+    }
+}
 
 /** Gesture 3 (docs/pantallas.md 4): 72dp of horizontal travel commits a day change; a plain tap still falls through. */
 internal fun Modifier.pointerInputHorizontalSwipe(

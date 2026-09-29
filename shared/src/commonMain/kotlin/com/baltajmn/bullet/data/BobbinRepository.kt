@@ -66,13 +66,8 @@ import kotlinx.serialization.json.jsonPrimitive
 /** How long Deshacer stays offered after a delete (docs/pantallas.md 5.8, docs/tecnico.md 6.4). */
 const val UNDO_MS = 5_000L
 
-/**
- * What a delete leaves behind for Deshacer (docs/tecnico.md 6.4): [before] is the exact prior
- * snapshot, for the common case where nothing else changed meanwhile; [deleted] is the entry
- * itself, in case something did and only it needs putting back.
- */
 /** What the undo line is offering to put back (docs/pantallas.md 5.8): its text says which. */
-enum class UndoKind { ENTRY, COLLECTION, ROW }
+enum class UndoKind { ENTRY, COLLECTION, ROW, ACTION }
 
 /**
  * One undoable delete. [before] is the whole diary as it was, which is what [BobbinRepository.undo]
@@ -86,6 +81,8 @@ class PendingUndo internal constructor(
     /** The entry an entry delete removed. Null when a whole collection went. */
     val deleted: Entry?,
     internal val restore: (Journal) -> Journal,
+    /** What an [UndoKind.ACTION] did, in the words of the line: "Hecha.", "Pasada a mañana, miércoles 30.". */
+    val message: String = "",
 )
 
 /**
@@ -294,9 +291,27 @@ object BobbinRepository {
         }
     }
 
+    /**
+     * Any one action on an entry, from its glyph or its sheet (docs/pantallas.md 5.8): done, reopened,
+     * moved, discarded, marked or edited, with [message] on the line and [UNDO_MS] to take it back.
+     * The narrow repair puts back exactly the entries [action] touched and drops the ones it created (a
+     * migration's copy), so an undo after some other change leaves that change alone. Nothing happens
+     * when [action] changed nothing.
+     */
+    fun undoable(message: String, action: () -> Unit) {
+        val before = journal
+        action()
+        if (journal === before) return
+        val was = before.entries.associateBy { it.id }
+        val touched = journal.entries.filter { was[it.id] != it }.map { it.id }.toSet()
+        armUndo(before, UndoKind.ACTION, deleted = null, message) { current ->
+            current.copy(entries = current.entries.mapNotNull { e -> if (e.id in touched) was[e.id] else e })
+        }
+    }
+
     /** No confirmation for a delete, but [UNDO_MS] to take it back (docs/pantallas.md 5.8). */
-    private fun armUndo(before: Journal, kind: UndoKind, deleted: Entry?, restore: (Journal) -> Journal) {
-        pendingUndo = PendingUndo(before, journal, kind, deleted, restore)
+    private fun armUndo(before: Journal, kind: UndoKind, deleted: Entry?, message: String = "", restore: (Journal) -> Journal) {
+        pendingUndo = PendingUndo(before, journal, kind, deleted, restore, message)
         val token = ++undoToken
         scope.launch {
             delay(UNDO_MS)

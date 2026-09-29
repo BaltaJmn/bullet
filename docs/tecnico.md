@@ -134,7 +134,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 
 | Fichero | Qué hace | Origen |
 |---|---|---|
-| `App.kt` | `enum class Screen` con los diez destinos, barra de cuatro, pila con `BackHandler`, puerta de bloqueo, `LifecycleEventEffect` de `ON_RESUME` y `ON_STOP`, `Route` | A `line/.../App.kt` |
+| `App.kt` | `enum class Screen` con los once destinos, barra de cuatro, pila con `BackHandler`, la guía del primer arranque, la hoja de entrada única, puerta de bloqueo, `LifecycleEventEffect` de `ON_RESUME` y `ON_STOP`, `Route` | A `line/.../App.kt` |
 | `model/Entry.kt` | `Entry`, `Bullet`, `TaskStatus`, `Signifier`, `oneLine`, `codePointCount`, `clampCodePoints`, `limitEdit`, `TEXT_LIMIT` | N; las tres funciones de texto, C `line/.../model/Text.kt` |
 | `model/Place.kt` | `Place` sellado y su serializador | N |
 | `model/Journal.kt` | `Journal`, `BulletCollection`, `CollectionKind`, `TrackerRow`, `Settings`, `JournalJson`, `newId`, operaciones puras de entrada | N |
@@ -143,8 +143,8 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `model/RapidParse.kt` | `rapidParse`, `capture`, `captureNote` | N |
 | `model/Collections.kt` | `COLLECTION_TITLE_MAX`, `IndexItem`, `indexItems`, `filterIndex`, colecciones, índice, hilo, seguimientos, `FREE_TRACKER_LIMIT` | N |
 | `data/Storage.kt` | `interface JournalFiles`, `expect object Storage`, `load`, `SCHEMA_STEPS` | A `line/.../data/Storage.kt` |
-| `data/Prefs.kt` | `expect object Prefs`: lo que vive fuera del diario (Pro, valoración pedida) | N |
-| `data/BobbinRepository.kt` | `object BobbinRepository`: estado, escritor único, deshacer, Pro | A `line/.../data/LineRepository.kt` |
+| `data/Prefs.kt` | `expect object Prefs`: lo que vive fuera del diario (Pro, valoración pedida, guía y pista vistas) | N |
+| `data/BobbinRepository.kt` | `object BobbinRepository`: estado, escritor único, deshacer (`delete` y `undoable`), Pro | A `line/.../data/LineRepository.kt` |
 | `data/Search.kt` | `fold`, `tags`, `search` | A `line/.../data/Search.kt`; `fold` C `line/.../model/Text.kt` |
 | `data/WidgetState.kt` | `WidgetState`, `WidgetJson`, `widgetState`, `widgetView`, `shownMask` | A `line/.../data/WidgetState.kt` |
 | `data/Widgets.kt` | `expect fun writeWidgetState`, `expect fun refreshWidgets`, `syncWidgets` | C `line/.../data/Widgets.kt` |
@@ -164,16 +164,19 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `ui/theme/Theme.kt` | `BobbinTheme`, colores, `enum class Cover`, `enum class Paper`, `isWideScreen`, `MAX_CONTENT_WIDTH` | A `line/.../ui/theme/Theme.kt` |
 | `ui/theme/Grid.kt` | `gridUnit` | N (#17) |
 | `ui/theme/Paper.kt` | modificador que pinta el papel; `page()` y `Spread`, la página y la doble página en ancho grande | N (#17, #34) |
-| `ui/theme/Type.kt` | `Ink`, `PageTitle`, `Body`, `Secondary`, `Eyebrow` | N (#17) |
+| `ui/theme/Type.kt` | `Ink`, `PageTitle`, `Heading`, `Body`, `Label`, `Secondary`, `Eyebrow` | N (#17) |
 | `ui/BulletGlyph.kt` | los glifos del método en `Canvas` | N |
-| `ui/Icons.kt` | los pocos iconos de la cabecera | A `line/.../ui/Icons.kt` |
-| `ui/EntryList.kt` | la lista de entradas y el campo de captura, compartidos por Hoy, Mes y Colección | N; el campo, A `line/.../ui/LineField.kt` |
-| `ui/EntrySheet.kt` | la hoja de la pulsación larga y el selector de destino de 5.7, que comparte con Revisar | N |
+| `ui/Icons.kt` | `enum class Glyph`: los iconos de las pestañas, la cabecera y las hojas | A `line/.../ui/Icons.kt` |
+| `ui/Parts.kt` | `Page`, `TopBar`, `BackBar`, `PageHead`, `Eyebrow`, botones, `NoticeCard`, `HintCard`, `ActionRow`, `Flash` y `ToastLine` (el aviso de abajo) | N |
+| `ui/Composer.kt` | la barra de escribir (`docs/pantallas.md` 5.2) | N; el campo, A `line/.../ui/LineField.kt` |
+| `ui/EntryList.kt` | la fila de una entrada y la lista con arrastre, compartidas por Hoy, Mes, Futuro, listas y Buscar | N |
+| `ui/EntrySheet.kt` | `EntrySheetState` y `EntrySheetHost`: la hoja de una entrada, una para toda la app, con los destinos de "Llevar a otro mes" y "Pasar a otro sitio" | N |
+| `ui/Guide.kt` | la guía del primer arranque (`docs/pantallas.md` 13.1) | N |
 | `ui/TodayScreen.kt` | Hoy | N, con el patrón de foco de `line/.../ui/TodayScreen.kt` |
 | `ui/MonthScreen.kt` | Mes | N |
 | `ui/FutureScreen.kt` | Futuro | N |
 | `ui/IndexScreen.kt` | Índice | N |
-| `ui/CollectionScreen.kt` | una colección, o un seguimiento | N |
+| `ui/CollectionScreen.kt` | una lista, o un seguimiento | N |
 | `ui/ReviewScreen.kt` | reflexión y revisión tarea a tarea, y la del Future Log | N |
 | `ui/SearchScreen.kt` | búsqueda | N |
 | `ui/KeyScreen.kt` | la clave de símbolos | N |
@@ -234,7 +237,7 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/CollectionsTest.kt` | tests 5 y 19: Índice, colecciones y seguimientos |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/MigrationTest.kt` | tests 6, 7 y 8: migrar, programar, descartar, la cadena y la revisión |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/RapidParseTest.kt` | test 10: captura rápida |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/FirstRunTest.kt` | tests 10 y 37 en lo que no necesita pantalla: primer bullet sin ajustes y ningún destino de bienvenida |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/FirstRunTest.kt` | tests 10 y 37 en lo que no necesita pantalla: primer bullet sin ajustes, y la guía como único destino del primer arranque |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/SearchTest.kt` | test 11 |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetSample.kt` | `WIDGET_SAMPLE`, el fichero de ejemplo de `widget.json` (tests 12 y 36) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetStateTest.kt` | test 12: el diario fijo que da exactamente `WIDGET_SAMPLE`, y `shownMask` sin Pro |
@@ -243,10 +246,10 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/theme/ProTest.kt` | test 18 y, de #47, que sin respuesta de la tienda se queda el último Pro conocido |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/StorageTest.kt` | test 21, la mitad común: carga, `.bak` y cuarentena con `MemoryFiles` |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/SchemaMigrationTest.kt` | test 21, la mitad del esquema |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/data/BobbinRepositoryTest.kt` | `delete` y `undo`: el Deshacer de 5.8, con `MemoryFiles` (#23) |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/data/BobbinRepositoryTest.kt` | `delete`, `undoable` y `undo`: el Deshacer de 5.8, con `MemoryFiles` (#23) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/i18n/StringsTest.kt` | test 24 (C `line/.../i18n/StringsTest.kt`) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/theme/ThemeTest.kt` | test 25 y el corte de 600 dp de #34 |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/EntrySheetTest.kt` | `statusActionsFor`, la tabla de 5.6: una nota o un evento nunca ofrecen un estado de tarea (#22) |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/EntrySheetTest.kt` | `statusActionsFor` y `moveTarget`, la tabla de 5.6: una nota o un evento nunca ofrecen un estado de tarea (#22) |
 | `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/NoBulkActionsTest.kt` | test 9 |
 | `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/FirstDayOfWeekTest.kt` | test 4, la semana que dice el idioma del sistema |
 | `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/StorageDiskTest.kt` | test 23 (A `line/.../StorageTest.kt`) |
@@ -777,9 +780,10 @@ Solo las tareas tienen estado.
 Toda acción que cambia una entrada pone `updatedAt = now`. `reorder` solo toca las que cambian de
 `order`. Una tarea `MIGRATED` o `SCHEDULED` no se reabre: su copia ya existe.
 
-La hoja de la pulsación larga ofrece a una tarea `OPEN` migrar, programar, descartar, los tres
-signifiers, editar y borrar; a un evento o una nota, solo los signifiers, editar y borrar. Nunca
-ofrece estados de tarea a un evento o una nota.
+La hoja de una entrada (se abre tocando su texto) ofrece a una tarea `OPEN` hecha, pasar (a mañana o
+a hoy, `moveTarget`), llevar a otro mes, pasar a otro sitio y descartar, además de los signifiers,
+editar y borrar; a un evento o una nota, solo los signifiers, editar y borrar. Nunca ofrece estados de
+tarea a un evento o una nota.
 
 Orden en pantalla dentro de un lugar: `order`, después `createdAt`, después `id`.
 
@@ -800,8 +804,9 @@ de iconos; geometría en `docs/pantallas.md`):
 La copia de una migrada o programada es `copyOf(j, id)`: la entrada no esqueleto cuyo `from` es `id`.
 
 Lectura para TalkBack y VoiceOver: `S.entryDescription(bullet, status, signifiers, text)`, "Tarea
-hecha, prioridad: comprar pan", en los cinco idiomas (#53). Completar, migrar y programar son además
-acciones personalizadas del lector (`CustomAccessibilityAction`), sin depender de la pulsación larga.
+hecha, prioridad: comprar pan", en los cinco idiomas (#53). Su acción principal abre la hoja, y
+completar, ir a la copia y reordenar son además acciones personalizadas del lector
+(`CustomAccessibilityAction`), sin depender de ningún gesto.
 
 ### 6.4 Migración, programación y cadena
 
@@ -853,6 +858,13 @@ Borrar no pide confirmación (#23): `BobbinRepository.delete(id)` guarda en memo
 antes y enseña Deshacer durante `UNDO_MS`. Deshacer restaura ese `Journal` si no ha habido otro cambio
 entre medias, o reinserta la entrada con su `order` y su estado si lo ha habido. Pasado el plazo, el
 borrado queda firme. El guardado a disco no espera al plazo.
+
+Lo mismo vale para cualquier otra acción de la hoja o de Revisar (`docs/pantallas.md` 5.8):
+`BobbinRepository.undoable(mensaje) { acción }` guarda el `Journal` de antes, hace la acción y, si
+cambió algo, arma el Deshacer con ese mensaje. Deshacer vuelve exactamente a antes si nada más escribió
+entre medias; si sí, devuelve a su estado anterior solo las entradas que la acción tocó y quita las que
+creó (la copia de una migración), sin revertir lo demás. Es un deshacer de la interfaz, no una función
+del modelo: la migración sigue siendo una decisión por tarea, y deshacerla no es borrar un original.
 
 Consultas que alimentan la revisión (6.6). "Días del mes" son los lugares `Daily(d)` y
 `Monthly(mes, día)`, cuya fecha es `d` o `LocalDate(mes, día)`. Ninguna cuenta esqueletos.
@@ -1588,7 +1600,7 @@ nunca por su cuenta.
 | `expect` | Fichero común | Contrato | Android | iOS |
 |---|---|---|---|---|
 | `object Storage : JournalFiles` | `data/Storage.kt` | 6.14 | `filesDir`, `.tmp` con `fsync` y rename | Application Support, `atomically`, `CompleteUntilFirstUserAuthentication` |
-| `object Prefs` | `data/Prefs.kt` | `bool(key)`, `setBool(key, value)` con las claves `pro`, `reviewAsked`, `notifyAsked`. Fuera del diario: sobrevive a borrar los datos y a importar | `SharedPreferences("bobbin")` | `NSUserDefaults.standardUserDefaults` |
+| `object Prefs` | `data/Prefs.kt` | `bool(key)`, `setBool(key, value)` con las claves `pro`, `reviewAsked`, `notifyAsked`, `guideSeen` (la guía se acabó o se saltó) y `hintSeen` (la pista de Hoy se contestó). Fuera del diario: sobrevive a borrar los datos y a importar. Si no se puede leer, la guía y la pista cuentan como vistas | `SharedPreferences("bobbin")` | `NSUserDefaults.standardUserDefaults` |
 | `object Lock` | `data/Lock.kt` | 6.15 | `BiometricPrompt` | `LAContext` |
 | `object Reminders` | `data/Reminders.kt` | 6.12 | `AlarmManager`, receptores | `UNUserNotificationCenter` |
 | `fun ImageBitmap.encodeToPng()`, `object Sharing` | `data/Sharing.kt` | `sharePngs(pngs: List<ByteArray>)` y `shareText(text)` abren la hoja del sistema con lo que ya se ha pintado; nada se guarda en la galería por su cuenta | `FileProvider` en `cache/share/`, `ACTION_SEND_MULTIPLE` o `ACTION_SEND` | `UIActivityViewController` |
@@ -1971,8 +1983,8 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
    prohibirla confundiría la regla con su forma.
 10. **Captura rápida y primer arranque** (#20, #21, #31): un `Journal` recién creado acepta su primer
     bullet sin tocar ningún ajuste, y sus ajustes siguen siendo los de por defecto después; `Screen`
-    tiene exactamente los diez destinos de `docs/pantallas.md` 3, así que ninguno es una bienvenida ni
-    un tutorial; cada prefijo solo; `"* - texto"` y `"- * texto"` dan la misma nota con prioridad; `"* ! ? o texto"` da un evento con los tres signifiers; `"-5 grados"` y `"hola - x"`
+    tiene exactamente los once destinos de `docs/pantallas.md` 3, y la guía es el único que se abre
+    solo; cada prefijo solo; `"* - texto"` y `"- * texto"` dan la misma nota con prioridad; `"* ! ? o texto"` da un evento con los tres signifiers; `"-5 grados"` y `"hola - x"`
     son tareas; `"- - x"` es una nota con texto `"- x"`; `"- "` y `"* "` solos devuelven `null`; el
     selector da el bullet sin prefijo y el prefijo gana al selector; un salto de línea pegado se
     convierte en espacio.
@@ -2073,10 +2085,11 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
 
 ### A mano, en emulador y Simulador
 
-37. **Arranque** (#21, #31, #48): en frío, Hoy con el campo enfocado y el teclado arriba sin ningún
-    toque; diez bullets seguidos sin soltar el foco; en una instalación limpia se escribe el primer
-    bullet sin pasar por otra pantalla; las tareas abiertas de ayer no están en la lista de hoy; nunca
-    sale el paywall.
+37. **Arranque** (#21, #31, #48): en una instalación limpia, la guía; "Saltar" desde el primer paso
+    y "Empezar a escribir" desde el último acaban en Hoy con la barra de escribir enfocada y el teclado
+    arriba, y la guía no vuelve en el siguiente arranque; en frío después, Hoy enfocado sin ningún
+    toque; diez bullets seguidos sin soltar el foco; las tareas abiertas de ayer no están en la lista
+    de hoy; nunca sale el paywall.
 38. **Cambio de día** (#19): con la app en segundo plano al cruzar las 04:00, volver enseña el día nuevo
     sin reiniciar.
 39. **Estados persistentes** (#22): cada estado y signifier se relee igual tras cerrar y reabrir.

@@ -1,25 +1,18 @@
 package com.baltajmn.bullet.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +35,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.GroupKey
 import com.baltajmn.bullet.data.SearchFilter
@@ -54,9 +48,7 @@ import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.ui.theme.Type
-import com.baltajmn.bullet.ui.theme.gridUnit
 import com.baltajmn.bullet.ui.theme.page
-import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.LocalDate
 
 /**
@@ -78,82 +70,42 @@ fun SearchScreen(
     val journal = BobbinRepository.journal
     var query by remember { mutableStateOf("") }
     var filters by remember { mutableStateOf(emptySet<SearchFilter>()) }
-    var editingId by remember { mutableStateOf<String?>(null) }
-    var sheetEntryId by remember { mutableStateOf<String?>(null) }
 
     val groups = search(journal, query, filters)
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
-            SearchField(query, onChange = { query = it }, onClear = { query = "" }, onBack = onBack)
+    Page(tab = false) {
+        BackBar(S.back, onBack)
+        SearchField(query, onChange = { query = it }, onClear = { query = "" })
 
-            FlowRow(Modifier.fillMaxWidth().padding(start = 48.dp, end = 24.dp)) {
-                FilterChip(SearchFilter.OPEN, S.filterOpen, filters) { filters = filters.toggle(it) }
-                FilterChip(SearchFilter.PRIORITY, S.signifierPriority, filters) { filters = filters.toggle(it) }
-                FilterChip(SearchFilter.INSPIRATION, S.signifierInspiration, filters) { filters = filters.toggle(it) }
-                FilterChip(SearchFilter.EXPLORE, S.signifierExplore, filters) { filters = filters.toggle(it) }
-            }
-            Spacer(Modifier.height(gridUnit))
-
-            when {
-                query.isBlank() && filters.isEmpty() ->
-                    Text(S.searchEmpty, style = Type.Secondary, modifier = Modifier.padding(start = 48.dp, end = 24.dp))
-                groups.isEmpty() ->
-                    Text(S.searchNothing, style = Type.Secondary, modifier = Modifier.padding(start = 48.dp, end = 24.dp))
-            }
-
-            groups.forEach { group ->
-                val place = placeOf(group.place)
-                Row(
-                    Modifier.fillMaxWidth().height(gridUnit * 2)
-                        .clickable(role = Role.Button) { onOpenGroup(place) },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(groupLabel(group.place, journal).uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp, end = 24.dp))
-                }
-                // Every gesture but dragging: reordering makes no sense in a list of results from
-                // several pages (docs/pantallas.md 12).
-                group.entries.forEach { entry ->
-                    EntryRow(
-                        entry = entry,
-                        journal = journal,
-                        isEditing = entry.id == editingId,
-                        onStartEdit = { editingId = entry.id },
-                        onSaveEdit = { text -> BobbinRepository.editText(entry.id, text); editingId = null },
-                        onLongPress = { sheetEntryId = entry.id },
-                        onToggleDone = { BobbinRepository.toggleDone(entry.id) },
-                        onNavigateTo = onNavigateTo,
-                    )
-                }
-                Spacer(Modifier.height(gridUnit))
-            }
-            Spacer(Modifier.height(gridUnit * 2))
+        FlowRow(Modifier.fillMaxWidth().padding(start = HEAD_START, end = 16.dp)) {
+            FilterChip(SearchFilter.OPEN, S.filterOpen, filters) { filters = filters.toggle(it) }
+            FilterChip(SearchFilter.PRIORITY, S.signifierPriority, filters) { filters = filters.toggle(it) }
+            FilterChip(SearchFilter.INSPIRATION, S.signifierInspiration, filters) { filters = filters.toggle(it) }
+            FilterChip(SearchFilter.EXPLORE, S.signifierExplore, filters) { filters = filters.toggle(it) }
         }
-        if (BobbinRepository.pendingUndo != null) {
-            UndoBanner(onUndo = BobbinRepository::undo)
-        }
-    }
 
-    val sheetEntry = sheetEntryId?.let { id -> journal.entries.find { it.id == id && !it.gone } }
-    if (sheetEntryId != null && sheetEntry == null) {
-        sheetEntryId = null
-    } else if (sheetEntry != null) {
-        EntrySheet(
-            entry = sheetEntry,
-            journal = journal,
-            today = today,
-            onClose = { sheetEntryId = null },
-            onEdit = { editingId = it },
-            onGoToCopy = onNavigateTo,
-        )
+        when {
+            query.isBlank() && filters.isEmpty() -> EmptyText(S.searchEmpty)
+            groups.isEmpty() -> EmptyText(S.searchNothing)
+        }
+
+        groups.forEach { group ->
+            val place = placeOf(group.place)
+            Box(Modifier.fillMaxWidth().clickable(role = Role.Button) { onOpenGroup(place) }) {
+                Eyebrow(groupLabel(group.place, journal))
+            }
+            // Every gesture but dragging: reordering makes no sense in a list of results from several
+            // pages (docs/pantallas.md 12).
+            group.entries.forEach { entry -> EntryRow(entry, journal, today, onNavigateTo) }
+        }
     }
 }
 
 private fun Set<SearchFilter>.toggle(f: SearchFilter) = if (f in this) this - f else this + f
 
-/** docs/pantallas.md 12: the field sits in the title row, focused, and the keyboard's search key only lowers it. */
+/** docs/pantallas.md 12: the field under the back button, focused, and the keyboard's search key only lowers it. */
 @Composable
-private fun SearchField(query: String, onChange: (String) -> Unit, onClear: () -> Unit, onBack: () -> Unit) {
+private fun SearchField(query: String, onChange: (String) -> Unit, onClear: () -> Unit) {
     val keyboard = LocalSoftwareKeyboardController.current
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) {
@@ -161,17 +113,20 @@ private fun SearchField(query: String, onChange: (String) -> Unit, onClear: () -
         keyboard?.show()
     }
 
-    Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
-        GlyphButton(Glyph.BACK, S.a11yBack, onBack)
+    Row(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 8.dp).height(46.dp)
+            .fieldFrame(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.outline).padding(start = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(Modifier.weight(1f)) {
             if (query.isEmpty()) {
-                Text(S.searchHint, style = Type.Ink.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                Text(S.searchHint, style = Type.Ink.copy(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant))
             }
             BasicTextField(
                 value = query,
                 onValueChange = { onChange(it.oneLine()) },
                 modifier = Modifier.fillMaxWidth().focusRequester(focus),
-                textStyle = Type.Ink,
+                textStyle = Type.Ink.copy(fontSize = 16.sp),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),

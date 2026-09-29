@@ -7,6 +7,7 @@ import com.baltajmn.bullet.model.TaskStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.YearMonth
 
 private fun entry(bullet: Bullet, status: TaskStatus = TaskStatus.OPEN) = Entry(
     id = "e-1",
@@ -28,9 +29,9 @@ class EntrySheetTest {
     }
 
     @Test
-    fun anOpenTaskOffersMigrateScheduleAndDiscard() {
+    fun anOpenTaskOffersEveryWayOutInTheSheetsOrder() {
         assertEquals(
-            listOf(StatusAction.MIGRATE, StatusAction.SCHEDULE, StatusAction.DISCARD),
+            listOf(StatusAction.DONE, StatusAction.MOVE, StatusAction.OTHER_MONTH, StatusAction.ELSEWHERE, StatusAction.DISCARD),
             statusActionsFor(entry(Bullet.TASK, TaskStatus.OPEN), copyExists = false),
         )
     }
@@ -46,5 +47,15 @@ class EntrySheetTest {
         assertEquals(listOf(StatusAction.GO_TO_COPY), statusActionsFor(entry(Bullet.TASK, TaskStatus.MIGRATED), copyExists = true))
         assertEquals(emptyList(), statusActionsFor(entry(Bullet.TASK, TaskStatus.MIGRATED), copyExists = false))
         assertEquals(listOf(StatusAction.GO_TO_COPY), statusActionsFor(entry(Bullet.TASK, TaskStatus.SCHEDULED), copyExists = true))
+    }
+
+    @Test
+    fun theNamedMoveGoesToTheNextDayFromTodayOnAndToTodayFromThePast() {
+        val today = LocalDate.parse("2026-09-22")
+        fun on(date: String) = entry(Bullet.TASK).copy(place = Place.Daily(LocalDate.parse(date)))
+        assertEquals(Place.Daily(LocalDate.parse("2026-09-23")), moveTarget(on("2026-09-22"), today))
+        assertEquals(Place.Daily(LocalDate.parse("2026-09-25")), moveTarget(on("2026-09-24"), today))
+        assertEquals(Place.Daily(today), moveTarget(on("2026-09-20"), today))
+        assertEquals(Place.Daily(today), moveTarget(entry(Bullet.TASK).copy(place = Place.Monthly(YearMonth(2026, 8))), today))
     }
 }

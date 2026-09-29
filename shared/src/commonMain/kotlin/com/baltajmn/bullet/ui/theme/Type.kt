@@ -15,14 +15,20 @@ import org.jetbrains.compose.resources.Font
 /**
  * The two voices of docs/pantallas.md 1.3: Literata for what the user wrote (`Ink`, `PageTitle`),
  * the system font for everything around it. Each style already carries its color, so a call site
- * never mixes one up. Line heights are `gridUnit` multiples so text follows the page grid at any
- * font scale.
+ * never mixes one up. The ink of an entry keeps a `gridUnit` line so it sits on the dots; titles and
+ * labels around it do not.
  */
 object Type {
     val literata: FontFamily @Composable get() = FontFamily(Font(Res.font.literata_regular))
 
     val Ink: TextStyle @Composable get() = ink(17.sp, 24.sp)
-    val PageTitle: TextStyle @Composable get() = ink(24.sp, 48.sp)
+    val PageTitle: TextStyle @Composable get() = ink(30.sp, 36.sp)
+
+    /** The sheet's header, a guide step and a task under review: between an entry and a page title. */
+    val Heading: TextStyle @Composable get() = ink(26.sp, 32.sp)
+
+    /** A button's label and the title of a card. */
+    val Label: TextStyle @Composable get() = system(15.sp, 20.sp, FontWeight.SemiBold, colors.onBackground)
 
     val Body: TextStyle @Composable get() = system(15.sp, 24.sp, FontWeight.Normal, colors.onBackground)
     val Secondary: TextStyle @Composable get() = system(13.sp, 24.sp, FontWeight.Normal, colors.onSurfaceVariant)

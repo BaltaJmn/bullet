@@ -6,6 +6,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
@@ -65,8 +67,9 @@ fun isWideScreen(windowWidth: Dp): Boolean = windowWidth >= WIDE_SCREEN_FROM
 fun isWideScreen(): Boolean = with(LocalDensity.current) { isWideScreen(LocalWindowInfo.current.containerSize.width.toDp()) }
 
 /**
- * The family's eight pastels (docs/tecnico.md 5), in its order. A cover only tints today's dot, the
- * active tab's mark and the widgets (docs/pantallas.md 1.2): never the text or the paper.
+ * The family's eight pastels (docs/tecnico.md 5), in its order. A cover only tints today's dot and
+ * number, the widgets and, washed out by [coverSoft], the active tab and the notice cards
+ * (docs/pantallas.md 1.2): never the text or the paper.
  */
 enum class Cover(val id: String, val color: Color) {
     Rose("rose", Color(0xFFF0AFBE)),
@@ -93,6 +96,16 @@ enum class Paper(val id: String) {
     companion object {
         fun of(id: String): Paper = entries.find { it.id == id } ?: Dotted
     }
+}
+
+/**
+ * The cover's pale wash (docs/pantallas.md 1.2): behind the active tab's icon, the notice cards and the
+ * picked day's number. Mixed into the paper, so it stays readable under ink in light and in dark.
+ */
+@Composable
+fun coverSoft(cover: Cover): Color {
+    val paper = MaterialTheme.colorScheme.background
+    return lerp(paper, cover.color, if (paper.luminance() > 0.5f) 0.35f else 0.16f)
 }
 
 fun canUse(cover: Cover, isPro: Boolean) = isPro || cover == Cover.Sage

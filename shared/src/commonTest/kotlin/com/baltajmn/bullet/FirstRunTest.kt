@@ -36,14 +36,14 @@ class FirstRunTest {
     }
 
     /**
-     * "Diez destinos y no mas" (docs/pantallas.md 3). El test es que ninguno de ellos sea una
-     * bienvenida, un tutorial ni un paso de alta: si alguien anade uno, aqui salta. El decimo, PRO,
-     * es el `Paywall`, un dialogo y no una pantalla (docs/tecnico.md 6.16).
+     * "Once destinos y no mas" (docs/pantallas.md 3). La guia es el unico que se abre solo, una vez,
+     * y no pide nada: ni alta, ni permisos, ni ajustes (13.1). Si alguien anade otro paso de entrada,
+     * aqui salta. El que falta, PRO, es el `Paywall`, un dialogo y no una pantalla (docs/tecnico.md 6.16).
      */
     @Test
-    fun thereIsNoOnboardingDestination() {
+    fun theGuideIsTheOnlyFirstStartDestination() {
         assertEquals(
-            listOf("TODAY", "MONTH", "FUTURE", "INDEX", "COLLECTION", "REVIEW", "SEARCH", "KEY", "SETTINGS"),
+            listOf("TODAY", "MONTH", "FUTURE", "INDEX", "COLLECTION", "REVIEW", "SEARCH", "KEY", "SETTINGS", "GUIDE"),
             Screen.entries.map { it.name },
         )
     }

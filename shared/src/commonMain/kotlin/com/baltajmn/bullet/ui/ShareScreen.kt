@@ -67,11 +67,11 @@ fun ShareSheet(content: ShareContent, onClose: () -> Unit) {
                 Text(S.sharePages(pages.size), style = Type.Secondary, modifier = Modifier.padding(start = 24.dp, top = 8.dp))
             }
             Spacer(Modifier.height(gridUnit))
-            SheetRow(glyph = null, label = S.shareImage) {
+            ActionRow(S.shareImage) {
                 Sharing.sharePngs(pages.map { it.encodeToPng() })
                 onClose()
             }
-            SheetRow(glyph = null, label = S.shareText) {
+            ActionRow(S.shareText) {
                 Sharing.shareText(shareText(content))
                 onClose()
             }

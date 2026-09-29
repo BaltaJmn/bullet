@@ -39,7 +39,7 @@ Fijadas aquí para la app, la ficha y las capturas, sin excepción por idioma.
    descartada, y los signifiers `*`, `!` y el ojo de explorar se dibujan igual en los cinco idiomas.
    Los prefijos de captura (`o `, `- `, `* `, `! `, `? `, `docs/tecnico.md` 6.2) son los mismos
    caracteres en todos: `o` es la letra latina minúscula, también en portugués aunque "o" sea un
-   artículo. Los textos que los nombran (`prefixHint`, `keyEventHow`...) los escriben tal cual, sin
+   artículo. Los textos que los nombran (`keyPrefixes`) los escriben tal cual, sin
    comillas y sin cambiarlos por otra letra. Los encabezados del Markdown exportado van fijos en inglés
    (`docs/tecnico.md` 4.4) y no son textos de la app.
 2. **Los textos del recordatorio son fijos y no citan ni una palabra del diario.** `reminderTitle` y
@@ -83,10 +83,10 @@ capturas. Si una pantalla necesita el concepto, usa esta palabra y no un sinóni
 | Mes (pestaña, Monthly Log) | Month | Mes | Mês | Monat | Mois |
 | Futuro (pestaña del Future Log) | Future | Futuro | Futuro | Zukunft | Futur |
 | Índice | Index | Índice | Índice | Index | Index |
-| Colección / Colecciones | Collection / Collections | Colección / Colecciones | Coleção / Coleções | Sammlung / Sammlungen | Collection / Collections |
+| Lista / Listas (colección de notas) | List / Lists | Lista / Listas | Lista / Listas | Liste / Listen | Liste / Listes |
 | Seguimiento (colección `TRACKER`) | Tracker | Seguimiento | Tracker | Tracker | Suivi |
-| Migrar | Migrate | Migrar | Migrar | Migrieren | Migrer |
-| Programar | Schedule | Programar | Agendar | Einplanen | Planifier |
+| Pasar (migrar: a hoy, a mañana, a otro día o a una lista) | Move | Pasar | Passar | Verschieben | Déplacer |
+| Llevar a otro mes (programar en Futuro) | Move to another month | Llevar a otro mes | Levar para outro mês | In einen anderen Monat | Reporter à un autre mois |
 | Descartar | Discard | Descartar | Descartar | Verwerfen | Écarter |
 | Revisar | Review | Revisar | Revisar | Durchsehen | Revoir |
 | Reabrir | Reopen | Reabrir | Reabrir | Wieder öffnen | Rouvrir |
@@ -94,7 +94,8 @@ capturas. Si una pantalla necesita el concepto, usa esta palabra y no un sinóni
 | Entrada | Entry | Entrada | Entrada | Eintrag | Entrée |
 | Tarea / Evento / Nota | Task / Event / Note | Tarea / Evento / Nota | Tarefa / Evento / Nota | Aufgabe / Ereignis / Notiz | Tâche / Événement / Note |
 | Abierta / Hecha | Open / Done | Abierta / Hecha | Aberta / Feita | Offen / Erledigt | Ouverte / Faite |
-| Migrada / Programada / Descartada | Migrated / Scheduled / Discarded | Migrada / Programada / Descartada | Migrada / Agendada / Descartada | Migriert / Eingeplant / Verworfen | Migrée / Planifiée / Écartée |
+| Pasada / Llevada a otro mes / Descartada | Moved / Moved to another month / Discarded | Pasada / Llevada a otro mes / Descartada | Passada / Levada para outro mês / Descartada | Verschoben / In einen anderen Monat verschoben / Verworfen | Déplacée / Reportée à un autre mois / Écartée |
+| Migrada / Programada (solo en la Clave, como nombre del método) | Migrated / Scheduled | Migrada / Programada | Migrada / Agendada | Migriert / Eingeplant | Migrée / Planifiée |
 | Prioridad / Inspiración / Explorar | Priority / Inspiration / Explore | Prioridad / Inspiración / Explorar | Prioridade / Inspiração / Explorar | Priorität / Inspiration / Erkunden | Priorité / Inspiration / Explorer |
 | Clave (la *key page*) | Key | Clave | Legenda | Legende | Légende |
 | Calendario (del mes) | Calendar | Calendario | Calendário | Kalender | Calendrier |
@@ -105,14 +106,20 @@ capturas. Si una pantalla necesita el concepto, usa esta palabra y no un sinóni
 | Símbolo (un glifo del método) | symbol | símbolo | símbolo | Symbol | symbole |
 
 Sin traducir en ningún idioma, como se busca el método: `bullet journal`, `bujo`, `bullet`,
-`signifier`, `rapid logging`, `Daily Log`, `Monthly Log` y `Future Log`. En la app solo aparecen
-`bullets` y `signifiers` (secciones de la Clave) y `Future Log` (la línea de Mes y su revisión); las
-pestañas dicen Hoy, Mes y Futuro, y la ficha explica que son el Daily Log, el Monthly Log y el Future
-Log.
+`signifier`, `rapid logging`, `Daily Log`, `Monthly Log` y `Future Log`. En la app no aparece ninguno:
+las pestañas dicen Hoy, Mes y Futuro, la Clave agrupa por lo que apuntas, lo que pasó con una tarea y
+el margen, y dice entre paréntesis el nombre del método de cada estado ("En el método: migrada"). La
+ficha explica que las pestañas son el Daily Log, el Monthly Log y el Future Log.
+
+La interfaz habla con verbos de todos los días (pasar, llevar, descartar) y enseña la consecuencia de
+cada acción antes de tocarla; los nombres del método (migrar, programar) viven en la Clave y en la
+ficha. Una colección de notas se llama lista, y un seguimiento, seguimiento. La ficha de tienda, que explica el
+método a quien lo busca por su nombre, puede llamarlas colecciones (Collections), como el método, igual
+que dice Daily Log.
 
 ## Forma en el código
 
-- Texto sin parámetros: `val captureHint = t("...", "...", "...", "...", "...")`.
+- Texto sin parámetros: `val undo = t("...", "...", "...", "...", "...")`.
 - Con parámetros: función, `fun earlierOpen(n: Int) = when (lang) { ... }`, con el plural resuelto por
   la regla del método 3 (`plural(n, one, other)`, privada en `S`).
 - Fechas y horas: funciones de `S` sobre las tablas de la sección 1, escritas a mano como en line.
@@ -170,6 +177,11 @@ Log.
 | `back` | | Back | Volver | Voltar | Zurück | Retour |
 | `undo`* | | Undo | Deshacer | Desfazer | Rückgängig | Annuler |
 | `working` | | One moment... | Un momento... | Um momento... | Einen Moment... | Un instant... |
+| `add`* | | Add | Añadir | Adicionar | Hinzufügen | Ajouter |
+| `save`* | | Save | Guardar | Salvar | Speichern | Enregistrer |
+| `gotIt`* | | Got it | Entendido | Entendi | Verstanden | Compris |
+| `previous`* | | Back | Atrás | Voltar | Zurück | Retour |
+| `next`* | | Next | Siguiente | Próximo | Weiter | Suivant |
 
 `taskCount(n)` y `entryCount(n)` (decisión de #16, sin fila propia porque no tienen texto fijo: son
 "$n " mas la palabra de la fila 2 de la tabla de la regla del metodo 3, tarea o entrada) dan el
@@ -185,27 +197,31 @@ concreta.
 | `tabFuture` | | Future | Futuro | Futuro | Zukunft | Futur |
 | `tabIndex` | | Index | Índice | Índice | Index | Index |
 | `backToToday`* | | Back to today | Volver a hoy | Voltar para hoje | Zurück zu heute | Revenir à aujourd'hui |
-| `a11yBack` | | Back | Volver | Voltar | Zurück | Retour |
+| `daySubtitle` | hoy | Today, September 2026 | Hoy, septiembre de 2026 | Hoje, setembro de 2026 | Heute, September 2026 | Aujourd'hui, septembre 2026 |
+| `daySubtitle` | ayer | Yesterday, September 2026 | Ayer, septiembre de 2026 | Ontem, setembro de 2026 | Gestern, September 2026 | Hier, septembre 2026 |
+| `daySubtitle` | mañana | Tomorrow, September 2026 | Mañana, septiembre de 2026 | Amanhã, setembro de 2026 | Morgen, September 2026 | Demain, septembre 2026 |
+| `daySubtitle` | otro | September 2026 | Septiembre de 2026 | Setembro de 2026 | September 2026 | Septembre 2026 |
+| `monthSubtitle` | actual | 2026 | 2026 | 2026 | 2026 | 2026 |
+| `monthSubtitle` | pasado | 2026, a past month | 2026, un mes pasado | 2026, um mês passado | 2026, ein vergangener Monat | 2026, un mois passé |
+| `backToMonth`* | mes | Back to September | Volver a septiembre | Voltar para setembro | Zurück zum September | Revenir à septembre |
 | `a11yPreviousDay` | | Previous day | Día anterior | Dia anterior | Vorheriger Tag | Jour précédent |
 | `a11yNextDay` | | Next day | Día siguiente | Próximo dia | Nächster Tag | Jour suivant |
 | `a11yPreviousMonth` | | Previous month | Mes anterior | Mês anterior | Vorheriger Monat | Mois précédent |
 | `a11yNextMonth` | | Next month | Mes siguiente | Próximo mês | Nächster Monat | Mois suivant |
 | `a11yClose` | | Close | Cerrar | Fechar | Schließen | Fermer |
-| `a11yShare` | | Share this page | Compartir esta página | Compartilhar esta página | Diese Seite teilen | Partager cette page |
 | `a11ySettings` | | Settings | Ajustes | Ajustes | Einstellungen | Réglages |
 | `a11ySearch` | | Search the journal | Buscar en el diario | Buscar no diário | Im Journal suchen | Chercher dans le journal |
-| `a11yKey` | | Symbol key | Clave de símbolos | Legenda dos símbolos | Legende der Symbole | Légende des symboles |
 | `a11yMoreActions` | | More actions | Más acciones | Mais ações | Weitere Aktionen | Plus d'actions |
 | `a11ySelected` | | selected | elegida | selecionada | ausgewählt | sélectionnée |
 
 Los títulos de página de Futuro y del Índice son `tabFuture` y `tabIndex`; el de la Clave, `keyTitle`
-(sección 12); el de Ajustes, `settingsTitle` (sección 13).
+(sección 12); el de Ajustes, `settingsTitle` (sección 13). `daySubtitle` dice qué día es respecto a
+hoy (hoy, ayer, mañana) antes del mes; `monthSubtitle` avisa de que un mes ya pasó.
 
-## 4. La entrada, la captura y la hoja
+## 4. La entrada, la barra de escribir y la hoja
 
 | Clave | Parámetros | en | es | pt | de | fr |
 |---|---|---|---|---|---|---|
-| `captureHint` | | Write here | Escribe aquí | Escreva aqui | Hier schreiben | Écris ici |
 | `counter` | n, max | 480/500 | 480/500 | 480/500 | 480/500 | 480/500 |
 | `bulletTask` | | Task | Tarea | Tarefa | Aufgabe | Tâche |
 | `bulletEvent` | | Event | Evento | Evento | Ereignis | Événement |
@@ -217,40 +233,99 @@ Los títulos de página de Futuro y del Índice son `tabFuture` y `tabIndex`; el
 | `signifierPriority` | | Priority | Prioridad | Prioridade | Priorität | Priorité |
 | `signifierInspiration` | | Inspiration | Inspiración | Inspiração | Inspiration | Inspiration |
 | `signifierExplore` | | Explore | Explorar | Explorar | Erkunden | Explorer |
-| `wentToDay` | fecha | = `abbrDate`: Sep 24 | 24 sept | 24 set | 24. Sept. | 24 sept. |
-| `wentToMonth` | mes | = `monthTitle`: October 2026 | Octubre 2026 | Outubro 2026 | Oktober 2026 | Octobre 2026 |
-| `wentToFuture` | mes, día? | Future, Oct 14 / Future, October 2026 | Futuro, 14 oct / Futuro, octubre de 2026 | Futuro, 14 out / Futuro, outubro de 2026 | Zukunft, 14. Okt. / Zukunft, Oktober 2026 | Futur, 14 oct. / Futur, octobre 2026 |
-| `migratedTimes` | n (>= 2) | Migrated 3 times | Migrada 3 veces | Migrada 3 vezes | 3-mal migriert | Migrée 3 fois |
-| `actionMigrate` | | Migrate | Migrar | Migrar | Migrieren | Migrer |
-| `actionSchedule` | | Schedule | Programar | Agendar | Einplanen | Planifier |
+| `timesMoved` | n | You've moved it 3 times / You've moved it once | Ya la has pasado 3 veces / Ya la has pasado una vez | Você já a passou 3 vezes / Você já a passou uma vez | Schon 3-mal verschoben / Schon einmal verschoben | Déjà déplacée 3 fois / Déjà déplacée une fois |
+| `actionDone` | | Done | Hecha | Feita | Erledigt | Faite |
 | `actionDiscard` | | Discard | Descartar | Descartar | Verwerfen | Écarter |
 | `actionReopen` | | Reopen | Reabrir | Reabrir | Wieder öffnen | Rouvrir |
+| `actionRecover` | | Bring back | Recuperar | Recuperar | Zurückholen | Récupérer |
 | `actionGoToCopy` | | Go to the copy | Ir a la copia | Ir para a cópia | Zur Kopie | Aller à la copie |
-| `actionEdit` | | Edit | Editar | Editar | Bearbeiten | Modifier |
+| `actionEdit` | | Edit the text | Editar el texto | Editar o texto | Text bearbeiten | Modifier le texte |
 | `actionDelete` | | Delete | Borrar | Apagar | Löschen | Supprimer |
+| `moveToday` | | Move to today | Pasar a hoy | Passar para hoje | Auf heute verschieben | Passer à aujourd'hui |
+| `moveTomorrow` | | Move to tomorrow | Pasar a mañana | Passar para amanhã | Auf morgen verschieben | Passer à demain |
+| `moveNextDay` | | Move to the next day | Pasar al día siguiente | Passar para o dia seguinte | Auf den nächsten Tag | Passer au jour suivant |
+| `moveOtherMonth` | | Move to another month | Llevar a otro mes | Levar para outro mês | In einen anderen Monat | Reporter à un autre mois |
+| `moveElsewhere` | | Move somewhere else | Pasar a otro sitio | Passar para outro lugar | Woandershin verschieben | Déplacer ailleurs |
+| `priorityOn` | | Mark as priority | Marcar como prioridad | Marcar como prioridade | Als Priorität markieren | Marquer comme priorité |
+| `priorityOff` | | Remove priority | Quitar prioridad | Tirar prioridade | Priorität entfernen | Retirer la priorité |
+| `otherMarks` | | Other margin marks | Otras marcas del margen | Outras marcas da margem | Weitere Randzeichen | Autres marques de la marge |
+| `backToOptions` | | Back to the options | Volver a las opciones | Voltar às opções | Zurück zu den Optionen | Retour aux options |
+| `doneHow` | | Stays where it is, marked with an x. | Se queda en su sitio, marcada con una x. | Fica onde está, marcada com um x. | Bleibt, wo sie ist, mit einem x markiert. | Reste à sa place, marquée d'un x. |
+| `otherMonthHow` | | You pick the month and it waits in Future. | Eliges el mes y espera en Futuro. | Você escolhe o mês e ela espera no Futuro. | Du wählst den Monat, dort wartet sie in Zukunft. | Tu choisis le mois et elle attend dans Futur. |
+| `discardHow` | | No longer needed. It stays crossed out. | Ya no hace falta. Se queda tachada. | Não é mais necessária. Fica riscada. | Nicht mehr nötig. Bleibt durchgestrichen. | Plus nécessaire. Elle reste barrée. |
+| `reopenHow` | | It's open again. | Vuelve a estar pendiente. | Volta a ficar pendente. | Ist wieder offen. | Elle est de nouveau à faire. |
+| `priorityOnHow` | | An asterisk in the margin. | Un asterisco en el margen. | Um asterisco na margem. | Ein Sternchen am Rand. | Un astérisque dans la marge. |
+| `priorityOffHow` | | The asterisk leaves the margin. | Se va el asterisco del margen. | O asterisco sai da margem. | Das Sternchen verschwindet vom Rand. | L'astérisque quitte la marge. |
+| `otherMarksHow` | | Inspiration or explore. | Inspiración o explorar. | Inspiração ou explorar. | Inspiration oder Erkunden. | Inspiration ou explorer. |
+| `elsewhereHow` | | A day this month, the month's tasks or a list. | Un día de este mes, las tareas del mes o una lista. | Um dia deste mês, as tarefas do mês ou uma lista. | Ein Tag in diesem Monat, die Aufgaben des Monats oder eine Liste. | Un jour de ce mois, les tâches du mois ou une liste. |
+| `deleteHow` | | It leaves the journal. You can undo it for a few seconds. | Desaparece del diario. Puedes deshacerlo unos segundos. | Sai do diário. Dá para desfazer por alguns segundos. | Verschwindet aus dem Journal. Ein paar Sekunden lang rückgängig zu machen. | Elle quitte le journal. Tu peux annuler pendant quelques secondes. |
+| `leavesMark` | marca, mes? | A > stays in August. / A > stays here. | En agosto queda una >. / Aquí queda una >. | Em agosto fica um >. / Aqui fica um >. | Im August bleibt ein >. / Hier bleibt ein >. | En août reste un >. / Ici reste un >. |
+| `waitsIn` | mes | Waits in Future, in October. | Espera en Futuro, en octubre. | Espera no Futuro, em outubro. | Wartet in Zukunft, im Oktober. | Attend dans Futur, en octobre. |
+| `placeLabel` | Daily(hoy) | today, Wednesday 23 | hoy, miércoles 23 | hoje, quarta-feira, 23 | heute, Mittwoch, 23. | aujourd'hui, mercredi 23 |
+| `placeLabel` | Daily(mañana) | tomorrow, Thursday 24 | mañana, jueves 24 | amanhã, quinta-feira, 24 | morgen, Donnerstag, 24. | demain, jeudi 24 |
+| `placeLabel` | Daily(ayer) | yesterday, Tuesday 22 | ayer, martes 22 | ontem, terça-feira, 22 | gestern, Dienstag, 22. | hier, mardi 22 |
+| `placeLabel` | Daily(otro) | Monday 28 | el lunes 28 | segunda-feira, 28 | Montag, 28. | lundi 28 |
+| `placeLabel` | Monthly(mes) | September's tasks | las tareas de septiembre | as tarefas de setembro | Aufgaben im September | les tâches de septembre |
+| `placeLabel` | Monthly(mes, día) | September 30 | el 30 de septiembre | 30 de setembro | 30. September | le 30 septembre |
+| `placeLabel` | Future(mes) | October, in Future | octubre, en Futuro | outubro, no Futuro | Oktober, in Zukunft | octobre, dans Futur |
+| `placeLabel` | Future(mes, día) | October 14, in Future | el 14 de octubre, en Futuro | 14 de outubro, no Futuro | 14. Oktober, in Zukunft | le 14 octobre, dans Futur |
+| `placeLabel` | InCollection | the list Lecturas | la lista Lecturas | a lista Lecturas | Liste Lecturas | la liste Lecturas |
+| `movedTo` | lugar | Moved to tomorrow, Thursday 24 | Pasada a mañana, jueves 24 | Passada para amanhã, quinta-feira, 24 | Verschoben: morgen, Donnerstag, 24. | Déplacée vers demain, jeudi 24 |
+| `scheduledTo` | lugar | Moved to October, in Future | Llevada a octubre, en Futuro | Levada para outubro, no Futuro | Verschoben: Oktober, in Zukunft | Reportée vers octobre, dans Futur |
+| `cameFrom` | lugar | Came from yesterday, Tuesday 22 | Viene de ayer, martes 22 | Origem: ontem, terça-feira, 22 | Kommt von: gestern, Dienstag, 22. | Origine : hier, mardi 22 |
+| `copiesTo` | lugar | A copy goes to tomorrow, Thursday 24. | Se copia a mañana, jueves 24. | Uma cópia vai para amanhã, quinta-feira, 24. | Kopie: morgen, Donnerstag, 24. | Une copie va vers demain, jeudi 24. |
+| `copyIsAt` | lugar | Copy: tomorrow, Thursday 24. | Está en mañana, jueves 24. | Cópia: amanhã, quinta-feira, 24. | Kopie: morgen, Donnerstag, 24. | Copie : demain, jeudi 24. |
+| `composeHint` | tarea | New task... | Nueva tarea... | Nova tarefa... | Neue Aufgabe... | Nouvelle tâche... |
+| `composeHint` | evento | New event... | Nuevo evento... | Novo evento... | Neues Ereignis... | Nouvel événement... |
+| `composeHint` | nota | New note... | Nueva nota... | Nova nota... | Neue Notiz... | Nouvelle note... |
+| `composeFor` | | For | En | Para | Für | Pour |
+| `targetLabel` | Daily(hoy) | today | hoy | hoje | heute | aujourd'hui |
+| `targetLabel` | Monthly(mes) | September's tasks | tareas de septiembre | tarefas de setembro | Aufgaben im September | tâches de septembre |
+| `targetLabel` | Monthly(mes, día) | September 30 | el 30 de septiembre | 30 de setembro | 30. September | le 30 septembre |
+| `targetLabel` | Future(mes) | October | octubre | outubro | Oktober | octobre |
+| `targetLabel` | InCollection | Lecturas | Lecturas | Lecturas | Lecturas | Lecturas |
+| `added` | bullet, lugar | Task added for today. / Event added for September 30. | Tarea añadida en hoy. / Evento añadido en el 30 de septiembre. | Tarefa adicionada para hoje. / Evento adicionado para 30 de setembro. | Aufgabe hinzugefügt: heute. / Ereignis hinzugefügt: 30. September. | Tâche ajoutée pour aujourd'hui. / Événement ajouté pour le 30 septembre. |
+| `toastDone` | | Done. | Hecha. | Feita. | Erledigt. | Faite. |
+| `toastDiscarded` | | Discarded. | Descartada. | Descartada. | Verworfen. | Écartée. |
+| `toastPriorityOn` | | Marked as priority. | Marcada como prioridad. | Marcada como prioridade. | Als Priorität markiert. | Marquée comme priorité. |
+| `toastPriorityOff` | | No longer a priority. | Sin prioridad. | Sem prioridade. | Keine Priorität mehr. | Plus prioritaire. |
+| `toastSaved` | | Saved. | Guardado. | Salvo. | Gespeichert. | Enregistré. |
+| `toastScheduled` | mes | Moved to October. It waits in Future. | Llevada a octubre. Espera en Futuro. | Levada para outubro. Espera no Futuro. | Verschoben: Oktober. Wartet in Zukunft. | Reportée en octobre. Elle attend dans Futur. |
+| `entryKind` | tarea abierta | Open task | Tarea pendiente | Tarefa pendente | Offene Aufgabe | Tâche à faire |
+| `entryKind` | tarea hecha | Done task | Tarea hecha | Tarefa feita | Erledigte Aufgabe | Tâche faite |
+| `entryKind` | evento con prioridad | Evento, priority | Evento, prioridad | Evento, prioridade | Evento, Priorität | Evento, priorité |
 | `toToday` | | Today | Hoy | Hoje | Heute | Aujourd'hui |
 | `toTomorrow` | | Tomorrow | Mañana | Amanhã | Morgen | Demain |
 | `toThisMonth` | | This month's tasks | Tareas de este mes | Tarefas deste mês | Aufgaben dieses Monats | Tâches de ce mois |
 | `toDayOfMonth` | | A day this month | Un día de este mes | Um dia deste mês | Ein Tag in diesem Monat | Un jour de ce mois |
-| `toCollection` | | To a collection | A una colección | Para uma coleção | In eine Sammlung | Vers une collection |
+| `toCollection` | | To a list | A una lista | Para uma lista | In eine Liste | Vers une liste |
 | `dayField` | | day | día | dia | Tag | jour |
-| `dayFieldOptional` | | Day, optional | Día, opcional | Dia, opcional | Tag, optional | Jour, facultatif |
-| `migrateAction`* | | Migrate | Migrar | Migrar | Migrieren | Migrer |
+| `moveAction`* | | Move | Pasar | Passar | Verschieben | Déplacer |
 | `dayOutOfRange` | mes, n | September has no day 31. | Septiembre no tiene día 31. | Setembro não tem dia 31. | Der September hat keinen 31. Tag. | Septembre n'a pas de jour 31. |
 | `dayPast` | | That day has passed. | Ese día ya pasó. | Esse dia já passou. | Dieser Tag ist vorbei. | Ce jour est passé. |
-| `newCollection` | | New collection | Nueva colección | Nova coleção | Neue Sammlung | Nouvelle collection |
+| `newList` | | New list | Nueva lista | Nova lista | Neue Liste | Nouvelle liste |
 | `showMoreMonths` | | Show more months | Ver más meses | Ver mais meses | Mehr Monate zeigen | Voir plus de mois |
 | `entryDeleted` | | Entry deleted. | Entrada borrada. | Entrada apagada. | Eintrag gelöscht. | Entrée supprimée. |
-| `collectionDeleted` | | Collection deleted. | Colección borrada. | Coleção apagada. | Sammlung gelöscht. | Collection supprimée. |
+| `collectionDeleted` | | List deleted. | Lista borrada. | Lista apagada. | Liste gelöscht. | Liste supprimée. |
 | `rowDeleted` | | Row deleted. | Fila borrada. | Linha apagada. | Zeile gelöscht. | Ligne supprimée. |
 
-- `wentToFuture` con día usa `abbrDate`; si el mes no es del año en curso, `abbrDateWithYear`
-  ("Futuro, 14 oct 2027"). Sin día, "Futuro, " y `monthYear`. Una colección de destino se cita por su
-  título, sin texto alrededor. Decisión de #16: como `Strings.kt` no lleva reloj, "el año en curso"
-  no lo decide la función; `wentToFuture(month, day, withYear)` recibe ese booleano ya calculado por
-  quien la llama.
-- `migratedTimes` solo se enseña desde `MIGRATION_SHOWN_FROM` (2). Con 1, por si acaso: Migrated once,
-  Migrada 1 vez, Migrada 1 vez, Einmal migriert, Migrée 1 fois.
+- **Verbos de la interfaz.** La app dice lo que pasa con palabras de todos los días y deja los nombres
+  del método para la Clave: "Pasar a hoy" y no Migrar, "Llevar a otro mes" y no Programar. Una tarea
+  migrada se llama "Pasada" (`movedName`); una programada, "Llevada a otro mes" (`otherMonthName`). El
+  símbolo es el mismo, y la Clave dice su nombre en el método.
+- **Cada acción dice su consecuencia** (`*How`, `leavesMark`, `copiesTo`, `waitsIn`): qué queda en la
+  página y a dónde va la copia, antes de tocarla.
+- **El aviso de abajo** (`toast*`, `added`, `movedTo`) repite el nombre de la acción y lleva `undo`
+  cuando se puede deshacer. `sentence` evita el doble punto cuando el lugar ya acaba en punto (alemán:
+  "24.").
+- `placeLabel` nombra un lugar dentro de una frase (hoy, mañana, el lunes 28, las tareas de
+  septiembre, la lista Lecturas); `targetLabel`, el mismo lugar en la etiqueta corta "En ..." de la
+  barra de escribir. En español se contrae con `a` y `de` ("al 30 de septiembre").
+- `wentToDay`, `wentToMonth` y `wentToFuture` quedan para Buscar y para compartir: `wentToFuture` con
+  día usa `abbrDate`, y `abbrDateWithYear` si el mes no es del año en curso; sin día, "Futuro, " y
+  `monthYear`. `wentToFuture(month, day, withYear)` recibe ese booleano ya calculado por quien la
+  llama, porque `Strings.kt` no lleva reloj.
+- `timesMoved` solo se enseña desde `MIGRATION_SHOWN_FROM` (2).
 - Nombre de cada glifo (`glyphName`, `docs/pantallas.md` 1.5), para el lector de pantalla:
 
 | Glifo | en | es | pt | de | fr |
@@ -270,16 +345,26 @@ Los títulos de página de Futuro y del Índice son `tabFuture` y `tabIndex`; el
 
 | Clave | Parámetros | en | es | pt | de | fr |
 |---|---|---|---|---|---|---|
-| `prefixHint` | | No prefix, task. - note, o event, * priority. | Sin prefijo, tarea. - nota, o evento, * prioridad. | Sem prefixo, tarefa. - nota, o evento, * prioridade. | Ohne Präfix eine Aufgabe. - Notiz, o Ereignis, * Priorität. | Sans préfixe, une tâche. - note, o événement, * priorité. |
 | `calendarToday` | | On the calendar | En el calendario | No calendário | Im Kalender | Au calendrier |
 | `noticeCorrupt` | | Couldn't read the journal. The files were set aside and nothing was deleted. | No se ha podido leer el diario. Los ficheros se han guardado aparte y no se ha borrado nada. | Não foi possível ler o diário. Os arquivos foram guardados à parte e nada foi apagado. | Das Journal konnte nicht gelesen werden. Die Dateien wurden beiseitegelegt, gelöscht wurde nichts. | Impossible de lire le journal. Les fichiers ont été mis de côté et rien n'a été supprimé. |
 | `noticeSaveFailed` | | Couldn't save. I'll try again with your next change. | No se ha podido guardar. Lo intento otra vez con tu próximo cambio. | Não foi possível salvar. Vou tentar de novo na sua próxima alteração. | Konnte nicht gespeichert werden. Ich versuche es bei deiner nächsten Änderung erneut. | Impossible d'enregistrer. Je réessaierai avec ta prochaine modification. |
 | `offerReminder` | hora | Remind you to go over the day at 21:00? | ¿Te aviso para repasar el día a las 21:00? | Quer que eu avise para repassar o dia às 21:00? | Soll ich dich um 21:00 erinnern, den Tag durchzugehen? | Je te rappelle de relire ta journée à 21:00 ? |
-| `unclosedMonth` | mes, n | August not closed: 4 open / 1 open | Agosto sin cerrar: 4 abiertas / 1 abierta | Agosto sem fechar: 4 abertas / 1 aberta | August nicht abgeschlossen: 4 offen / 1 offen | Août pas clôturé : 4 ouvertes / 1 ouverte |
-| `earlierOpen` | n | 3 still open from earlier days / 1 still open from earlier days | Quedan 3 abiertas de días anteriores / Queda 1 abierta de días anteriores | Restam 3 abertas de dias anteriores / Resta 1 aberta de dias anteriores | Noch 3 offen von früheren Tagen / Noch 1 offen von früheren Tagen | Il reste 3 tâches ouvertes des jours précédents / Il reste 1 tâche ouverte des jours précédents |
+| `unclosedMonth` | mes, n | August still has 4 open tasks / August still has 1 open task | Agosto tiene 4 tareas sin cerrar / Agosto tiene 1 tarea sin cerrar | Agosto tem 4 tarefas sem fechar / Agosto tem 1 tarefa sem fechar | Im August sind 4 Aufgaben offen / Im August ist 1 Aufgabe offen | Août a 4 tâches non clôturées / Août a 1 tâche non clôturée |
+| `unclosedBody` | | Decide what happens to each one: done, to today, to another month or discarded. Nothing moves unless you say so. | Decide qué pasa con cada una: hecha, a hoy, a otro mes o descartada. Nada se mueve si no lo dices tú. | Decida o que acontece com cada uma: feita, para hoje, para outro mês ou descartada. Nada se move se você não disser. | Entscheide, was mit jeder passiert: erledigt, auf heute, in einen anderen Monat oder verworfen. Nichts bewegt sich, wenn du es nicht sagst. | Décide ce que devient chacune : faite, à aujourd'hui, à un autre mois ou écartée. Rien ne bouge si tu ne le dis pas. |
+| `reviewMonth`* | mes | Review August | Repasar agosto | Revisar agosto | August durchsehen | Revoir août |
+| `earlierOpen` | n | 3 tasks still open from earlier days / 1 task still open from earlier days | Quedan 3 tareas abiertas de días anteriores / Queda 1 tarea abierta de días anteriores | Restam 3 tarefas abertas de dias anteriores / Resta 1 tarefa aberta de dias anteriores | Noch 3 Aufgaben offen von früheren Tagen / Noch 1 Aufgabe offen von früheren Tagen | Il reste 3 tâches ouvertes des jours précédents / Il reste 1 tâche ouverte des jours précédents |
+| `earlierBody` | | They're from days of this month that have passed. Decide what happens to each one. | Son de días de este mes que ya pasaron. Decide qué pasa con cada una. | São de dias deste mês que já passaram. Decida o que acontece com cada uma. | Sie sind von vergangenen Tagen dieses Monats. Entscheide, was mit jeder passiert. | Elles viennent de jours passés de ce mois. Décide ce que devient chacune. |
+| `reviewEarlier`* | | Review those days | Repasar esos días | Revisar esses dias | Diese Tage durchsehen | Revoir ces jours |
+| `reviewDay`* | | Review the day | Repasar el día | Revisar o dia | Den Tag durchsehen | Revoir la journée |
+| `hintTap` | | ^Tap the dot^ of a task to mark it done. ^Tap the text^ to see everything you can do with it. | ^Toca el punto^ de una tarea para marcarla hecha. ^Toca el texto^ para ver todo lo que puedes hacer con ella. | ^Toque no ponto^ de uma tarefa para marcá-la como feita. ^Toque no texto^ para ver tudo o que dá para fazer com ela. | ^Tippe auf den Punkt^ einer Aufgabe, um sie zu erledigen. ^Tippe auf den Text^, um alles zu sehen, was du mit ihr machen kannst. | ^Touche le point^ d'une tâche pour la marquer faite. ^Touche le texte^ pour voir tout ce que tu peux en faire. |
+| `dayEmpty` | hoy | Nothing written today. | Nada escrito hoy. | Nada escrito hoje. | Heute steht noch nichts. | Rien d'écrit aujourd'hui. |
+| `dayEmpty` | otro día | Nothing written on this day. | Nada escrito en este día. | Nada escrito neste dia. | An diesem Tag steht nichts. | Rien d'écrit ce jour-là. |
+| `writeBelow` | | Write below to start. | Escribe abajo para empezar. | Escreva abaixo para começar. | Schreib unten, um anzufangen. | Écris en bas pour commencer. |
+| `shareDay` | | Share this day | Compartir este día | Compartilhar este dia | Diesen Tag teilen | Partager ce jour |
 
-El título de Hoy es `dayTitle`, el subtítulo `monthYear` y la pista del campo `captureHint`. La oferta
-del recordatorio lleva `notNow` y `yes`; el aviso de diario dañado, `ok`.
+El título de Hoy es `dayTitle` y el subtítulo `daySubtitle`. La oferta del recordatorio lleva `notNow` y
+`yes`; el aviso de diario dañado, `ok`; la pista de la primera entrada, `gotIt`. Los `^` de `hintTap`
+marcan el texto en negrita y no se pintan.
 
 ## 6. Mes
 
@@ -287,39 +372,63 @@ del recordatorio lleva `notNow` y `yes`; el aviso de diario dañado, `ok`.
 |---|---|---|---|---|---|---|
 | `monthTasks` | | Tasks of the month | Tareas del mes | Tarefas do mês | Aufgaben des Monats | Tâches du mois |
 | `calendarTitle` | | Calendar | Calendario | Calendário | Kalender | Calendrier |
-| `futureWaiting` | n | 2 Future Log entries waiting / 1 Future Log entry waiting | 2 entradas del Future Log esperan / 1 entrada del Future Log espera | 2 entradas do Future Log esperam / 1 entrada do Future Log espera | 2 Einträge im Future Log warten / 1 Eintrag im Future Log wartet | 2 entrées du Future Log attendent / 1 entrée du Future Log attend |
+| `monthExplain` | | Above, what happens each day. Below, what you want to do this month with no set date. | Arriba, lo que pasa cada día. Abajo, lo que quieres hacer este mes sin fecha fija. | Em cima, o que acontece a cada dia. Embaixo, o que você quer fazer este mês sem data fixa. | Oben, was an jedem Tag passiert. Unten, was du diesen Monat ohne festes Datum tun willst. | En haut, ce qui se passe chaque jour. En bas, ce que tu veux faire ce mois-ci sans date fixe. |
+| `calendarHint` | | Tap a day to write on it | Toca un día para apuntar en él | Toque num dia para anotar nele | Tippe auf einen Tag, um dort zu notieren | Touche un jour pour y noter |
+| `writingHere` | | Writing here | Aquí se apunta | Anotando aqui | Hier wird notiert | On note ici |
+| `monthTasksEmpty` | | None yet. | Ninguna todavía. | Nenhuma ainda. | Noch keine. | Aucune pour l'instant. |
+| `shareMonth` | | Share this month | Compartir este mes | Compartilhar este mês | Diesen Monat teilen | Partager ce mois |
+| `futureWaiting` | n | 2 Future entries are waiting for this month / 1 Future entry is waiting for this month | 2 entradas de Futuro esperan a este mes / 1 entrada de Futuro espera a este mes | 2 entradas do Futuro esperam este mês / 1 entrada do Futuro espera este mês | 2 Einträge aus Zukunft warten auf diesen Monat / 1 Eintrag aus Zukunft wartet auf diesen Monat | 2 entrées de Futur attendent ce mois-ci / 1 entrée de Futur attend ce mois-ci |
+| `futureWaitingBody` | | You wrote them down for this month. Move them to the calendar, leave them or discard them. | Las apuntaste para este mes. Pásalas al calendario, déjalas o descártalas. | Você as anotou para este mês. Passe-as para o calendário, deixe-as ou descarte-as. | Du hast sie für diesen Monat notiert. In den Kalender, lassen oder verwerfen. | Tu les as notées pour ce mois. Passe-les au calendrier, laisse-les ou écarte-les. |
+| `reviewFuture`* | | Review Future | Repasar Futuro | Revisar Futuro | Zukunft durchsehen | Revoir Futur |
 
-El título de Mes es `monthName` y el subtítulo el año en cifras. La línea del mes sin cerrar es
-`unclosedMonth` (sección 5).
+El título de Mes es `monthName` y el subtítulo `monthSubtitle`. El aviso del mes sin cerrar es
+`unclosedMonth` con `unclosedBody` y `reviewMonth` (sección 5).
 
 ## 7. Futuro
 
-Sin textos propios: título `tabFuture`, bloques `monthTitle`, campo del día `dayField`, error
-`dayOutOfRange`, `showMoreMonths` y `captureHint`.
+| Clave | Parámetros | en | es | pt | de | fr |
+|---|---|---|---|---|---|---|
+| `futureSubtitle` | n | The next 6 months | Los próximos 6 meses | Os próximos 6 meses | Die nächsten 6 Monate | Les 6 prochains mois |
+| `futureExplain` | | Write down what isn't due yet. When its month comes, you review it and decide: nothing drops into Today on its own. | Apunta lo que aún no toca. Cuando llegue su mes, lo repasas y decides: nada baja solo a Hoy. | Anote o que ainda não é para agora. Quando chegar o mês, você revisa e decide: nada desce sozinho para Hoje. | Notiere, was noch nicht dran ist. Kommt sein Monat, siehst du es durch und entscheidest: nichts rutscht von allein in Heute. | Note ce qui n'est pas encore pour maintenant. Quand son mois arrive, tu le revois et tu décides : rien ne descend seul dans Aujourd'hui. |
+| `futureEmpty` | | Nothing yet. | Nada todavía. | Nada ainda. | Noch nichts. | Rien pour l'instant. |
+| `onDay` | día | Day 14 | Día 14 | Dia 14 | Tag 14 | Jour 14 |
+
+Título `tabFuture`; cada bloque, `monthTitle`; campo del día `dayField`; error `dayOutOfRange`;
+`showMoreMonths`.
 
 ## 8. Índice
 
 | Clave | Parámetros | en | es | pt | de | fr |
 |---|---|---|---|---|---|---|
-| `indexFilterHint` | | Filter by title | Filtrar por título | Filtrar por título | Nach Titel filtern | Filtrer par titre |
-| `indexMonth` | | Month | Mes | Mês | Monat | Mois |
-| `indexCollection` | | Collection | Colección | Coleção | Sammlung | Collection |
-| `indexTracker` | | Tracker | Seguimiento | Tracker | Tracker | Suivi |
+| `indexSubtitle` | | Your whole journal, in one place | Todo tu diario, en un sitio | Todo o seu diário, num só lugar | Dein ganzes Journal an einem Ort | Tout ton journal, au même endroit |
+| `indexMonths` | | Months | Meses | Meses | Monate | Mois |
+| `indexLists` | | Lists | Listas | Listas | Listen | Listes |
+| `indexListsHint` | | Trips, ideas, books: what doesn't go in a day | Viajes, ideas, libros: lo que no va en un día | Viagens, ideias, livros: o que não cabe num dia | Reisen, Ideen, Bücher: was in keinen Tag gehört | Voyages, idées, livres : ce qui ne va pas dans un jour |
+| `indexTrackers` | | Trackers | Seguimientos | Trackers | Tracker | Suivis |
+| `indexTrackersHint` | | One row per habit, one box per day | Una fila por hábito, un cuadro por día | Uma linha por hábito, um quadrado por dia | Eine Zeile pro Gewohnheit, ein Kästchen pro Tag | Une ligne par habitude, une case par jour |
 | `newTracker` | | New tracker | Nuevo seguimiento | Novo tracker | Neuer Tracker | Nouveau suivi |
+| `listNameHint` | | Name of the list | Nombre de la lista | Nome da lista | Name der Liste | Nom de la liste |
+| `trackerNameHint` | | Name of the tracker | Nombre del seguimiento | Nome do tracker | Name des Trackers | Nom du suivi |
+| `listCreated` | | List created. Write its first line below. | Lista creada. Escribe abajo su primera línea. | Lista criada. Escreva a primeira linha abaixo. | Liste erstellt. Schreib unten die erste Zeile. | Liste créée. Écris sa première ligne en bas. |
 | `archivedToggle` | n | Archived (2) | Archivadas (2) | Arquivadas (2) | Archiviert (2) | Archivées (2) |
 | `indexEmpty` | | Months show up here as soon as you write in them. | Los meses aparecen aquí en cuanto escribes en ellos. | Os meses aparecem aqui assim que você escreve neles. | Monate erscheinen hier, sobald du in ihnen schreibst. | Les mois apparaissent ici dès que tu y écris. |
-| `indexNoMatch` | | No title with those letters. | Ningún título con esas letras. | Nenhum título com essas letras. | Kein Titel mit diesen Buchstaben. | Aucun titre avec ces lettres. |
 
-Las filas de crear son `newCollection` (sección 4) y `newTracker`.
+La fila de crear una lista es `newList` (sección 4). Cada grupo lleva su pista corta al lado del nombre.
 
-## 9. Colección y seguimiento
+## 9. Lista y seguimiento
 
 | Clave | Parámetros | en | es | pt | de | fr |
 |---|---|---|---|---|---|---|
-| `archive` | | Archive | Archivar | Arquivar | Archivieren | Archiver |
-| `unarchive` | | Unarchive | Sacar del archivo | Tirar do arquivo | Aus dem Archiv holen | Désarchiver |
-| `deleteCollection` | | Delete collection | Borrar colección | Apagar coleção | Sammlung löschen | Supprimer la collection |
+| `listSubtitle` | | List | Lista | Lista | Liste | Liste |
+| `listEmpty` | | Empty list. Write the first line below. | Lista vacía. Escribe abajo la primera línea. | Lista vazia. Escreva a primeira linha abaixo. | Leere Liste. Schreib unten die erste Zeile. | Liste vide. Écris la première ligne en bas. |
+| `shareList` | | Share the list | Compartir la lista | Compartilhar a lista | Liste teilen | Partager la liste |
+| `rename`* | | Rename | Cambiar el nombre | Mudar o nome | Umbenennen | Renommer |
+| `archive`* | | Archive | Archivar | Arquivar | Archivieren | Archiver |
+| `unarchive`* | | Unarchive | Sacar del archivo | Tirar do arquivo | Aus dem Archiv holen | Désarchiver |
+| `deleteCollection`* | | Delete | Borrar | Apagar | Löschen | Supprimer |
 | `archivedNote` | | Archived. | Archivada. | Arquivada. | Archiviert. | Archivée. |
+| `trackerSubtitle` | mes | September tracker | Seguimiento de septiembre | Tracker de setembro | Tracker im September | Suivi de septembre |
+| `trackerExplain` | | Tap a box to mark that day; again to clear it. Next month starts blank. | Toca un cuadro para marcar ese día; otra vez para quitarlo. El mes que viene empieza en blanco. | Toque num quadrado para marcar esse dia; de novo para tirar. O mês que vem começa em branco. | Tippe auf ein Kästchen, um den Tag zu markieren, noch einmal, um es zu löschen. Der nächste Monat beginnt leer. | Touche une case pour marquer ce jour ; encore une fois pour l'effacer. Le mois prochain commence vierge. |
 | `trackerRowHint` | | New row | Nueva fila | Nova linha | Neue Zeile | Nouvelle ligne |
 | `rowDelete` | | Delete row | Borrar fila | Apagar linha | Zeile löschen | Supprimer la ligne |
 
@@ -327,30 +436,33 @@ Las filas de crear son `newCollection` (sección 4) y `newTracker`.
 
 | Clave | Parámetros | en | es | pt | de | fr |
 |---|---|---|---|---|---|---|
-| `reflectTitle` | mes | Read September again | Releer septiembre | Reler setembro | September nachlesen | Relire septembre |
-| `reflectTitle` | días | Read up to today | Releer hasta hoy | Reler até hoje | Bis heute nachlesen | Relire jusqu'à aujourd'hui |
-| `reflectHint` | mes | A note about this month, if you like | Una nota sobre este mes, si quieres | Uma nota sobre este mês, se quiser | Eine Notiz zu diesem Monat, wenn du magst | Une note sur ce mois, si tu veux |
-| `reflectHint` | días | A note about these days, if you like | Una nota sobre estos días, si quieres | Uma nota sobre estes dias, se quiser | Eine Notiz zu diesen Tagen, wenn du magst | Une note sur ces jours, si tu veux |
-| `skip`* | | Skip | Saltar | Pular | Überspringen | Passer |
-| `saveAndGo`* | | Save and continue | Guardar y seguir | Salvar e seguir | Speichern und weiter | Valider et continuer |
-| `reviewPosition` | i, n | 3 of 12 | 3 de 12 | 3 de 12 | 3 von 12 | 3 sur 12 |
+| `rereadTitle` | mes? | Before deciding, read August again / Before deciding, read these days again | Antes de decidir, relee agosto / Antes de decidir, relee estos días | Antes de decidir, releia agosto / Antes de decidir, releia estes dias | Bevor du entscheidest, lies den August nach / Bevor du entscheidest, lies diese Tage nach | Avant de décider, relis août / Avant de décider, relis ces jours |
+| `rereadLead` | n | 4 tasks were left open. Next you'll see them one at a time and decide what happens to each. / 1 task was left open. Next you'll see it and decide what happens to it. / No task was left open. | Quedaron 4 tareas abiertas. Después las verás de una en una y decides qué pasa con cada una. / Quedó 1 tarea abierta. Después la verás y decides qué pasa con ella. / No quedó ninguna tarea abierta. | Ficaram 4 tarefas abertas. Depois você as verá uma a uma e decide o que acontece com cada uma. / Ficou 1 tarefa aberta. Depois você a verá e decide o que acontece com ela. / Nenhuma tarefa ficou aberta. | 4 Aufgaben sind offen geblieben. Danach siehst du sie einzeln und entscheidest, was mit jeder passiert. / 1 Aufgabe ist offen geblieben. Danach siehst du sie und entscheidest, was mit ihr passiert. / Keine Aufgabe ist offen geblieben. | 4 tâches sont restées ouvertes. Ensuite tu les verras une par une et tu décideras ce que devient chacune. / 1 tâche est restée ouverte. Ensuite tu la verras et tu décideras ce qu'elle devient. / Aucune tâche n'est restée ouverte. |
+| `rereadNote` | mes? | A note about August (optional) / A note about these days (optional) | Una nota sobre agosto (opcional) / Una nota sobre estos días (opcional) | Uma nota sobre agosto (opcional) / Uma nota sobre estes dias (opcional) | Eine Notiz zum August (optional) / Eine Notiz zu diesen Tagen (optional) | Une note sur août (facultatif) / Une note sur ces jours (facultatif) |
+| `rereadNoteHint` | | What went well, what didn't... | Qué salió bien, qué no... | O que deu certo, o que não... | Was gut lief, was nicht... | Ce qui a marché, ce qui non... |
+| `decideTasks`* | n | Decide the 4 tasks / Decide the task / Finish | Decidir las 4 tareas / Decidir la tarea / Terminar | Decidir as 4 tarefas / Decidir a tarefa / Terminar | 4 Aufgaben entscheiden / Aufgabe entscheiden / Fertig | Décider les 4 tâches / Décider la tâche / Terminer |
+| `taskOf` | i, n | Task 2 of 4 | Tarea 2 de 4 | Tarefa 2 de 4 | Aufgabe 2 von 4 | Tâche 2 sur 4 |
+| `entryOf` | i, n | Entry 1 of 3 | Entrada 1 de 3 | Entrada 1 de 3 | Eintrag 1 von 3 | Entrée 1 sur 3 |
+| `doneStaysIn` | mes? | Stays in August, marked with an x. / Se queda en su sitio, marcada con una x. | Se queda en agosto, marcada con una x. / Se queda en su sitio, marcada con una x. | Fica em agosto, marcada com um x. / Se queda en su sitio, marcada con una x. | Bleibt im August, mit einem x markiert. / Se queda en su sitio, marcada con una x. | Reste en août, marquée d'un x. / Se queda en su sitio, marcada con una x. |
+| `decideLater`* | | Decide later | Decidir luego | Decidir depois | Später entscheiden | Décider plus tard |
+| `decideLaterHow` | | It stays open and the notice stays. | Sigue abierta y el aviso no se va. | Continua aberta e o aviso não sai. | Bleibt offen, und der Hinweis bleibt. | Elle reste ouverte et l'avis ne part pas. |
+| `reviewFinished` | | Review finished | Repaso terminado | Revisão terminada | Durchsicht beendet | Revue terminée |
+| `reviewEndTitle` | mes?, quedan | August, reviewed / August, almost / These days, reviewed | Agosto, repasado / Agosto, casi / Estos días, repasados | Agosto, revisado / Agosto, quase / Estes dias, revisados | August, durchgesehen / August, fast / Diese Tage, durchgesehen | Août, revu / Août, presque / Ces jours, revus |
+| `reviewEndLead` | quedan | What you moved to today is already on your list, and what you moved to another month waits in Future. / You left 2 tasks for later. The notice stays on Today until you decide. | Lo que pasaste a hoy ya está en tu lista, y lo que llevaste a otro mes espera en Futuro. / Dejaste 2 tareas para luego. El aviso seguirá en Hoy hasta que decidas. | O que você passou para hoje já está na sua lista, e o que levou para outro mês espera no Futuro. / Você deixou 2 tarefas para depois. O aviso fica em Hoje até você decidir. | Was du auf heute verschoben hast, steht schon auf deiner Liste, und was in einen anderen Monat ging, wartet in Zukunft. / Du hast 2 Aufgaben für später gelassen. Der Hinweis bleibt in Heute, bis du entscheidest. | Ce que tu as passé à aujourd'hui est déjà dans ta liste, et ce que tu as reporté attend dans Futur. / Tu as laissé 2 tâches pour plus tard. L'avis reste dans Aujourd'hui jusqu'à ta décision. |
+| `skip` | | Skip | Saltar | Pular | Überspringen | Passer |
 | `fromDay` | fecha | From Monday 14 | Del lunes 14 | Da segunda-feira, 14 | Vom Montag, 14. | Du lundi 14 |
 | `fromMonthTasks` | mes | August tasks | Tareas de agosto | Tarefas de agosto | Aufgaben im August | Tâches d'août |
 | `fromCalendar` | fecha | Calendar, August 3 | Calendario, 3 de agosto | Calendário, 3 de agosto | Kalender, 3. August | Calendrier, 3 août |
 | `fromFuture` | mes, día? | Future, September 14 / Future, September 2026 | Futuro, 14 de septiembre / Futuro, septiembre de 2026 | Futuro, 14 de setembro / Futuro, setembro de 2026 | Zukunft, 14. September / Zukunft, September 2026 | Futur, 14 septembre / Futur, septembre 2026 |
-| `reviewDone` | | Done | Hecha | Feita | Erledigt | Faite |
-| `reviewMigrate` | | Migrate | Migrar | Migrar | Migrieren | Migrer |
-| `reviewSchedule` | | Schedule | Programar | Agendar | Einplanen | Planifier |
-| `reviewToCollection` | | To a collection | A una colección | Para uma coleção | In eine Sammlung | Vers une collection |
-| `reviewDiscard` | | Discard | Descartar | Descartar | Verwerfen | Écarter |
-| `reviewAllDecided` | | All decided. | Todo decidido. | Tudo decidido. | Alles entschieden. | Tout est décidé. |
-| `monthClosed` | mes | August, closed. | Agosto, cerrado. | Agosto, fechado. | August, abgeschlossen. | Août, clôturé. |
 | `futureToCalendar` | | Move to the calendar | Pasar al calendario | Passar para o calendário | In den Kalender | Passer au calendrier |
-| `futureLeave` | | Leave it | Dejarla | Deixar | Lassen | La laisser |
-| `futureDiscard` | | Discard | Descartar | Descartar | Verwerfen | Écarter |
-| `futureAllDecided` | | This month's Future Log is up to date. | El Future Log de este mes está al día. | O Future Log deste mês está em dia. | Das Future Log dieses Monats ist auf dem Stand. | Le Future Log de ce mois est à jour. |
+| `goesTo` | lugar | Goes to September 14. | Va al 14 de septiembre. | Vai para 14 de setembro. | Geht nach: 14. September. | Va vers le 14 septembre. |
+| `futureLeave`* | | Leave it | Dejarla | Deixar | Lassen | La laisser |
+| `futureLeaveHow` | | It keeps waiting in Future. | Sigue esperando en Futuro. | Continua esperando no Futuro. | Wartet weiter in Zukunft. | Elle attend encore dans Futur. |
+| `futureAllDecided` | | Everything Future kept for this month is decided. | Todo lo que Futuro guardaba para este mes está decidido. | Tudo o que o Futuro guardava para este mês está decidido. | Alles, was Zukunft für diesen Monat hatte, ist entschieden. | Tout ce que Futur gardait pour ce mois est décidé. |
 
-Al releer, cada día lleva `dayTitle` y el mes `calendarTitle` y `monthTasks`. El fin lleva `close`.
+Al releer, cada día lleva `dayTitle` y el mes `calendarTitle` y `monthTasks`. Las acciones de una tarea
+son las de la hoja (sección 4) con su consecuencia; `decideLater` la deja para esta vez sin tocarla. El
+fin lleva `backToToday`.
 
 ## 11. Buscar
 
@@ -358,49 +470,78 @@ Al releer, cada día lleva `dayTitle` y el mes `calendarTitle` y `monthTasks`. E
 |---|---|---|---|---|---|---|
 | `searchHint` | | A word or a #tag | Una palabra o una #etiqueta | Uma palavra ou uma #etiqueta | Ein Wort oder ein #Tag | Un mot ou un #tag |
 | `filterOpen` | | Open | Abiertas | Abertas | Offen | Ouvertes |
-| `monthGroup` | mes | = `monthTitle` | | | | |
-| `futureGroup` | mes | = `wentToFuture` sin día: Future, October 2026 | Futuro, octubre de 2026 | Futuro, outubro de 2026 | Zukunft, Oktober 2026 | Futur, octobre 2026 |
+| `monthGroup` | mes | September 2026 | Septiembre 2026 | Setembro 2026 | September 2026 | Septembre 2026 |
+| `futureGroup` | mes | Future, October 2026 | Futuro, octubre de 2026 | Futuro, outubro de 2026 | Zukunft, Oktober 2026 | Futur, octobre 2026 |
 | `searchEmpty` | | Search for a word, or type # and a tag. | Busca una palabra, o escribe # y una etiqueta. | Busque uma palavra, ou escreva # e uma etiqueta. | Such nach einem Wort, oder tippe # und einen Tag. | Cherche un mot, ou écris # et un tag. |
 | `searchNothing` | | Nothing with those words. | Nada con esas palabras. | Nada com essas palavras. | Nichts mit diesen Wörtern. | Rien avec ces mots. |
 
 Los otros tres filtros son los nombres de los signifiers (sección 4); el grupo de un día,
-`longDateWithYear`; el de una colección, su título.
+`longDateWithYear`; el de una lista, su título.
 
-## 12. Clave
+## 12. Clave y guía
 
 | Clave | Parámetros | en | es | pt | de | fr |
 |---|---|---|---|---|---|---|
 | `keyTitle` | | Key | Clave | Legenda | Legende | Légende |
-| `keyBullets` | | Bullets | Bullets | Bullets | Bullets | Bullets |
-| `keyStates` | | States | Estados | Estados | Zustände | États |
-| `keySignifiers` | | Signifiers | Signifiers | Signifiers | Signifiers | Signifiers |
-| `keyGestures` | | Gestures | Gestos | Gestos | Gesten | Gestes |
-| `keyTaskHow` | | No prefix | Sin prefijo | Sem prefixo | Ohne Präfix | Sans préfixe |
-| `keyEventHow` | | Starts with o and a space | Empieza con o y espacio | Começa com o e espaço | Beginnt mit o und Leerzeichen | Commence par o et un espace |
-| `keyNoteHow` | | Starts with - and a space | Empieza con - y espacio | Começa com - e espaço | Beginnt mit - und Leerzeichen | Commence par - et un espace |
-| `keyDoneHow` | | Tap the dot | Toca el punto | Toque no ponto | Tippe auf den Punkt | Touche le point |
-| `keyMigratedHow` | | Press and hold: Migrate | Mantén pulsada: Migrar | Toque e segure: Migrar | Gedrückt halten: Migrieren | Appui long : Migrer |
-| `keyScheduledHow` | | Press and hold: Schedule | Mantén pulsada: Programar | Toque e segure: Agendar | Gedrückt halten: Einplanen | Appui long : Planifier |
-| `keyDiscardedHow` | | Press and hold: Discard | Mantén pulsada: Descartar | Toque e segure: Descartar | Gedrückt halten: Verwerfen | Appui long : Écarter |
-| `keyMigratedLink` | | Tap the > to go where it went. | Toca el > para ir a donde fue. | Toque no > para ir aonde ela foi. | Tippe auf das >, um zu ihrer Kopie zu gehen. | Touche le > pour aller là où elle est partie. |
-| `keyPriorityHow` | | Starts with * and a space | Empieza con * y espacio | Começa com * e espaço | Beginnt mit * und Leerzeichen | Commence par * et un espace |
-| `keyInspirationHow` | | Starts with ! and a space | Empieza con ! y espacio | Começa com ! e espaço | Beginnt mit ! und Leerzeichen | Commence par ! et un espace |
-| `keyExploreHow` | | Starts with ? and a space | Empieza con ? y espacio | Começa com ? e espaço | Beginnt mit ? und Leerzeichen | Commence par ? et un espace |
-| `keyGestureTap` | | Tapping the symbol completes a task. | Tocar el símbolo completa una tarea. | Tocar no símbolo conclui uma tarefa. | Ein Tipp auf das Symbol erledigt eine Aufgabe. | Toucher le symbole termine une tâche. |
-| `keyGestureHold` | | Holding an entry opens its actions. | Mantener pulsada una entrada abre sus acciones. | Tocar e segurar uma entrada abre suas ações. | Langes Drücken auf einen Eintrag öffnet seine Aktionen. | Un appui long sur une entrée ouvre ses actions. |
-| `keyGestureSwipe` | | Swiping sideways on Today changes the day. | Deslizar a los lados en Hoy cambia de día. | Deslizar para os lados em Hoje muda o dia. | Seitlich wischen in Heute wechselt den Tag. | Glisser sur le côté dans Aujourd'hui change de jour. |
-| `keyGestureDrag` | | Holding and dragging changes the order. | Mantener pulsada y arrastrar cambia el orden. | Segurar e arrastar muda a ordem. | Gedrückt halten und ziehen ändert die Reihenfolge. | Appuyer longuement et glisser change l'ordre. |
-| `keyTapText` | | Tap the text to edit it. | Toca el texto para editarlo. | Toque no texto para editá-lo. | Tippe auf den Text, um ihn zu bearbeiten. | Touche le texte pour le modifier. |
+| `keyWhat` | | What each symbol means | Qué significa cada símbolo | O que cada símbolo significa | Was jedes Symbol bedeutet | Ce que veut dire chaque symbole |
+| `keyWrite` | | What you write down | Lo que apuntas | O que você anota | Was du notierst | Ce que tu notes |
+| `keyHappened` | | What happened to a task | Qué pasó con una tarea | O que aconteceu com uma tarefa | Was mit einer Aufgabe geschah | Ce qu'est devenue une tâche |
+| `keyMargin` | | In the margin | En el margen | Na margem | Am Rand | Dans la marge |
+| `keyTask` | | Something to do. | Algo que hacer. | Algo para fazer. | Etwas zu tun. | Quelque chose à faire. |
+| `keyEvent` | | Something that happens on a date. | Algo que pasa en una fecha. | Algo que acontece numa data. | Etwas, das an einem Datum passiert. | Quelque chose qui arrive à une date. |
+| `keyNote` | | Something you want to remember. | Algo que quieres recordar. | Algo que você quer lembrar. | Etwas, das du dir merken willst. | Quelque chose dont tu veux te souvenir. |
+| `keyDone` | | Stays where it was, with an x. | Se queda donde estaba, con una x. | Fica onde estava, com um x. | Bleibt, wo sie war, mit einem x. | Reste où elle était, avec un x. |
+| `movedName` | | Moved | Pasada | Passada | Verschoben | Déplacée |
+| `keyMoved` | | You took it to another day or a list. In the method: migrated. | La llevaste a otro día o a una lista. En el método: migrada. | Você a levou para outro dia ou uma lista. No método: migrada. | Du hast sie auf einen anderen Tag oder in eine Liste gelegt. In der Methode: migriert. | Tu l'as portée à un autre jour ou dans une liste. Dans la méthode : migrée. |
+| `otherMonthName` | | Moved to another month | Llevada a otro mes | Levada para outro mês | In einen anderen Monat | Reportée à un autre mois |
+| `keyOtherMonth` | | Waits in Future. In the method: scheduled. | Espera en Futuro. En el método: programada. | Espera no Futuro. No método: agendada. | Wartet in Zukunft. In der Methode: eingeplant. | Attend dans Futur. Dans la méthode : planifiée. |
+| `keyDiscarded` | | It wasn't needed any more. In the method: irrelevant. | Ya no hacía falta. En el método: irrelevante. | Não era mais necessária. No método: irrelevante. | Wurde nicht mehr gebraucht. In der Methode: irrelevant. | Elle n'était plus utile. Dans la méthode : non pertinente. |
+| `keyPriority` | | What comes before everything else. | Lo que va antes que lo demás. | O que vem antes do resto. | Was vor allem anderen kommt. | Ce qui passe avant le reste. |
+| `keyInspiration` | | An idea worth keeping. | Una idea que vale la pena. | Uma ideia que vale a pena. | Eine Idee, die sich lohnt. | Une idée qui vaut le coup. |
+| `keyExplore` | | Something to look into. | Algo que investigar. | Algo para investigar. | Etwas zum Nachforschen. | Quelque chose à creuser. |
+| `keyPrefixes` | | When writing: start with ^o^ for an event, ^-^ for a note, and ^*^, ^!^ or ^?^ for the margin marks. | Al escribir: empieza con ^o^ para un evento, con ^-^ para una nota, y con ^*^, ^!^ o ^?^ para las marcas del margen. | Ao escrever: comece com ^o^ para um evento, com ^-^ para uma nota, e com ^*^, ^!^ ou ^?^ para as marcas da margem. | Beim Schreiben: beginne mit ^o^ für ein Ereignis, mit ^-^ für eine Notiz und mit ^*^, ^!^ oder ^?^ für die Randzeichen. | En écrivant : commence par ^o^ pour un événement, par ^-^ pour une note, et par ^*^, ^!^ ou ^?^ pour les marques de la marge. |
 
-El nombre de cada fila es `bulletTask`, `bulletEvent`, `bulletNote`, `stateDone`, `stateMigrated`,
-`stateScheduled`, `stateDiscarded` y los tres `signifier*` (sección 4). Los símbolos que citan las
-filas (`o`, `-`, `*`, `!`, `?`, `>`) son los del método, iguales en los cinco idiomas.
+El nombre de cada fila es `bulletTask`, `bulletEvent`, `bulletNote`, `stateDone`, `movedName`,
+`otherMonthName`, `stateDiscarded` y los tres `signifier*` (sección 4); `keyMoved` y `keyOtherMonth`
+dicen además su nombre en el método. Los símbolos que citan las filas (`o`, `-`, `*`, `!`, `?`, `>`,
+`<`) son los del método, iguales en los cinco idiomas. Los `^` de `keyPrefixes` marcan lo que va en
+negrita.
+
+**Guía del primer arranque** (`docs/pantallas.md` 13.1). Las líneas de ejemplo de los dibujos
+(`guideInk`, `guideDinner`, `guideOpens`, `guideQuote`, `guideBank`) son de un diario inventado y se
+traducen como cualquier texto. `skip`, `previous` y `next` son los de las secciones 2 y 10.
+
+| Clave | Parámetros | en | es | pt | de | fr |
+|---|---|---|---|---|---|---|
+| `guideStart`* | | Start writing | Empezar a escribir | Começar a escrever | Losschreiben | Commencer à écrire |
+| `guideStep` | i, n | Step 1 of 4 | Paso 1 de 4 | Passo 1 de 4 | Schritt 1 von 4 | Étape 1 sur 4 |
+| `guideTitles[0]` | | Write it in one line | Apunta en una línea | Anote em uma linha | Schreib es in eine Zeile | Note-le en une ligne |
+| `guideTexts[0]` | | Each line is a task, an event or a note. The symbol in front tells you which. | Cada línea es una tarea, un evento o una nota. El símbolo de delante te dice cuál es. | Cada linha é uma tarefa, um evento ou uma nota. O símbolo na frente diz qual é. | Jede Zeile ist eine Aufgabe, ein Ereignis oder eine Notiz. Das Symbol davor sagt dir, was. | Chaque ligne est une tâche, un événement ou une note. Le symbole devant te dit lequel. |
+| `guideTitles[1]` | | Tap the dot when it's done | Toca el punto cuando esté hecha | Toque no ponto quando estiver feita | Tippe auf den Punkt, wenn sie erledigt ist | Touche le point quand c'est fait |
+| `guideTexts[1]` | | The task stays where it was, marked with an x. If you got it wrong, another tap reopens it. | La tarea se queda donde estaba, marcada con una x. Si te equivocas, otro toque la reabre. | A tarefa fica onde estava, marcada com um x. Se errar, outro toque a reabre. | Die Aufgabe bleibt, wo sie war, mit einem x markiert. Hast du dich vertan, öffnet ein weiterer Tipp sie wieder. | La tâche reste où elle était, marquée d'un x. Si tu te trompes, un autre toucher la rouvre. |
+| `guideTitles[2]` | | You move what's pending | Lo pendiente lo mueves tú | O pendente, você que move | Offenes verschiebst du selbst | Ce qui reste, c'est toi qui le déplaces |
+| `guideTexts[2]` | | Nothing moves on its own. You move a task to tomorrow, take it to another month or discard it, and the page keeps the trace. | Nada cambia de sitio solo. Pasas una tarea a mañana, la llevas a otro mes o la descartas, y en la página queda el rastro. | Nada muda de lugar sozinho. Você passa uma tarefa para amanhã, leva para outro mês ou descarta, e a página guarda o rastro. | Nichts wandert von allein. Du verschiebst eine Aufgabe auf morgen, in einen anderen Monat oder verwirfst sie, und die Seite behält die Spur. | Rien ne bouge tout seul. Tu passes une tâche à demain, tu la reportes à un autre mois ou tu l'écartes, et la page en garde la trace. |
+| `guideTitles[3]` | | Once a month, review | Una vez al mes, repasa | Uma vez por mês, revise | Einmal im Monat durchsehen | Une fois par mois, fais le point |
+| `guideTexts[3]` | | Bobbin tells you what was left open last month and shows it to you one at a time, with each way out explained. | Bobbin te avisa de lo que quedó abierto el mes anterior y te lo enseña de una en una, con cada salida explicada. | O Bobbin avisa o que ficou aberto no mês anterior e mostra uma de cada vez, com cada saída explicada. | Bobbin zeigt dir, was im Vormonat offen blieb, eins nach dem anderen, und erklärt jeden Ausweg. | Bobbin te signale ce qui est resté ouvert le mois dernier et te le montre une à une, avec chaque issue expliquée. |
+| `guideInk` | | Buy ink | Comprar tinta | Comprar tinta | Tinte kaufen | Acheter de l'encre |
+| `guideDinner` | | Dinner with Ana | Cena con Ana | Jantar com a Ana | Essen mit Ana | Dîner avec Ana |
+| `guideOpens` | | Opens at 10 | Abre a las 10 | Abre às 10 | Öffnet um 10 | Ouvre à 10 h |
+| `guideQuote` | | Send the quote | Enviar el presupuesto | Enviar o orçamento | Angebot schicken | Envoyer le devis |
+| `guideBank` | | Call the bank | Llamar al banco | Ligar para o banco | Bank anrufen | Appeler la banque |
+| `guideCopy` | | Copy | Copia | Cópia | Kopie | Copie |
+| `guideUnclosed` | n | 4 tasks not closed | 4 tareas sin cerrar | 4 tarefas sem fechar | 4 Aufgaben offen | 4 tâches non clôturées |
+| `guideToToday` | | To today | A hoy | Para hoje | Auf heute | À aujourd'hui |
+| `guideToMonth` | | Other month | A otro mes | Outro mês | Anderer Monat | Autre mois |
 
 ## 13. Ajustes
 
 | Clave | Parámetros | en | es | pt | de | fr |
 |---|---|---|---|---|---|---|
 | `settingsTitle` | | Settings | Ajustes | Ajustes | Einstellungen | Réglages |
+| `sectionHelp` | | Help | Ayuda | Ajuda | Hilfe | Aide |
+| `guideAgain` | | See the guide again | Ver la guía otra vez | Ver o guia de novo | Anleitung erneut ansehen | Revoir le guide |
+| `guideAgainSub` | | The four screens from the first start. | Las cuatro pantallas del primer arranque. | As quatro telas da primeira abertura. | Die vier Seiten vom ersten Start. | Les quatre écrans du premier lancement. |
+| `keyRowSub` | | The method's key, with its usual names. | La clave del método, con sus nombres de siempre. | A legenda do método, com os nomes de sempre. | Die Legende der Methode, mit ihren üblichen Namen. | La légende de la méthode, avec ses noms habituels. |
 | `sectionDay` | | Day | Día | Dia | Tag | Jour |
 | `dayStartRow` | | The day starts | El día empieza | O dia começa | Der Tag beginnt | La journée commence |
 | `dayStartAt` | h | At 04:00 | A las 04:00 | Às 04:00 | Um 04:00 | À 04:00 |
@@ -597,12 +738,11 @@ textos y la misma regla de plurales.
 | Clave | Parámetros | en | es | pt | de | fr |
 |---|---|---|---|---|---|---|
 | `entryDescription` | bullet, estado, signifiers, texto | Done task, priority: buy bread | Tarea hecha, prioridad: comprar pan | Tarefa feita, prioridade: comprar pão | Erledigte Aufgabe, Priorität: Brot kaufen | Tâche faite, priorité : acheter du pain |
-| `a11yWentTo` | destino | Moved to Sep 24 | Fue a 24 sept | Foi para 24 set | Verschoben nach 24. Sept. | Partie vers 24 sept. |
 | `a11yComplete` | | Complete | Completar | Concluir | Erledigen | Terminer |
 | `a11yReopen` | | Reopen | Reabrir | Reabrir | Wieder öffnen | Rouvrir |
 | `a11yMoveUp` | | Move up | Subir | Subir | Nach oben | Monter |
 | `a11yMoveDown` | | Move down | Bajar | Descer | Nach unten | Descendre |
-| `a11yCapture` | | New entry | Nueva entrada | Nova entrada | Neuer Eintrag | Nouvelle entrée |
+| `a11yOptions` | | See options | Ver opciones | Ver opções | Optionen ansehen | Voir les options |
 | `a11yDayRow` | día, nombre, n | 3, Thursday, 2 entries | 3, jueves, 2 entradas | 3, quinta-feira, 2 entradas | 3., Donnerstag, 2 Einträge | 3, jeudi, 2 entrées |
 | `a11yDayRow` | día, nombre, 0 | 3, Thursday, no entries | 3, jueves, sin entradas | 3, quinta-feira, sem entradas | 3., Donnerstag, keine Einträge | 3, jeudi, aucune entrée |
 | `a11yTrackerCell` | fila, fecha, marcada | Two litres, September 23, marked / not marked | Dos litros, 23 de septiembre, marcada / sin marcar | Dois litros, 23 de setembro, marcada / sem marcar | Zwei Liter, 23. September, markiert / nicht markiert | Deux litres, 23 septembre, cochée / pas cochée |
@@ -612,11 +752,12 @@ textos y la misma regla de plurales.
 - `entryDescription` junta `glyphName` del estado (sección 4), los signifiers puestos por su nombre en
   el orden prioridad, inspiración, explorar, separados por coma, dos puntos y el texto. Los nombres de
   los signifiers van en minúscula salvo en alemán. Sin signifiers, el glifo, dos puntos y el texto:
-  "Evento: cena con Ana". Una migrada o programada añade `. ` y `a11yWentTo` con su destino
-  (`wentTo*`, sección 4), si la copia existe.
+  "Evento: cena con Ana". Una pasada o llevada a otro mes añade `. ` y la línea que se ve debajo
+  (`movedTo`, `scheduledTo` o `cameFrom`, sección 4).
 - El texto del usuario se lee tal cual, sin cambiarle la caja; "comprar pan" es solo el ejemplo.
-- Las acciones personalizadas son `a11yComplete` o `a11yReopen`, `actionMigrate`, `actionSchedule`,
-  `a11yMoveUp`, `a11yMoveDown` y `a11yMoreActions`. Los iconos usan las `a11y*` de la sección 3.
+- La acción principal de una fila es `a11yOptions`, que abre su hoja. Las acciones personalizadas son
+  `a11yComplete` o `a11yReopen`, `actionGoToCopy`, `a11yMoveUp` y `a11yMoveDown`. Los iconos usan las
+  `a11y*` de la sección 3; los que llevan su texto al lado (volver, compartir) se leen por ese texto.
 - `a11yTrackerCell` lee el título de la fila, `shortDate` y el estado; `a11yTrackerMarked` junta los
   días con `joinAnd`. Sin totales ni porcentajes.
 

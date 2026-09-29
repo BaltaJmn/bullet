@@ -1,6 +1,7 @@
 package com.baltajmn.bullet.i18n
 
 import com.baltajmn.bullet.model.Bullet
+import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.TaskStatus
 import kotlinx.datetime.DayOfWeek
@@ -107,6 +108,8 @@ object S {
     }
 
     private fun ofConnector() = t("of", "de", "de", "von", "sur")
+
+    private fun daysBetween(from: LocalDate, to: LocalDate): Int = (to.toEpochDays() - from.toEpochDays()).toInt()
 
     /** French elides "de" before a month name that starts with a vowel: "Tâches d'août". */
     private fun frDe(month: String) = if (month.firstOrNull()?.lowercaseChar() in setOf('a', 'e', 'i', 'o', 'u')) {
@@ -219,6 +222,11 @@ object S {
     val back = t("Back", "Volver", "Voltar", "Zurück", "Retour")
     val undo = t("Undo", "Deshacer", "Desfazer", "Rückgängig", "Annuler")
     val working = t("One moment...", "Un momento...", "Um momento...", "Einen Moment...", "Un instant...")
+    val add = t("Add", "Añadir", "Adicionar", "Hinzufügen", "Ajouter")
+    val save = t("Save", "Guardar", "Salvar", "Speichern", "Enregistrer")
+    val gotIt = t("Got it", "Entendido", "Entendi", "Verstanden", "Compris")
+    val previous = t("Back", "Atrás", "Voltar", "Zurück", "Retour")
+    val next = t("Next", "Siguiente", "Próximo", "Weiter", "Suivant")
 
     // --- 3. Navegacion y cabeceras -----------------------------------------------------------
 
@@ -227,22 +235,41 @@ object S {
     val tabFuture = t("Future", "Futuro", "Futuro", "Zukunft", "Futur")
     val tabIndex = t("Index", "Índice", "Índice", "Index", "Index")
     val backToToday = t("Back to today", "Volver a hoy", "Voltar para hoje", "Zurück zu heute", "Revenir à aujourd'hui")
-    val a11yBack = t("Back", "Volver", "Voltar", "Zurück", "Retour")
     val a11yPreviousDay = t("Previous day", "Día anterior", "Dia anterior", "Vorheriger Tag", "Jour précédent")
     val a11yNextDay = t("Next day", "Día siguiente", "Próximo dia", "Nächster Tag", "Jour suivant")
     val a11yPreviousMonth = t("Previous month", "Mes anterior", "Mês anterior", "Vorheriger Monat", "Mois précédent")
     val a11yNextMonth = t("Next month", "Mes siguiente", "Próximo mês", "Nächster Monat", "Mois suivant")
     val a11yClose = t("Close", "Cerrar", "Fechar", "Schließen", "Fermer")
-    val a11yShare = t("Share this page", "Compartir esta página", "Compartilhar esta página", "Diese Seite teilen", "Partager cette page")
     val a11ySettings = t("Settings", "Ajustes", "Ajustes", "Einstellungen", "Réglages")
     val a11ySearch = t("Search the journal", "Buscar en el diario", "Buscar no diário", "Im Journal suchen", "Chercher dans le journal")
-    val a11yKey = t("Symbol key", "Clave de símbolos", "Legenda dos símbolos", "Legende der Symbole", "Légende des symboles")
     val a11yMoreActions = t("More actions", "Más acciones", "Mais ações", "Weitere Aktionen", "Plus d'actions")
     val a11ySelected = t("selected", "elegida", "selecionada", "ausgewählt", "sélectionnée")
 
+    /** Under the day's title: "Hoy, septiembre de 2026", or just the month away from the three near days. */
+    fun daySubtitle(day: LocalDate, today: LocalDate): String {
+        val month = monthYear(YearMonth(day.year, day.month))
+        val near = when (daysBetween(today, day)) {
+            0 -> t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui")
+            -1 -> t("Yesterday", "Ayer", "Ontem", "Gestern", "Hier")
+            1 -> t("Tomorrow", "Mañana", "Amanhã", "Morgen", "Demain")
+            else -> return month.replaceFirstChar { it.uppercase() }
+        }
+        return "$near, $month"
+    }
+
+    fun monthSubtitle(month: YearMonth, past: Boolean): String = if (!past) {
+        "${month.year}"
+    } else {
+        "${month.year}" + t(", a past month", ", un mes pasado", ", um mês passado", ", ein vergangener Monat", ", un mois passé")
+    }
+
+    fun backToMonth(month: YearMonth): String {
+        val m = monthNames()[month.month.ordinal]
+        return t("Back to $m", "Volver a $m", "Voltar para $m", "Zurück zum $m", "Revenir à $m")
+    }
+
     // --- 4. La entrada, la captura y la hoja --------------------------------------------------
 
-    val captureHint = t("Write here", "Escribe aquí", "Escreva aqui", "Hier schreiben", "Écris ici")
     fun counter(n: Int, max: Int) = "$n/$max"
     val bulletTask = t("Task", "Tarea", "Tarefa", "Aufgabe", "Tâche")
     val bulletEvent = t("Event", "Evento", "Evento", "Ereignis", "Événement")
@@ -268,28 +295,238 @@ object S {
         return t("Future, $place", "Futuro, $place", "Futuro, $place", "Zukunft, $place", "Futur, $place")
     }
 
-    /** Only shown from MIGRATION_SHOWN_FROM (2); the n == 1 phrase exists just in case. */
-    fun migratedTimes(n: Int): String = if (n == 1) {
-        t("Migrated once", "Migrada 1 vez", "Migrada 1 vez", "Einmal migriert", "Migrée 1 fois")
+    /** From MIGRATION_SHOWN_FROM (2) in a review (docs/pantallas.md 11.2): how many times this task was already moved. */
+    fun timesMoved(n: Int): String = if (n == 1) {
+        t("You've moved it once", "Ya la has pasado una vez", "Você já a passou uma vez", "Schon einmal verschoben", "Déjà déplacée une fois")
     } else {
-        t("Migrated $n times", "Migrada $n veces", "Migrada $n vezes", "$n-mal migriert", "Migrée $n fois")
+        t("You've moved it $n times", "Ya la has pasado $n veces", "Você já a passou $n vezes", "Schon $n-mal verschoben", "Déjà déplacée $n fois")
     }
 
-    val actionMigrate = t("Migrate", "Migrar", "Migrar", "Migrieren", "Migrer")
-    val actionSchedule = t("Schedule", "Programar", "Agendar", "Einplanen", "Planifier")
+    val actionDone = t("Done", "Hecha", "Feita", "Erledigt", "Faite")
     val actionDiscard = t("Discard", "Descartar", "Descartar", "Verwerfen", "Écarter")
     val actionReopen = t("Reopen", "Reabrir", "Reabrir", "Wieder öffnen", "Rouvrir")
+    val actionRecover = t("Bring back", "Recuperar", "Recuperar", "Zurückholen", "Récupérer")
     val actionGoToCopy = t("Go to the copy", "Ir a la copia", "Ir para a cópia", "Zur Kopie", "Aller à la copie")
-    val actionEdit = t("Edit", "Editar", "Editar", "Bearbeiten", "Modifier")
+    val actionEdit = t("Edit the text", "Editar el texto", "Editar o texto", "Text bearbeiten", "Modifier le texte")
     val actionDelete = t("Delete", "Borrar", "Apagar", "Löschen", "Supprimer")
+    val moveToday = t("Move to today", "Pasar a hoy", "Passar para hoje", "Auf heute verschieben", "Passer à aujourd'hui")
+    val moveTomorrow = t("Move to tomorrow", "Pasar a mañana", "Passar para amanhã", "Auf morgen verschieben", "Passer à demain")
+    val moveNextDay = t("Move to the next day", "Pasar al día siguiente", "Passar para o dia seguinte", "Auf den nächsten Tag", "Passer au jour suivant")
+    val moveOtherMonth = t("Move to another month", "Llevar a otro mes", "Levar para outro mês", "In einen anderen Monat", "Reporter à un autre mois")
+    val moveElsewhere = t("Move somewhere else", "Pasar a otro sitio", "Passar para outro lugar", "Woandershin verschieben", "Déplacer ailleurs")
+    val priorityOn = t("Mark as priority", "Marcar como prioridad", "Marcar como prioridade", "Als Priorität markieren", "Marquer comme priorité")
+    val priorityOff = t("Remove priority", "Quitar prioridad", "Tirar prioridade", "Priorität entfernen", "Retirer la priorité")
+    val otherMarks = t("Other margin marks", "Otras marcas del margen", "Outras marcas da margem", "Weitere Randzeichen", "Autres marques de la marge")
+    val backToOptions = t("Back to the options", "Volver a las opciones", "Voltar às opções", "Zurück zu den Optionen", "Retour aux options")
+
+    // What each action does, under its name (docs/pantallas.md 5.6): the consequence, never an instruction.
+    val doneHow = t(
+        "Stays where it is, marked with an x.",
+        "Se queda en su sitio, marcada con una x.",
+        "Fica onde está, marcada com um x.",
+        "Bleibt, wo sie ist, mit einem x markiert.",
+        "Reste à sa place, marquée d'un x.",
+    )
+    val otherMonthHow = t(
+        "You pick the month and it waits in Future.",
+        "Eliges el mes y espera en Futuro.",
+        "Você escolhe o mês e ela espera no Futuro.",
+        "Du wählst den Monat, dort wartet sie in Zukunft.",
+        "Tu choisis le mois et elle attend dans Futur.",
+    )
+    val discardHow = t(
+        "No longer needed. It stays crossed out.",
+        "Ya no hace falta. Se queda tachada.",
+        "Não é mais necessária. Fica riscada.",
+        "Nicht mehr nötig. Bleibt durchgestrichen.",
+        "Plus nécessaire. Elle reste barrée.",
+    )
+    val reopenHow = t("It's open again.", "Vuelve a estar pendiente.", "Volta a ficar pendente.", "Ist wieder offen.", "Elle est de nouveau à faire.")
+    val priorityOnHow = t("An asterisk in the margin.", "Un asterisco en el margen.", "Um asterisco na margem.", "Ein Sternchen am Rand.", "Un astérisque dans la marge.")
+    val priorityOffHow = t(
+        "The asterisk leaves the margin.",
+        "Se va el asterisco del margen.",
+        "O asterisco sai da margem.",
+        "Das Sternchen verschwindet vom Rand.",
+        "L'astérisque quitte la marge.",
+    )
+    val otherMarksHow = t("Inspiration or explore.", "Inspiración o explorar.", "Inspiração ou explorar.", "Inspiration oder Erkunden.", "Inspiration ou explorer.")
+    val elsewhereHow = t(
+        "A day this month, the month's tasks or a list.",
+        "Un día de este mes, las tareas del mes o una lista.",
+        "Um dia deste mês, as tarefas do mês ou uma lista.",
+        "Ein Tag in diesem Monat, die Aufgaben des Monats oder eine Liste.",
+        "Un jour de ce mois, les tâches du mois ou une liste.",
+    )
+    val deleteHow = t(
+        "It leaves the journal. You can undo it for a few seconds.",
+        "Desaparece del diario. Puedes deshacerlo unos segundos.",
+        "Sai do diário. Dá para desfazer por alguns segundos.",
+        "Verschwindet aus dem Journal. Ein paar Sekunden lang rückgängig zu machen.",
+        "Elle quitte le journal. Tu peux annuler pendant quelques secondes.",
+    )
+
+    /** "En agosto queda una >." with the review's [month], "Aquí queda una >." without one. [mark] is the method's own sign. */
+    fun leavesMark(mark: String, month: YearMonth? = null): String {
+        val m = month?.let { monthNames()[it.month.ordinal] }
+        return if (m == null) {
+            t("A $mark stays here.", "Aquí queda una $mark.", "Aqui fica um $mark.", "Hier bleibt ein $mark.", "Ici reste un $mark.")
+        } else {
+            t("A $mark stays in $m.", "En $m queda una $mark.", "Em $m fica um $mark.", "Im $m bleibt ein $mark.", "En $m reste un $mark.")
+        }
+    }
+
+    fun waitsIn(month: YearMonth): String {
+        val m = monthNames()[month.month.ordinal]
+        return t("Waits in Future, in $m.", "Espera en Futuro, en $m.", "Espera no Futuro, em $m.", "Wartet in Zukunft, im $m.", "Attend dans Futur, en $m.")
+    }
+
+    /**
+     * Where an entry is, in the middle of a sentence (docs/textos.md 4): "hoy, martes 29", "el 12 de
+     * septiembre", "la lista Viaje". [today] decides hoy, mañana and ayer; [list] is a collection's title.
+     */
+    fun placeLabel(place: Place, today: LocalDate, list: String?): String = when (place) {
+        is Place.Daily -> {
+            val d = place.date
+            val phrase = dayPhrase(d, sameMonth = d.year == today.year && d.month == today.month)
+            when (daysBetween(today, d)) {
+                0 -> t("today, $phrase", "hoy, $phrase", "hoje, $phrase", "heute, $phrase", "aujourd'hui, $phrase")
+                1 -> t("tomorrow, $phrase", "mañana, $phrase", "amanhã, $phrase", "morgen, $phrase", "demain, $phrase")
+                -1 -> t("yesterday, $phrase", "ayer, $phrase", "ontem, $phrase", "gestern, $phrase", "hier, $phrase")
+                else -> t(phrase, "el $phrase", phrase, phrase, phrase)
+            }
+        }
+        is Place.Monthly -> if (place.day != null) {
+            monthDayLabel(place.month, place.day, withYear = place.month.year != today.year)
+        } else {
+            val m = monthNames()[place.month.month.ordinal]
+            t("$m's tasks", "las tareas de $m", "as tarefas de $m", "Aufgaben im $m", "les tâches ${frDe(m)}")
+        }
+        is Place.Future -> {
+            val where = if (place.day != null) {
+                monthDayLabel(place.month, place.day, withYear = place.month.year != today.year)
+            } else if (place.month.year != today.year) {
+                monthYear(place.month)
+            } else {
+                monthNames()[place.month.month.ordinal]
+            }
+            t("$where, in Future", "$where, en Futuro", "$where, no Futuro", "$where, in Zukunft", "$where, dans Futur")
+        }
+        is Place.InCollection -> t("the list $list", "la lista $list", "a lista $list", "Liste $list", "la liste $list")
+    }
+
+    /** "el 12 de septiembre", "September 12", "le 12 septembre": a day of a month, with its article where the language puts one. */
+    private fun monthDayLabel(month: YearMonth, day: Int, withYear: Boolean): String {
+        val date = shortDate(LocalDate(month.year, month.month, day)) + if (withYear) yearSuffix(month.year) else ""
+        return t(date, "el $date", date, date, "le $date")
+    }
+
+    /** "martes 29", "Saturday, August 2": the weekday in lower case where the language writes it so. */
+    private fun dayPhrase(d: LocalDate, sameMonth: Boolean): String {
+        val w = weekdayNames()[d.dayOfWeek.ordinal]
+        if (sameMonth) return t("$w ${d.day}", "$w ${d.day}", "$w, ${d.day}", "$w, ${d.day}.", "$w ${frDay(d.day)}")
+        return t("$w, ${shortDate(d)}", "$w ${shortDate(d)}", "$w, ${shortDate(d)}", "$w, ${shortDate(d)}", "$w ${shortDate(d)}")
+    }
+
+    /** Spanish joins "a" and "de" with "el": "al sábado", "del 12 de septiembre". */
+    private fun esA(label: String) = if (label.startsWith("el ")) "al ${label.drop(3)}" else "a $label"
+    private fun esDe(label: String) = if (label.startsWith("el ")) "del ${label.drop(3)}" else "de $label"
+
+    fun movedTo(label: String) = t("Moved to $label", "Pasada ${esA(label)}", "Passada para $label", "Verschoben: $label", "Déplacée vers $label")
+    fun scheduledTo(label: String) = t("Moved to $label", "Llevada ${esA(label)}", "Levada para $label", "Verschoben: $label", "Reportée vers $label")
+    fun cameFrom(label: String) = t("Came from $label", "Viene ${esDe(label)}", "Origem: $label", "Kommt von: $label", "Origine : $label")
+    fun copiesTo(label: String) = sentence(t("A copy goes to $label", "Se copia ${esA(label)}", "Uma cópia vai para $label", "Kopie: $label", "Une copie va vers $label"))
+    fun copyIsAt(label: String) = sentence(t("Copy: $label", "Está en $label", "Cópia: $label", "Kopie: $label", "Copie : $label"))
+
+    /** A label that already ends a sentence ("24." in German) gets no second full stop. */
+    fun sentence(text: String) = if (text.endsWith(".")) text else "$text."
+
+    // The composer (docs/pantallas.md 5.2): what is being written and where it lands.
+    fun composeHint(bullet: Bullet): String = when (bullet) {
+        Bullet.TASK -> t("New task...", "Nueva tarea...", "Nova tarefa...", "Neue Aufgabe...", "Nouvelle tâche...")
+        Bullet.EVENT -> t("New event...", "Nuevo evento...", "Novo evento...", "Neues Ereignis...", "Nouvel événement...")
+        Bullet.NOTE -> t("New note...", "Nueva nota...", "Nova nota...", "Neue Notiz...", "Nouvelle note...")
+    }
+
+    /** The word before the composer's destination, which goes in bold: "En **hoy**", "For **today**". */
+    val composeFor = t("For", "En", "Para", "Für", "Pour")
+
+    /** The composer's destination (docs/pantallas.md 5.2). [list] is set for a collection, and is its title. */
+    fun targetLabel(place: Place, today: LocalDate, list: String?): String = when (place) {
+        is Place.Daily -> when (daysBetween(today, place.date)) {
+            0 -> t("today", "hoy", "hoje", "heute", "aujourd'hui")
+            1 -> t("tomorrow", "mañana", "amanhã", "morgen", "demain")
+            else -> dayPhrase(place.date, sameMonth = true).let { t(it, "el $it", it, it, it) }
+        }
+        is Place.Monthly -> if (place.day != null) {
+            monthDayLabel(place.month, place.day, withYear = false)
+        } else {
+            val m = monthNames()[place.month.month.ordinal]
+            t("$m's tasks", "tareas de $m", "tarefas de $m", "Aufgaben im $m", "tâches ${frDe(m)}")
+        }
+        is Place.Future -> if (place.day != null) {
+            monthDayLabel(place.month, place.day, withYear = place.month.year != today.year)
+        } else if (place.month.year != today.year) {
+            monthYear(place.month)
+        } else {
+            monthNames()[place.month.month.ordinal]
+        }
+        is Place.InCollection -> list.orEmpty()
+    }
+
+    fun added(bullet: Bullet, label: String): String = when (bullet) {
+        Bullet.TASK -> sentence(t("Task added for $label", "Tarea añadida en $label", "Tarefa adicionada para $label", "Aufgabe hinzugefügt: $label", "Tâche ajoutée pour $label"))
+        Bullet.EVENT -> sentence(t("Event added for $label", "Evento añadido en $label", "Evento adicionado para $label", "Ereignis hinzugefügt: $label", "Événement ajouté pour $label"))
+        Bullet.NOTE -> sentence(t("Note added for $label", "Nota añadida en $label", "Nota adicionada para $label", "Notiz hinzugefügt: $label", "Note ajoutée pour $label"))
+    }
+
+    // The line that confirms an action, with undo (docs/pantallas.md 5.8).
+    val toastDone = t("Done.", "Hecha.", "Feita.", "Erledigt.", "Faite.")
+    val toastDiscarded = t("Discarded.", "Descartada.", "Descartada.", "Verworfen.", "Écartée.")
+    val toastPriorityOn = t("Marked as priority.", "Marcada como prioridad.", "Marcada como prioridade.", "Als Priorität markiert.", "Marquée comme priorité.")
+    val toastPriorityOff = t("No longer a priority.", "Sin prioridad.", "Sem prioridade.", "Keine Priorität mehr.", "Plus prioritaire.")
+    val toastSaved = t("Saved.", "Guardado.", "Salvo.", "Gespeichert.", "Enregistré.")
+
+    fun toastScheduled(month: YearMonth): String {
+        val m = monthNames()[month.month.ordinal]
+        return t(
+            "Moved to $m. It waits in Future.",
+            "Llevada a $m. Espera en Futuro.",
+            "Levada para $m. Espera no Futuro.",
+            "Verschoben: $m. Wartet in Zukunft.",
+            "Reportée en $m. Elle attend dans Futur.",
+        )
+    }
+
+    // The sheet's header (docs/pantallas.md 5.6): what the entry is, in plain words.
+    fun entryKind(bullet: Bullet, status: TaskStatus, priority: Boolean): String {
+        val kind = when (bullet) {
+            Bullet.EVENT -> bulletEvent
+            Bullet.NOTE -> bulletNote
+            Bullet.TASK -> when (status) {
+                TaskStatus.OPEN -> t("Open task", "Tarea pendiente", "Tarefa pendente", "Offene Aufgabe", "Tâche à faire")
+                TaskStatus.DONE -> t("Done task", "Tarea hecha", "Tarefa feita", "Erledigte Aufgabe", "Tâche faite")
+                TaskStatus.MIGRATED -> t("Moved task", "Tarea pasada", "Tarefa passada", "Verschobene Aufgabe", "Tâche déplacée")
+                TaskStatus.SCHEDULED -> t(
+                    "Task moved to another month",
+                    "Tarea llevada a otro mes",
+                    "Tarefa levada para outro mês",
+                    "In einen anderen Monat verschoben",
+                    "Tâche reportée à un autre mois",
+                )
+                TaskStatus.IRRELEVANT -> t("Discarded task", "Tarea descartada", "Tarefa descartada", "Verworfene Aufgabe", "Tâche écartée")
+            }
+        }
+        return if (priority) kind + t(", priority", ", prioridad", ", prioridade", ", Priorität", ", priorité") else kind
+    }
+
     val toToday = t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui")
     val toTomorrow = t("Tomorrow", "Mañana", "Amanhã", "Morgen", "Demain")
     val toThisMonth = t("This month's tasks", "Tareas de este mes", "Tarefas deste mês", "Aufgaben dieses Monats", "Tâches de ce mois")
     val toDayOfMonth = t("A day this month", "Un día de este mes", "Um dia deste mês", "Ein Tag in diesem Monat", "Un jour de ce mois")
-    val toCollection = t("To a collection", "A una colección", "Para uma coleção", "In eine Sammlung", "Vers une collection")
+    val toCollection = t("To a list", "A una lista", "Para uma lista", "In eine Liste", "Vers une liste")
     val dayField = t("day", "día", "dia", "Tag", "jour")
-    val dayFieldOptional = t("Day, optional", "Día, opcional", "Dia, opcional", "Tag, optional", "Jour, facultatif")
-    val migrateAction = t("Migrate", "Migrar", "Migrar", "Migrieren", "Migrer")
+    val moveAction = t("Move", "Pasar", "Passar", "Verschieben", "Déplacer")
 
     fun dayOutOfRange(month: YearMonth, day: Int): String {
         val name = monthName(month)
@@ -303,10 +540,10 @@ object S {
     }
 
     val dayPast = t("That day has passed.", "Ese día ya pasó.", "Esse dia já passou.", "Dieser Tag ist vorbei.", "Ce jour est passé.")
-    val newCollection = t("New collection", "Nueva colección", "Nova coleção", "Neue Sammlung", "Nouvelle collection")
+    val newList = t("New list", "Nueva lista", "Nova lista", "Neue Liste", "Nouvelle liste")
     val showMoreMonths = t("Show more months", "Ver más meses", "Ver mais meses", "Mehr Monate zeigen", "Voir plus de mois")
     val entryDeleted = t("Entry deleted.", "Entrada borrada.", "Entrada apagada.", "Eintrag gelöscht.", "Entrée supprimée.")
-    val collectionDeleted = t("Collection deleted.", "Colección borrada.", "Coleção apagada.", "Sammlung gelöscht.", "Collection supprimée.")
+    val collectionDeleted = t("List deleted.", "Lista borrada.", "Lista apagada.", "Liste gelöscht.", "Liste supprimée.")
     val rowDeleted = t("Row deleted.", "Fila borrada.", "Linha apagada.", "Zeile gelöscht.", "Ligne supprimée.")
 
     /** docs/pantallas.md 1.5: the name of each glyph, for the screen reader. */
@@ -331,13 +568,6 @@ object S {
 
     // --- 5. Hoy -------------------------------------------------------------------------------
 
-    val prefixHint = t(
-        "No prefix, task. - note, o event, * priority.",
-        "Sin prefijo, tarea. - nota, o evento, * prioridad.",
-        "Sem prefixo, tarefa. - nota, o evento, * prioridade.",
-        "Ohne Präfix eine Aufgabe. - Notiz, o Ereignis, * Priorität.",
-        "Sans préfixe, une tâche. - note, o événement, * priorité.",
-    )
     val calendarToday = t("On the calendar", "En el calendario", "No calendário", "Im Kalender", "Au calendrier")
     val noticeCorrupt = t(
         "Couldn't read the journal. The files were set aside and nothing was deleted.",
@@ -365,56 +595,155 @@ object S {
         )
     }
 
+    /** The title of the unclosed month's card (docs/pantallas.md 6.3): "Agosto tiene 4 tareas sin cerrar". */
     fun unclosedMonth(month: YearMonth, n: Int): String {
         val name = monthName(month)
-        val w = widgetOpen(n)
+        val w = wordTask(n)
         return t(
-            "$name not closed: $n $w",
-            "$name sin cerrar: $n $w",
-            "$name sem fechar: $n $w",
-            "$name nicht abgeschlossen: $n $w",
-            "$name pas clôturé : $n $w",
+            "$name still has $n open $w",
+            "$name tiene $n $w sin cerrar",
+            "$name tem $n $w sem fechar",
+            "Im $name ${if (isSingular(n)) "ist" else "sind"} $n $w offen",
+            "$name a $n $w non ${if (isSingular(n)) "clôturée" else "clôturées"}",
         )
+    }
+    val unclosedBody = t(
+        "Decide what happens to each one: done, to today, to another month or discarded. Nothing moves unless you say so.",
+        "Decide qué pasa con cada una: hecha, a hoy, a otro mes o descartada. Nada se mueve si no lo dices tú.",
+        "Decida o que acontece com cada uma: feita, para hoje, para outro mês ou descartada. Nada se move se você não disser.",
+        "Entscheide, was mit jeder passiert: erledigt, auf heute, in einen anderen Monat oder verworfen. Nichts bewegt sich, wenn du es nicht sagst.",
+        "Décide ce que devient chacune : faite, à aujourd'hui, à un autre mois ou écartée. Rien ne bouge si tu ne le dis pas.",
+    )
+
+    /** Also the review's own label (docs/pantallas.md 11.1). */
+    fun reviewMonth(month: YearMonth): String {
+        val m = monthNames()[month.month.ordinal]
+        return t("Review $m", "Repasar $m", "Revisar $m", "$m durchsehen", "Revoir $m")
     }
 
     fun earlierOpen(n: Int): String {
         val singular = isSingular(n)
         return when (lang) {
-            "es" -> if (singular) "Queda $n abierta de días anteriores" else "Quedan $n abiertas de días anteriores"
-            "pt" -> if (singular) "Resta $n aberta de dias anteriores" else "Restam $n abertas de dias anteriores"
-            "de" -> "Noch $n offen von früheren Tagen"
+            "es" -> if (singular) "Queda $n tarea abierta de días anteriores" else "Quedan $n tareas abiertas de días anteriores"
+            "pt" -> if (singular) "Resta $n tarefa aberta de dias anteriores" else "Restam $n tarefas abertas de dias anteriores"
+            "de" -> if (singular) "Noch $n Aufgabe offen von früheren Tagen" else "Noch $n Aufgaben offen von früheren Tagen"
             "fr" -> if (singular) {
                 "Il reste $n tâche ouverte des jours précédents"
             } else {
                 "Il reste $n tâches ouvertes des jours précédents"
             }
-            else -> "$n still open from earlier days"
+            else -> if (singular) "$n task still open from earlier days" else "$n tasks still open from earlier days"
         }
     }
+    val earlierBody = t(
+        "They're from days of this month that have passed. Decide what happens to each one.",
+        "Son de días de este mes que ya pasaron. Decide qué pasa con cada una.",
+        "São de dias deste mês que já passaram. Decida o que acontece com cada uma.",
+        "Sie sind von vergangenen Tagen dieses Monats. Entscheide, was mit jeder passiert.",
+        "Elles viennent de jours passés de ce mois. Décide ce que devient chacune.",
+    )
+    val reviewEarlier = t("Review those days", "Repasar esos días", "Revisar esses dias", "Diese Tage durchsehen", "Revoir ces jours")
+    val reviewDay = t("Review the day", "Repasar el día", "Revisar o dia", "Den Tag durchsehen", "Revoir la journée")
+
+    /** Once, on Hoy, until "Entendido" or the first use (docs/pantallas.md 6.3). ^...^ goes in bold. */
+    val hintTap = t(
+        "^Tap the dot^ of a task to mark it done. ^Tap the text^ to see everything you can do with it.",
+        "^Toca el punto^ de una tarea para marcarla hecha. ^Toca el texto^ para ver todo lo que puedes hacer con ella.",
+        "^Toque no ponto^ de uma tarefa para marcá-la como feita. ^Toque no texto^ para ver tudo o que dá para fazer com ela.",
+        "^Tippe auf den Punkt^ einer Aufgabe, um sie zu erledigen. ^Tippe auf den Text^, um alles zu sehen, was du mit ihr machen kannst.",
+        "^Touche le point^ d'une tâche pour la marquer faite. ^Touche le texte^ pour voir tout ce que tu peux en faire.",
+    )
+
+    /** Hoy with nothing on it (docs/pantallas.md 6.2), followed by [writeBelow]. */
+    fun dayEmpty(day: LocalDate, today: LocalDate): String = when (daysBetween(today, day)) {
+        0 -> t("Nothing written today.", "Nada escrito hoy.", "Nada escrito hoje.", "Heute steht noch nichts.", "Rien d'écrit aujourd'hui.")
+        1 -> t("Nothing written for tomorrow.", "Nada escrito para mañana.", "Nada escrito para amanhã.", "Für morgen steht nichts.", "Rien d'écrit pour demain.")
+        else -> t("Nothing written on this day.", "Nada escrito en este día.", "Nada escrito neste dia.", "An diesem Tag steht nichts.", "Rien d'écrit ce jour-là.")
+    }
+    val writeBelow = t("Write below to start.", "Escribe abajo para empezar.", "Escreva abaixo para começar.", "Schreib unten, um anzufangen.", "Écris en bas pour commencer.")
+    val shareDay = t("Share this day", "Compartir este día", "Compartilhar este dia", "Diesen Tag teilen", "Partager ce jour")
 
     // --- 6. Mes ---------------------------------------------------------------------------
 
     val monthTasks = t("Tasks of the month", "Tareas del mes", "Tarefas do mês", "Aufgaben des Monats", "Tâches du mois")
     val calendarTitle = t("Calendar", "Calendario", "Calendário", "Kalender", "Calendrier")
 
+    val monthExplain = t(
+        "Above, what happens each day. Below, what you want to do this month with no set date.",
+        "Arriba, lo que pasa cada día. Abajo, lo que quieres hacer este mes sin fecha fija.",
+        "Em cima, o que acontece a cada dia. Embaixo, o que você quer fazer este mês sem data fixa.",
+        "Oben, was an jedem Tag passiert. Unten, was du diesen Monat ohne festes Datum tun willst.",
+        "En haut, ce qui se passe chaque jour. En bas, ce que tu veux faire ce mois-ci sans date fixe.",
+    )
+    val calendarHint = t("Tap a day to write on it", "Toca un día para apuntar en él", "Toque num dia para anotar nele", "Tippe auf einen Tag, um dort zu notieren", "Touche un jour pour y noter")
+
+    /** On the picked day of Mes and the picked block of Futuro: where the composer writes. */
+    val writingHere = t("Writing here", "Aquí se apunta", "Anotando aqui", "Hier wird notiert", "On note ici")
+    val monthTasksEmpty = t("None yet.", "Ninguna todavía.", "Nenhuma ainda.", "Noch keine.", "Aucune pour l'instant.")
+    val shareMonth = t("Share this month", "Compartir este mes", "Compartilhar este mês", "Diesen Monat teilen", "Partager ce mois")
+
     fun futureWaiting(n: Int): String {
         val singular = isSingular(n)
         return when (lang) {
-            "es" -> if (singular) "$n entrada del Future Log espera" else "$n entradas del Future Log esperan"
-            "pt" -> if (singular) "$n entrada do Future Log espera" else "$n entradas do Future Log esperam"
-            "de" -> if (singular) "$n Eintrag im Future Log wartet" else "$n Einträge im Future Log warten"
-            "fr" -> if (singular) "$n entrée du Future Log attend" else "$n entrées du Future Log attendent"
-            else -> if (singular) "$n Future Log entry waiting" else "$n Future Log entries waiting"
+            "es" -> if (singular) "$n entrada de Futuro espera a este mes" else "$n entradas de Futuro esperan a este mes"
+            "pt" -> if (singular) "$n entrada do Futuro espera este mês" else "$n entradas do Futuro esperam este mês"
+            "de" -> if (singular) "$n Eintrag aus Zukunft wartet auf diesen Monat" else "$n Einträge aus Zukunft warten auf diesen Monat"
+            "fr" -> if (singular) "$n entrée de Futur attend ce mois-ci" else "$n entrées de Futur attendent ce mois-ci"
+            else -> if (singular) "$n Future entry is waiting for this month" else "$n Future entries are waiting for this month"
         }
     }
+    val futureWaitingBody = t(
+        "You wrote them down for this month. Move them to the calendar, leave them or discard them.",
+        "Las apuntaste para este mes. Pásalas al calendario, déjalas o descártalas.",
+        "Você as anotou para este mês. Passe-as para o calendário, deixe-as ou descarte-as.",
+        "Du hast sie für diesen Monat notiert. In den Kalender, lassen oder verwerfen.",
+        "Tu les as notées pour ce mois. Passe-les au calendrier, laisse-les ou écarte-les.",
+    )
+    val reviewFuture = t("Review Future", "Repasar Futuro", "Revisar Futuro", "Zukunft durchsehen", "Revoir Futur")
+
+    // --- 7. Futuro --------------------------------------------------------------------------
+
+    fun futureSubtitle(n: Int) = t("The next $n months", "Los próximos $n meses", "Os próximos $n meses", "Die nächsten $n Monate", "Les $n prochains mois")
+    val futureExplain = t(
+        "Write down what isn't due yet. When its month comes, you review it and decide: nothing drops into Today on its own.",
+        "Apunta lo que aún no toca. Cuando llegue su mes, lo repasas y decides: nada baja solo a Hoy.",
+        "Anote o que ainda não é para agora. Quando chegar o mês, você revisa e decide: nada desce sozinho para Hoje.",
+        "Notiere, was noch nicht dran ist. Kommt sein Monat, siehst du es durch und entscheidest: nichts rutscht von allein in Heute.",
+        "Note ce qui n'est pas encore pour maintenant. Quand son mois arrive, tu le revois et tu décides : rien ne descend seul dans Aujourd'hui.",
+    )
+    val futureEmpty = t("Nothing yet.", "Nada todavía.", "Nada ainda.", "Noch nichts.", "Rien pour l'instant.")
+    fun onDay(day: Int) = t("Day $day", "Día $day", "Dia $day", "Tag $day", "Jour $day")
 
     // --- 8. Indice ------------------------------------------------------------------------
 
-    val indexFilterHint = t("Filter by title", "Filtrar por título", "Filtrar por título", "Nach Titel filtern", "Filtrer par titre")
-    val indexMonth = t("Month", "Mes", "Mês", "Monat", "Mois")
-    val indexCollection = t("Collection", "Colección", "Coleção", "Sammlung", "Collection")
-    val indexTracker = t("Tracker", "Seguimiento", "Tracker", "Tracker", "Suivi")
+    val indexSubtitle = t("Your whole journal, in one place", "Todo tu diario, en un sitio", "Todo o seu diário, num só lugar", "Dein ganzes Journal an einem Ort", "Tout ton journal, au même endroit")
+    val indexMonths = t("Months", "Meses", "Meses", "Monate", "Mois")
+    val indexLists = t("Lists", "Listas", "Listas", "Listen", "Listes")
+    val indexListsHint = t(
+        "Trips, ideas, books: what doesn't go in a day",
+        "Viajes, ideas, libros: lo que no va en un día",
+        "Viagens, ideias, livros: o que não cabe num dia",
+        "Reisen, Ideen, Bücher: was in keinen Tag gehört",
+        "Voyages, idées, livres : ce qui ne va pas dans un jour",
+    )
+    val indexTrackers = t("Trackers", "Seguimientos", "Trackers", "Tracker", "Suivis")
+    val indexTrackersHint = t(
+        "One row per habit, one box per day",
+        "Una fila por hábito, un cuadro por día",
+        "Uma linha por hábito, um quadrado por dia",
+        "Eine Zeile pro Gewohnheit, ein Kästchen pro Tag",
+        "Une ligne par habitude, une case par jour",
+    )
     val newTracker = t("New tracker", "Nuevo seguimiento", "Novo tracker", "Neuer Tracker", "Nouveau suivi")
+    val listNameHint = t("Name of the list", "Nombre de la lista", "Nome da lista", "Name der Liste", "Nom de la liste")
+    val trackerNameHint = t("Name of the tracker", "Nombre del seguimiento", "Nome do tracker", "Name des Trackers", "Nom du suivi")
+    val listCreated = t(
+        "List created. Write its first line below.",
+        "Lista creada. Escribe abajo su primera línea.",
+        "Lista criada. Escreva a primeira linha abaixo.",
+        "Liste erstellt. Schreib unten die erste Zeile.",
+        "Liste créée. Écris sa première ligne en bas.",
+    )
     fun archivedToggle(n: Int) = t("Archived ($n)", "Archivadas ($n)", "Arquivadas ($n)", "Archiviert ($n)", "Archivées ($n)")
     val indexEmpty = t(
         "Months show up here as soon as you write in them.",
@@ -423,52 +752,157 @@ object S {
         "Monate erscheinen hier, sobald du in ihnen schreibst.",
         "Les mois apparaissent ici dès que tu y écris.",
     )
-    val indexNoMatch = t(
-        "No title with those letters.",
-        "Ningún título con esas letras.",
-        "Nenhum título com essas letras.",
-        "Kein Titel mit diesen Buchstaben.",
-        "Aucun titre avec ces lettres.",
-    )
 
     // --- 9. Coleccion y seguimiento ---------------------------------------------------------
 
+    val listSubtitle = t("List", "Lista", "Lista", "Liste", "Liste")
+    val listEmpty = t(
+        "Empty list. Write the first line below.",
+        "Lista vacía. Escribe abajo la primera línea.",
+        "Lista vazia. Escreva a primeira linha abaixo.",
+        "Leere Liste. Schreib unten die erste Zeile.",
+        "Liste vide. Écris la première ligne en bas.",
+    )
+    val shareList = t("Share the list", "Compartir la lista", "Compartilhar a lista", "Liste teilen", "Partager la liste")
+    val rename = t("Rename", "Cambiar el nombre", "Mudar o nome", "Umbenennen", "Renommer")
     val archive = t("Archive", "Archivar", "Arquivar", "Archivieren", "Archiver")
     val unarchive = t("Unarchive", "Sacar del archivo", "Tirar do arquivo", "Aus dem Archiv holen", "Désarchiver")
-    val deleteCollection = t("Delete collection", "Borrar colección", "Apagar coleção", "Sammlung löschen", "Supprimer la collection")
+    val deleteCollection = t("Delete", "Borrar", "Apagar", "Löschen", "Supprimer")
     val archivedNote = t("Archived.", "Archivada.", "Arquivada.", "Archiviert.", "Archivée.")
+
+    fun trackerSubtitle(month: YearMonth): String {
+        val m = monthNames()[month.month.ordinal]
+        return when (lang) {
+            "es" -> "Seguimiento de $m"
+            "pt" -> "Tracker de $m"
+            "de" -> "Tracker im $m"
+            "fr" -> "Suivi ${frDe(m)}"
+            else -> "$m tracker".replaceFirstChar { it.uppercase() }
+        }
+    }
+    val trackerExplain = t(
+        "Tap a box to mark that day; again to clear it. Next month starts blank.",
+        "Toca un cuadro para marcar ese día; otra vez para quitarlo. El mes que viene empieza en blanco.",
+        "Toque num quadrado para marcar esse dia; de novo para tirar. O mês que vem começa em branco.",
+        "Tippe auf ein Kästchen, um den Tag zu markieren, noch einmal, um es zu löschen. Der nächste Monat beginnt leer.",
+        "Touche une case pour marquer ce jour ; encore une fois pour l'effacer. Le mois prochain commence vierge.",
+    )
     val trackerRowHint = t("New row", "Nueva fila", "Nova linha", "Neue Zeile", "Nouvelle ligne")
     val rowDelete = t("Delete row", "Borrar fila", "Apagar linha", "Zeile löschen", "Supprimer la ligne")
 
     // --- 10. Revisar ------------------------------------------------------------------------
 
-    fun reflectTitle(month: YearMonth) = t(
-        "Read ${monthName(month)} again",
-        "Releer ${monthNames()[month.month.ordinal]}",
-        "Reler ${monthNames()[month.month.ordinal]}",
-        "${monthName(month)} nachlesen",
-        "Relire ${monthNames()[month.month.ordinal]}",
-    )
-    fun reflectTitle() = t("Read up to today", "Releer hasta hoy", "Reler até hoje", "Bis heute nachlesen", "Relire jusqu'à aujourd'hui")
+    /** Step 1's title (docs/pantallas.md 11.1): a month by its name, the other scopes as "these days". */
+    fun rereadTitle(month: YearMonth?): String {
+        val m = month?.let { monthNames()[it.month.ordinal] }
+        return if (m != null) {
+            t("Before deciding, read $m again", "Antes de decidir, relee $m", "Antes de decidir, releia $m", "Bevor du entscheidest, lies den $m nach", "Avant de décider, relis $m")
+        } else {
+            t(
+                "Before deciding, read these days again",
+                "Antes de decidir, relee estos días",
+                "Antes de decidir, releia estes dias",
+                "Bevor du entscheidest, lies diese Tage nach",
+                "Avant de décider, relis ces jours",
+            )
+        }
+    }
 
-    fun reflectHint(month: YearMonth) = t(
-        "A note about this month, if you like",
-        "Una nota sobre este mes, si quieres",
-        "Uma nota sobre este mês, se quiser",
-        "Eine Notiz zu diesem Monat, wenn du magst",
-        "Une note sur ce mois, si tu veux",
+    fun rereadLead(n: Int): String = when {
+        n == 0 -> t("No task was left open.", "No quedó ninguna tarea abierta.", "Nenhuma tarefa ficou aberta.", "Keine Aufgabe ist offen geblieben.", "Aucune tâche n'est restée ouverte.")
+        isSingular(n) -> t(
+            "$n task was left open. Next you'll see it and decide what happens to it.",
+            "Quedó $n tarea abierta. Después la verás y decides qué pasa con ella.",
+            "Ficou $n tarefa aberta. Depois você a verá e decide o que acontece com ela.",
+            "$n Aufgabe ist offen geblieben. Danach siehst du sie und entscheidest, was mit ihr passiert.",
+            "$n tâche est restée ouverte. Ensuite tu la verras et tu décideras ce qu'elle devient.",
+        )
+        else -> t(
+            "$n tasks were left open. Next you'll see them one at a time and decide what happens to each.",
+            "Quedaron $n tareas abiertas. Después las verás de una en una y decides qué pasa con cada una.",
+            "Ficaram $n tarefas abertas. Depois você as verá uma a uma e decide o que acontece com cada uma.",
+            "$n Aufgaben sind offen geblieben. Danach siehst du sie einzeln und entscheidest, was mit jeder passiert.",
+            "$n tâches sont restées ouvertes. Ensuite tu les verras une par une et tu décideras ce que devient chacune.",
+        )
+    }
+
+    fun rereadNote(month: YearMonth?): String {
+        val m = month?.let { monthNames()[it.month.ordinal] }
+        return if (m != null) {
+            t("A note about $m (optional)", "Una nota sobre $m (opcional)", "Uma nota sobre $m (opcional)", "Eine Notiz zum $m (optional)", "Une note sur $m (facultatif)")
+        } else {
+            t(
+                "A note about these days (optional)",
+                "Una nota sobre estos días (opcional)",
+                "Uma nota sobre estes dias (opcional)",
+                "Eine Notiz zu diesen Tagen (optional)",
+                "Une note sur ces jours (facultatif)",
+            )
+        }
+    }
+    val rereadNoteHint = t("What went well, what didn't...", "Qué salió bien, qué no...", "O que deu certo, o que não...", "Was gut lief, was nicht...", "Ce qui a marché, ce qui non...")
+
+    fun decideTasks(n: Int): String = when {
+        n == 0 -> t("Finish", "Terminar", "Terminar", "Fertig", "Terminer")
+        n == 1 -> t("Decide the task", "Decidir la tarea", "Decidir a tarefa", "Aufgabe entscheiden", "Décider la tâche")
+        else -> t("Decide the $n tasks", "Decidir las $n tareas", "Decidir as $n tarefas", "$n Aufgaben entscheiden", "Décider les $n tâches")
+    }
+
+    fun taskOf(i: Int, n: Int) = t("Task $i of $n", "Tarea $i de $n", "Tarefa $i de $n", "Aufgabe $i von $n", "Tâche $i sur $n")
+    fun entryOf(i: Int, n: Int) = t("Entry $i of $n", "Entrada $i de $n", "Entrada $i de $n", "Eintrag $i von $n", "Entrée $i sur $n")
+
+    /** The review's own "Hecha": in a month review the task stays in that month (docs/pantallas.md 11.2). */
+    fun doneStaysIn(month: YearMonth?): String {
+        val m = month?.let { monthNames()[it.month.ordinal] } ?: return doneHow
+        return t("Stays in $m, marked with an x.", "Se queda en $m, marcada con una x.", "Fica em $m, marcada com um x.", "Bleibt im $m, mit einem x markiert.", "Reste en $m, marquée d'un x.")
+    }
+    val decideLater = t("Decide later", "Decidir luego", "Decidir depois", "Später entscheiden", "Décider plus tard")
+    val decideLaterHow = t(
+        "It stays open and the notice stays.",
+        "Sigue abierta y el aviso no se va.",
+        "Continua aberta e o aviso não sai.",
+        "Bleibt offen, und der Hinweis bleibt.",
+        "Elle reste ouverte et l'avis ne part pas.",
     )
-    fun reflectHint() = t(
-        "A note about these days, if you like",
-        "Una nota sobre estos días, si quieres",
-        "Uma nota sobre estes dias, se quiser",
-        "Eine Notiz zu diesen Tagen, wenn du magst",
-        "Une note sur ces jours, si tu veux",
-    )
+    val reviewFinished = t("Review finished", "Repaso terminado", "Revisão terminada", "Durchsicht beendet", "Revue terminée")
+
+    fun reviewEndTitle(month: YearMonth?, left: Int): String {
+        val almost = left > 0
+        if (month == null) {
+            return if (almost) {
+                t("These days, almost", "Estos días, casi", "Estes dias, quase", "Diese Tage, fast", "Ces jours, presque")
+            } else {
+                t("These days, reviewed", "Estos días, repasados", "Estes dias, revisados", "Diese Tage, durchgesehen", "Ces jours, revus")
+            }
+        }
+        val m = monthName(month)
+        return if (almost) {
+            t("$m, almost", "$m, casi", "$m, quase", "$m, fast", "$m, presque")
+        } else {
+            t("$m, reviewed", "$m, repasado", "$m, revisado", "$m, durchgesehen", "$m, revu")
+        }
+    }
+
+    fun reviewEndLead(left: Int): String = if (left > 0) {
+        val w = wordTask(left)
+        t(
+            "You left $left $w for later. The notice stays on Today until you decide.",
+            "Dejaste $left $w para luego. El aviso seguirá en Hoy hasta que decidas.",
+            "Você deixou $left $w para depois. O aviso fica em Hoje até você decidir.",
+            "Du hast $left $w für später gelassen. Der Hinweis bleibt in Heute, bis du entscheidest.",
+            "Tu as laissé $left $w pour plus tard. L'avis reste dans Aujourd'hui jusqu'à ta décision.",
+        )
+    } else {
+        t(
+            "What you moved to today is already on your list, and what you moved to another month waits in Future.",
+            "Lo que pasaste a hoy ya está en tu lista, y lo que llevaste a otro mes espera en Futuro.",
+            "O que você passou para hoje já está na sua lista, e o que levou para outro mês espera no Futuro.",
+            "Was du auf heute verschoben hast, steht schon auf deiner Liste, und was in einen anderen Monat ging, wartet in Zukunft.",
+            "Ce que tu as passé à aujourd'hui est déjà dans ta liste, et ce que tu as reporté attend dans Futur.",
+        )
+    }
 
     val skip = t("Skip", "Saltar", "Pular", "Überspringen", "Passer")
-    val saveAndGo = t("Save and continue", "Guardar y seguir", "Salvar e seguir", "Speichern und weiter", "Valider et continuer")
-    fun reviewPosition(i: Int, n: Int) = "$i ${ofConnector()} $n"
 
     fun fromDay(d: LocalDate): String {
         val w = weekdayNames()[d.dayOfWeek.ordinal]
@@ -497,18 +931,6 @@ object S {
         return t("Future, $place", "Futuro, $place", "Futuro, $place", "Zukunft, $place", "Futur, $place")
     }
 
-    val reviewDone = t("Done", "Hecha", "Feita", "Erledigt", "Faite")
-    val reviewMigrate = t("Migrate", "Migrar", "Migrar", "Migrieren", "Migrer")
-    val reviewSchedule = t("Schedule", "Programar", "Agendar", "Einplanen", "Planifier")
-    val reviewToCollection = t("To a collection", "A una colección", "Para uma coleção", "In eine Sammlung", "Vers une collection")
-    val reviewDiscard = t("Discard", "Descartar", "Descartar", "Verwerfen", "Écarter")
-    val reviewAllDecided = t("All decided.", "Todo decidido.", "Tudo decidido.", "Alles entschieden.", "Tout est décidé.")
-
-    fun monthClosed(month: YearMonth): String {
-        val name = monthName(month)
-        return t("$name, closed.", "$name, cerrado.", "$name, fechado.", "$name, abgeschlossen.", "$name, clôturé.")
-    }
-
     val futureToCalendar = t(
         "Move to the calendar",
         "Pasar al calendario",
@@ -516,14 +938,15 @@ object S {
         "In den Kalender",
         "Passer au calendrier",
     )
+    fun goesTo(label: String) = sentence(t("Goes to $label", "Va ${esA(label)}", "Vai para $label", "Geht nach: $label", "Va vers $label"))
     val futureLeave = t("Leave it", "Dejarla", "Deixar", "Lassen", "La laisser")
-    val futureDiscard = t("Discard", "Descartar", "Descartar", "Verwerfen", "Écarter")
+    val futureLeaveHow = t("It keeps waiting in Future.", "Sigue esperando en Futuro.", "Continua esperando no Futuro.", "Wartet weiter in Zukunft.", "Elle attend encore dans Futur.")
     val futureAllDecided = t(
-        "This month's Future Log is up to date.",
-        "El Future Log de este mes está al día.",
-        "O Future Log deste mês está em dia.",
-        "Das Future Log dieses Monats ist auf dem Stand.",
-        "Le Future Log de ce mois est à jour.",
+        "Everything Future kept for this month is decided.",
+        "Todo lo que Futuro guardaba para este mes está decidido.",
+        "Tudo o que o Futuro guardava para este mês está decidido.",
+        "Alles, was Zukunft für diesen Monat hatte, ist entschieden.",
+        "Tout ce que Futur gardait pour ce mois est décidé.",
     )
 
     // --- 11. Buscar -------------------------------------------------------------------------
@@ -550,65 +973,119 @@ object S {
     // --- 12. Clave --------------------------------------------------------------------------
 
     val keyTitle = t("Key", "Clave", "Legenda", "Legende", "Légende")
-    val keyBullets = t("Bullets", "Bullets", "Bullets", "Bullets", "Bullets")
-    val keyStates = t("States", "Estados", "Estados", "Zustände", "États")
-    val keySignifiers = t("Signifiers", "Signifiers", "Signifiers", "Signifiers", "Signifiers")
-    val keyGestures = t("Gestures", "Gestos", "Gestos", "Gesten", "Gestes")
-    val keyTaskHow = t("No prefix", "Sin prefijo", "Sem prefixo", "Ohne Präfix", "Sans préfixe")
-    val keyEventHow = t("Starts with o and a space", "Empieza con o y espacio", "Começa com o e espaço", "Beginnt mit o und Leerzeichen", "Commence par o et un espace")
-    val keyNoteHow = t("Starts with - and a space", "Empieza con - y espacio", "Começa com - e espaço", "Beginnt mit - und Leerzeichen", "Commence par - et un espace")
-    val keyDoneHow = t("Tap the dot", "Toca el punto", "Toque no ponto", "Tippe auf den Punkt", "Touche le point")
-    val keyMigratedHow = t("Press and hold: Migrate", "Mantén pulsada: Migrar", "Toque e segure: Migrar", "Gedrückt halten: Migrieren", "Appui long : Migrer")
-    val keyScheduledHow = t("Press and hold: Schedule", "Mantén pulsada: Programar", "Toque e segure: Agendar", "Gedrückt halten: Einplanen", "Appui long : Planifier")
-    val keyDiscardedHow = t("Press and hold: Discard", "Mantén pulsada: Descartar", "Toque e segure: Descartar", "Gedrückt halten: Verwerfen", "Appui long : Écarter")
-    val keyMigratedLink = t(
-        "Tap the > to go where it went.",
-        "Toca el > para ir a donde fue.",
-        "Toque no > para ir aonde ela foi.",
-        "Tippe auf das >, um zu ihrer Kopie zu gehen.",
-        "Touche le > pour aller là où elle est partie.",
+    val keyWhat = t("What each symbol means", "Qué significa cada símbolo", "O que cada símbolo significa", "Was jedes Symbol bedeutet", "Ce que veut dire chaque symbole")
+    val keyWrite = t("What you write down", "Lo que apuntas", "O que você anota", "Was du notierst", "Ce que tu notes")
+    val keyHappened = t("What happened to a task", "Qué pasó con una tarea", "O que aconteceu com uma tarefa", "Was mit einer Aufgabe geschah", "Ce qu'est devenue une tâche")
+    val keyMargin = t("In the margin", "En el margen", "Na margem", "Am Rand", "Dans la marge")
+    val keyTask = t("Something to do.", "Algo que hacer.", "Algo para fazer.", "Etwas zu tun.", "Quelque chose à faire.")
+    val keyEvent = t("Something that happens on a date.", "Algo que pasa en una fecha.", "Algo que acontece numa data.", "Etwas, das an einem Datum passiert.", "Quelque chose qui arrive à une date.")
+    val keyNote = t("Something you want to remember.", "Algo que quieres recordar.", "Algo que você quer lembrar.", "Etwas, das du dir merken willst.", "Quelque chose dont tu veux te souvenir.")
+    val keyDone = t("Stays where it was, with an x.", "Se queda donde estaba, con una x.", "Fica onde estava, com um x.", "Bleibt, wo sie war, mit einem x.", "Reste où elle était, avec un x.")
+    val movedName = t("Moved", "Pasada", "Passada", "Verschoben", "Déplacée")
+    val keyMoved = t(
+        "You took it to another day or a list. In the method: migrated.",
+        "La llevaste a otro día o a una lista. En el método: migrada.",
+        "Você a levou para outro dia ou uma lista. No método: migrada.",
+        "Du hast sie auf einen anderen Tag oder in eine Liste gelegt. In der Methode: migriert.",
+        "Tu l'as portée à un autre jour ou dans une liste. Dans la méthode : migrée.",
     )
-    val keyPriorityHow = t("Starts with * and a space", "Empieza con * y espacio", "Começa com * e espaço", "Beginnt mit * und Leerzeichen", "Commence par * et un espace")
-    val keyInspirationHow = t("Starts with ! and a space", "Empieza con ! y espacio", "Começa com ! e espaço", "Beginnt mit ! und Leerzeichen", "Commence par ! et un espace")
-    val keyExploreHow = t("Starts with ? and a space", "Empieza con ? y espacio", "Começa com ? e espaço", "Beginnt mit ? und Leerzeichen", "Commence par ? et un espace")
-    val keyGestureTap = t(
-        "Tapping the symbol completes a task.",
-        "Tocar el símbolo completa una tarea.",
-        "Tocar no símbolo conclui uma tarefa.",
-        "Ein Tipp auf das Symbol erledigt eine Aufgabe.",
-        "Toucher le symbole termine une tâche.",
+    val otherMonthName = t("Moved to another month", "Llevada a otro mes", "Levada para outro mês", "In einen anderen Monat", "Reportée à un autre mois")
+    val keyOtherMonth = t(
+        "Waits in Future. In the method: scheduled.",
+        "Espera en Futuro. En el método: programada.",
+        "Espera no Futuro. No método: agendada.",
+        "Wartet in Zukunft. In der Methode: eingeplant.",
+        "Attend dans Futur. Dans la méthode : planifiée.",
     )
-    val keyGestureHold = t(
-        "Holding an entry opens its actions.",
-        "Mantener pulsada una entrada abre sus acciones.",
-        "Tocar e segurar uma entrada abre suas ações.",
-        "Langes Drücken auf einen Eintrag öffnet seine Aktionen.",
-        "Un appui long sur une entrée ouvre ses actions.",
+    val keyDiscarded = t(
+        "It wasn't needed any more. In the method: irrelevant.",
+        "Ya no hacía falta. En el método: irrelevante.",
+        "Não era mais necessária. No método: irrelevante.",
+        "Wurde nicht mehr gebraucht. In der Methode: irrelevant.",
+        "Elle n'était plus utile. Dans la méthode : non pertinente.",
     )
-    val keyGestureSwipe = t(
-        "Swiping sideways on Today changes the day.",
-        "Deslizar a los lados en Hoy cambia de día.",
-        "Deslizar para os lados em Hoje muda o dia.",
-        "Seitlich wischen in Heute wechselt den Tag.",
-        "Glisser sur le côté dans Aujourd'hui change de jour.",
+    val keyPriority = t("What comes before everything else.", "Lo que va antes que lo demás.", "O que vem antes do resto.", "Was vor allem anderen kommt.", "Ce qui passe avant le reste.")
+    val keyInspiration = t("An idea worth keeping.", "Una idea que vale la pena.", "Uma ideia que vale a pena.", "Eine Idee, die sich lohnt.", "Une idée qui vaut le coup.")
+    val keyExplore = t("Something to look into.", "Algo que investigar.", "Algo para investigar.", "Etwas zum Nachforschen.", "Quelque chose à creuser.")
+
+    /** The prefixes of docs/tecnico.md 6.2, as written; ^...^ goes in bold. */
+    val keyPrefixes = t(
+        "When writing: start with ^o^ for an event, ^-^ for a note, and ^*^, ^!^ or ^?^ for the margin marks.",
+        "Al escribir: empieza con ^o^ para un evento, con ^-^ para una nota, y con ^*^, ^!^ o ^?^ para las marcas del margen.",
+        "Ao escrever: comece com ^o^ para um evento, com ^-^ para uma nota, e com ^*^, ^!^ ou ^?^ para as marcas da margem.",
+        "Beim Schreiben: beginne mit ^o^ für ein Ereignis, mit ^-^ für eine Notiz und mit ^*^, ^!^ oder ^?^ für die Randzeichen.",
+        "En écrivant : commence par ^o^ pour un événement, par ^-^ pour une note, et par ^*^, ^!^ ou ^?^ pour les marques de la marge.",
     )
-    val keyGestureDrag = t(
-        "Holding and dragging changes the order.",
-        "Mantener pulsada y arrastrar cambia el orden.",
-        "Segurar e arrastar muda a ordem.",
-        "Gedrückt halten und ziehen ändert die Reihenfolge.",
-        "Appuyer longuement et glisser change l'ordre.",
+
+    // The guide of the first start (docs/pantallas.md 13.1): four steps, each with its moving picture.
+    val guideStart = t("Start writing", "Empezar a escribir", "Começar a escrever", "Losschreiben", "Commencer à écrire")
+    fun guideStep(i: Int, n: Int) = t("Step $i of $n", "Paso $i de $n", "Passo $i de $n", "Schritt $i von $n", "Étape $i sur $n")
+    val guideTitles = listOf(
+        t("Write it in one line", "Apunta en una línea", "Anote em uma linha", "Schreib es in eine Zeile", "Note-le en une ligne"),
+        t("Tap the dot when it's done", "Toca el punto cuando esté hecha", "Toque no ponto quando estiver feita", "Tippe auf den Punkt, wenn sie erledigt ist", "Touche le point quand c'est fait"),
+        t("You move what's pending", "Lo pendiente lo mueves tú", "O pendente, você que move", "Offenes verschiebst du selbst", "Ce qui reste, c'est toi qui le déplaces"),
+        t("Once a month, review", "Una vez al mes, repasa", "Uma vez por mês, revise", "Einmal im Monat durchsehen", "Une fois par mois, fais le point"),
     )
-    val keyTapText = t(
-        "Tap the text to edit it.",
-        "Toca el texto para editarlo.",
-        "Toque no texto para editá-lo.",
-        "Tippe auf den Text, um ihn zu bearbeiten.",
-        "Touche le texte pour le modifier.",
+    val guideTexts = listOf(
+        t(
+            "Each line is a task, an event or a note. The symbol in front tells you which.",
+            "Cada línea es una tarea, un evento o una nota. El símbolo de delante te dice cuál es.",
+            "Cada linha é uma tarefa, um evento ou uma nota. O símbolo na frente diz qual é.",
+            "Jede Zeile ist eine Aufgabe, ein Ereignis oder eine Notiz. Das Symbol davor sagt dir, was.",
+            "Chaque ligne est une tâche, un événement ou une note. Le symbole devant te dit lequel.",
+        ),
+        t(
+            "The task stays where it was, marked with an x. If you got it wrong, another tap reopens it.",
+            "La tarea se queda donde estaba, marcada con una x. Si te equivocas, otro toque la reabre.",
+            "A tarefa fica onde estava, marcada com um x. Se errar, outro toque a reabre.",
+            "Die Aufgabe bleibt, wo sie war, mit einem x markiert. Hast du dich vertan, öffnet ein weiterer Tipp sie wieder.",
+            "La tâche reste où elle était, marquée d'un x. Si tu te trompes, un autre toucher la rouvre.",
+        ),
+        t(
+            "Nothing moves on its own. You move a task to tomorrow, take it to another month or discard it, and the page keeps the trace.",
+            "Nada cambia de sitio solo. Pasas una tarea a mañana, la llevas a otro mes o la descartas, y en la página queda el rastro.",
+            "Nada muda de lugar sozinho. Você passa uma tarefa para amanhã, leva para outro mês ou descarta, e a página guarda o rastro.",
+            "Nichts wandert von allein. Du verschiebst eine Aufgabe auf morgen, in einen anderen Monat oder verwirfst sie, und die Seite behält die Spur.",
+            "Rien ne bouge tout seul. Tu passes une tâche à demain, tu la reportes à un autre mois ou tu l'écartes, et la page en garde la trace.",
+        ),
+        t(
+            "Bobbin tells you what was left open last month and shows it to you one at a time, with each way out explained.",
+            "Bobbin te avisa de lo que quedó abierto el mes anterior y te lo enseña de una en una, con cada salida explicada.",
+            "O Bobbin avisa o que ficou aberto no mês anterior e mostra uma de cada vez, com cada saída explicada.",
+            "Bobbin zeigt dir, was im Vormonat offen blieb, eins nach dem anderen, und erklärt jeden Ausweg.",
+            "Bobbin te signale ce qui est resté ouvert le mois dernier et te le montre une à une, avec chaque issue expliquée.",
+        ),
     )
+
+    // The guide's pictures: a made-up page, never the user's diary.
+    val guideInk = t("Buy ink", "Comprar tinta", "Comprar tinta", "Tinte kaufen", "Acheter de l'encre")
+    val guideDinner = t("Dinner with Ana", "Cena con Ana", "Jantar com a Ana", "Essen mit Ana", "Dîner avec Ana")
+    val guideOpens = t("Opens at 10", "Abre a las 10", "Abre às 10", "Öffnet um 10", "Ouvre à 10 h")
+    val guideQuote = t("Send the quote", "Enviar el presupuesto", "Enviar o orçamento", "Angebot schicken", "Envoyer le devis")
+    val guideBank = t("Call the bank", "Llamar al banco", "Ligar para o banco", "Bank anrufen", "Appeler la banque")
+    val guideCopy = t("Copy", "Copia", "Cópia", "Kopie", "Copie")
+    fun guideUnclosed(n: Int) = t("$n tasks not closed", "$n tareas sin cerrar", "$n tarefas sem fechar", "$n Aufgaben offen", "$n tâches non clôturées")
+    val guideToToday = t("To today", "A hoy", "Para hoje", "Auf heute", "À aujourd'hui")
+    val guideToMonth = t("Other month", "A otro mes", "Outro mês", "Anderer Monat", "Autre mois")
 
     // --- 13. Ajustes ------------------------------------------------------------------------
 
+    val sectionHelp = t("Help", "Ayuda", "Ajuda", "Hilfe", "Aide")
+    val guideAgain = t("See the guide again", "Ver la guía otra vez", "Ver o guia de novo", "Anleitung erneut ansehen", "Revoir le guide")
+    val guideAgainSub = t(
+        "The four screens from the first start.",
+        "Las cuatro pantallas del primer arranque.",
+        "As quatro telas da primeira abertura.",
+        "Die vier Seiten vom ersten Start.",
+        "Les quatre écrans du premier lancement.",
+    )
+    val keyRowSub = t(
+        "The method's key, with its usual names.",
+        "La clave del método, con sus nombres de siempre.",
+        "A legenda do método, com os nomes de sempre.",
+        "Die Legende der Methode, mit ihren üblichen Namen.",
+        "La légende de la méthode, avec ses noms habituels.",
+    )
     val settingsTitle = t("Settings", "Ajustes", "Ajustes", "Einstellungen", "Réglages")
     val sectionDay = t("Day", "Día", "Dia", "Tag", "Jour")
     val dayStartRow = t("The day starts", "El día empieza", "O dia começa", "Der Tag beginnt", "La journée commence")
@@ -1119,18 +1596,11 @@ object S {
         return if (lang == "de") name else name.lowercase()
     }
 
-    fun a11yWentTo(destination: String) = t(
-        "Moved to $destination",
-        "Fue a $destination",
-        "Foi para $destination",
-        "Verschoben nach $destination",
-        "Partie vers $destination",
-    )
     val a11yComplete = t("Complete", "Completar", "Concluir", "Erledigen", "Terminer")
     val a11yReopen = t("Reopen", "Reabrir", "Reabrir", "Wieder öffnen", "Rouvrir")
+    val a11yOptions = t("See options", "Ver opciones", "Ver opções", "Optionen ansehen", "Voir les options")
     val a11yMoveUp = t("Move up", "Subir", "Subir", "Nach oben", "Monter")
     val a11yMoveDown = t("Move down", "Bajar", "Descer", "Nach unten", "Descendre")
-    val a11yCapture = t("New entry", "Nueva entrada", "Nova entrada", "Neuer Eintrag", "Nouvelle entrée")
 
     fun a11yDayRow(day: Int, weekday: String, n: Int): String {
         val entries = if (n == 0) {

@@ -2,25 +2,23 @@ package com.baltajmn.bullet.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.baltajmn.bullet.data.monthShare
-import com.baltajmn.bullet.data.ShareContent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,17 +28,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.BobbinRepository
+import com.baltajmn.bullet.data.ShareContent
+import com.baltajmn.bullet.data.monthShare
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.i18n.systemFirstDayOfWeek
+import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.entriesAt
@@ -53,20 +60,19 @@ import com.baltajmn.bullet.model.openTasksOfMonth
 import com.baltajmn.bullet.model.unclosedMonth
 import com.baltajmn.bullet.model.weekStarts
 import com.baltajmn.bullet.ui.theme.Type
-import com.baltajmn.bullet.ui.theme.gridUnit
-import com.baltajmn.bullet.ui.theme.page
-import com.baltajmn.bullet.ui.theme.paper
+import com.baltajmn.bullet.ui.theme.activeCover
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 
 /**
- * The Monthly Log as a list, never a calendar grid (docs/pantallas.md 7, SPEC 2.6, #24): a row per
- * day of [viewedMonth] with its `Monthly(m, día)` entries, then the month's tasks without a day.
- * Nothing here comes from another month: the month starts empty. [onNavigateTo] follows a migrated
- * or scheduled entry's link (5.5) wherever it landed.
+ * The Monthly Log as a list, never a calendar grid (docs/pantallas.md 7, SPEC 2.6): a row per day of
+ * [viewedMonth] with its calendar entries, then the month's tasks without a day. Touching a day makes
+ * it where the composer writes, with an event suggested; touching it again goes back to the month's
+ * tasks. Nothing here comes from another month: the month starts empty.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -86,150 +92,163 @@ fun MonthScreen(
     val currentMonth = monthOf(today)
     val oldestMonth = (journal.monthsWithContent() + currentMonth).min()
     val weekStartDays = weekStarts(viewedMonth, firstDayOfWeek(journal.settings, systemFirstDayOfWeek()))
-
-    // One entry edits or opens its sheet at a time, as in Hoy (#22, #23); one day at a time has its
-    // capture open, and another month closes it (docs/pantallas.md 7.1).
-    var editingId by remember { mutableStateOf<String?>(null) }
-    var sheetEntryId by remember { mutableStateOf<String?>(null) }
     var sharing by remember { mutableStateOf<ShareContent?>(null) }
-    var capturingDay by remember(viewedMonth) { mutableStateOf<Int?>(null) }
-    BackHandler(capturingDay != null) { capturingDay = null }
+    var picked by remember(viewedMonth) { mutableStateOf<Int?>(null) }
+    var pickSignal by remember { mutableStateOf(0) }
+    BackHandler(picked != null) { picked = null }
 
     // "Desplazado hasta la fila de hoy" (docs/pantallas.md 7.1), on every visit to the current month.
+    // The asked rect runs below the row, so today lands with the rest of the week under it instead of
+    // pressed against the composer.
     val todayRow = remember { BringIntoViewRequester() }
-    LaunchedEffect(viewedMonth) {
-        if (viewedMonth == currentMonth) todayRow.bringIntoView()
-    }
+    val below = with(LocalDensity.current) { 320.dp.toPx() }
+    LaunchedEffect(viewedMonth) { if (viewedMonth == currentMonth) todayRow.bringIntoView(Rect(0f, 0f, 1f, below)) }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
-            // SHARE when the calendar or the tasks have anything (docs/pantallas.md 7.1).
-            val monthPage = monthShare(journal, viewedMonth)
-            TabHeaderIcons(onSearch, onSettings, onShare = if (monthPage.rows.isNotEmpty()) ({ sharing = monthPage }) else null)
-            Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
-                Text(S.monthName(viewedMonth), style = Type.PageTitle, modifier = Modifier.padding(start = 48.dp).weight(1f))
-                // An arrow that would not respond is not painted (docs/pantallas.md 2).
-                if (viewedMonth > oldestMonth) {
-                    GlyphButton(Glyph.BACK, S.a11yPreviousMonth, { onViewedMonthChange(viewedMonth.minus(1, DateTimeUnit.MONTH)) })
-                } else {
-                    Spacer(Modifier.width(48.dp))
-                }
-                if (viewedMonth < currentMonth) {
-                    GlyphButton(Glyph.FORWARD, S.a11yNextMonth, { onViewedMonthChange(viewedMonth.plus(1, DateTimeUnit.MONTH)) })
-                } else {
-                    Spacer(Modifier.width(48.dp))
-                }
+    val pickedPlace = picked?.let { Place.Monthly(viewedMonth, it) }
+    Page(
+        tab = true,
+        bottom = {
+            Composer(
+                place = pickedPlace ?: Place.Monthly(viewedMonth),
+                today = today,
+                suggested = if (pickedPlace != null) Bullet.EVENT else Bullet.TASK,
+                focusSignal = pickSignal,
+            )
+        },
+    ) {
+        TopBar(onSearch, onSettings)
+        val past = viewedMonth < currentMonth
+        PageHead(
+            title = S.monthName(viewedMonth),
+            subtitle = S.monthSubtitle(viewedMonth, past),
+            explain = S.monthExplain,
+            action = if (past) S.backToMonth(currentMonth) to { onViewedMonthChange(currentMonth) } else null,
+        ) {
+            // An arrow that would not respond is not painted (docs/pantallas.md 2).
+            if (viewedMonth > oldestMonth) {
+                GlyphButton(Glyph.BACK, S.a11yPreviousMonth, { onViewedMonthChange(viewedMonth.minus(1, DateTimeUnit.MONTH)) })
+            } else {
+                Spacer(Modifier.width(48.dp))
             }
-            Row(Modifier.fillMaxWidth().height(gridUnit), verticalAlignment = Alignment.CenterVertically) {
-                Text(viewedMonth.year.toString(), style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
+            if (past) {
+                GlyphButton(Glyph.FORWARD, S.a11yNextMonth, { onViewedMonthChange(viewedMonth.plus(1, DateTimeUnit.MONTH)) })
+            } else {
+                Spacer(Modifier.width(48.dp))
             }
+        }
 
-            // The notice strip of docs/pantallas.md 7.2, only in the current month.
-            if (viewedMonth == currentMonth) {
-                journal.unclosedMonth(today)?.let { month ->
-                    NoticeLine(
-                        S.unclosedMonth(month, journal.openTasksOfMonth(month).size),
-                        action = { onReview(ReviewScope.Month(month)) },
-                    )
-                }
-                val waiting = journal.futureWaiting(today)
-                if (waiting.isNotEmpty() && journal.settings.futureSeen != currentMonth) {
-                    NoticeLine(S.futureWaiting(waiting.size), action = onFutureReview)
-                }
+        // The notices of docs/pantallas.md 7.2, only in the current month.
+        if (viewedMonth == currentMonth) {
+            journal.unclosedMonth(today)?.let { month ->
+                NoticeCard(
+                    S.unclosedMonth(month, journal.openTasksOfMonth(month).size),
+                    S.unclosedBody,
+                    listOf(S.reviewMonth(month) to { onReview(ReviewScope.Month(month)) }),
+                )
             }
+            val waiting = journal.futureWaiting(today)
+            if (waiting.isNotEmpty() && journal.settings.futureSeen != currentMonth) {
+                NoticeCard(S.futureWaiting(waiting.size), S.futureWaitingBody, listOf(S.reviewFuture to onFutureReview))
+            }
+        }
 
-            Spacer(Modifier.height(gridUnit))
-
-            val weekLine = MaterialTheme.colorScheme.outlineVariant
+        Eyebrow(S.calendarTitle, S.calendarHint)
+        val weekLine = MaterialTheme.colorScheme.outline
+        Column(Modifier.padding(start = 6.dp, end = 4.dp)) {
             for (day in 1..monthDays(viewedMonth)) {
                 val date = LocalDate(viewedMonth.year, viewedMonth.month, day)
-                val isToday = date == today
                 val place = Place.Monthly(viewedMonth, day)
                 val entries = journal.entriesAt(place)
-                val openCapture = { capturingDay = day }
-
-                DatedRow(
-                    modifier = if (day != 1 && day in weekStartDays) {
-                        Modifier.drawBehind { drawLine(weekLine, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) }
-                    } else {
-                        Modifier
-                    },
-                    date = {
-                        Row(
-                            Modifier.fillMaxWidth()
-                                .then(if (isToday) Modifier.bringIntoViewRequester(todayRow) else Modifier)
-                                .then(scrollHereWhen(linkTo == place, onLinkHandled))
-                                .clearAndSetSemantics {
-                                    contentDescription = S.a11yDayRow(day, S.weekdayNames()[date.dayOfWeek.ordinal], entries.size)
-                                }
-                                .clickable(role = Role.Button, onClick = openCapture),
-                        ) {
-                            DayNumber(date, isToday)
-                        }
-                    },
+                val isPicked = picked == day
+                val pick = {
+                    picked = if (isPicked) null else day
+                    if (!isPicked) pickSignal++
+                }
+                if (day != 1 && day in weekStartDays) {
+                    Box(Modifier.fillMaxWidth().padding(vertical = 4.dp).height(1.dp).drawBehind { drawLine(weekLine, Offset(0f, 0f), Offset(size.width, 0f), 1.dp.toPx()) })
+                }
+                Row(
+                    Modifier.fillMaxWidth()
+                        .then(if (date == today) Modifier.bringIntoViewRequester(todayRow) else Modifier)
+                        .then(scrollHereWhen(linkTo == place, onLinkHandled))
+                        .clip(RoundedCornerShape(12.dp))
+                        .then(if (isPicked) Modifier.background(MaterialTheme.colorScheme.surfaceVariant) else Modifier),
                 ) {
-                    if (entries.isEmpty() && capturingDay != day) {
-                        // The day's number already reads and acts for the row: this is only a wider touch.
-                        Spacer(
-                            Modifier.fillMaxWidth().height(gridUnit * 2)
-                                .semantics { hideFromAccessibility() }
-                                .clickable(role = Role.Button, onClick = openCapture),
-                        )
+                    DayCell(date, today, isPicked, entries.size, pick)
+                    Column(Modifier.weight(1f)) {
+                        if (entries.isEmpty()) {
+                            Box(
+                                Modifier.fillMaxWidth().height(40.dp).semantics { hideFromAccessibility() }
+                                    .clickable(role = Role.Button, onClick = pick).padding(start = 8.dp),
+                                contentAlignment = Alignment.CenterStart,
+                            ) {
+                                if (isPicked) Text(S.writingHere, style = Type.Secondary)
+                            }
+                        } else {
+                            EntryListSection(entries, place, journal, today, onNavigateTo, margin = false)
+                        }
                     }
-                    EntryListSection(
-                        entries = entries,
-                        place = place,
-                        journal = journal,
-                        editingId = editingId,
-                        onStartEdit = { editingId = it },
-                        onSaveEdit = { id, text -> BobbinRepository.editText(id, text); editingId = null },
-                        onLongPress = { sheetEntryId = it },
-                        onToggleDone = { BobbinRepository.toggleDone(it) },
-                        onNavigateTo = onNavigateTo,
-                        onReorder = BobbinRepository::reorder,
-                    )
-                    if (capturingDay == day) CaptureRow(place, dayKey = place)
                 }
             }
+        }
 
-            Spacer(Modifier.height(gridUnit))
-            Text(S.monthTasks.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
-            val tasksPlace = Place.Monthly(viewedMonth)
-            DatedRow(modifier = scrollHereWhen(linkTo == tasksPlace, onLinkHandled)) {
-                EntryListSection(
-                    entries = journal.entriesAt(tasksPlace),
-                    place = tasksPlace,
-                    journal = journal,
-                    editingId = editingId,
-                    onStartEdit = { editingId = it },
-                    onSaveEdit = { id, text -> BobbinRepository.editText(id, text); editingId = null },
-                    onLongPress = { sheetEntryId = it },
-                    onToggleDone = { BobbinRepository.toggleDone(it) },
-                    onNavigateTo = onNavigateTo,
-                    onReorder = BobbinRepository::reorder,
-                )
-                CaptureRow(tasksPlace, dayKey = tasksPlace, autoFocus = false)
-            }
-            Spacer(Modifier.height(gridUnit * 2))
+        Eyebrow(S.monthTasks)
+        val tasksPlace = Place.Monthly(viewedMonth)
+        val tasks = journal.entriesAt(tasksPlace)
+        Box(scrollHereWhen(linkTo == tasksPlace, onLinkHandled)) {
+            if (tasks.isEmpty()) EmptyText(S.monthTasksEmpty) else EntryListSection(tasks, tasksPlace, journal, today, onNavigateTo)
         }
-        if (BobbinRepository.pendingUndo != null) {
-            UndoBanner(onUndo = BobbinRepository::undo)
-        }
+
+        val monthPage = monthShare(journal, viewedMonth)
+        if (monthPage.rows.isNotEmpty()) ShareRow(S.shareMonth) { sharing = monthPage }
     }
 
     sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
+}
 
-    val sheetEntry = sheetEntryId?.let { id -> journal.entries.find { it.id == id && !it.gone } }
-    if (sheetEntryId != null && sheetEntry == null) {
-        sheetEntryId = null
-    } else if (sheetEntry != null) {
-        EntrySheet(
-            entry = sheetEntry,
-            journal = journal,
-            today = today,
-            onClose = { sheetEntryId = null },
-            onEdit = { editingId = it },
-            onGoToCopy = onNavigateTo,
-        )
+/**
+ * The date of a calendar row (docs/pantallas.md 7.1): the weekday's initial and the number, today on the
+ * cover's colour, the weekend in grey. Touching it picks the day for the composer.
+ */
+@Composable
+private fun DayCell(date: LocalDate, today: LocalDate, picked: Boolean, count: Int, onPick: () -> Unit) {
+    val weekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
+    val isToday = date == today
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val weekday = S.weekdayNames()[date.dayOfWeek.ordinal]
+    Row(
+        Modifier.width(52.dp).height(40.dp)
+            .clearAndSetSemantics {
+                contentDescription = S.a11yDayRow(date.day, weekday, count) + if (picked) ", ${S.a11ySelected}" else ""
+                onClick { onPick(); true }
+            }
+            .clickable(role = Role.Button, onClick = onPick)
+            .padding(end = 4.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(S.weekdayInitial()[date.dayOfWeek.ordinal], style = Type.Secondary.copy(fontSize = 11.sp), modifier = Modifier.width(14.dp))
+        Box(
+            Modifier.size(26.dp).clip(CircleShape)
+                .then(if (isToday) Modifier.background(activeCover(BobbinRepository.journal.settings, BobbinRepository.isPro).color) else Modifier),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                date.day.toString(),
+                style = Type.Body.copy(
+                    fontSize = 14.sp,
+                    color = when {
+                        isToday -> TODAY_INK
+                        weekend -> muted
+                        else -> MaterialTheme.colorScheme.onBackground
+                    },
+                    fontFeatureSettings = "tnum",
+                ),
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
+
+/** Ink on the cover's pastel: dark in both themes, since the pastel is light in both. */
+private val TODAY_INK = androidx.compose.ui.graphics.Color(0xFF23301F)

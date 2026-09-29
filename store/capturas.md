@@ -38,10 +38,10 @@ mano con las mismas escenas y el mismo diario (sección 5).
 
 | Fichero | Pantalla | Qué tiene que verse |
 |---|---|---|
-| `01_hoy` | Hoy, al abrir | Evento, tarea hecha, tarea con prioridad, nota y la tarea que llegó migrada de ayer; la línea del mes sin cerrar; una línea a medio escribir y el teclado arriba |
-| `02_mes` | Mes, desde arriba | El título, la línea del mes sin cerrar y la primera quincena con cuatro eventos |
-| `03_revisar` | Revisión del mes anterior, abierta desde la línea de Hoy | Releer saltado; la primera tarea abierta, "Migrada 2 veces", con las cinco decisiones |
-| `04_indice` | Índice | Tres meses, dos colecciones y un seguimiento, en el orden en que se empezaron |
+| `01_hoy` | Hoy, al abrir | La tarjeta del mes sin cerrar; evento, tarea hecha, tarea con prioridad y la tarea que llegó pasada de ayer; una línea a medio escribir en la barra de escribir y el teclado arriba |
+| `02_mes` | Mes, desde arriba | El título, su explicación, la tarjeta del mes sin cerrar y los primeros días con sus eventos |
+| `03_revisar` | Revisión del mes anterior, abierta desde la tarjeta de Hoy | Pasado el releer con "Decidir las 4 tareas"; la primera tarea abierta, "Ya la has pasado 2 veces", con las cinco salidas y lo que deja cada una |
+| `04_indice` | Índice | Tres meses, dos listas y un seguimiento, en el orden en que se empezaron |
 | `05_widgets` | Segunda página del lanzador | El widget de hoy y el del mes, con Pro para que el del mes no salga bloqueado |
 | `06_cuaderno` | Ajustes, sección Cuaderno | La vista previa con una portada (lila) y un papel (cuadrícula) Pro mirados sin comprar, y la línea de qué es gratis |
 
@@ -53,8 +53,15 @@ sirve igual en los cinco idiomas. Lo que no hace solo:
 - **Pro para la escena 05**: el script escribe `pro` en las preferencias de la build de depuración con
   `run-as`, abre la app para que reescriba `widget.json` y lo quita al terminar. La escena 06 se saca
   antes, siempre sin Pro. Con la clave de RevenueCat a `null`, nada corrige esa caché.
+- **La guía y la pista de Hoy**: el script escribe `guideSeen` y `hintSeen` en las preferencias, como
+  `pro`, porque el diario de demostración no es un primer arranque.
 - **en-US se saca con la app en en-GB**: el Gboard del emulador no levanta el teclado con el subtipo
-  en-US, y la app solo lee el idioma, así que los textos son los mismos.
+  en-US, y la app solo lee el idioma, así que los textos son los mismos. Si el emulador cree tener un
+  teclado físico, Gboard solo enseña su barrita flotante:
+  `adb shell settings put secure show_ime_with_hard_keyboard 1` en ese emulador de pruebas.
+- **Con varios emuladores abiertos**, `ANDROID_SERIAL=emulator-5556 python3 tools/store/crudas.py ...`.
+  La escena 05 sale del lanzador en el que se colocaron los widgets: en otro emulador se conserva la
+  cruda anterior.
 - En el emulador el teclado a veces no sube en un arranque en frío; el script vuelve a arrancar la app
   hasta que sube. Tocar el campo no sirve: deja el asa del texto a la vista, y el asa se queda encima
   de la escena siguiente.
@@ -69,7 +76,7 @@ tira de la ficha.
 | 01 | Rapid logging: / one line, one bullet | Rapid logging: / una línea, un bullet | Rapid logging: / uma linha, um bullet | Rapid logging: / eine Zeile, ein Bullet | Rapid logging : / une ligne, un bullet |
 | 02 | The month on one page: / calendar and tasks | El mes en una página: / calendario y tareas | O mês em uma página: / calendário e tarefas | Der Monat auf einer Seite: / Kalender und Aufgaben | Le mois sur une page : / calendrier et tâches |
 | 03 | You migrate by hand, / one task at a time | Migras a mano, / tarea por tarea | Você migra à mão, / tarefa por tarefa | Du migrierst von Hand, / Aufgabe für Aufgabe | Tu migres à la main, / tâche par tâche |
-| 04 | An Index, collections / and trackers | Índice, colecciones / y seguimientos | Índice, coleções / e trackers | Index, Sammlungen / und Tracker | Index, collections / et suivis |
+| 04 | An Index, lists / and trackers | Índice, listas / y seguimientos | Índice, listas / e trackers | Index, Listen / und Tracker | Index, listes / et suivis |
 | 05 | On your home screen, / never your words | En tu pantalla de inicio, / sin tus palabras | Na sua tela inicial, / sem as suas palavras | Auf dem Startbildschirm, / ohne deine Worte | Sur l'écran d'accueil, / jamais tes mots |
 | 06 | Your notebook: / cover and paper | Tu cuaderno: / portada y papel | Seu caderno: / capa e papel | Dein Notizbuch: / Umschlag und Papier | Ton carnet : / couverture et papier |
 
@@ -96,7 +103,7 @@ alrededor de `--hoy`: dos ejecuciones el mismo día dan el mismo diario. Qué ll
   desde hace dos meses.
 - **Future Log**: tres entradas en los tres meses siguientes, con `futureSeen` en el mes actual para que
   su línea no tape la del mes sin cerrar.
-- **Índice**: dos colecciones empezadas el mes anterior y un seguimiento de tres filas en este.
+- **Índice**: dos listas empezadas el mes anterior y un seguimiento de tres filas en este.
 - `reminderOffered: true`: la oferta del recordatorio no sale en ninguna escena.
 
 ## 5. Meter el diario en la app a mano

@@ -2,10 +2,12 @@ package com.baltajmn.bullet.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import com.baltajmn.bullet.ui.theme.coverSoft
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -111,7 +113,7 @@ internal const val DIALOG_MAX_WIDTH_DP = 576
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(onBack: () -> Unit, onKey: () -> Unit, onGuide: () -> Unit) {
     BackHandler(true, onBack)
     val settings = BobbinRepository.journal.settings
     val systemWeekStart = systemFirstDayOfWeek()
@@ -157,12 +159,13 @@ fun SettingsScreen(onBack: () -> Unit) {
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).paper().page()) {
-            Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
-                GlyphButton(Glyph.BACK, S.a11yBack, onBack)
-            }
-            Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
-                Text(S.settingsTitle, style = Type.PageTitle, modifier = Modifier.padding(start = 48.dp))
-            }
+            BackBar(S.back, onBack)
+            PageHead(S.settingsTitle)
+
+            // Help first: the two pages that explain the app, for whoever lands here looking for them.
+            SettingsSection(S.sectionHelp)
+            SettingsRow(title = S.guideAgain, subtitle = S.guideAgainSub, onClick = onGuide)
+            SettingsRow(title = S.keyWhat, subtitle = S.keyRowSub, onClick = onKey)
 
             SettingsSection(S.sectionDay)
             SettingsRow(
@@ -197,7 +200,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                 },
             )
             if (permission == NotifyPermission.DENIED) {
-                Box(Modifier.padding(start = 40.dp)) { TextAction(S.openSystemSettings, Reminders::openSystemSettings) }
+                Box(Modifier.padding(start = HEAD_START - 2.dp)) { TextAction(S.openSystemSettings, Reminders::openSystemSettings) }
             }
 
             SettingsSection(S.sectionPrivacy)
@@ -393,7 +396,7 @@ private fun NotebookLook(settings: Settings) {
     val savedPaper = activePaper(settings, isPro)
     var cover by remember { mutableStateOf(savedCover) }
     var paper by remember { mutableStateOf(savedPaper) }
-    val side = Modifier.padding(start = 48.dp, end = 24.dp)
+    val side = Modifier.padding(start = HEAD_START + 6.dp, end = 24.dp)
     val frame = RoundedCornerShape(12.dp)
 
     Column(
@@ -413,11 +416,13 @@ private fun NotebookLook(settings: Settings) {
                 Text(text, style = Type.Ink, maxLines = 1)
             }
         }
-        Row(Modifier.height(gridUnit * 2).padding(start = 36.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.width(IntrinsicSize.Min)) {
-                Text(S.tabToday, style = Type.Body)
-                Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(2.dp).background(cover.color))
-            }
+        // The active tab as the bar paints it (docs/pantallas.md 3.1): the cover's wash behind the icon.
+        Column(Modifier.padding(start = 28.dp, top = 6.dp, bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                Modifier.width(52.dp).height(30.dp).clip(RoundedCornerShape(15.dp)).background(coverSoft(cover)),
+                contentAlignment = Alignment.Center,
+            ) { GlyphIcon(Glyph.TODAY, size = 21.dp, tint = MaterialTheme.colorScheme.onBackground) }
+            Text(S.tabToday, style = Type.Secondary.copy(fontSize = 12.sp, lineHeight = 16.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold))
         }
     }
 
@@ -523,8 +528,8 @@ private enum class SettingsDialog { DAY_START, WEEK_START, REMINDER_TIME, WIPE }
 /** A section label in `Eyebrow` with `2u` of air above it (docs/pantallas.md 14). */
 @Composable
 private fun SettingsSection(title: String) {
-    Spacer(Modifier.height(gridUnit * 2))
-    Text(title.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
+    Spacer(Modifier.height(gridUnit))
+    Eyebrow(title)
 }
 
 /** One settings row (docs/pantallas.md 14): title, optional subtitle, optional control, and the whole row responds. */
@@ -538,7 +543,7 @@ private fun SettingsRow(
     Row(
         Modifier.fillMaxWidth().heightIn(min = gridUnit * 2)
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
-            .padding(start = 48.dp, end = 24.dp),
+            .padding(start = HEAD_START + 6.dp, end = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f).padding(vertical = 8.dp)) {

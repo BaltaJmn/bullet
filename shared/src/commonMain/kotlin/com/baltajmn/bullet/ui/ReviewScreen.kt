@@ -1,25 +1,20 @@
 package com.baltajmn.bullet.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,21 +27,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.askReviewAfter
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Entry
-import com.baltajmn.bullet.model.Journal
+import com.baltajmn.bullet.model.FUTURE_MONTHS
+import com.baltajmn.bullet.model.FUTURE_MONTHS_MAX
 import com.baltajmn.bullet.model.MIGRATION_SHOWN_FROM
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.ReviewScope
@@ -54,6 +55,7 @@ import com.baltajmn.bullet.model.TEXT_LIMIT
 import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.entriesAt
 import com.baltajmn.bullet.model.futureMonth
+import com.baltajmn.bullet.model.futureMonths
 import com.baltajmn.bullet.model.futureWaiting
 import com.baltajmn.bullet.model.limitEdit
 import com.baltajmn.bullet.model.migrationCount
@@ -65,289 +67,201 @@ import com.baltajmn.bullet.model.placeDay
 import com.baltajmn.bullet.model.reviewDays
 import com.baltajmn.bullet.model.reviewQueue
 import com.baltajmn.bullet.ui.theme.Type
-import com.baltajmn.bullet.ui.theme.gridUnit
-import com.baltajmn.bullet.ui.theme.page
-import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.YearMonth
+
+private enum class Step { INTRO, TASKS, END }
 
 /**
- * The Future Log review (docs/pantallas.md 11.4, docs/tecnico.md 6.5, #26), opened from the
- * `futureWaiting` line of Mes. One entry at a time, three actions, no reflect step and no bulk
- * anything: "Pasar al calendario" is a single `migrate`, "Descartar" a single `discard` or `delete`,
- * and "Dejarla" writes nothing at all.
- *
- * Reaching the end marks the month seen so the line does not come back; leaving half way through does
- * not, so what was left over shows up again next time (6.5).
+ * A review (docs/pantallas.md 11, docs/tecnico.md 6.6): reread the period first, then one open task at a
+ * time with five ways out, each saying what it will do, and nothing anywhere that decides two. The queue
+ * comes from [reviewQueue] every recomposition, so each decision already changed its own task and there
+ * is no progress to save; "Decidir luego" only lives in this session, and the task stays open.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit, onToToday: () -> Unit) {
+    BackHandler(true, onClose)
+    val journal = BobbinRepository.journal
+    val month = (scope as? ReviewScope.Month)?.month
+    var step by remember { mutableStateOf(Step.INTRO) }
+    var later by remember { mutableStateOf(emptySet<String>()) }
+    // Counted once, at open (docs/pantallas.md 11.2): each decision takes a task out of the queue.
+    val total = remember { journal.reviewQueue(scope).size }
+    val queue = journal.reviewQueue(scope).filterNot { it.id in later }
+    val label = when (scope) {
+        is ReviewScope.Month -> S.reviewMonth(scope.month)
+        is ReviewScope.Earlier -> S.reviewEarlier
+        is ReviewScope.Day -> S.reviewDay
+    }
+
+    when (step) {
+        Step.INTRO -> {
+            var note by remember { mutableStateOf("") }
+            Page(
+                tab = false,
+                bottom = {
+                    Footer {
+                        PrimaryButton(S.decideTasks(total), {
+                            if (note.isNotBlank()) BobbinRepository.captureNote(note, scope.notePlace())
+                            step = if (total > 0) Step.TASKS else Step.END
+                        }, block = true)
+                        QuietButton(S.notNow, onClose, Modifier.align(Alignment.CenterHorizontally))
+                    }
+                },
+            ) {
+                ReviewTop(onClose)
+                Column(Modifier.padding(horizontal = 24.dp)) {
+                    Text(label.uppercase(), style = Type.Eyebrow)
+                    Text(S.rereadTitle(month), style = Type.Heading, modifier = Modifier.padding(top = 10.dp, bottom = 8.dp).semantics { heading() })
+                    Text(S.rereadLead(total), style = Type.Secondary.copy(fontSize = 15.sp, lineHeight = 22.sp))
+                }
+                Spacer(Modifier.height(8.dp))
+                Column(Modifier.padding(start = 8.dp, end = 8.dp)) {
+                    journal.reviewDays(scope).forEach { (date, entries) ->
+                        Eyebrow(S.dayTitle(date))
+                        entries.forEach { EntryRow(it, journal, today, onNavigateTo = {}, still = true, showFrom = false) }
+                    }
+                    // Only a month has a calendar and tasks of its own to reread.
+                    if (month != null) {
+                        val calendar = (1..monthDays(month)).flatMap { journal.entriesAt(Place.Monthly(month, it)) }
+                        if (calendar.isNotEmpty()) {
+                            Eyebrow(S.calendarTitle)
+                            calendar.forEach { EntryRow(it, journal, today, onNavigateTo = {}, still = true, showFrom = false) }
+                        }
+                        val tasks = journal.entriesAt(Place.Monthly(month))
+                        if (tasks.isNotEmpty()) {
+                            Eyebrow(S.monthTasks)
+                            tasks.forEach { EntryRow(it, journal, today, onNavigateTo = {}, still = true, showFrom = false) }
+                        }
+                    }
+                }
+                Column(Modifier.padding(horizontal = 24.dp)) {
+                    Text(S.rereadNote(month), style = Type.Secondary, modifier = Modifier.padding(top = 18.dp, bottom = 6.dp))
+                    NoteField(note) { note = it }
+                }
+            }
+        }
+
+        Step.TASKS -> {
+            val entry = queue.firstOrNull()
+            LaunchedEffect(entry == null) { if (entry == null) step = Step.END }
+            if (entry == null) return
+            var months by remember(entry.id) { mutableStateOf(false) }
+            val position = (total - queue.size + 1).coerceIn(1, maxOf(total, 1))
+            Page(tab = false) {
+                ReviewTop(onClose, S.taskOf(position, total), position, total)
+                TaskUnderReview(originOf(entry), entry, journal.migrationCount(entry.id))
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                    if (months) {
+                        ScheduleChoices(today, entry) { months = false }
+                    } else {
+                        ActionRow(S.actionDone, S.doneStaysIn(month), icon = { BulletGlyph(Bullet.TASK, TaskStatus.DONE) }) {
+                            BobbinRepository.undoable(S.toastDone) { BobbinRepository.toggleDone(entry.id) }
+                        }
+                        val to = moveTarget(entry, today)
+                        val where = placeLabel(to, journal, today)
+                        ActionRow(moveLabel(entry, today), "${S.copiesTo(where)} ${S.leavesMark(">", month)}", icon = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) {
+                            BobbinRepository.undoable(S.sentence(S.movedTo(where))) { BobbinRepository.migrate(entry.id, to) }
+                        }
+                        ActionRow(S.moveOtherMonth, "${S.otherMonthHow} ${S.leavesMark("<", month)}", icon = { BulletGlyph(Bullet.TASK, TaskStatus.SCHEDULED) }) {
+                            months = true
+                        }
+                        ActionRow(S.actionDiscard, S.discardHow, icon = { DiscardGlyph() }) {
+                            BobbinRepository.undoable(S.toastDiscarded) { BobbinRepository.discard(entry.id) }
+                        }
+                        ActionRow(S.decideLater, S.decideLaterHow, icon = { GlyphIcon(Glyph.LATER) }) { later = later + entry.id }
+                    }
+                }
+            }
+        }
+
+        Step.END -> {
+            val left = journal.reviewQueue(scope).size
+            // The first month closed with nothing left open is when the rating is asked for, once (6.6).
+            LaunchedEffect(Unit) { askReviewAfter(scope, decided = total - left, left = left) }
+            Page(tab = false, bottom = { Footer { PrimaryButton(S.backToToday, onToToday, block = true) } }) {
+                ReviewTop(onClose)
+                Column(Modifier.padding(horizontal = 24.dp)) {
+                    Text(S.reviewFinished.uppercase(), style = Type.Eyebrow)
+                    Text(S.reviewEndTitle(month, left), style = Type.Heading, modifier = Modifier.padding(top = 10.dp, bottom = 8.dp).semantics { heading() })
+                    Text(S.reviewEndLead(left), style = Type.Secondary.copy(fontSize = 15.sp, lineHeight = 22.sp))
+                }
+            }
+        }
+    }
+}
+
+/** "Llevar a otro mes" inside a review: the same months as the sheet, and back to the five ways out. */
+@Composable
+private fun ScheduleChoices(today: LocalDate, entry: Entry, onBack: () -> Unit) {
+    var shown by remember { mutableStateOf(FUTURE_MONTHS) }
+    futureMonths(today, shown).forEach { m ->
+        ActionRow(S.monthTitle(m), S.waitsIn(m), icon = { BulletGlyph(Bullet.TASK, TaskStatus.SCHEDULED) }) {
+            BobbinRepository.undoable(S.toastScheduled(m)) { BobbinRepository.schedule(entry.id, m, null) }
+            onBack()
+        }
+    }
+    if (shown < FUTURE_MONTHS_MAX) {
+        ActionRow(S.showMoreMonths, icon = { GlyphIcon(Glyph.PLUS) }) { shown = minOf(shown + FUTURE_MONTHS, FUTURE_MONTHS_MAX) }
+    }
+    ActionRow(S.backToOptions, icon = { GlyphIcon(Glyph.BACK) }, onClick = onBack)
+}
+
+/**
+ * The Future Log review (docs/pantallas.md 11.4, docs/tecnico.md 6.5), opened from the notice of Mes.
+ * One entry at a time and three ways out: "Pasar al calendario" is a single `migrate`, "Descartar" a
+ * single `discard` or `delete`, and "Dejarla" writes nothing at all. Reaching the end marks the month
+ * seen so the notice does not come back; leaving half way through does not.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun FutureReviewScreen(today: LocalDate, onClose: () -> Unit) {
-    // Back is the same as CLOSE: it leaves keeping whatever was decided, because each decision
-    // already changed its entry (docs/pantallas.md 11).
     BackHandler(true, onClose)
     val journal = BobbinRepository.journal
     val currentMonth = monthOf(today)
-
-    // "Dejarla" changes nothing in the diary, so only this session can remember it: without the set,
-    // the entry left alone would be the next one offered, forever. Migrating and discarding need no
-    // bookkeeping because they take the entry out of futureWaiting on their own.
     var left by remember { mutableStateOf(emptySet<String>()) }
     val queue = journal.futureWaiting(today).filterNot { it.id in left }
-    // The queue is counted once, at open (docs/pantallas.md 11.2): migrating or discarding takes an
-    // entry out of futureWaiting, so counting it live would shrink the total under the position.
     val total = remember { journal.futureWaiting(today).size }
-    val decided = (total - queue.size).coerceIn(0, total)
-
     LaunchedEffect(queue.isEmpty()) {
         if (queue.isEmpty()) BobbinRepository.settings { it.copy(futureSeen = currentMonth) }
     }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).paper().page()) {
-            ReviewHeader(onClose, position = if (queue.isEmpty()) null else S.reviewPosition(minOf(decided + 1, total), total))
-
-            val entry = queue.firstOrNull()
-            if (entry == null) {
-                Spacer(Modifier.height(gridUnit))
-                Text(S.futureAllDecided, style = Type.Body, modifier = Modifier.padding(start = 48.dp))
-                Spacer(Modifier.height(gridUnit))
-                Box(Modifier.padding(start = 40.dp)) { TextAction(S.close, onClose) }
-            } else {
-                Text(
-                    S.fromFuture(entry.futureMonth ?: currentMonth, entry.placeDay),
-                    style = Type.Eyebrow,
-                    modifier = Modifier.padding(start = 48.dp),
-                )
-                Spacer(Modifier.height(gridUnit))
-                ReviewEntry(entry)
-                if (entry.bullet == Bullet.TASK) {
-                    val count = journal.migrationCount(entry.id)
-                    if (count >= MIGRATION_SHOWN_FROM) {
-                        Text(S.migratedTimes(count), style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
-                    }
-                }
-                Spacer(Modifier.height(gridUnit * 2))
-
-                // The day travels with the entry only if it is a day of this month: "Pasar al
-                // calendario" of a September entry seen in October has no day to keep (6.5).
-                val toDay = entry.placeDay?.takeIf { entry.futureMonth == currentMonth }
-                ReviewAction(S.futureToCalendar, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) {
-                    BobbinRepository.migrate(entry.id, Place.Monthly(currentMonth, toDay))
-                }
-                ReviewAction(S.futureLeave, glyph = null) { left = left + entry.id }
-                ReviewAction(S.futureDiscard, glyph = { DiscardGlyph() }) {
-                    // A task keeps its line struck through; an event or a note has no discarded state
-                    // to wear, so it goes with the undo line behind it (docs/pantallas.md 11.4).
-                    if (entry.bullet == Bullet.TASK) BobbinRepository.discard(entry.id) else BobbinRepository.delete(entry.id)
-                }
-            }
-            Spacer(Modifier.height(gridUnit * 2))
+    val entry = queue.firstOrNull()
+    if (entry == null) {
+        Page(tab = false, bottom = { Footer { PrimaryButton(S.close, onClose, block = true) } }) {
+            ReviewTop(onClose)
+            Text(S.futureAllDecided, style = Type.Heading, modifier = Modifier.padding(horizontal = 24.dp))
         }
-        if (BobbinRepository.pendingUndo != null) {
-            UndoBanner(onUndo = BobbinRepository::undo)
-        }
-    }
-}
-
-/**
- * Step 2 of a review (docs/pantallas.md 11.2, docs/tecnico.md 6.6, #27): one open task at a time, five
- * actions, and nothing anywhere that decides two. The queue comes from [reviewQueue] every
- * recomposition, so leaving half way through and coming back offers only what is still open: each
- * action already changed its own task, and there is no progress to save.
- */
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit) {
-    BackHandler(true, onClose)
-    val journal = BobbinRepository.journal
-
-    // Step 1 comes first and only once: rereading the period is what earns the right to decide
-    // (docs/pantallas.md 11.1, #28). Saltar and Guardar both land here.
-    var reread by remember { mutableStateOf(false) }
-    if (!reread) {
-        ReflectStep(scope, journal, onClose = onClose, onDone = { reread = true })
         return
     }
-
-    val queue = journal.reviewQueue(scope)
-    val total = remember { journal.reviewQueue(scope).size }
-    val decided = (total - queue.size).coerceIn(0, total)
-
-    // The destination picker replaces the actions in the same place (docs/pantallas.md 5.7), and a new
-    // task always starts back at the actions.
-    var mode by remember { mutableStateOf(Destination.NONE) }
-    val entry = queue.firstOrNull()
-    LaunchedEffect(entry?.id) { mode = Destination.NONE }
-
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
-            ReviewHeader(onClose, position = if (entry == null) null else S.reviewPosition(minOf(decided + 1, total), total))
-
-            if (entry == null) {
-                Spacer(Modifier.height(gridUnit))
-                // A Month review that ends with nothing open is a closed month (docs/pantallas.md 11.3),
-                // and the first one is when the rating is asked for, once (docs/tecnico.md 6.6).
-                LaunchedEffect(Unit) { askReviewAfter(scope, decided = total, left = 0) }
-                val done = (scope as? ReviewScope.Month)?.let { S.monthClosed(it.month) } ?: S.reviewAllDecided
-                Text(done, style = Type.Body, modifier = Modifier.padding(start = 48.dp))
-                Spacer(Modifier.height(gridUnit))
-                Box(Modifier.padding(start = 40.dp)) { TextAction(S.close, onClose) }
+    val position = (total - queue.size + 1).coerceIn(1, maxOf(total, 1))
+    Page(tab = false) {
+        ReviewTop(onClose, S.entryOf(position, total), position, total)
+        TaskUnderReview(S.fromFuture(entry.futureMonth ?: currentMonth, entry.placeDay), entry, journal.migrationCount(entry.id))
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            // The day travels with the entry only if it is a day of this month: a September entry seen
+            // in October has no day to keep (6.5).
+            val toDay = entry.placeDay?.takeIf { entry.futureMonth == currentMonth }
+            val to = Place.Monthly(currentMonth, toDay)
+            val where = placeLabel(to, journal, today)
+            ActionRow(S.futureToCalendar, S.goesTo(where), icon = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) {
+                BobbinRepository.undoable(S.sentence(S.movedTo(where))) { BobbinRepository.migrate(entry.id, to) }
+            }
+            ActionRow(S.futureLeave, S.futureLeaveHow, icon = { GlyphIcon(Glyph.LATER) }) { left = left + entry.id }
+            // A task keeps its line struck through; an event or a note has no discarded state to wear,
+            // so it goes, with the undo line behind it (docs/pantallas.md 11.4).
+            if (entry.bullet == Bullet.TASK) {
+                ActionRow(S.actionDiscard, S.discardHow, icon = { DiscardGlyph() }) {
+                    BobbinRepository.undoable(S.toastDiscarded) { BobbinRepository.discard(entry.id) }
+                }
             } else {
-                Text(originOf(entry), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
-                Spacer(Modifier.height(gridUnit))
-                ReviewEntry(entry)
-                val count = journal.migrationCount(entry.id)
-                if (count >= MIGRATION_SHOWN_FROM) {
-                    // The only pressure the method applies, and it presses towards a different decision.
-                    Text(S.migratedTimes(count), style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
-                }
-                Spacer(Modifier.height(gridUnit * 2))
-
-                when (mode) {
-                    Destination.NONE -> {
-                        ReviewAction(S.reviewDone, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.DONE) }) {
-                            BobbinRepository.toggleDone(entry.id)
-                        }
-                        ReviewAction(S.reviewMigrate, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) {
-                            mode = Destination.MIGRATE
-                        }
-                        ReviewAction(S.reviewSchedule, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.SCHEDULED) }) {
-                            mode = Destination.SCHEDULE
-                        }
-                        ReviewAction(S.reviewToCollection, glyph = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) {
-                            mode = Destination.COLLECTION
-                        }
-                        ReviewAction(S.reviewDiscard, glyph = { DiscardGlyph() }) { BobbinRepository.discard(entry.id) }
-                    }
-                    // Both pickers move exactly one task and then the next one is on screen: the queue
-                    // no longer holds the decided one.
-                    Destination.MIGRATE -> MigrateDestinations(
-                        entry,
-                        today,
-                        onBack = { mode = Destination.NONE },
-                        onCollections = { mode = Destination.COLLECTION },
-                        onDone = { mode = Destination.NONE },
-                    )
-                    Destination.SCHEDULE -> ScheduleDestinations(entry, today, onBack = { mode = Destination.NONE }, onDone = { mode = Destination.NONE })
-                    Destination.COLLECTION -> CollectionDestinations(entry, journal, onBack = { mode = Destination.NONE }, onDone = { mode = Destination.NONE })
-                }
-            }
-            Spacer(Modifier.height(gridUnit * 2))
-        }
-        if (BobbinRepository.pendingUndo != null) {
-            UndoBanner(onUndo = BobbinRepository::undo)
-        }
-    }
-}
-
-/**
- * Step 1 of a review (docs/pantallas.md 11.1, docs/tecnico.md 6.6, #28): the whole period in reading
- * mode, an optional note, and a bar with one action. No count, no percentage and no chart anywhere:
- * what the month was is the entries themselves, not a score of them.
- */
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-private fun ReflectStep(scope: ReviewScope, journal: Journal, onClose: () -> Unit, onDone: () -> Unit) {
-    BackHandler(true, onClose)
-    val month = (scope as? ReviewScope.Month)?.month
-    var note by remember { mutableStateOf("") }
-
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
-            ReviewHeader(onClose, position = null)
-            Text(
-                if (month != null) S.reflectTitle(month) else S.reflectTitle(),
-                style = Type.PageTitle,
-                modifier = Modifier.padding(start = 48.dp),
-            )
-            Spacer(Modifier.height(gridUnit))
-
-            journal.reviewDays(scope).forEach { (date, entries) ->
-                Text(S.dayTitle(date).uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
-                entries.forEach { ReadOnlyRow(it) }
-                Spacer(Modifier.height(gridUnit))
-            }
-
-            // Only a month has a calendar and tasks of its own to reread.
-            if (month != null) {
-                val calendar = (1..monthDays(month)).flatMap { journal.entriesAt(Place.Monthly(month, it)) }
-                if (calendar.isNotEmpty()) {
-                    Text(S.calendarTitle.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
-                    calendar.forEach { ReadOnlyRow(it) }
-                    Spacer(Modifier.height(gridUnit))
-                }
-                val tasks = journal.entriesAt(Place.Monthly(month))
-                if (tasks.isNotEmpty()) {
-                    Text(S.monthTasks.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
-                    tasks.forEach { ReadOnlyRow(it) }
-                    Spacer(Modifier.height(gridUnit))
-                }
-            }
-
-            NoteField(note, hint = if (month != null) S.reflectHint(month) else S.reflectHint()) { note = it }
-            Spacer(Modifier.height(gridUnit * 2))
-        }
-
-        // One action, on the left: Saltar with the field empty, Guardar y seguir with text in it.
-        val line = MaterialTheme.colorScheme.outlineVariant
-        Row(
-            Modifier.fillMaxWidth().height(gridUnit * 2)
-                .background(MaterialTheme.colorScheme.background)
-                .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) },
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Spacer(Modifier.width(40.dp))
-            if (note.isBlank()) {
-                TextAction(S.skip, onDone)
-            } else {
-                TextAction(S.saveAndGo) {
-                    BobbinRepository.captureNote(note, scope.notePlace())
-                    onDone()
-                }
+                ActionRow(S.actionDiscard, S.deleteHow, icon = { DiscardGlyph() }) { BobbinRepository.delete(entry.id) }
             }
         }
     }
 }
 
-/** An entry in reading mode (docs/pantallas.md 11.1): the anatomy of 5.1 with no gesture on it at all. */
-@Composable
-private fun ReadOnlyRow(entry: Entry) {
-    Row(Modifier.fillMaxWidth().heightIn(min = gridUnit * 2).padding(end = 24.dp)) {
-        Row(Modifier.widthIn(min = 48.dp), horizontalArrangement = Arrangement.End) {
-            entry.signifiers.sortedBy { it.ordinal }.forEach { SignifierGlyph(it) }
-        }
-        BulletGlyph(entry.bullet, entry.status)
-        Text(entry.text, style = Type.Ink, modifier = Modifier.padding(top = 2.dp).weight(1f))
-    }
-}
-
-/** The reflection field (docs/pantallas.md 11.1): the note glyph in grey, and a prefix stays text. */
-@Composable
-private fun NoteField(value: String, hint: String, onChange: (String) -> Unit) {
-    var field by remember { mutableStateOf(TextFieldValue(value)) }
-    Row(Modifier.fillMaxWidth().heightIn(min = gridUnit * 2)) {
-        Spacer(Modifier.width(48.dp))
-        BulletGlyph(Bullet.NOTE, TaskStatus.OPEN, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Box(Modifier.weight(1f)) {
-            if (field.text.isEmpty()) Text(hint, style = Type.Ink.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
-            BasicTextField(
-                value = field,
-                onValueChange = { new ->
-                    val edit = limitEdit(field.text.oneLine(), new.text.oneLine(), new.selection.end, TEXT_LIMIT)
-                    field = TextFieldValue(edit.text, TextRange(edit.cursor))
-                    onChange(edit.text)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = Type.Ink,
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
-            )
-        }
-    }
-}
-
-/** docs/pantallas.md 11.2: where the task under review comes from, in `Eyebrow`. */
+/** docs/pantallas.md 11.2: where the task under review comes from. */
 private fun originOf(entry: Entry): String = when (val p = entry.place) {
     is Place.Daily -> S.fromDay(p.date)
     is Place.Monthly -> if (p.day == null) S.fromMonthTasks(p.month) else S.fromCalendar(LocalDate(p.month.year, p.month.month, p.day))
@@ -355,36 +269,80 @@ private fun originOf(entry: Entry): String = when (val p = entry.place) {
     is Place.InCollection -> ""
 }
 
-/** The header of docs/pantallas.md 11: `CLOSE` on the left, and the position on the right while there is a task. */
+/** `CLOSE` on the left and, while there is a task, where the review is: "Tarea 2 de 4" and a dot per task. */
 @Composable
-private fun ReviewHeader(onClose: () -> Unit, position: String?) {
-    Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
+private fun ReviewTop(onClose: () -> Unit, position: String? = null, at: Int = 0, total: Int = 0) {
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp, start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         GlyphButton(Glyph.CLOSE, S.close, onClose)
-        Spacer(Modifier.weight(1f))
-        if (position != null) Text(position, style = Type.Secondary, modifier = Modifier.padding(end = 24.dp))
-    }
-}
-
-/** The entry under review (docs/pantallas.md 11.2): `PageTitle`, its glyph and signifiers on the first baseline. */
-@Composable
-private fun ReviewEntry(entry: Entry) {
-    Row(Modifier.fillMaxWidth().padding(end = 24.dp)) {
-        Row(Modifier.widthIn(min = 48.dp), horizontalArrangement = Arrangement.End) {
-            entry.signifiers.sortedBy { it.ordinal }.forEach { SignifierGlyph(it) }
+        if (position != null) {
+            Text(position, style = Type.Secondary, modifier = Modifier.padding(start = 4.dp, end = 8.dp))
+            Row(Modifier.clearAndSetSemantics {}, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
+                val ink = MaterialTheme.colorScheme.onBackground
+                val line = MaterialTheme.colorScheme.outline
+                val muted = MaterialTheme.colorScheme.onSurfaceVariant
+                // ponytail: one dot per task; a review of dozens runs off the edge, a count would scale.
+                for (k in 1..minOf(total, 24)) {
+                    Box(
+                        Modifier.height(6.dp).width(if (k == at) 18.dp else 6.dp).clip(RoundedCornerShape(3.dp))
+                            .background(if (k == at) ink else if (k < at) muted else line),
+                    )
+                }
+            }
         }
-        BulletGlyph(entry.bullet, entry.status)
-        Text(entry.text, style = Type.PageTitle, modifier = Modifier.weight(1f))
     }
 }
 
-/** One of the review's actions (docs/pantallas.md 11.2): the glyph in the bullet column, the name in `Body` `primary`. */
+/** The task under review (docs/pantallas.md 11.2): where it comes from, its text large, and how often it was moved. */
 @Composable
-private fun ReviewAction(label: String, glyph: (@Composable () -> Unit)?, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = gridUnit * 2).clickable(role = Role.Button, onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically,
+private fun TaskUnderReview(origin: String, entry: Entry, moved: Int) {
+    Column(Modifier.padding(horizontal = 24.dp)) {
+        Text(origin, style = Type.Secondary, modifier = Modifier.padding(top = 14.dp))
+        Text(entry.text, style = Type.Heading, modifier = Modifier.padding(top = 6.dp).semantics { contentDescription = S.entryDescription(entry.bullet, entry.status, entry.signifiers, entry.text) })
+        // The only pressure the method applies, and it presses towards a different decision.
+        if (moved >= MIGRATION_SHOWN_FROM) {
+            Text(
+                S.timesMoved(moved),
+                style = Type.Secondary.copy(fontSize = 12.sp, lineHeight = 16.sp, color = MaterialTheme.colorScheme.onBackground),
+                modifier = Modifier.padding(top = 10.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
+            )
+        }
+    }
+}
+
+/** The foot of a review step: its one button, full width, over a hairline. */
+@Composable
+private fun Footer(content: @Composable ColumnScope.() -> Unit) {
+    val line = MaterialTheme.colorScheme.outline
+    Column(
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)
+            .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), 1.dp.toPx()) }
+            .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        content = content,
+    )
+}
+
+/** The reflection note (docs/pantallas.md 11.1): one line like any entry, wrapping as it grows. */
+@Composable
+private fun NoteField(value: String, onChange: (String) -> Unit) {
+    var field by remember { mutableStateOf(TextFieldValue(value)) }
+    Box(
+        Modifier.fillMaxWidth().heightIn(min = 76.dp).fieldFrame(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.outline)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
-        Box(Modifier.width(72.dp).padding(start = 48.dp)) { glyph?.invoke() }
-        Text(label, style = Type.Body.copy(color = MaterialTheme.colorScheme.primary), modifier = Modifier.weight(1f))
+        if (field.text.isEmpty()) Text(S.rereadNoteHint, style = Type.Ink.copy(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant))
+        BasicTextField(
+            value = field,
+            onValueChange = { new ->
+                val edit = limitEdit(field.text.oneLine(), new.text.oneLine(), new.selection.end, TEXT_LIMIT)
+                field = TextFieldValue(edit.text, TextRange(edit.cursor))
+                onChange(edit.text)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            textStyle = Type.Ink.copy(fontSize = 16.sp, lineHeight = 22.sp),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
+        )
     }
 }

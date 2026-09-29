@@ -21,17 +21,24 @@ PAQUETE = "com.baltajmn.bullet"
 ADB = [os.path.expanduser("~/Library/Android/sdk/platform-tools/adb")]
 
 # What each scene looks for, in the app's own words (Strings.kt), and what gets typed on Hoy.
+# "repasar" is the button of last month's notice (reviewMonth), told apart from the other review
+# buttons by what follows the verb; "decidir" is the one that leaves rereading (decideTasks).
 IDIOMAS = {
-    "en-US": dict(escribir="Call%sLeo", mes="Month", indice="Index", saltar="Skip", sin_cerrar="not closed",
-                  ajustes="Settings", cuaderno="NOTEBOOK", portada="Lilac", papel="grid"),
-    "es-ES": dict(escribir="Llamar%sa%sLeo", mes="Mes", indice="Índice", saltar="Saltar", sin_cerrar="sin cerrar",
-                  ajustes="Ajustes", cuaderno="CUADERNO", portada="Lila", papel="cuadrícula"),
-    "pt-BR": dict(escribir="Ligar%spara%so%sLeo", mes="Mês", indice="Índice", saltar="Pular", sin_cerrar="sem fechar",
-                  ajustes="Ajustes", cuaderno="CADERNO", portada="Lilás", papel="quadriculado"),
-    "de-DE": dict(escribir="Leo%sanrufen", mes="Monat", indice="Index", saltar="Überspringen", sin_cerrar="nicht abgeschlossen",
-                  ajustes="Einstellungen", cuaderno="NOTIZBUCH", portada="Flieder", papel="kariert"),
-    "fr-FR": dict(escribir="Appeler%sLeo", mes="Mois", indice="Index", saltar="Passer", sin_cerrar="pas clôturé",
-                  ajustes="Réglages", cuaderno="CARNET", portada="Lilas", papel="quadrillé"),
+    "en-US": dict(escribir="Call%sLeo", mes="Month", indice="Index", ajustes="Settings", cuaderno="NOTEBOOK",
+                  portada="Lilac", papel="grid",
+                  repasar=r"^Review (?!those days|the day|Future)", decidir=r"^Decide the \d+ tasks$"),
+    "es-ES": dict(escribir="Llamar%sa%sLeo", mes="Mes", indice="Índice", ajustes="Ajustes", cuaderno="CUADERNO",
+                  portada="Lila", papel="cuadrícula",
+                  repasar=r"^Repasar (?!esos días|el día|Futuro)", decidir=r"^Decidir las \d+ tareas$"),
+    "pt-BR": dict(escribir="Ligar%spara%so%sLeo", mes="Mês", indice="Índice", ajustes="Ajustes", cuaderno="CADERNO",
+                  portada="Lilás", papel="quadriculado",
+                  repasar=r"^Revisar (?!esses dias|o dia|Futuro)", decidir=r"^Decidir as \d+ tarefas$"),
+    "de-DE": dict(escribir="Leo%sanrufen", mes="Monat", indice="Index", ajustes="Einstellungen", cuaderno="NOTIZBUCH",
+                  portada="Flieder", papel="kariert",
+                  repasar=r"^(?!Diese Tage|Den Tag|Zukunft)\S+ durchsehen$", decidir=r"^\d+ Aufgaben entscheiden$"),
+    "fr-FR": dict(escribir="Appeler%sLeo", mes="Mois", indice="Index", ajustes="Réglages", cuaderno="CARNET",
+                  portada="Lilas", papel="quadrillé",
+                  repasar=r"^Revoir (?!ces jours|la journée|Futur)", decidir=r"^Décider les \d+ tâches$"),
 }
 
 
@@ -109,6 +116,9 @@ def main():
     adb("shell", "cmd", "locale", "set-app-locales", PAQUETE, "--locales", "en-GB" if idioma == "en-US" else idioma)
     adb("push", str(diario), "/data/local/tmp/journal.json")
     adb("shell", "run-as %s sh -c 'mkdir -p files && cp /data/local/tmp/journal.json files/journal.json && rm -f files/journal.bak.json'" % PAQUETE)
+    # The guide and Today's hint are for a first start, not for a diary that already has months in it.
+    pref("guideSeen", "true")
+    pref("hintSeen", "true")
     barra_limpia()
 
     # 01 Today, typing: the app opens with the capture field focused and the keyboard up. On the
@@ -117,7 +127,8 @@ def main():
     for _ in range(4):
         adb("shell", "am", "force-stop", PAQUETE)
         adb("shell", "am", "start", "-n", PAQUETE + "/.MainActivity")
-        buscar(t["mes"])
+        # The settings icon, not a tab: with the keyboard up the tab bar steps aside.
+        buscar(t["ajustes"])
         fin = time.time() + 6
         while not teclado() and time.time() < fin:
             time.sleep(0.5)
@@ -130,11 +141,11 @@ def main():
     time.sleep(1)
     captura(salida / "01_hoy.png")
 
-    # 03 Reviewing last month, from Today's notice (Month opens scrolled to today, with its own notice
-    # off screen): rereading is skipped, and the first task is the one migrated twice.
+    # 03 Reviewing last month, from Today's notice: past rereading, the first task is the one moved
+    # twice, with each way out saying what it leaves on the page.
     cerrar_teclado()
-    tocar(buscar(t["sin_cerrar"], exacto=False))
-    tocar(buscar(t["saltar"]))
+    tocar(buscar(re.compile(t["repasar"])))
+    tocar(buscar(re.compile(t["decidir"])))
     time.sleep(0.8)
     captura(salida / "03_revisar.png")
 
@@ -174,9 +185,9 @@ def main():
     # the launcher's second page, placed there by hand once (store/capturas.md). Pro is set in the
     # debug build's own preferences and taken away again, so scene 06 is always seen without it.
     adb("shell", "am", "force-stop", PAQUETE)
-    pro("true")
+    pref("pro", "true")
     adb("shell", "am", "start", "-n", PAQUETE + "/.MainActivity")
-    buscar(t["mes"])
+    buscar(t["ajustes"])
     time.sleep(2)
     adb("shell", "input", "keyevent", "KEYCODE_HOME")
     time.sleep(2)
@@ -184,16 +195,16 @@ def main():
     time.sleep(2.5)
     captura(salida / "05_widgets.png")
     adb("shell", "am", "force-stop", PAQUETE)
-    pro(None)
+    pref("pro", None)
 
 
-def pro(valor):
-    """Writes the Pro flag straight into the debug build's SharedPreferences, or removes it with None."""
+def pref(nombre, valor):
+    """Writes a flag of Prefs straight into the debug build's SharedPreferences, or removes it with None."""
     orden = ("cd shared_prefs 2>/dev/null || { mkdir shared_prefs; cd shared_prefs; }; "
              "[ -f bobbin.xml ] || printf '<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?>\\n<map>\\n</map>\\n' > bobbin.xml; "
-             "sed -i '/name=\"pro\"/d' bobbin.xml")
+             "sed -i '/name=\"%s\"/d' bobbin.xml" % nombre)
     if valor:
-        orden += "; sed -i 's#</map>#    <boolean name=\"pro\" value=\"%s\" />\\n</map>#' bobbin.xml" % valor
+        orden += "; sed -i 's#</map>#    <boolean name=\"%s\" value=\"%s\" />\\n</map>#' bobbin.xml" % (nombre, valor)
     adb("shell", "run-as %s sh -c '%s'" % (PAQUETE, orden.replace("'", "'\\''")))
 
 

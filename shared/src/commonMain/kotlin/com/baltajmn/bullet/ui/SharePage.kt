@@ -33,6 +33,7 @@ import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.Journal
+import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.copyOf
@@ -228,4 +229,13 @@ private fun DrawScope.signifier(s: Signifier, x: Float, y: Float) {
             drawCircle(Ink, radius = 1.5f * SCALE, center = at(x, y, 12f, 12f))
         }
     }
+}
+
+/** Where a migrated or scheduled task's copy landed, or null once it no longer exists. */
+private fun wentToText(place: Place?, journal: Journal): String? = when (place) {
+    null -> null
+    is Place.Daily -> S.wentToDay(place.date)
+    is Place.Monthly -> S.wentToMonth(place.month)
+    is Place.Future -> S.wentToFuture(place.month, place.day)
+    is Place.InCollection -> journal.collections.find { it.id == place.id }?.title
 }

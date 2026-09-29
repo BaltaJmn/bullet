@@ -11,8 +11,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
+import kotlinx.datetime.plus
 
 /** docs/tecnico.md 6.4, docs/pantallas.md 5.8: delete offers Deshacer, #23. */
 class BobbinRepositoryTest {
@@ -97,5 +99,40 @@ class BobbinRepositoryTest {
         val skeleton = BobbinRepository.journal.entries.single { it.id == "e-1" }
         assertTrue(skeleton.gone)
         assertEquals(1, BobbinRepository.journal.migrationCount("e-2"))
+    }
+
+    @Test
+    fun undoingAMoveTakesTheCopyAwayAndReopensTheOriginal() {
+        // A move only goes forward from the real today (docs/tecnico.md 6.4).
+        BobbinRepository.load(MemoryFiles())
+        val day = BobbinRepository.today()
+        freshJournalWith(entry("e-1", Place.Daily(day)))
+
+        BobbinRepository.undoable("Pasada.") { BobbinRepository.migrate("e-1", Place.Daily(day.plus(1, DateTimeUnit.DAY))) }
+        assertEquals(2, BobbinRepository.journal.entries.size)
+        assertEquals("Pasada.", BobbinRepository.pendingUndo?.message)
+
+        BobbinRepository.undo()
+        assertEquals(listOf("e-1" to TaskStatus.OPEN), BobbinRepository.journal.entries.map { it.id to it.status })
+    }
+
+    @Test
+    fun undoingAnActionAfterAnotherChangeRevertsOnlyWhatTheActionTouched() {
+        freshJournalWith(entry("e-1"), entry("e-2"))
+
+        BobbinRepository.undoable("Hecha.") { BobbinRepository.toggleDone("e-1") }
+        BobbinRepository.toggleSignifier("e-2", Signifier.PRIORITY)
+
+        BobbinRepository.undo()
+        val byId = BobbinRepository.journal.entries.associateBy { it.id }
+        assertEquals(TaskStatus.OPEN, byId.getValue("e-1").status)
+        assertEquals(setOf(Signifier.PRIORITY), byId.getValue("e-2").signifiers)
+    }
+
+    @Test
+    fun anActionThatChangesNothingArmsNoUndo() {
+        freshJournalWith(entry("e-1"))
+        BobbinRepository.undoable("Nada.") { }
+        assertNull(BobbinRepository.pendingUndo)
     }
 }

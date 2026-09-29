@@ -2,19 +2,24 @@ package com.baltajmn.bullet
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,20 +30,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.baltajmn.bullet.billing.Billing
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.Lock
+import com.baltajmn.bullet.data.PREF_GUIDE_SEEN
+import com.baltajmn.bullet.data.Prefs
 import com.baltajmn.bullet.data.Reminders
 import com.baltajmn.bullet.data.Route
 import com.baltajmn.bullet.data.syncWidgets
@@ -49,24 +59,26 @@ import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.ui.CollectionScreen
+import com.baltajmn.bullet.ui.EntrySheetHost
 import com.baltajmn.bullet.ui.FutureReviewScreen
 import com.baltajmn.bullet.ui.FutureScreen
 import com.baltajmn.bullet.ui.Glyph
-import com.baltajmn.bullet.ui.GlyphButton
+import com.baltajmn.bullet.ui.GlyphIcon
+import com.baltajmn.bullet.ui.GuideScreen
 import com.baltajmn.bullet.ui.IndexScreen
 import com.baltajmn.bullet.ui.KeyScreen
 import com.baltajmn.bullet.ui.LockScreen
-import com.baltajmn.bullet.ui.SearchScreen
-import com.baltajmn.bullet.ui.SettingsScreen
 import com.baltajmn.bullet.ui.MonthScreen
 import com.baltajmn.bullet.ui.Paywall
 import com.baltajmn.bullet.ui.ProDialog
 import com.baltajmn.bullet.ui.ReviewScreen
+import com.baltajmn.bullet.ui.SearchScreen
+import com.baltajmn.bullet.ui.SettingsScreen
 import com.baltajmn.bullet.ui.TodayScreen
 import com.baltajmn.bullet.ui.theme.BobbinTheme
-import com.baltajmn.bullet.ui.theme.activeCover
 import com.baltajmn.bullet.ui.theme.Type
-import com.baltajmn.bullet.ui.theme.gridUnit
+import com.baltajmn.bullet.ui.theme.activeCover
+import com.baltajmn.bullet.ui.theme.coverSoft
 import com.baltajmn.bullet.ui.theme.page
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
@@ -76,12 +88,11 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.monthsUntil
 
 /**
- * Ten destinations and no more (SPEC 5, docs/pantallas.md 3): four tabs at the bottom, and
- * everything else opens as a single screen above them. The four tabs have a real page (#21, #24,
- * #25, #29); the rest land issue by issue and show a bare placeholder with just their title until
- * then.
+ * Eleven destinations and no more (SPEC 5, docs/pantallas.md 3): four tabs at the bottom, and
+ * everything else opens as a single screen above them. GUIDE is the first start's only one that
+ * opens on its own (docs/pantallas.md 13.1).
  */
-enum class Screen { TODAY, MONTH, FUTURE, INDEX, COLLECTION, REVIEW, SEARCH, KEY, SETTINGS }
+enum class Screen { TODAY, MONTH, FUTURE, INDEX, COLLECTION, REVIEW, SEARCH, KEY, SETTINGS, GUIDE }
 
 private val TABS = listOf(Screen.TODAY, Screen.MONTH, Screen.FUTURE, Screen.INDEX)
 
@@ -149,7 +160,8 @@ fun App() {
     var tab by remember { mutableStateOf(Screen.TODAY) }
     // At most one screen open above the tab bar (docs/pantallas.md 3): each one owns its own
     // BackHandler, so one that still has a sheet or a dialog of its own open can close that first.
-    var overlay by remember { mutableStateOf<Screen?>(null) }
+    // A failed read counts as seen: a guide shown twice is worse than one never shown.
+    var overlay by remember { mutableStateOf(if (runCatching { Prefs.bool(PREF_GUIDE_SEEN) }.getOrDefault(true)) null else Screen.GUIDE) }
 
     /** [created] is true only straight from the Index's own capture row, which is when it opens focused. */
     fun goToCollection(id: String, created: Boolean) {
@@ -222,7 +234,6 @@ fun App() {
                             today = today,
                             viewedDay = viewedDay,
                             onViewedDayChange = { viewedDay = it },
-                            onKey = { overlay = Screen.KEY },
                             onSearch = { overlay = Screen.SEARCH },
                             onSettings = { overlay = Screen.SETTINGS },
                             onReview = ::openReview,
@@ -230,6 +241,8 @@ fun App() {
                             reminderOfferOn = reminderOfferOn,
                             onReminderOffer = { reminderOfferOn = it },
                             focusSignal = focusToday,
+                            // Under the guide the keyboard would come up behind it.
+                            autoFocus = overlay != Screen.GUIDE,
                         )
                         Screen.INDEX -> IndexScreen(
                             onSearch = { overlay = Screen.SEARCH },
@@ -263,18 +276,35 @@ fun App() {
                         else -> Unit
                     }
                 }
-                TabBar(active = tab, onSelect = { tab = it })
+                // The composer takes the bottom while writing (docs/pantallas.md 5.1).
+                if (WindowInsets.ime.getBottom(LocalDensity.current) == 0) TabBar(active = tab, onSelect = { tab = it })
             }
 
+            val dismiss = { overlay = null; reviewFutureLog = false; reviewScope = null; openCollection = null }
             overlay?.let { screen ->
-                val dismiss = { overlay = null; reviewFutureLog = false; reviewScope = null; openCollection = null }
                 val scope = reviewScope
                 val collection = openCollection
                 when {
                     screen == Screen.REVIEW && reviewFutureLog -> FutureReviewScreen(today = today, onClose = dismiss)
-                    screen == Screen.REVIEW && scope != null -> ReviewScreen(scope = scope, today = today, onClose = dismiss)
-                    screen == Screen.KEY -> KeyScreen(onBack = dismiss)
-                    screen == Screen.SETTINGS -> SettingsScreen(onBack = dismiss)
+                    screen == Screen.REVIEW && scope != null -> ReviewScreen(
+                        scope = scope,
+                        today = today,
+                        onClose = dismiss,
+                        onToToday = { dismiss(); tab = Screen.TODAY; viewedDay = today },
+                    )
+                    screen == Screen.KEY -> KeyScreen(onBack = { overlay = Screen.SETTINGS })
+                    screen == Screen.SETTINGS -> SettingsScreen(
+                        onBack = dismiss,
+                        onKey = { overlay = Screen.KEY },
+                        onGuide = { overlay = Screen.GUIDE },
+                    )
+                    screen == Screen.GUIDE -> GuideScreen(today) {
+                        runCatching { Prefs.setBool(PREF_GUIDE_SEEN, true) }
+                        dismiss()
+                        tab = Screen.TODAY
+                        viewedDay = today
+                        focusToday++
+                    }
                     screen == Screen.SEARCH -> SearchScreen(
                         today = today,
                         onBack = dismiss,
@@ -293,6 +323,9 @@ fun App() {
                 }
             }
 
+            // One sheet for every row of every page, so it survives the page it was opened from.
+            EntrySheetHost(today, onNavigateTo = { place -> dismiss(); goTo(place) })
+
             // A dialog is a window of its own and would float over the lock screen, so it waits for the unlock.
             if (Paywall.open && !locked) ProDialog()
 
@@ -303,8 +336,8 @@ fun App() {
 }
 
 /**
- * docs/pantallas.md 3.1: four equal labels, the active one marked, no icons. Their scale stops at 1.5,
- * so at 200 % the four one-word labels still fit a quarter of the page each.
+ * docs/pantallas.md 3.1: four equal tabs, each an icon over its word, the active one on a wash of the
+ * cover. Their scale stops at 1.5, so at 200 % the four one-word labels still fit a quarter each.
  */
 @Composable
 private fun TabBar(active: Screen, onSelect: (Screen) -> Unit) {
@@ -316,39 +349,52 @@ private fun TabBar(active: Screen, onSelect: (Screen) -> Unit) {
 
 @Composable
 private fun TabRow(active: Screen, onSelect: (Screen) -> Unit) {
-    val line = MaterialTheme.colorScheme.outlineVariant
+    val line = MaterialTheme.colorScheme.outline
+    val wash = coverSoft(activeCover(BobbinRepository.journal.settings, BobbinRepository.isPro))
     Row(
-        Modifier.fillMaxWidth().height(gridUnit * 2)
+        Modifier.fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
             .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) }
-            // The line goes the whole width; the four labels share the width of the page (docs/pantallas.md 21).
-            .page(),
+            .navigationBarsPadding()
+            // The line goes the whole width; the four tabs share the width of the page (docs/pantallas.md 21).
+            .page()
+            .padding(top = 6.dp, bottom = 6.dp),
     ) {
         TABS.forEach { screen ->
             val isActive = screen == active
-            Box(
-                Modifier.weight(1f).fillMaxHeight()
+            val ink = if (isActive) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant
+            Column(
+                Modifier.weight(1f).heightIn(min = 56.dp)
                     .semantics { selected = isActive }
                     .clickable(role = Role.Tab, onClick = { onSelect(screen) }),
-                contentAlignment = Alignment.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
             ) {
-                Column(Modifier.width(IntrinsicSize.Min), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        tabLabel(screen),
-                        style = Type.Body.copy(
-                            color = if (isActive) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
-                    )
-                    if (isActive) {
-                        Box(
-                            Modifier.padding(top = 4.dp).fillMaxWidth().height(2.dp)
-                                .background(activeCover(BobbinRepository.journal.settings, BobbinRepository.isPro).color),
-                        )
-                    }
-                }
+                Box(
+                    Modifier.width(52.dp).height(30.dp).clip(RoundedCornerShape(15.dp)).background(if (isActive) wash else Color.Transparent),
+                    contentAlignment = Alignment.Center,
+                ) { GlyphIcon(tabGlyph(screen), size = 21.dp, tint = ink) }
+                Text(
+                    tabLabel(screen),
+                    style = Type.Secondary.copy(
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                        color = ink,
+                        fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+                    ),
+                    maxLines = 1,
+                    modifier = Modifier.padding(top = 3.dp),
+                )
             }
         }
     }
+}
+
+private fun tabGlyph(screen: Screen): Glyph = when (screen) {
+    Screen.TODAY -> Glyph.TODAY
+    Screen.MONTH -> Glyph.MONTH
+    Screen.FUTURE -> Glyph.FUTURE
+    else -> Glyph.INDEX
 }
 
 private fun tabLabel(screen: Screen): String = when (screen) {
