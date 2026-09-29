@@ -52,7 +52,7 @@ Todas tomadas. El porqué de cada una, en `SPEC.md`.
 
 Arrancar todo esto antes de escribir una línea de código. Ninguno depende del código.
 
-- [ ] **[autor] Crear la app en Play Console** con el nombre Bobbin, idioma por defecto `en-US`, app
+- [x] **[autor] Crear la app en Play Console** con el nombre Bobbin, idioma por defecto `en-US`, app
       gratuita. El paquete se fija con el primer AAB, no aquí. (#7)
 - [ ] **[autor] Comprobar la cuenta de Apple Developer**, ya abierta con las hermanas: no hace falta
       pagarla dos veces. Contratos, fiscalidad y datos bancarios ya están en App Store Connect. (#7)
@@ -92,8 +92,8 @@ Arrancar todo esto antes de escribir una línea de código. Ninguno depende del 
 
       **[autor]** Guardar el `.jks` y la contraseña en el gestor de contraseñas, con copia fuera de
       este Mac. (#7)
-- [ ] **[autor] Los cinco secretos de firma y publicación** en GitHub (`ci.md`). (#7)
-- [ ] **Publicar la política**: GitHub Pages desde este mismo repositorio con `pages.yml`, que
+- [x] **[autor] Los cinco secretos de firma y publicación** en GitHub (`ci.md`). (#7)
+- [x] **Publicar la política**: GitHub Pages desde este mismo repositorio con `pages.yml`, que
       publica `store/privacy/index.html`, igual que line. Pasos en `store/privacy/README.md`; los hace
       Claude con el sí del autor (`~/keys/LEEME.md`). (#59)
 
@@ -128,6 +128,10 @@ Paso a paso en `revenuecat.md`. Resumen: proyecto Bobbin, las dos tiendas, derec
 `default` como *Current* con un paquete *Lifetime*, y las dos claves públicas pegadas en
 `Billing.android.kt` y `Billing.ios.kt`. Mientras sean `null`, la app funciona entera en modo gratis
 y no revienta. (#47)
+
+Android, hecho el 29-09-2026: proyecto `Bobbin` con la app de Play, `bullet_pro`, derecho `pro` y
+oferta `default` como *Current* con `$rc_lifetime`; la `goog_` va en el `versionCode` 2, ya en la
+prueba interna. iOS espera a la app de App Store Connect.
 
 **[autor] Probar una compra real** en un móvil con la app instalada desde la prueba interna y la
 cuenta en *Licencia para testing*, y *Restaurar compra* tras desinstalar. En el emulador no se puede:
