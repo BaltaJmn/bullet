@@ -1,0 +1,1 @@
+Bujo und Planer mit rapid logging und Migration von Hand. Ohne Konto.

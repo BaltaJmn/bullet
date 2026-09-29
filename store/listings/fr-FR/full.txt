@@ -1,0 +1,33 @@
+Achat unique, sans compte, sans publicité. Bobbin est un bullet journal numérique qui garde la méthode papier telle qu'elle est : rapid logging, trois bullets, cinq états de tâche et migration à la main, entrée par entrée.
+
+Il s'ouvre sur Aujourd'hui avec le clavier levé. Tu écris une ligne, tu appuies sur Entrée et tu écris la suivante. Rien à configurer avant, ni modèles ni autocollants : un bujo et un agenda minimaliste qui ressemble à ton carnet.
+
+LE VRAI RAPID LOGGING
+Un point pour une tâche, un cercle pour un événement, un tiret pour une note. Tape o, - ou un signifier en début de ligne et le bullet change pendant que tu écris. Une tâche est ouverte, faite, migrée, planifiée ou écartée, et priorité, inspiration et explorer marquent ce qui compte. La Légende explique chaque symbole.
+
+DAILY LOG, MONTHLY LOG, FUTURE LOG ET INDEX
+Aujourd'hui est le Daily Log. Mois est le Monthly Log : le calendrier en liste de jours et les tâches du mois. Futur est le Future Log, en blocs de mois. L'Index réunit chaque mois où tu as écrit et chaque collection, dans l'ordre où tu les as commencés.
+
+LA MIGRATION À LA MAIN
+Rien ne bouge tout seul. Les tâches ouvertes d'hier n'apparaissent pas aujourd'hui, un nouveau mois ne copie pas le précédent et le Future Log t'attend. À la fin du mois, Revoir montre une tâche ouverte à la fois : tu la migres, tu la planifies, tu la déplaces dans une collection ou tu l'écartes. Une tâche migrée trois fois le dit, et c'est la seule pression que met Bobbin.
+
+RELIRE AVANT DE DÉCIDER
+Chaque revue commence par relire la période, avec de la place pour une courte réflexion. Un rappel quotidien facultatif, désactivé par défaut, avec un texte fixe qui ne cite jamais ton journal.
+
+COLLECTIONS ET SUIVIS
+Des collections pour les livres, les voyages ou tout ce qui a un nom. Un suivi prend une touche par jour pour les lignes que tu définis, une page par mois. Bobbin ne tient ni statistiques d'habitudes ni séries : pour ça il y a Quilt, une app sœur, avec rappels et statistiques.
+
+TON JOURNAL RESTE SUR TON TÉLÉPHONE
+Pas de compte, pas de cloud à nous, pas d'analytique. Exporte tout le journal dans un zip avec du Markdown lisible, importe-le sur un autre téléphone sans rien perdre et verrouille-le avec ton empreinte, ton visage ou le verrouillage de l'écran. Partage un jour, un mois ou une collection comme une page pointillée.
+
+WIDGET ET TABLETTE
+Un widget Aujourd'hui avec les tâches ouvertes, les tâches faites et les événements, jamais ton texte. Sur tablette, l'Index et le Futur s'ouvrent en double page, comme un carnet ouvert.
+
+GRATUIT, POUR DE BON
+Toute la méthode, la recherche, l'export et l'import, le partage, le rappel, le verrouillage et le widget Aujourd'hui : gratuits et sans limite de temps.
+
+BOBBIN PRO, UN SEUL PAIEMENT
+Sept couvertures de plus, papier ligné, quadrillé et uni, plus d'un suivi et le widget du mois. Payé une fois, jamais un abonnement.
+
+CE QUE TU NE TROUVERAS PAS
+Aucune IA qui résume tes journées, aucune promesse de santé mentale, ni séries, ni publicité, ni analytique. Si tu veux une ligne par jour à relire chaque année, essaie Purl.
