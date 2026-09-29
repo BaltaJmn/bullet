@@ -62,11 +62,12 @@ class ReminderReceiver : BroadcastReceiver() {
     }
 }
 
-/** Alarms do not survive a reboot, a reinstall or a change of clock, so book it again. */
+/** Alarms do not survive a reboot, a reinstall or a change of clock, so book them again. */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         AndroidContext.init(context)
         BobbinRepository.ensureLoaded()
         Reminders.sync()
+        refreshWidgets()
     }
 }

@@ -1,0 +1,10 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">Ouvertes, faites et événements du jour, sans aucun texte</string>
+    <string name="widget_month_description">Un point pour chaque jour avec des entrées</string>
+    <string name="widget_preview_date">MER 23 SEPT</string>
+    <string name="widget_preview_open">ouvertes</string>
+    <string name="widget_preview_done">faites</string>
+    <string name="widget_preview_events">événements</string>
+    <string name="widget_preview_month">SEPTEMBRE</string>
+</resources>

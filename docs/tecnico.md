@@ -237,6 +237,7 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/DataTest.kt` | tests 10 a 20, 29, 31, 35 |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/StorageTest.kt` | tests 21, 22, 32 |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetSample.kt` | `WIDGET_SAMPLE`, el fichero de ejemplo de `widget.json` (test 12 y 36) |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetStateTest.kt` | test 12: el diario fijo que da exactamente `WIDGET_SAMPLE` |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/i18n/StringsTest.kt` | test 24 (C `line/.../i18n/StringsTest.kt`) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ThemeTest.kt` | test 25 |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/EntrySheetTest.kt` | `statusActionsFor`, la tabla de 5.6: una nota o un evento nunca ofrecen un estado de tarea (#22) |
@@ -489,7 +490,7 @@ struct BobbinState: Decodable {
 
 ```json
 {"date":"2026-09-23","open":3,"done":2,"events":1,"month":"2026-09",
- "monthMask":"110110011101111011101000000000","reviewPending":true,"isPro":false,
+ "monthMask":"110110011101111011101010000000","reviewPending":true,"isPro":false,
  "cover":"sage","dayStartHour":4}
 ```
 

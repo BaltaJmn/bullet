@@ -10,10 +10,11 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
         android:theme="@style/Theme.Bobbin">
 
-        <!-- Lo que falta de docs/tecnico.md 8.1 llega con su issue: copia, widgets y compartir. -->
+        <!-- Lo que falta de docs/tecnico.md 8.1 llega con su issue: copia, widget del mes y compartir. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -27,6 +28,8 @@
 
         <receiver android:name="com.baltajmn.bullet.data.ReminderReceiver" android:exported="false" />
 
+        <receiver android:name="com.baltajmn.bullet.data.WidgetDayReceiver" android:exported="false" />
+
         <!-- Broadcasts protegidos del sistema: exported es obligatorio para recibirlos. -->
         <receiver android:name="com.baltajmn.bullet.data.BootReceiver" android:exported="true">
             <intent-filter>
@@ -35,6 +38,13 @@
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
             </intent-filter>
+        </receiver>
+
+        <receiver android:name="com.baltajmn.bullet.widget.TodayWidgetReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/today_widget_info" />
         </receiver>
     </application>
 </manifest>

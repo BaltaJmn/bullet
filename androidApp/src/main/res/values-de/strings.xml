@@ -1,0 +1,10 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">Offene und erledigte Aufgaben und Ereignisse von heute, ohne Text</string>
+    <string name="widget_month_description">Ein Punkt für jeden Tag mit Einträgen</string>
+    <string name="widget_preview_date">MI 23 SEPT</string>
+    <string name="widget_preview_open">offen</string>
+    <string name="widget_preview_done">erledigt</string>
+    <string name="widget_preview_events">Ereignisse</string>
+    <string name="widget_preview_month">SEPTEMBER</string>
+</resources>

@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.baltajmn.bullet.model.Settings
 
 /**
  * Ink on paper, not a generic task manager (docs/pantallas.md 1.2, SPEC 5). Adapted from the
@@ -62,3 +63,44 @@ fun isWideScreen(windowWidth: Dp): Boolean = windowWidth >= WIDE_SCREEN_FROM
 /** The window's width decides, so portrait and landscape are the same rule (docs/pantallas.md 21). */
 @Composable
 fun isWideScreen(): Boolean = with(LocalDensity.current) { isWideScreen(LocalWindowInfo.current.containerSize.width.toDp()) }
+
+/**
+ * The family's eight pastels (docs/tecnico.md 5), in its order. A cover only tints today's dot, the
+ * active tab's mark and the widgets (docs/pantallas.md 1.2): never the text or the paper.
+ */
+enum class Cover(val id: String, val color: Color) {
+    Rose("rose", Color(0xFFF0AFBE)),
+    Peach("peach", Color(0xFFF5C39B)),
+    Butter("butter", Color(0xFFEDDC98)),
+    Sage("sage", Color(0xFFB6D6AB)),
+    Mint("mint", Color(0xFF9CD3C7)),
+    Sky("sky", Color(0xFFA2C3E9)),
+    Periwinkle("periwinkle", Color(0xFFB4B8EC)),
+    Lilac("lilac", Color(0xFFD9AFE6));
+
+    companion object {
+        /** An id this version does not know reads as the free one (docs/tecnico.md 5). */
+        fun of(id: String): Cover = entries.find { it.id == id } ?: Sage
+    }
+}
+
+enum class Paper(val id: String) {
+    Dotted("dotted"),
+    Lined("lined"),
+    Grid("grid"),
+    Blank("blank");
+
+    companion object {
+        fun of(id: String): Paper = entries.find { it.id == id } ?: Dotted
+    }
+}
+
+fun canUse(cover: Cover, isPro: Boolean) = isPro || cover == Cover.Sage
+fun canUse(paper: Paper, isPro: Boolean) = isPro || paper == Paper.Dotted
+
+/**
+ * What is painted, not what was chosen (docs/tecnico.md 6.17): losing Pro to a refund falls back to
+ * the free ones without rewriting `settings`, so the choice comes back if Pro does.
+ */
+fun activeCover(s: Settings, isPro: Boolean): Cover = Cover.of(s.cover).takeIf { canUse(it, isPro) } ?: Cover.Sage
+fun activePaper(s: Settings, isPro: Boolean): Paper = Paper.of(s.paper).takeIf { canUse(it, isPro) } ?: Paper.Dotted

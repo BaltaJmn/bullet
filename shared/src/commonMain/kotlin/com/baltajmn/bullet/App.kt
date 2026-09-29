@@ -35,6 +35,7 @@ import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.Lock
 import com.baltajmn.bullet.data.Reminders
 import com.baltajmn.bullet.data.Route
+import com.baltajmn.bullet.data.syncWidgets
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.FUTURE_MONTHS
 import com.baltajmn.bullet.model.FUTURE_MONTHS_MAX
@@ -121,6 +122,8 @@ fun App() {
         if (wasThisMonth) viewedMonth = monthOf(today)
         // A change of clock, of zone or of permission is only seen from here (docs/tecnico.md 6.12).
         Reminders.sync()
+        // The widgets may be showing yesterday, or a Pro that the store has since confirmed (6.13).
+        syncWidgets(BobbinRepository.journal, BobbinRepository.isPro, today)
     }
     // The day the reminder offer was shown on (docs/pantallas.md 6.3): it goes with the answer, with
     // the day, or with the process, and `reminderOffered` makes sure it never comes back.

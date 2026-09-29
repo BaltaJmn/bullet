@@ -8,6 +8,9 @@ object BobbinBridge {
     /** For the cover over the task switcher, which Swift paints before Compose could (docs/tecnico.md 6.15). */
     fun isLockOn(): Boolean = BobbinRepository.journal.settings.lockOn
 
+    /** Assigned by iOSApp.swift: WidgetCenter belongs to Swift, and Kotlin only asks. */
+    var reloadWidgets: (() -> Unit)? = null
+
     /** onOpenURL, and the reminder's tap as `bobbin://review`. Anything else is left alone. */
     fun open(url: String) {
         parseLink(url)?.let { Route.pending = it }

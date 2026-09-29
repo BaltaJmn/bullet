@@ -1,0 +1,7 @@
+<resources>
+    <!-- Los mismos hex que el tema: RemoteViews no lee el de Compose (docs/tecnico.md 8.2). -->
+    <color name="widget_background">#FBF8F3</color>
+    <color name="widget_on_background">#39352E</color>
+    <color name="widget_muted">#736D63</color>
+    <color name="widget_outline">#E3DCD1</color>
+</resources>

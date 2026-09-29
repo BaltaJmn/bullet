@@ -1,4 +1,12 @@
 <resources>
     <!-- Bobbin no se traduce: se lee igual en los cinco idiomas (SPEC.md 8). -->
     <string name="app_name">Bobbin</string>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">Today\'s open, done and events, without any text</string>
+    <string name="widget_month_description">One dot for each day with entries</string>
+    <string name="widget_preview_date">WED 23 SEP</string>
+    <string name="widget_preview_open">open</string>
+    <string name="widget_preview_done">done</string>
+    <string name="widget_preview_events">events</string>
+    <string name="widget_preview_month">SEPTEMBER</string>
 </resources>

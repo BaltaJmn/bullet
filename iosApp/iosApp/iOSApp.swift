@@ -1,5 +1,6 @@
 import SwiftUI
 import UserNotifications
+import WidgetKit
 import Shared
 
 /// Swift owns the notification delegate, so a tap on the reminder crosses to Kotlin as the same link
@@ -28,6 +29,11 @@ struct iOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.colorScheme) private var colorScheme
+
+    init() {
+        // WidgetCenter is Swift's; Kotlin writes widget.json and asks through here.
+        BobbinBridge.shared.reloadWidgets = { WidgetCenter.shared.reloadAllTimelines() }
+    }
 
     var body: some Scene {
         WindowGroup {

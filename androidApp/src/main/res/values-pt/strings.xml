@@ -1,0 +1,10 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">Abertas, feitas e eventos de hoje, sem nenhum texto</string>
+    <string name="widget_month_description">Um ponto para cada dia com entradas</string>
+    <string name="widget_preview_date">QUA 23 SET</string>
+    <string name="widget_preview_open">abertas</string>
+    <string name="widget_preview_done">feitas</string>
+    <string name="widget_preview_events">eventos</string>
+    <string name="widget_preview_month">SETEMBRO</string>
+</resources>

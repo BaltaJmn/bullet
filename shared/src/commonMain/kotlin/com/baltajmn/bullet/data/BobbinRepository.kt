@@ -94,6 +94,13 @@ object BobbinRepository {
 
     private var undoToken = 0
 
+    /**
+     * The last entitlement known (docs/tecnico.md 6.16). Purchases never block content: this is what
+     * was last confirmed, kept until the store says otherwise.
+     */
+    var isPro by mutableStateOf(false)
+        internal set
+
     /** The last write failed. Today shows it; the next change retries. */
     var saveFailed by mutableStateOf(false)
         private set
@@ -396,6 +403,8 @@ object BobbinRepository {
         if (ok) {
             written = snapshot
             saveFailed = false
+            // After every good save and only then: the widgets never show what the disk does not have.
+            syncWidgets(snapshot, isPro, today())
         } else {
             saveFailed = true
         }
