@@ -49,7 +49,7 @@ día que se abre la siguiente sesión.
 | `docs/` | Contrato técnico, interfaz y textos |
 | `store/` | Fichas, novedades, formularios, política, compras, CI, capturas y el checklist de lanzamiento |
 | `tools/` | Scripts de ficha, capturas, diario de demostración e icono |
-| `.github/workflows` | Tests en cada push, publicación por etiqueta, fichas |
+| `.github/workflows` | Tests en cada push, publicación por etiqueta, fichas y la política en Pages |
 
 ## Contratos que no se rompen
 

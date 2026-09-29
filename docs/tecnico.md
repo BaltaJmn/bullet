@@ -1875,7 +1875,7 @@ y no habría nada que hacer, así que una interfaz para una sola plataforma sobr
 
 ## 9. CI
 
-Se copian los cuatro workflows de `line/.github/workflows/`:
+Se copian los cinco workflows de `line/.github/workflows/`:
 
 | Workflow | Cambios |
 |---|---|
@@ -1883,6 +1883,7 @@ Se copian los cuatro workflows de `line/.github/workflows/`:
 | `release.yml` | `package-name: com.baltajmn.bullet`; `whatsnew-dir: store/whatsnew`; sin `signer-cn` (la clave de subida se genera con `CN=Baltasar`, el valor por defecto del workflow compartido) |
 | `release-ios.yml` | archivo `Bobbin.xcarchive`; esquema `iosApp`; se salta solo con `::notice::` mientras no exista `APPSTORE_KEY_ID`, sin ponerse en rojo |
 | `listings.yml` | ninguno: manual (`accion`: `estado` por defecto, o `subir`) o en push que toque `store/listings/**`, y ahí solo valida topes |
+| `pages.yml` | `bullet.baltajmn.dev`: publica solo `store/privacy/index.html` cuando cambia en `main` |
 
 - **Los tests de iOS corren en `macos-26`**: `ui-uikit` de Compose referencia una clase de UIKit que solo
   existe desde el SDK de iOS 26, y una imagen más vieja falla el enlace.

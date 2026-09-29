@@ -93,8 +93,9 @@ Arrancar todo esto antes de escribir una línea de código. Ninguno depende del 
       para contrastarla con la que enseñe Play al subir el primer AAB. Copia del `.jks` fuera de este
       Mac. (#7)
 - [ ] **[autor] Los cinco secretos de firma y publicación** en GitHub (`ci.md`). (#7)
-- [ ] **[autor] Publicar la política**: repositorio público `BaltaJmn/bullet-privacy` con
-      `privacy/index.html` y GitHub Pages, igual que las hermanas. (#59)
+- [ ] **Publicar la política**: GitHub Pages desde este mismo repositorio con `pages.yml`, que
+      publica `store/privacy/index.html`, igual que line. Pasos en `store/privacy/README.md`; los hace
+      Claude con el sí del autor (`~/keys/LEEME.md`). (#59)
 
 ## Fase 3. Play
 
