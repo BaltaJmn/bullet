@@ -283,6 +283,7 @@ Simulador de iOS (9). Solo va a `androidHostTest` lo que necesita disco real o r
 | `tools/play-listing/subir.py` | `PACKAGE_NAME = "com.baltajmn.bullet"` | C line |
 | `tools/store/capturas.py`, `tools/store/cabecera.py` | capturas y cabecera de Play (#58) | A line |
 | `tools/demo/generar.py` | el diario de demostración de las capturas, datos inventados | A line |
+| `tools/store/crudas.py` | recorre las seis escenas en el emulador por adb y deja las capturas crudas (`store/capturas.md`) | N |
 | `tools/perf/generar.py` | `journal.json` de 5.000 entradas en 36 meses (#55) | N |
 | `tools/generate_icons.py`, `tools/icon-master.svg` | icono (#18) | A line; el SVG, N |
 | `tools/check-bobbinstore.swift` | comprueba `BobbinStore.swift` contra `WIDGET_SAMPLE` (test 36) | A `line/tools/check-linestore.swift` |
