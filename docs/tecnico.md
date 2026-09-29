@@ -150,9 +150,8 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `data/Widgets.kt` | `expect fun writeWidgetState`, `expect fun refreshWidgets`, `syncWidgets` | C `line/.../data/Widgets.kt` |
 | `data/Merge.kt` | `merge`, `MergeResult` | N |
 | `data/Zip.kt` | `ZipWriter`, `ZipReader`, `crc32`, `ZipDamaged` | C `line/.../data/Zip.kt` |
-| `data/Export.kt` | `exportName`, `monthMarkdown`, `collectionMarkdown`, `exportZip`, `readBackup`, `ImportProblem` | A `line/.../data/Export.kt` |
+| `data/Export.kt` | `exportName`, `monthMarkdown`, `collectionMarkdown`, `collectionFileNames`, `exportZip`, `readBackup`, `parseBackup`, `ReadBackup`, `ImportProblem` | A `line/.../data/Export.kt` |
 | `data/FilePicker.kt` | `expect object FilePicker`, `PickResult` | C `line/.../data/FilePicker.kt` |
-| `data/Backup.kt` | `expect object Backup`: qué queda fuera de la copia del sistema | N |
 | `data/Lock.kt` | `expect object Lock` | C `line/.../data/Lock.kt` |
 | `data/Reminders.kt` | `expect object Reminders`, `nextReminder`, `NotifyPermission` | A `line/.../data/Reminder.kt` |
 | `data/Sharing.kt` | `expect fun ImageBitmap.encodeToPng()`, `expect object Sharing`, `ShareContent` (`dayShare`, `monthShare`, `collectionShare`), `asciiEntry`, `shareText`, `paginate` | A `line/.../share/Sharing.kt` |
@@ -198,7 +197,6 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `data/FilePicker.android.kt` | C line: `OpenDocument` para importar, `CreateDocument("application/zip")` para exportar |
 | `data/Storage.android.kt` | A line: los nombres de 6.14 en `filesDir`, `keepCopy`, `readCopy` y `wipe` |
 | `data/Prefs.android.kt` | N: `SharedPreferences` `bobbin` |
-| `data/Backup.android.kt` | N: no hace nada; lo dicen las reglas de 8.2 |
 | `data/Lock.android.kt` | C line |
 | `data/Reminders.android.kt` y `data/ReminderReceiver.kt` (con `BootReceiver`) | A line: texto fijo, sin comprobar si el día está escrito |
 | `data/Widgets.android.kt` | A line: `widget.json` en `filesDir`, `updateAll` de los dos widgets y la alarma del cambio de día (6.13) |
@@ -219,7 +217,6 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `data/AppInfo.ios.kt`, `data/FilePicker.ios.kt` | C line |
 | `data/Storage.ios.kt` | A line: Application Support, **no** el App Group |
 | `data/Prefs.ios.kt` | N: `NSUserDefaults.standardUserDefaults` |
-| `data/Backup.ios.kt` | N: `NSURLIsExcludedFromBackupKey` |
 | `data/Lock.ios.kt` | C line |
 | `data/Reminders.ios.kt` | N: un `UNCalendarNotificationTrigger` que se repite (6.12) |
 | `data/Widgets.ios.kt` | A line: `widget.json` en el App Group y `WidgetCenter` vía `BobbinBridge` |
@@ -238,6 +235,8 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/StorageTest.kt` | tests 21, 22, 32 |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetSample.kt` | `WIDGET_SAMPLE`, el fichero de ejemplo de `widget.json` (test 12 y 36) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetStateTest.kt` | test 12: el diario fijo que da exactamente `WIDGET_SAMPLE` |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/BackupTest.kt` | tests 14, 15, 16 y 22: zip, Markdown, validación e importación fusionando |
+| `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/ZipFileTest.kt` | la mitad del test 14 que necesita un fichero: `unzip -t` del sistema |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/i18n/StringsTest.kt` | test 24 (C `line/.../i18n/StringsTest.kt`) |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ThemeTest.kt` | test 25 |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/EntrySheetTest.kt` | `statusActionsFor`, la tabla de 5.6: una nota o un evento nunca ofrecen un estado de tarea (#22) |
@@ -1076,7 +1075,7 @@ fun merge(device: Journal, incoming: Journal): MergeResult
    el derecho Pro: no está en el diario.
 6. `schemaVersion` del resultado es `SCHEMA_VERSION`.
 
-Importar, paso a paso (`BobbinRepository.import`):
+Importar, paso a paso (Ajustes y `BobbinRepository.applyImport`):
 
 1. `FilePicker.importFile` entrega un flujo de bytes.
 2. Si empieza por `PK`, `ZipReader` lo recorre y guarda en memoria solo `journal.json`; si empieza
@@ -1086,7 +1085,9 @@ Importar, paso a paso (`BobbinRepository.import`):
 4. `merge` en seco y **resumen antes de tocar nada**: N nuevas, M actualizadas. Nunca fusión
    silenciosa.
 5. Confirmar: `flush()`, `Storage.keepCopy("pre-import", actual)`, aplicar el resultado y `flush()`.
-   Cancelar: nada cambia, porque nada se había aplicado.
+   `applyImport` vuelve a calcular la fusión contra el diario de ese momento, por si algo cambió con
+   el resumen abierto, y descarta el deshacer pendiente. Cancelar: nada cambia, porque nada se había
+   aplicado.
 
 ### 6.10 Exportar
 
@@ -1554,7 +1555,6 @@ nunca por su cuenta.
 | `object Lock` | `data/Lock.kt` | 6.15 | `BiometricPrompt` | `LAContext` |
 | `object Reminders` | `data/Reminders.kt` | 6.12 | `AlarmManager`, receptores | `UNUserNotificationCenter` |
 | `fun ImageBitmap.encodeToPng()`, `object Sharing` | `data/Sharing.kt` | `sharePngs(pngs: List<ByteArray>)` y `shareText(text)` abren la hoja del sistema con lo que ya se ha pintado; nada se guarda en la galería por su cuenta | `FileProvider` en `cache/share/`, `ACTION_SEND_MULTIPLE` o `ACTION_SEND` | `UIActivityViewController` |
-| `object Backup` | `data/Backup.kt` | `exclude(path)`: deja una ruta del almacén privado fuera de la copia del sistema. `Storage` lo llama para `corrupt/` | no hace nada: lo dicen las reglas de 8.2 | `NSURLIsExcludedFromBackupKey = true` |
 | `val revenueCatApiKey` | `billing/Billing.kt` | 6.16 | `goog_...` o `null` | `appl_...` o `null` |
 | `object FilePicker` | `data/FilePicker.kt` | `available`, `exportZip(suggestedName, write, onDone)`, `importFile(read, onDone)` con `PickResult` (`Done`, `Cancelled`, `Failed`). Cancelar no es fallar. Exportar pasa por el selector y no por la hoja de compartir: una copia tiene que quedar donde el usuario la encuentre | `CreateDocument("application/zip")`, `OpenDocument` | `UIDocumentPickerViewController` |
 | `fun writeWidgetState(json)`, `fun refreshWidgets()` | `data/Widgets.kt` | 6.13 | `filesDir/widget.json`, `updateAll`, alarma del cambio de día | `widget.json` en el App Group, `BobbinBridge.reloadWidgets` |
@@ -1831,7 +1831,9 @@ no vinculados, sin seguimiento y con propósito `AppFunctionality`; `FileTimesta
   Generate Privacy Report). Lo que añada, se añade aquí y ahí.
 
 Copia del sistema en iOS (#46): la copia de iCloud del dispositivo incluye Application Support sin
-configuración. `corrupt/` se excluye con `Backup.exclude`.
+configuración. `corrupt/` se excluye marcándola con `NSURLIsExcludedFromBackupKey` en
+`Storage.ios.kt`, al crearla. No hay un `expect object Backup`: en Android lo dicen las reglas de 8.2
+y no habría nada que hacer, así que una interfaz para una sola plataforma sobraba.
 
 ---
 

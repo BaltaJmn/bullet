@@ -51,9 +51,10 @@ fun collectionShare(j: Journal, id: String) = ShareContent(
 
 /**
  * An entry in the ASCII of docs/tecnico.md 4.4, without the `- ` of a list item: signifiers, the
- * bullet's symbol and the text. An irrelevant task goes between `~~`.
+ * bullet's symbol and the text. An irrelevant task goes between `~~`. [before] goes right before the
+ * symbol, as the `(14)` of a Future Log entry with a day.
  */
-fun asciiEntry(e: Entry): String {
+fun asciiEntry(e: Entry, before: String? = null): String {
     val marks = e.signifiers.sortedBy { it.ordinal }.map {
         when (it) {
             Signifier.PRIORITY -> "*"
@@ -72,7 +73,7 @@ fun asciiEntry(e: Entry): String {
         }
     }
     val body = if (e.status == TaskStatus.IRRELEVANT) "~~$symbol ${e.text}~~" else "$symbol ${e.text}"
-    return (marks + body).joinToString(" ")
+    return (marks + listOfNotNull(before) + body).joinToString(" ")
 }
 
 /** docs/pantallas.md 17.3: the title, a line per row, and the name at the end after a blank line. */

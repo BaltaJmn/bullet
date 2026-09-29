@@ -18,6 +18,8 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileProtectionCompleteUntilFirstUserAuthentication
 import platform.Foundation.NSFileProtectionKey
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
+import platform.Foundation.NSURL
+import platform.Foundation.NSURLIsExcludedFromBackupKey
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfFile
@@ -63,6 +65,8 @@ actual object Storage : JournalFiles {
     override fun quarantine() {
         val stamp = timestamp()
         val corrupt = "$root/corrupt".also { fm.createDirectoryAtPath(it, true, protection, null) }
+        // A file nobody could read has no business in the phone's iCloud backup (docs/tecnico.md 8.3).
+        NSURL.fileURLWithPath(corrupt).setResourceValue(true, forKey = NSURLIsExcludedFromBackupKey, error = null)
         if (fm.fileExistsAtPath(path)) fm.moveItemAtPath(path, "$corrupt/journal-$stamp.json", null)
         if (fm.fileExistsAtPath(backupPath)) fm.moveItemAtPath(backupPath, "$corrupt/journal-$stamp.bak.json", null)
     }
@@ -105,12 +109,12 @@ actual object Storage : JournalFiles {
 }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-private fun ByteArray.toNSData(): NSData = memScoped {
+internal fun ByteArray.toNSData(): NSData = memScoped {
     NSData.create(bytes = allocArrayOf(this@toNSData), length = size.toULong())
 }
 
 @OptIn(ExperimentalForeignApi::class)
-private fun NSData.toByteArray(): ByteArray {
+internal fun NSData.toByteArray(): ByteArray {
     val size = length.toInt()
     if (size == 0) return ByteArray(0)
     return ByteArray(size).apply { usePinned { memcpy(it.addressOf(0), bytes, length) } }

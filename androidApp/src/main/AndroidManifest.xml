@@ -7,6 +7,8 @@
 
     <application
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
@@ -14,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Bobbin">
 
-        <!-- Lo que falta de docs/tecnico.md 8.1 llega con su issue: la copia y el widget del mes. -->
+        <!-- El widget del mes (Pro) llega con #51. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

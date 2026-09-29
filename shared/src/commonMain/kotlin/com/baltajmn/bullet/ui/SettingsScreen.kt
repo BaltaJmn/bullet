@@ -25,6 +25,18 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.baltajmn.bullet.model.Journal
+import com.baltajmn.bullet.data.readBackup
+import com.baltajmn.bullet.data.merge
+import com.baltajmn.bullet.data.exportZip
+import com.baltajmn.bullet.data.exportName
+import com.baltajmn.bullet.data.ReadBackup
+import com.baltajmn.bullet.data.PickResult
+import com.baltajmn.bullet.data.MergeResult
+import com.baltajmn.bullet.data.ImportProblem
+import com.baltajmn.bullet.data.FilePicker
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import com.baltajmn.bullet.data.Reminders
 import com.baltajmn.bullet.data.NotifyPermission
 import androidx.compose.material3.rememberTimePickerState
@@ -72,7 +84,7 @@ internal const val DIALOG_MAX_WIDTH_DP = 576
  * only Pro lives outside, in `Prefs`.
  *
  * The rows that need machinery of their own arrive with it: the notebook's covers and papers (#49),
- * export and import (#44, #45), and Bobbin Pro and restoring a purchase (#47, #48).
+ * and Bobbin Pro and restoring a purchase (#47, #48).
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -81,6 +93,13 @@ fun SettingsScreen(onBack: () -> Unit) {
     val settings = BobbinRepository.journal.settings
     val systemWeekStart = systemFirstDayOfWeek()
     var dialog by remember { mutableStateOf<SettingsDialog?>(null) }
+    val uiScope = rememberCoroutineScope()
+    // The backup's own dialogs (docs/pantallas.md 15.2, 15.3), each with what it has to say.
+    var importPreview by remember { mutableStateOf<Pair<Journal, MergeResult>?>(null) }
+    var importing by remember { mutableStateOf(false) }
+    var importDone by remember { mutableStateOf<Int?>(null) }
+    var importProblem by remember { mutableStateOf<ImportProblem?>(null) }
+    var exportFailed by remember { mutableStateOf(false) }
 
     // Read again on every return from the system settings, so granting the permission there shows
     // here without restarting (docs/tecnico.md 6.12).
@@ -181,6 +200,42 @@ fun SettingsScreen(onBack: () -> Unit) {
                 },
             )
 
+            if (FilePicker.available) {
+                SettingsSection(S.sectionBackup)
+                val journal = BobbinRepository.journal
+                val nothing = journal.entries.none { !it.gone } && journal.collections.isEmpty()
+                SettingsRow(
+                    title = S.exportRow,
+                    subtitle = if (nothing) S.exportNothing else S.exportSubtitle,
+                    onClick = if (nothing) null else ({
+                        uiScope.launch {
+                            // Everything written first, then a snapshot: the zip is the diary as it is now.
+                            BobbinRepository.flush()
+                            val snapshot = BobbinRepository.journal
+                            FilePicker.exportZip(exportName(BobbinRepository.today()), { sink -> exportZip(snapshot, sink) }) {
+                                // Cancelling is not failing: it says nothing (docs/pantallas.md 15.3).
+                                if (it == PickResult.Failed) exportFailed = true
+                            }
+                        }
+                    }),
+                )
+                SettingsRow(
+                    title = S.importRow,
+                    subtitle = S.importSubtitle,
+                    onClick = {
+                        var read: ReadBackup? = null
+                        FilePicker.importFile({ source -> read = readBackup(source) }) { picked ->
+                            when (val r = read) {
+                                null -> if (picked == PickResult.Failed) importProblem = ImportProblem.NOT_BACKUP
+                                is ReadBackup.Failed -> importProblem = r.problem
+                                // Nothing is applied yet: this is the merge done dry, for the summary.
+                                is ReadBackup.Ok -> importPreview = r.journal to merge(BobbinRepository.journal, r.journal)
+                            }
+                        }
+                    },
+                )
+            }
+
             // "Más apps" only exists while some sister app has a page on this platform (docs/tecnico.md 6.16).
             val siblings = SIBLINGS.filter { it.storeUrl != null }
             if (siblings.isNotEmpty()) {
@@ -205,6 +260,30 @@ fun SettingsScreen(onBack: () -> Unit) {
             Spacer(Modifier.height(gridUnit * 2))
         }
     }
+
+    importPreview?.let { (incoming, result) ->
+        MessageDialog(
+            title = S.importTitle,
+            text = S.importSummary(result.added, result.updated, result.same),
+            confirm = if (importing) S.working else S.importAction,
+            onConfirm = {
+                if (!importing) {
+                    importing = true
+                    uiScope.launch {
+                        val changed = BobbinRepository.applyImport(incoming)
+                        importing = false
+                        importPreview = null
+                        importDone = changed
+                    }
+                }
+            },
+            // Cancelling after the summary leaves the diary exactly as it was: nothing was applied.
+            onDismiss = { if (!importing) importPreview = null },
+        )
+    }
+    importDone?.let { MessageDialog(title = S.importTitle, text = S.importDone(it), onDismiss = { importDone = null }) }
+    importProblem?.let { MessageDialog(title = S.importFailedTitle, text = importProblemText(it), onDismiss = { importProblem = null }) }
+    if (exportFailed) MessageDialog(title = S.exportRow, text = S.exportFailed, onDismiss = { exportFailed = false })
 
     when (dialog) {
         null -> Unit
@@ -341,6 +420,35 @@ private fun ReminderTimeDialog(hour: Int, minute: Int, onClose: () -> Unit, onPi
         text = { TimePicker(state = state) },
         confirmButton = { DialogAction(S.ok) { onPick(state.hour, state.minute); onClose() } },
         dismissButton = { DialogAction(S.cancel, onClick = onClose) },
+    )
+}
+
+private fun importProblemText(problem: ImportProblem): String = when (problem) {
+    ImportProblem.NOT_BACKUP -> S.importNotBackup
+    ImportProblem.DAMAGED -> S.importDamaged
+    ImportProblem.TOO_NEW -> S.importTooNew
+    ImportProblem.EMPTY -> S.importEmpty
+    ImportProblem.SIBLING_PURL -> S.importIsSibling("Purl")
+    ImportProblem.SIBLING_MOOD -> S.importIsSibling("MoodTraker")
+    ImportProblem.SIBLING_QUILT -> S.importIsSibling("Quilt")
+}
+
+/**
+ * A dialog that says one thing (docs/pantallas.md 15): with [confirm], two buttons and [onDismiss] as
+ * `cancel`; without it, only `ok`.
+ */
+@Composable
+private fun MessageDialog(title: String, text: String, onDismiss: () -> Unit, confirm: String? = null, onConfirm: () -> Unit = {}) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH_DP.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 0.dp,
+        title = { Text(title, style = Type.Body) },
+        text = { Text(text, style = Type.Body) },
+        confirmButton = { if (confirm != null) DialogAction(confirm, onClick = onConfirm) else DialogAction(S.ok, onClick = onDismiss) },
+        dismissButton = if (confirm != null) ({ DialogAction(S.cancel, onClick = onDismiss) }) else null,
     )
 }
 

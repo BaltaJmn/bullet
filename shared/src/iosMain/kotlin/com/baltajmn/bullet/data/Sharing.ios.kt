@@ -3,12 +3,8 @@ package com.baltajmn.bullet.data
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asSkiaBitmap
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.addressOf
-import kotlinx.cinterop.usePinned
 import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
-import platform.Foundation.NSData
-import platform.Foundation.create
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIImage
@@ -22,7 +18,7 @@ actual fun ImageBitmap.encodeToPng(): ByteArray =
 actual object Sharing {
 
     actual fun sharePngs(pngs: List<ByteArray>) {
-        present(pngs.mapNotNull { png -> png.toNSData()?.let { UIImage.imageWithData(it) } })
+        present(pngs.filter { it.isNotEmpty() }.mapNotNull { UIImage.imageWithData(it.toNSData()) })
     }
 
     actual fun shareText(text: String) = present(listOf(text))
@@ -35,12 +31,6 @@ actual object Sharing {
         sheet.popoverPresentationController?.sourceView = host.view
         host.presentViewController(sheet, animated = true, completion = null)
     }
-}
-
-@OptIn(ExperimentalForeignApi::class)
-private fun ByteArray.toNSData(): NSData? {
-    if (isEmpty()) return null
-    return usePinned { NSData.create(bytes = it.addressOf(0), length = size.toULong()) }
 }
 
 private fun topViewController(): UIViewController? {

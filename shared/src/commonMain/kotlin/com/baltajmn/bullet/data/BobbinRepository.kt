@@ -392,6 +392,23 @@ object BobbinRepository {
     /** Writes the latest state now. Going to the background calls this. */
     suspend fun flush() = persist()
 
+    /**
+     * Applies a backup already read and shown in summary (docs/tecnico.md 6.9, step 5): the diary as it
+     * is right now is kept as `pre-import` first, and the merge is worked out again against it, in case
+     * something changed while the summary was open. Returns how many entries and collections changed.
+     */
+    suspend fun applyImport(incoming: Journal): Int {
+        flush()
+        val before = journal
+        val result = merge(before, incoming)
+        withContext(Dispatchers.IO) { files.keepCopy("pre-import", encode(before)) }
+        pendingUndo = null
+        undoToken++
+        journal = result.journal
+        flush()
+        return result.added + result.updated
+    }
+
     private suspend fun persist() = writeLock.withLock { writeLocked() }
 
     /** The write itself. The caller already holds [writeLock], so [wipe] can delete and rewrite as one. */

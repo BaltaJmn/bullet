@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 y anteriores (docs/tecnico.md 8.2): lo mismo, y solo si la copia va cifrada. -->
+<full-backup-content>
+    <include domain="file" path="journal.json" requireFlags="clientSideEncryption" />
+    <include domain="file" path="journal.bak.json" requireFlags="clientSideEncryption" />
+</full-backup-content>

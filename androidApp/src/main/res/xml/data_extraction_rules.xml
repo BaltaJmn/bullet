@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+ (docs/tecnico.md 8.2). Solo el diario y su copia anterior: widget.json, corrupt/, las
+  copias journal.pre-* y las preferencias se quedan fuera. A la nube solo cifrado de extremo a extremo.
+-->
+<data-extraction-rules>
+    <cloud-backup disableIfNoEncryptionCapabilities="true">
+        <include domain="file" path="journal.json" />
+        <include domain="file" path="journal.bak.json" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="journal.json" />
+        <include domain="file" path="journal.bak.json" />
+    </device-transfer>
+</data-extraction-rules>
