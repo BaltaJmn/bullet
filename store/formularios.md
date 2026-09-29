@@ -42,6 +42,10 @@ RevenueCat recibe los datos como encargado del tratamiento, así que no cuenta c
 Play no deja enviar este cuestionario hasta que *Público objetivo* (§3) está hecho: mientras, se
 guarda en borrador con todo lo de arriba.
 
+Play comprueba que la URL de eliminación responde y no deja pasar de página si no. Mientras
+`bullet.baltajmn.dev` no esté publicada, esa pregunta (opcional) se queda sin responder en el
+borrador; se rellena antes de enviar.
+
 Lo que **no** se marca, y por qué:
 
 | Tipo | Por qué no |
@@ -101,7 +105,9 @@ Paid content: Bobbin Pro, a one-time purchase (bullet_pro). Redeem this promo co
 The lock (Settings > Privacy) is optional, off by default, and uses the device's own screen lock or biometrics.
 ```
 
-La casilla de acceso completo, contenido de pago incluido, solo se marca con el código puesto. Los
+La casilla de acceso completo, contenido de pago incluido, solo se marca con el código puesto, y Play
+no guarda la sección sin ella: la cadena entera (precio, producto activo, promoción, esta sección,
+*Público objetivo*, *Seguridad de los datos*) espera al precio. Los
 códigos salen de una promoción de `bullet_pro` (*Monetizar con Play > Códigos promocionales*), que
 existe solo cuando el producto existe (#47); el CSV se guarda en `~/keys/`, fuera del repositorio, y
 al caducar se crea otra y se cambia el código aquí. Crear la promoción acepta los términos de los
