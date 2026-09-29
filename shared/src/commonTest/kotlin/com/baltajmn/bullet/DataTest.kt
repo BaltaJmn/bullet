@@ -4,6 +4,16 @@ import com.baltajmn.bullet.data.Link
 import com.baltajmn.bullet.data.nextReminder
 import com.baltajmn.bullet.data.parseLink
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.data.paginate
+import com.baltajmn.bullet.data.shareText
+import com.baltajmn.bullet.data.dayShare
+import com.baltajmn.bullet.model.Bullet
+import com.baltajmn.bullet.model.Entry
+import com.baltajmn.bullet.model.Journal
+import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.Signifier
+import com.baltajmn.bullet.model.TaskStatus
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -51,6 +61,42 @@ class DataTest {
         assertTrue(relocks(lockOn = true, away = 61.seconds))
         assertFalse(relocks(lockOn = false, away = 61.seconds))
         assertFalse(relocks(lockOn = true, away = null))
+    }
+
+    /** Test 17 (#43): forty entries of different heights, over several pages, none split and none lost. */
+    @Test
+    fun aLongCollectionIsSharedOverPagesWithoutSplittingAnEntry() {
+        val heights = List(40) { i -> 108 + (i % 4) * 54 }
+        val pages = paginate(heights, 918)
+        assertTrue(pages.size > 1)
+        assertEquals((0 until 40).toList(), pages.flatMap { it.toList() })
+        pages.forEach { page -> assertTrue(page.sumOf { heights[it] } <= 918) }
+        // One that does not fit even an empty page goes alone and is cut, instead of being dropped.
+        assertEquals(listOf(0..0, 1..1, 2..2), paginate(listOf(100, 2000, 100), 918))
+        assertEquals(listOf(0 until 0), paginate(emptyList(), 918))
+    }
+
+    @Test
+    fun sharedTextUsesTheAsciiOfTheExportAndNoSkeletons() {
+        val day = LocalDate(2026, 9, 22)
+        fun e(id: String, bullet: Bullet, status: TaskStatus = TaskStatus.OPEN, text: String = id, gone: Boolean = false, signifiers: Set<Signifier> = emptySet()) =
+            Entry(id = id, bullet = bullet, text = text, status = status, place = Place.Daily(day), signifiers = signifiers, createdAt = 0L, updatedAt = 0L, gone = gone)
+        val j = Journal(
+            entries = listOf(
+                e("a", Bullet.TASK, signifiers = setOf(Signifier.PRIORITY), text = "Renovar"),
+                e("b", Bullet.TASK, TaskStatus.DONE, text = "Banco"),
+                e("c", Bullet.TASK, TaskStatus.IRRELEVANT, text = "Tinta"),
+                e("d", Bullet.EVENT, text = "Concierto"),
+                e("e", Bullet.NOTE, text = "Jueves"),
+                e("f", Bullet.TASK, text = "borrada", gone = true),
+            ),
+        )
+        val text = shareText(dayShare(j, day))
+        val lines = text.lines()
+        assertEquals(S.longDateWithYear(day), lines.first())
+        assertEquals(listOf("* . Renovar", "x Banco", "~~. Tinta~~", "o Concierto", "- Jueves"), lines.subList(1, 6))
+        assertFalse("borrada" in text)
+        assertEquals(S.appName, lines.last())
     }
 
     /** docs/tecnico.md 7: three links and nothing else. */

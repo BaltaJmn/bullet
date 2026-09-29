@@ -24,6 +24,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.baltajmn.bullet.data.collectionShare
+import com.baltajmn.bullet.data.ShareContent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -86,6 +88,7 @@ fun CollectionScreen(
     val place = Place.InCollection(id)
     var editingId by remember { mutableStateOf<String?>(null) }
     var sheetEntryId by remember { mutableStateOf<String?>(null) }
+    var sharing by remember { mutableStateOf<ShareContent?>(null) }
     var renaming by remember(id) { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
 
@@ -94,6 +97,9 @@ fun CollectionScreen(
             Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
                 GlyphButton(Glyph.BACK, S.a11yBack, onBack)
                 Spacer(Modifier.weight(1f))
+                if (journal.entriesAt(place).isNotEmpty()) {
+                    GlyphButton(Glyph.SHARE, S.a11yShare, { sharing = collectionShare(journal, id) })
+                }
                 GlyphButton(Glyph.MORE, S.a11yMoreActions, { moreOpen = true })
             }
 
@@ -147,6 +153,8 @@ fun CollectionScreen(
             onDelete = { BobbinRepository.deleteCollection(id); moreOpen = false },
         )
     }
+
+    sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
 
     val sheetEntry = sheetEntryId?.let { entryId -> journal.entries.find { it.id == entryId && !it.gone } }
     if (sheetEntryId != null && sheetEntry == null) {

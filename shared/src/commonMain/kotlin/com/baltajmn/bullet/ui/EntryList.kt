@@ -257,7 +257,7 @@ fun EntryListSection(
 }
 
 /** docs/pantallas.md 5.1: where a migrated or scheduled task's copy landed, or null once it no longer exists. */
-private fun wentToText(place: Place?, journal: Journal): String? = when (place) {
+internal fun wentToText(place: Place?, journal: Journal): String? = when (place) {
     null -> null
     is Place.Daily -> S.wentToDay(place.date)
     is Place.Monthly -> S.wentToMonth(place.month)
@@ -483,8 +483,10 @@ fun DayField(text: String, modifier: Modifier = Modifier.width(40.dp), onChange:
 
 /** The icon row of a tab without `KEY` (docs/pantallas.md 3.2): `SEARCH` and `SETTINGS`. `SHARE` joins with #43. */
 @Composable
-fun TabHeaderIcons(onSearch: () -> Unit, onSettings: () -> Unit) {
+fun TabHeaderIcons(onSearch: () -> Unit, onSettings: () -> Unit, onShare: (() -> Unit)? = null) {
     Row(Modifier.fillMaxWidth().height(gridUnit * 2), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+        // Only when the page has something to share (docs/pantallas.md 3.2).
+        if (onShare != null) GlyphButton(Glyph.SHARE, S.a11yShare, onShare)
         GlyphButton(Glyph.SEARCH, S.a11ySearch, onSearch)
         GlyphButton(Glyph.SETTINGS, S.a11ySettings, onSettings)
     }

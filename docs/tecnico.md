@@ -155,7 +155,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `data/Backup.kt` | `expect object Backup`: qué queda fuera de la copia del sistema | N |
 | `data/Lock.kt` | `expect object Lock` | C `line/.../data/Lock.kt` |
 | `data/Reminders.kt` | `expect object Reminders`, `nextReminder`, `NotifyPermission` | A `line/.../data/Reminder.kt` |
-| `data/Sharing.kt` | `expect fun ImageBitmap.encodeToPng()`, `expect object Sharing`, `shareText`, `paginate` | A `line/.../share/Sharing.kt` |
+| `data/Sharing.kt` | `expect fun ImageBitmap.encodeToPng()`, `expect object Sharing`, `ShareContent` (`dayShare`, `monthShare`, `collectionShare`), `asciiEntry`, `shareText`, `paginate` | A `line/.../share/Sharing.kt` |
 | `data/StoreReview.kt` | `expect object StoreReview`, `shouldAskReview` | N |
 | `data/Route.kt` | `object Route`: a qué pantalla pide ir un widget, un enlace o la notificación | A `line/.../data/Route.kt` |
 | `data/AppInfo.kt` | `PRIVACY_URL`, `SIBLINGS`, `expect object AppInfo` | A `line/.../data/AppInfo.kt` |

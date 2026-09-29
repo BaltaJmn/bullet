@@ -19,6 +19,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.baltajmn.bullet.data.monthShare
+import com.baltajmn.bullet.data.ShareContent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -85,6 +87,7 @@ fun MonthScreen(
     // capture open, and another month closes it (docs/pantallas.md 7.1).
     var editingId by remember { mutableStateOf<String?>(null) }
     var sheetEntryId by remember { mutableStateOf<String?>(null) }
+    var sharing by remember { mutableStateOf<ShareContent?>(null) }
     var capturingDay by remember(viewedMonth) { mutableStateOf<Int?>(null) }
     BackHandler(capturingDay != null) { capturingDay = null }
 
@@ -96,7 +99,9 @@ fun MonthScreen(
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
-            TabHeaderIcons(onSearch, onSettings)
+            // SHARE when the calendar or the tasks have anything (docs/pantallas.md 7.1).
+            val monthPage = monthShare(journal, viewedMonth)
+            TabHeaderIcons(onSearch, onSettings, onShare = if (monthPage.rows.isNotEmpty()) ({ sharing = monthPage }) else null)
             Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
                 Text(S.monthName(viewedMonth), style = Type.PageTitle, modifier = Modifier.padding(start = 48.dp).weight(1f))
                 // An arrow that would not respond is not painted (docs/pantallas.md 2).
@@ -199,6 +204,8 @@ fun MonthScreen(
             UndoBanner(onUndo = BobbinRepository::undo)
         }
     }
+
+    sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
 
     val sheetEntry = sheetEntryId?.let { id -> journal.entries.find { it.id == id && !it.gone } }
     if (sheetEntryId != null && sheetEntry == null) {

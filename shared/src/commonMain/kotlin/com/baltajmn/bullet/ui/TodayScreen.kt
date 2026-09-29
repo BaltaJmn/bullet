@@ -22,6 +22,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.baltajmn.bullet.data.dayShare
+import com.baltajmn.bullet.data.ShareContent
 import com.baltajmn.bullet.data.Reminders
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.LaunchedEffect
@@ -93,10 +95,16 @@ fun TodayScreen(
     // Only one entry edits or opens its sheet at a time; #22, #23.
     var editingId by remember { mutableStateOf<String?>(null) }
     var sheetEntryId by remember { mutableStateOf<String?>(null) }
+    var sharing by remember { mutableStateOf<ShareContent?>(null) }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
-            HeaderIcons(onKey, onSearch, onSettings)
+            HeaderIcons(
+                onKey = onKey,
+                onSearch = onSearch,
+                onSettings = onSettings,
+                onShare = if (journal.ofDay(viewedDay).isNotEmpty()) ({ sharing = dayShare(journal, viewedDay) }) else null,
+            )
             TitleRow(
                 day = viewedDay,
                 isToday = isToday,
@@ -174,6 +182,8 @@ fun TodayScreen(
         }
     }
 
+    sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
+
     val sheetEntry = sheetEntryId?.let { id -> journal.entries.find { it.id == id && !it.gone } }
     if (sheetEntryId != null && sheetEntry == null) {
         // The entry closed the sheet on itself (deleted from elsewhere): nothing left to show.
@@ -191,9 +201,10 @@ fun TodayScreen(
 }
 
 @Composable
-private fun HeaderIcons(onKey: () -> Unit, onSearch: () -> Unit, onSettings: () -> Unit) {
+private fun HeaderIcons(onKey: () -> Unit, onSearch: () -> Unit, onSettings: () -> Unit, onShare: (() -> Unit)?) {
     Row(Modifier.fillMaxWidth().height(gridUnit * 2), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-        // SHARE lands with #43: ofDay(d) has nothing to share to yet.
+        // SHARE only when the day has something on it (docs/pantallas.md 6.1).
+        if (onShare != null) GlyphButton(Glyph.SHARE, S.a11yShare, onShare)
         GlyphButton(Glyph.KEY, S.a11yKey, onKey)
         GlyphButton(Glyph.SEARCH, S.a11ySearch, onSearch)
         GlyphButton(Glyph.SETTINGS, S.a11ySettings, onSettings)

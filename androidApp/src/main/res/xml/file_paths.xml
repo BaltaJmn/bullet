@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- La hoja de compartir solo puede leer las paginas por aqui: nada mas sale de la cache. -->
+<paths><cache-path name="share" path="share/" /></paths>

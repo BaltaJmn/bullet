@@ -1189,7 +1189,9 @@ en una vacía va sola y se corta abajo. Cada página repite el título.
 ### 17.3 Como texto
 
 `shareText`: el título en la primera línea y una línea por entrada con los símbolos ASCII de
-`docs/tecnico.md` 4.4, sin el `- ` de lista. Al final, una línea en blanco y `Bobbin`.
+`docs/tecnico.md` 4.4, sin el `- ` de lista. En un mes, la primera entrada de cada día del calendario
+lleva delante `(día)`, como el Future log del Markdown, y las tareas del mes van tras la línea
+`monthTasks`. Al final, una línea en blanco y `Bobbin`.
 
 ---
 

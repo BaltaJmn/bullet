@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Bobbin">
 
-        <!-- Lo que falta de docs/tecnico.md 8.1 llega con su issue: copia, widget del mes y compartir. -->
+        <!-- Lo que falta de docs/tecnico.md 8.1 llega con su issue: la copia y el widget del mes. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -46,5 +46,14 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/today_widget_info" />
         </receiver>
+
+        <!-- La hoja de compartir solo puede leer las paginas por aqui: nada mas sale de la cache. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
+        </provider>
     </application>
 </manifest>
