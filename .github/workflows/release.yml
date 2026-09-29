@@ -12,6 +12,11 @@ on:
         type: choice
         options: [alpha, internal, beta, production]
         default: alpha
+      status:
+        description: draft while the app has no published version
+        type: choice
+        options: [completed, draft]
+        default: completed
 
 jobs:
   release:
@@ -26,6 +31,8 @@ jobs:
       gradle-tasks: ':shared:testAndroidHostTest :androidApp:bundleRelease'
       track: ${{ inputs.track || 'alpha' }}
       whatsnew-dir: store/whatsnew
+      # Play refuses any status but draft in an app with no published version yet.
+      status: ${{ inputs.status || 'completed' }}
     secrets:
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

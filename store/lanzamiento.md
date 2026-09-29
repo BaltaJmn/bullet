@@ -80,18 +80,18 @@ Arrancar todo esto antes de escribir una línea de código. Ninguno depende del 
 - [x] Repositorio `BaltaJmn/bullet`, público. Los minutos de Actions no se facturan.
 - [x] **[código] Andamiaje y CI**: los cuatro workflows de line con los cambios de `docs/tecnico.md`
       9. (#9)
-- [ ] **[autor] Crear el almacén de subida.** Un comando, y el `CN=Baltasar` no es opcional: es lo que
-      comprueba el workflow compartido (`ci.md`).
+- [x] **Crear el almacén de subida** (29-09-2026). `~/keys/bobbin-upload.jks`, alias `upload`, con
+      `CN=Baltasar, O=BaltaJmn, C=ES`, que es lo que comprueba el workflow compartido (`ci.md`), y
+      `keystore.properties` en la raíz del repositorio (git-ignorado). La contraseña no se imprimió
+      nunca: está solo en `keystore.properties`. Huella SHA-256 del certificado, para contrastarla
+      con la que enseñe Play al subir el primer AAB:
 
-      ```bash
-      keytool -genkeypair -v -keystore ~/keys/bobbin-upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Baltasar, O=BaltaJmn, C=ES"
+      ```
+      B3:5B:C3:40:B2:47:D6:7A:42:6B:C7:3E:15:9D:47:62:0F:72:E3:0D:D9:23:81:06:F4:93:3A:3B:67:8D:FE:61
       ```
 
-      Después, `keystore.properties` en la raíz del repositorio (git-ignorado) con `storeFile`,
-      `storePassword`, `keyAlias=upload` y `keyPassword`. Apunta aquí la huella SHA-256 que imprime
-      `keytool -list -v -keystore ~/keys/bobbin-upload.jks -J-Duser.language=en -J-Duser.country=US`,
-      para contrastarla con la que enseñe Play al subir el primer AAB. Copia del `.jks` fuera de este
-      Mac. (#7)
+      **[autor]** Guardar el `.jks` y la contraseña en el gestor de contraseñas, con copia fuera de
+      este Mac. (#7)
 - [ ] **[autor] Los cinco secretos de firma y publicación** en GitHub (`ci.md`). (#7)
 - [ ] **Publicar la política**: GitHub Pages desde este mismo repositorio con `pages.yml`, que
       publica `store/privacy/index.html`, igual que line. Pasos en `store/privacy/README.md`; los hace
@@ -106,10 +106,11 @@ subido a mano, así que `release.yml` y `listings.yml` fallan si se ejecutan ant
    clasificación, público objetivo, declaraciones. Respuestas una a una en `store/formularios.md`,
    que se escribe en la issue #59 junto con las secciones de `docs/tecnico.md` que gobierna (SPEC
    §9). (#59)
-2. **[autor] La primera subida, a mano.** `./gradlew :androidApp:bundleRelease` y subir
-   `androidApp/build/outputs/bundle/release/androidApp-release.aab` en *Probar y publicar > Pruebas
-   internas > Crear versión*. Comprobar que la huella del certificado de subida coincide con la
-   apuntada en la fase 2. (#10)
+2. **La primera subida, por CI y en borrador**, que Play acepta aunque la app no tenga ninguna
+   versión publicada (probado con Chroma, `~/keys/LEEME.md`):
+   `gh workflow run release.yml --ref main -f track=internal -f status=draft`. Después **[autor]**
+   publica ese borrador una vez en *Probar y publicar > Pruebas internas*, y comprueba que la huella
+   del certificado de subida coincide con la apuntada en la fase 2. (#10)
 3. **[código] Subir el `versionCode` a 2 y commitearlo.** El 1 queda gastado en la prueba interna y
    Play no lo acepta en ningún otro canal.
 4. **[código] Ficha**, ya con la API viva: `gh workflow run listings.yml --ref main -f accion=subir`.
