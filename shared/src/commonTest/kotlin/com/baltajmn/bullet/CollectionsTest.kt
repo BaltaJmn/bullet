@@ -20,6 +20,14 @@ import com.baltajmn.bullet.model.migrationCount
 import com.baltajmn.bullet.model.renameCollection
 import com.baltajmn.bullet.model.restoreCollection
 import com.baltajmn.bullet.model.restoreDeleted
+import com.baltajmn.bullet.model.addTrackerRow
+import com.baltajmn.bullet.model.canCreateTracker
+import com.baltajmn.bullet.model.toggleTrackerDay
+import com.baltajmn.bullet.model.trackerCount
+import com.baltajmn.bullet.model.trackerPage
+import com.baltajmn.bullet.model.trackerTails
+import com.baltajmn.bullet.model.trackerThread
+import com.baltajmn.bullet.model.withTrackerPage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -228,5 +236,58 @@ class CollectionsTest {
         assertEquals(gone, restored.collections.single())
         assertEquals(listOf("e-9", "e-1", "e-2"), restored.entries.map { it.id })
         assertEquals("uno", restored.entries.single { it.id == "e-1" }.text)
+    }
+
+    private fun water(): Journal {
+        var j = Journal().createCollection("Agua", 1, "c1", CollectionKind.TRACKER, sep)!!
+        j = j.addTrackerRow("c1", "Dos litros", "r1", 2)!!
+        return j.toggleTrackerDay("c1", "r1", 23, 3)!!
+    }
+
+    /** Test 19: a new month is a blank page linked to the last one, saved only by its first mark. */
+    @Test
+    fun aNewMonthIsABlankPageLinkedToTheLastOne() {
+        val j = water()
+        val blank = trackerPage(j, j.trackerTails().single(), oct)
+        assertEquals("", blank.id)
+        assertEquals("c1", blank.threadFrom)
+        assertEquals(oct, blank.month)
+        assertEquals(listOf("r1" to "Dos litros"), blank.rows.map { it.id to it.title })
+        assertTrue(blank.rows.all { it.days.isEmpty() }, "last month's marks are never copied")
+        assertEquals(1, j.collections.size, "looking at a month saves nothing")
+
+        val (saved, id) = j.withTrackerPage(blank, "c2", 4)
+        val marked = saved.toggleTrackerDay(id, "r1", 1, 5)!!
+        assertEquals(setOf(23), marked.collections.first { it.id == "c1" }.rows.single().days)
+        assertEquals(setOf(1), marked.collections.first { it.id == "c2" }.rows.single().days)
+        assertEquals(listOf("c1", "c2"), marked.trackerThread("c1").map { it.id })
+        assertEquals(listOf("c1", "c2"), marked.trackerThread("c2").map { it.id })
+        // One tracker, one Index row, in the place its first month started.
+        assertEquals(1, trackerCount(marked))
+        val row = marked.indexItems { "" }.single() as IndexItem.Collection
+        assertEquals("c2" to 1L, row.id to row.createdAt)
+        // A day outside the month and a second tap both behave.
+        assertNull(marked.toggleTrackerDay(id, "r1", 32, 6))
+        assertEquals(emptySet(), marked.toggleTrackerDay(id, "r1", 1, 6)!!.collections.first { it.id == "c2" }.rows.single().days)
+    }
+
+    /** Test 19: one tracker free, archiving frees no room and deleting does; with Pro, no limit. */
+    @Test
+    fun theSecondTrackerNeedsPro() {
+        val j = water()
+        assertTrue(canCreateTracker(Journal(), isPro = false))
+        assertFalse(canCreateTracker(j, isPro = false))
+        assertTrue(canCreateTracker(j, isPro = true))
+        assertFalse(canCreateTracker(j.archiveCollection("c1", true, 9), isPro = false))
+        assertTrue(canCreateTracker(j.deleteCollection("c1", 9), isPro = false))
+    }
+
+    /** Deleting one tracker's pages leaves every other collection and thread as it was. */
+    @Test
+    fun deletingATrackerTouchesNoOtherThread() {
+        val two = water().createCollection("Estirar", 10, "c3", CollectionKind.TRACKER, sep)!!
+        val gone = two.trackerThread("c1").reversed().fold(two) { acc, page -> acc.deleteCollection(page.id, 11) }
+        assertEquals(listOf("c3"), gone.collections.map { it.id })
+        assertEquals(two.collections.first { it.id == "c3" }, gone.collections.single())
     }
 }

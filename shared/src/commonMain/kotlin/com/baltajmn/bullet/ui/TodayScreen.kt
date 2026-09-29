@@ -292,7 +292,7 @@ private fun NoticeStrip(
 
 
 /** Gesture 3 (docs/pantallas.md 4): 72dp of horizontal travel commits a day change; a plain tap still falls through. */
-private fun Modifier.pointerInputHorizontalSwipe(
+internal fun Modifier.pointerInputHorizontalSwipe(
     key: Any?,
     threshold: Dp,
     onSwipeRight: () -> Unit,

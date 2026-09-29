@@ -4,6 +4,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.baltajmn.bullet.model.Bullet
+import com.baltajmn.bullet.model.BulletCollection
+import com.baltajmn.bullet.model.addTrackerRow
+import com.baltajmn.bullet.model.deleteTrackerRow
+import com.baltajmn.bullet.model.monthOf
+import com.baltajmn.bullet.model.renameTrackerRow
+import com.baltajmn.bullet.model.moveTrackerRow
+import com.baltajmn.bullet.model.restoreTrackerRow
+import com.baltajmn.bullet.model.toggleTrackerDay
+import com.baltajmn.bullet.model.trackerThread
+import com.baltajmn.bullet.model.withTrackerPage
 import com.baltajmn.bullet.model.CollectionKind
 import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.Journal
@@ -62,7 +72,7 @@ const val UNDO_MS = 5_000L
  * itself, in case something did and only it needs putting back.
  */
 /** What the undo line is offering to put back (docs/pantallas.md 5.8): its text says which. */
-enum class UndoKind { ENTRY, COLLECTION }
+enum class UndoKind { ENTRY, COLLECTION, ROW }
 
 /**
  * One undoable delete. [before] is the whole diary as it was, which is what [BobbinRepository.undo]
@@ -300,14 +310,70 @@ object BobbinRepository {
     /** Archiving touches no entry at all (docs/tecnico.md 6.7). */
     fun archiveCollection(id: String, archived: Boolean) = edit { j -> j.archiveCollection(id, archived, now()) }
 
-    /** Returns the new collection's id, or null when the title was empty (docs/tecnico.md 6.7). */
+    /** Returns the new collection's id, or null when the title was empty (docs/tecnico.md 6.7). A tracker starts on this month's page. */
     fun createCollection(title: String, kind: CollectionKind = CollectionKind.NOTES): String? {
         var made: String? = null
         edit { j ->
-            val id = newId("c", j.collections.map { it.id }.toSet())
-            j.createCollection(title, now(), id, kind)?.also { made = id }
+            val id = collectionId(j)
+            j.createCollection(title, now(), id, kind, monthOf(today()))?.also { made = id }
         }
         return made
+    }
+
+    private fun collectionId(j: Journal) = newId("c", j.collections.map { it.id }.toSet())
+
+    /**
+     * Every change to a tracker page goes through here, in one write: the blank page of [trackerPage] is
+     * saved only when [change] actually changes something, so looking at a new month leaves nothing.
+     */
+    private fun onTrackerPage(page: BulletCollection, change: (Journal, String) -> Journal?): String? {
+        var saved: String? = null
+        edit { j ->
+            val (base, id) = j.withTrackerPage(page, collectionId(j), now())
+            change(base, id)?.also { saved = id }
+        }
+        return saved
+    }
+
+    fun toggleTrackerDay(page: BulletCollection, rowId: String, day: Int) {
+        onTrackerPage(page) { j, id -> j.toggleTrackerDay(id, rowId, day, now()) }
+    }
+
+    fun addTrackerRow(page: BulletCollection, title: String): Boolean =
+        onTrackerPage(page) { j, id -> j.addTrackerRow(id, title, newId("r", page.rows.map { it.id }.toSet()), now()) } != null
+
+    fun renameTrackerRow(page: BulletCollection, rowId: String, title: String) {
+        onTrackerPage(page) { j, id -> j.renameTrackerRow(id, rowId, title, now()) }
+    }
+
+    fun moveTrackerRow(page: BulletCollection, rowId: String, to: Int) {
+        onTrackerPage(page) { j, id -> j.moveTrackerRow(id, rowId, to, now()) }
+    }
+
+    /** Without confirmation, with the undo line (docs/pantallas.md 10.2, `rowDeleted`). */
+    fun deleteTrackerRow(page: BulletCollection, rowId: String) {
+        val index = page.rows.indexOfFirst { it.id == rowId }
+        if (index < 0) return
+        val row = page.rows[index]
+        val before = journal
+        val id = onTrackerPage(page) { j, id -> j.deleteTrackerRow(id, rowId, now()) } ?: return
+        armUndo(before, UndoKind.ROW, deleted = null) { it.restoreTrackerRow(id, row, index, now()) }
+    }
+
+    /** A tracker's title is its thread's: every page is renamed, so no month keeps an old name (docs/tecnico.md 6.18). */
+    fun renameTracker(id: String, title: String) = edit { j ->
+        var renamed: Journal? = null
+        for (page in j.trackerThread(id)) renamed = (renamed ?: j).renameCollection(page.id, title, now()) ?: renamed
+        renamed
+    }
+
+    /** Deleting a tracker deletes every page of its thread and nothing else (docs/tecnico.md 6.18). */
+    fun deleteTracker(id: String) {
+        val pages = journal.trackerThread(id)
+        if (pages.isEmpty()) return
+        val before = journal
+        edit { j -> pages.reversed().fold(j) { acc, page -> acc.deleteCollection(page.id, now()) } }
+        armUndo(before, UndoKind.COLLECTION, deleted = null) { current -> pages.fold(current) { acc, page -> acc.restoreCollection(page) } }
     }
 
     /**

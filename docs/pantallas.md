@@ -733,7 +733,7 @@ una marca por día.
 
 ```
 +------------------------------------------------+
-|  [<]                             [SHARE] [...] |
+|  [<]                                     [...] |
 |    Agua                                        |  PageTitle
 |    septiembre de 2026                [<] [>]   |  Secondary; páginas del hilo
 |                                                |
@@ -767,6 +767,9 @@ una marca por día.
 - **Pro.** Sin Pro, los seguimientos que ya existen se leen y se editan igual, y sus páginas nuevas se
   siguen creando (`docs/tecnico.md` 6.18).
 - Sin números: ni "12 de 30", ni porcentajes, ni rachas.
+- Sin `SHARE`: la página compartida (17) es de entradas; la tabla del seguimiento sale en la
+  exportación (`docs/tecnico.md` 4.4 y 6.10). `MORE` abre la hoja de 10.1: archivar y borrar el seguimiento
+  entero, con deshacer.
 
 | Estado | Qué se ve |
 |---|---|

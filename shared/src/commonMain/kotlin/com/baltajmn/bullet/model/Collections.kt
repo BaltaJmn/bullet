@@ -3,12 +3,12 @@ package com.baltajmn.bullet.model
 import com.baltajmn.bullet.data.fold
 import kotlinx.datetime.YearMonth
 
-/**
- * The Index and the collections (docs/tecnico.md 6.7). `createCollection` and `deleteCollection` land
- * with #30, and the threading and trackers of 6.18 with #50 and #63.
- */
+/** The Index, the collections and the trackers (docs/tecnico.md 6.7, 6.18). */
 
 const val COLLECTION_TITLE_MAX = 60
+
+/** Trackers without Pro (docs/tecnico.md 6.18): counted by thread, so a new month is never a new tracker. */
+const val FREE_TRACKER_LIMIT = 1
 
 /**
  * A row of the Index: a month with content, or a collection (docs/tecnico.md 6.7). A Daily Log is never
@@ -52,9 +52,14 @@ fun Journal.indexItems(monthTitle: (YearMonth) -> String): List<IndexItem> {
         .groupBy({ it.first }, { it.second })
         .map { (month, times) -> IndexItem.Month(month, monthTitle(month), times.min()) }
 
-    val collections = this.collections.map {
-        IndexItem.Collection(it.id, it.title, it.createdAt, it.kind, it.archived)
-    }
+    // A tracker is one row however many months it has: its newest page, in the place its first one started.
+    val tails = trackerTails().mapTo(mutableSetOf()) { it.id }
+    val collections = this.collections
+        .filter { it.kind != CollectionKind.TRACKER || it.id in tails }
+        .map {
+            val started = if (it.kind == CollectionKind.TRACKER) trackerThread(it.id).first().createdAt else it.createdAt
+            IndexItem.Collection(it.id, it.title, started, it.kind, it.archived)
+        }
 
     val (archived, active) = (months + collections).partition { it is IndexItem.Collection && it.archived }
     return active.sortedBy { it.createdAt } + archived.sortedBy { it.createdAt }
@@ -99,10 +104,11 @@ fun Journal.createCollection(
     now: Long,
     newId: String,
     kind: CollectionKind = CollectionKind.NOTES,
+    month: YearMonth? = null,
 ): Journal? {
     val clean = title.oneLine().trim().clampCodePoints(COLLECTION_TITLE_MAX)
     if (clean.isEmpty()) return null
-    val made = BulletCollection(id = newId, title = clean, createdAt = now, kind = kind)
+    val made = BulletCollection(id = newId, title = clean, createdAt = now, kind = kind, month = month.takeIf { kind == CollectionKind.TRACKER })
     return copy(collections = collections + made)
 }
 
@@ -134,3 +140,103 @@ fun Journal.deleteCollection(id: String, now: Long): Journal {
  */
 fun Journal.restoreCollection(collection: BulletCollection): Journal =
     if (collections.any { it.id == collection.id }) this else copy(collections = collections + collection)
+
+/** The pages of the tracker [id] belongs to, oldest first (docs/tecnico.md 6.18). */
+fun Journal.trackerThread(id: String): List<BulletCollection> {
+    val trackers = collections.filter { it.kind == CollectionKind.TRACKER }
+    val byId = trackers.associateBy { it.id }
+    var head = byId[id] ?: return emptyList()
+    val seen = mutableSetOf(head.id)
+    while (true) {
+        val previous = head.threadFrom?.let(byId::get) ?: break
+        if (!seen.add(previous.id)) break
+        head = previous
+    }
+    val continuedBy = trackers.filter { it.threadFrom != null }.associateBy { it.threadFrom }
+    val thread = mutableListOf(head)
+    while (true) {
+        val next = continuedBy[thread.last().id] ?: break
+        if (next in thread) break
+        thread += next
+    }
+    return thread
+}
+
+/** Each tracker's newest page, the one no other page continues: what the Index shows (docs/tecnico.md 6.18). */
+fun Journal.trackerTails(): List<BulletCollection> {
+    val continued = collections.filter { it.kind == CollectionKind.TRACKER }.mapNotNullTo(mutableSetOf()) { it.threadFrom }
+    return collections.filter { it.kind == CollectionKind.TRACKER && it.id !in continued }
+}
+
+/** Trackers that exist now, archived ones included: archiving frees no room, deleting does. */
+fun trackerCount(j: Journal): Int = j.trackerTails().size
+
+fun canCreateTracker(j: Journal, isPro: Boolean): Boolean = isPro || trackerCount(j) < FREE_TRACKER_LIMIT
+
+/**
+ * [month]'s page of the tracker [tail] ends, or a blank one continuing it: same title and rows (same
+ * ids), no marks, and an empty id because it is not in the diary. It is saved by the first mark or the
+ * first change of rows, so a month nobody touched leaves no page behind, and last month's marks are
+ * never copied (docs/tecnico.md 6.18).
+ */
+fun trackerPage(j: Journal, tail: BulletCollection, month: YearMonth): BulletCollection =
+    j.trackerThread(tail.id).find { it.month == month }
+        ?: tail.copy(
+            id = "",
+            createdAt = 0,
+            updatedAt = 0,
+            threadFrom = tail.id,
+            month = month,
+            rows = tail.rows.map { it.copy(days = emptySet()) },
+        )
+
+/** Saves [page] under [newId] if it is the blank of [trackerPage]. Returns the diary and the page's id. */
+fun Journal.withTrackerPage(page: BulletCollection, newId: String, now: Long): Pair<Journal, String> =
+    if (page.id.isNotEmpty()) {
+        this to page.id
+    } else {
+        copy(collections = collections + page.copy(id = newId, createdAt = now, updatedAt = now)) to newId
+    }
+
+/** One tap on a cell: the day is marked, or no longer is. Outside the page's month it does nothing. */
+fun Journal.toggleTrackerDay(pageId: String, rowId: String, day: Int, now: Long): Journal? = updatePage(pageId, now) { page ->
+    val month = page.month ?: return@updatePage null
+    if (day !in 1..monthDays(month) || page.rows.none { it.id == rowId }) return@updatePage null
+    page.copy(rows = page.rows.map { if (it.id == rowId) it.copy(days = if (day in it.days) it.days - day else it.days + day) else it })
+}
+
+/** A new row at the end, from the capture row of docs/pantallas.md 10.2: no prefixes, one line. */
+fun Journal.addTrackerRow(pageId: String, title: String, rowId: String, now: Long): Journal? = updatePage(pageId, now) { page ->
+    val clean = title.oneLine().trim().clampCodePoints(COLLECTION_TITLE_MAX)
+    if (clean.isEmpty()) null else page.copy(rows = page.rows + TrackerRow(rowId, clean))
+}
+
+fun Journal.renameTrackerRow(pageId: String, rowId: String, title: String, now: Long): Journal? = updatePage(pageId, now) { page ->
+    val clean = title.oneLine().trim().clampCodePoints(COLLECTION_TITLE_MAX)
+    if (clean.isEmpty() || page.rows.none { it.id == rowId && it.title != clean }) null
+    else page.copy(rows = page.rows.map { if (it.id == rowId) it.copy(title = clean) else it })
+}
+
+fun Journal.deleteTrackerRow(pageId: String, rowId: String, now: Long): Journal? = updatePage(pageId, now) { page ->
+    if (page.rows.none { it.id == rowId }) null else page.copy(rows = page.rows.filterNot { it.id == rowId })
+}
+
+/** Gesture 4 on the rows (docs/pantallas.md 4): the one row that was dragged, to its new place. */
+fun Journal.moveTrackerRow(pageId: String, rowId: String, to: Int, now: Long): Journal? = updatePage(pageId, now) { page ->
+    val from = page.rows.indexOfFirst { it.id == rowId }
+    if (from < 0 || to !in page.rows.indices || to == from) null
+    else page.copy(rows = page.rows.toMutableList().apply { add(to, removeAt(from)) })
+}
+
+/** Puts [row] back at [index] of its page, for the Deshacer of a deleted row (docs/pantallas.md 5.8). */
+fun Journal.restoreTrackerRow(pageId: String, row: TrackerRow, index: Int, now: Long): Journal =
+    updatePage(pageId, now) { page ->
+        if (page.rows.any { it.id == row.id }) null
+        else page.copy(rows = page.rows.toMutableList().apply { add(index.coerceIn(0, size), row) })
+    } ?: this
+
+private fun Journal.updatePage(pageId: String, now: Long, change: (BulletCollection) -> BulletCollection?): Journal? {
+    val page = collections.find { it.id == pageId && it.kind == CollectionKind.TRACKER } ?: return null
+    val changed = change(page) ?: return null
+    return copy(collections = collections.map { if (it.id == pageId) changed.copy(updatedAt = now) else it })
+}

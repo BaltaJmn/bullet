@@ -87,7 +87,7 @@ import kotlinx.datetime.LocalDate
  */
 
 /** Gesture 4 (docs/pantallas.md 4): past this much vertical travel after the long press, it's a drag, not a tap that opens the sheet. */
-private val DRAG_SLOP = 12.dp
+internal val DRAG_SLOP = 12.dp
 
 /**
  * One entry (docs/pantallas.md 5.1). The glyph is gesture 1: it toggles an open or done task,
@@ -526,7 +526,11 @@ fun UndoBanner(onUndo: () -> Unit) {
             .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val what = if (kind == UndoKind.COLLECTION) S.collectionDeleted else S.entryDeleted
+        val what = when (kind) {
+            UndoKind.ENTRY -> S.entryDeleted
+            UndoKind.COLLECTION -> S.collectionDeleted
+            UndoKind.ROW -> S.rowDeleted
+        }
         Text(what, style = Type.Body, modifier = Modifier.padding(start = 24.dp).weight(1f))
         TextAction(S.undo, onUndo)
         Spacer(Modifier.width(16.dp))

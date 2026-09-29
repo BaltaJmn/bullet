@@ -1513,6 +1513,15 @@ recordatorios ni estadísticas: para eso está Quilt, y la ficha remite a ella.
   de los que ya existen se siguen creando, y solo no se puede crear otro.
 - Borrar un seguimiento borra las páginas de su hilo; no toca ninguna otra colección. Borrar una
   página suelta engancha la siguiente a la anterior (6.7).
+- **Funciones** (`model/Collections.kt`): `trackerThread(id)` da las páginas del hilo de cualquiera de
+  ellas, de la más antigua a la más reciente; `trackerTails()`, la más reciente de cada hilo. La página
+  en blanco de `trackerPage` lleva `id` vacío, y `withTrackerPage(page, newId, now)` la guarda: el
+  repositorio lo hace en la misma escritura que el cambio (`toggleTrackerDay`, `addTrackerRow`,
+  `renameTrackerRow`, `deleteTrackerRow`, `moveTrackerRow`), y solo si el cambio cambia algo. Mover
+  es una fila a un índice, no una lista de ids: ninguna función que escribe recibe varias cosas (test 9).
+- En el Índice, un seguimiento es una fila: la de su página más reciente, con el `createdAt` de la
+  primera, así que no cambia de sitio cada mes. Renombrarlo renombra todas las páginas del hilo;
+  archivar actúa sobre la más reciente, y la página nueva hereda `archived` de ella.
 
 ### 6.19 Rendimiento con miles de entradas
 

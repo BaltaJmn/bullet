@@ -49,14 +49,16 @@ import com.baltajmn.bullet.ui.theme.page
 import com.baltajmn.bullet.ui.theme.Spread
 import com.baltajmn.bullet.ui.theme.isWideScreen
 import com.baltajmn.bullet.ui.theme.paper
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import com.baltajmn.bullet.model.canCreateTracker
 import kotlinx.datetime.YearMonth
 
 /**
  * The Index (docs/pantallas.md 9, docs/tecnico.md 6.7, #29): the months that have something and the
  * collections, in the order they were started. Never alphabetical, and with no page number anywhere,
  * because this paper has no physical pages to number.
- *
- * The `newTracker` row lands with #50, which is what brings trackers and the Pro gate of 6.18.
  */
 @Composable
 fun IndexScreen(
@@ -106,8 +108,13 @@ fun IndexScreen(
                 // Only the title, and Intro creates it and opens it with its capture focused
                 // (docs/pantallas.md 9). Hidden while filtering, like the archived block.
                 if (query.isEmpty()) {
-                    NewCollectionRow { title ->
+                    NewCollectionRow(S.newCollection) { title ->
                         BobbinRepository.createCollection(title)?.let(onCreated)
+                    }
+                    // Without Pro and with one tracker already, the row is the door to Pro and not a
+                    // field: nothing is typed that could then not be kept (docs/tecnico.md 6.18).
+                    NewCollectionRow(S.newTracker, locked = !canCreateTracker(journal, BobbinRepository.isPro)) { title ->
+                        BobbinRepository.createCollection(title, CollectionKind.TRACKER)?.let(onCreated)
                     }
                 }
 
@@ -147,19 +154,30 @@ private fun open(item: IndexItem, onOpenMonth: (YearMonth) -> Unit, onOpenCollec
     is IndexItem.Collection -> onOpenCollection(item.id)
 }
 
-/** docs/pantallas.md 9: the capture row that creates a collection. It asks for a title and nothing else. */
+/**
+ * docs/pantallas.md 9: the capture row that creates a collection or a tracker. It asks for a title and
+ * nothing else. [locked] turns it into the Pro door; once bought, it comes back as the field, focused.
+ */
 @Composable
-private fun NewCollectionRow(onCreate: (String) -> Unit) {
+private fun NewCollectionRow(hint: String, locked: Boolean = false, onCreate: (String) -> Unit) {
     var value by remember { mutableStateOf("") }
-    Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
+    var bought by remember { mutableStateOf(0) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(bought, locked) { if (bought > 0 && !locked) focus.requestFocus() }
+    Row(
+        Modifier.fillMaxWidth().height(gridUnit * 2)
+            .then(if (locked) Modifier.clickable(role = Role.Button) { Paywall.show { bought++ } } else Modifier),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(Modifier.weight(1f).padding(start = 48.dp, end = 24.dp)) {
             if (value.isEmpty()) {
-                Text(S.newCollection, style = Type.Ink.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                Text(hint, style = Type.Ink.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
             }
+            if (locked) return@Box
             BasicTextField(
                 value = value,
                 onValueChange = { value = it.oneLine() },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().focusRequester(focus),
                 textStyle = Type.Ink,
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
                 singleLine = true,
