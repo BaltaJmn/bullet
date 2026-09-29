@@ -43,3 +43,6 @@ tools/demo/salida/
 
 # Worktrees de los agentes de Claude Code.
 .claude/worktrees/
+
+# El diario de prueba de tools/perf/generar.py: se genera, no se versiona.
+tools/perf/out/

@@ -229,22 +229,30 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 
 | Fichero | Qué cubre (sección 10) |
 |---|---|
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/ModelTest.kt` | tests 1, 2, 3, 4, 5, 27, 30, 34 |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/MigrationTest.kt` | tests 6, 7, 8, 28, 33 |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/DataTest.kt` | tests 10 a 20, 29, 31, 35 |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/StorageTest.kt` | tests 21, 22, 32 |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetSample.kt` | `WIDGET_SAMPLE`, el fichero de ejemplo de `widget.json` (test 12 y 36) |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetStateTest.kt` | test 12: el diario fijo que da exactamente `WIDGET_SAMPLE` |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/ModelTest.kt` | tests 1, 2, 3 y 4: serialización, invariantes de la entrada, día lógico, mes y Future Log |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/SettingsTest.kt` | test 3: cada ajuste con su valor por defecto |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/CollectionsTest.kt` | tests 5 y 19: Índice, colecciones y seguimientos |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/MigrationTest.kt` | tests 6, 7 y 8: migrar, programar, descartar, la cadena y la revisión |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/RapidParseTest.kt` | test 10: captura rápida |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/FirstRunTest.kt` | tests 10 y 37 en lo que no necesita pantalla: primer bullet sin ajustes y ningún destino de bienvenida |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/SearchTest.kt` | test 11 |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetSample.kt` | `WIDGET_SAMPLE`, el fichero de ejemplo de `widget.json` (tests 12 y 36) |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/WidgetStateTest.kt` | test 12: el diario fijo que da exactamente `WIDGET_SAMPLE`, y `shownMask` sin Pro |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/DataTest.kt` | tests 13 y 17, los enlaces `bobbin://` y `relocks` del test 41 |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/BackupTest.kt` | tests 14, 15, 16 y 22: zip, Markdown, validación e importación fusionando |
-| `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/ZipFileTest.kt` | la mitad del test 14 que necesita un fichero: `unzip -t` del sistema |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/i18n/StringsTest.kt` | test 24 (C `line/.../i18n/StringsTest.kt`) |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/ThemeTest.kt` | test 25 |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/theme/ProTest.kt` | test 18 y, de #47, que sin respuesta de la tienda se queda el último Pro conocido |
-| `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/EntrySheetTest.kt` | `statusActionsFor`, la tabla de 5.6: una nota o un evento nunca ofrecen un estado de tarea (#22) |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/StorageTest.kt` | test 21, la mitad común: carga, `.bak` y cuarentena con `MemoryFiles` |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/SchemaMigrationTest.kt` | test 21, la mitad del esquema |
 | `shared/src/commonTest/kotlin/com/baltajmn/bullet/data/BobbinRepositoryTest.kt` | `delete` y `undo`: el Deshacer de 5.8, con `MemoryFiles` (#23) |
-| `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/NoBulkTest.kt` | test 9 |
-| `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/StorageFileTest.kt` | test 23 (A `line/.../StorageTest.kt`) |
-| `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/PerfTest.kt` | test 26 |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/i18n/StringsTest.kt` | test 24 (C `line/.../i18n/StringsTest.kt`) |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/theme/ThemeTest.kt` | test 25 y el corte de 600 dp de #34 |
+| `shared/src/commonTest/kotlin/com/baltajmn/bullet/ui/EntrySheetTest.kt` | `statusActionsFor`, la tabla de 5.6: una nota o un evento nunca ofrecen un estado de tarea (#22) |
+| `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/NoBulkActionsTest.kt` | test 9 |
+| `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/FirstDayOfWeekTest.kt` | test 4, la semana que dice el idioma del sistema |
+| `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/StorageDiskTest.kt` | test 23 (A `line/.../StorageTest.kt`) |
+| `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/ZipFileTest.kt` | la mitad del test 14 que necesita un fichero: `unzip -t` del sistema |
+| `shared/src/androidHostTest/kotlin/com/baltajmn/bullet/PerfTest.kt` | test 26 y el índice `byPlace` de 6.19 |
+| `tools/check-bobbinstore.swift` | test 36, en el job de iOS |
 
 `ModelTest`, `MigrationTest`, `DataTest` y `StorageTest` están en `commonTest`: corren en JVM y en el
 Simulador de iOS (9). Solo va a `androidHostTest` lo que necesita disco real o reflexión de la JVM.
@@ -1559,6 +1567,13 @@ Medidas (#55 las rellena):
 | Índice, desplazamiento | >= 45 fps | pendiente | |
 | Búsqueda con filtros | < 200 ms | pendiente | |
 | Serializar y escribir, p95 | < 50 ms | pendiente | |
+
+En la JVM de los tests (test 26, un Mac de desarrollo, septiembre de 2026): decodificar las 5.000,
+unos 55 ms (`PARSE_BUDGET_MS` = 1.000); buscar "cafe" con abiertas y prioridad, unos 7 ms
+(`SEARCH_BUDGET_MS` = 200). Los techos son holgados a propósito: un runner de CI es más lento y más
+ruidoso que un teléfono, y lo que tienen que cazar es un orden de magnitud, no un 10 %. Las filas de
+la tabla son del dispositivo y las rellena el autor con `tools/perf/generar.py` importado en un diario
+vacío.
 
 ---
 

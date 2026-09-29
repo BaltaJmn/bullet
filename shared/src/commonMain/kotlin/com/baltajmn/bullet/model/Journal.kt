@@ -79,7 +79,16 @@ data class Journal(
     val settings: Settings = Settings(),
     /** v1.2, 12.9; key "yyyy-MM". */
     val months: Map<String, IndexMark> = emptyMap(),
-)
+) {
+    /**
+     * Each place's live entries, in order, built the first time a screen asks and kept with this
+     * instance, which never changes: every edit is a new Journal (docs/tecnico.md 6.19). A delegated
+     * property has no backing field of its own, so it is neither serialized nor part of equals.
+     */
+    internal val byPlace: Map<Place, List<Entry>> by lazy {
+        entries.filter { !it.gone }.groupBy { it.place }.mapValues { (_, list) -> list.sortedWith(ENTRY_ORDER) }
+    }
+}
 
 val JournalJson = Json {
     ignoreUnknownKeys = true
@@ -181,7 +190,7 @@ private fun List<Entry>.dropOrphanSkeletons(): List<Entry> {
 }
 
 /** What sits at exactly [place], skeletons left out, in screen order (docs/tecnico.md 6.3): a `Monthly(m, 3)` is never among `Monthly(m, null)`. */
-fun Journal.entriesAt(place: Place): List<Entry> = entries.filter { it.place == place && !it.gone }.sortedWith(ENTRY_ORDER)
+fun Journal.entriesAt(place: Place): List<Entry> = byPlace[place].orEmpty()
 
 /** The entry a migration or a schedule landed, if it is still there (docs/tecnico.md 6.3): the non skeleton entry whose `from` is [id]. */
 fun copyOf(j: Journal, id: String): Entry? = j.entries.find { it.from == id && !it.gone }
