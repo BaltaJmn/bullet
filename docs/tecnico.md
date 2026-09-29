@@ -2026,7 +2026,9 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
 36. **Espejo Swift de `widget.json`** (#40, #42): `tools/check-bobbinstore.swift` saca `WIDGET_SAMPLE`
     de `WidgetSample.kt`, lo decodifica con `BobbinStore.swift` y comprueba cada campo, y comprueba el
     `widgetView` y el día lógico de Swift con las mismas fechas que el test 12. La extensión no tiene
-    target de tests; por eso es un script (9).
+    target de tests; por eso es un script (9). Se compila con `swiftc -parse-as-library` junto a
+    `BobbinStore.swift` (con dos ficheros, Swift solo acepta código suelto en `main.swift`) y lo corre
+    el trabajo `ios` de `tests.yml`.
 
 ### A mano, en emulador y Simulador
 

@@ -41,3 +41,7 @@ jobs:
       # Same tests, linked as a Kotlin/Native binary. The linker options in shared/build.gradle.kts
       # read `xcode-select -p`, so whatever Xcode the runner image ships with is the one used.
       - run: ./gradlew :shared:iosSimulatorArm64Test
+      # Test 36: the widget extension has no test target, so its mirror of widget.json is a script.
+      - run: |
+          swiftc -parse-as-library -o "$RUNNER_TEMP/check-bobbinstore" tools/check-bobbinstore.swift iosApp/BobbinWidget/BobbinStore.swift
+          "$RUNNER_TEMP/check-bobbinstore"
