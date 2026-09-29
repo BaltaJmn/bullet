@@ -17,6 +17,7 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import com.baltajmn.bullet.data.BobbinRepository
 import kotlin.math.roundToInt
 
 private val DOT_DIAMETER = 1.5.dp
@@ -25,15 +26,17 @@ private val COLUMN_START = 12.dp
 private val SPINE = 48.dp
 
 /**
- * Paints the dotted page (docs/pantallas.md 1.1): a 1.5dp dot every 24dp horizontally, on every
- * vertical grid line, aligned so a dot sits on the baseline of an `Ink` row at any font scale.
- * Lined, grid and blank paper arrive with #49; dotted is always the free default. The page itself
- * scrolls with the content, so this only paints, it never reserves space.
+ * Paints the page (docs/pantallas.md 1.1): dots every 24dp on every vertical grid line, aligned so a
+ * dot sits on the baseline of an `Ink` row at any font scale; lined draws a rule through each row of
+ * dots, grid adds one down each column, blank draws nothing. [kind] is the active paper unless a
+ * preview says otherwise. The page scrolls with the content, so this only paints, it never reserves
+ * space, and no paper moves a line.
  */
 @Composable
-fun Modifier.paper(): Modifier {
+fun Modifier.paper(kind: Paper = activePaper(BobbinRepository.journal.settings, BobbinRepository.isPro)): Modifier {
+    if (kind == Paper.Blank) return this
     val unit = gridUnit
-    val dotColor = MaterialTheme.colorScheme.outlineVariant
+    val color = MaterialTheme.colorScheme.outlineVariant
     val inkStyle = Type.Ink
     val textMeasurer = rememberTextMeasurer()
     val baseline = remember(inkStyle, textMeasurer) { inkBaseline(textMeasurer, inkStyle) }
@@ -42,12 +45,24 @@ fun Modifier.paper(): Modifier {
         val startX = COLUMN_START.toPx()
         val radius = (DOT_DIAMETER / 2).toPx()
         val unitPx = unit.toPx()
-        var y = baseline
-        while (y <= size.height) {
+        val rule = 1.dp.toPx()
+        if (kind == Paper.Grid) {
             var x = startX
             while (x <= size.width) {
-                drawCircle(dotColor, radius = radius, center = Offset(x, y))
+                drawLine(color, Offset(x, 0f), Offset(x, size.height), strokeWidth = rule)
                 x += step
+            }
+        }
+        var y = baseline
+        while (y <= size.height) {
+            if (kind == Paper.Dotted) {
+                var x = startX
+                while (x <= size.width) {
+                    drawCircle(color, radius = radius, center = Offset(x, y))
+                    x += step
+                }
+            } else {
+                drawLine(color, Offset(0f, y), Offset(size.width, y), strokeWidth = rule)
             }
             y += unitPx
         }

@@ -1,6 +1,28 @@
 package com.baltajmn.bullet.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import com.baltajmn.bullet.model.Bullet
+import com.baltajmn.bullet.model.Settings
+import com.baltajmn.bullet.model.TaskStatus
+import com.baltajmn.bullet.ui.theme.Cover
+import com.baltajmn.bullet.ui.theme.Paper
+import com.baltajmn.bullet.ui.theme.activeCover
+import com.baltajmn.bullet.ui.theme.activePaper
+import com.baltajmn.bullet.ui.theme.canUse
+import kotlinx.datetime.LocalDate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -203,6 +225,9 @@ fun SettingsScreen(onBack: () -> Unit) {
                 },
             )
 
+            SettingsSection(S.sectionNotebook)
+            NotebookLook(settings)
+
             if (FilePicker.available) {
                 SettingsSection(S.sectionBackup)
                 val journal = BobbinRepository.journal
@@ -351,6 +376,145 @@ fun SettingsScreen(onBack: () -> Unit) {
                 onBack()
             },
         )
+    }
+}
+
+/** A Wednesday the 23rd, so the preview says the same day in every language (docs/pantallas.md 14.1). */
+private val PREVIEW_DAY = LocalDate(2026, 9, 23)
+
+/**
+ * docs/pantallas.md 14.1: every cover and paper can be looked at for free; touching one saves it only
+ * if it is free or there is Pro. What is only being looked at lives here, so leaving Settings forgets it.
+ */
+@Composable
+private fun NotebookLook(settings: Settings) {
+    val isPro = BobbinRepository.isPro
+    val savedCover = activeCover(settings, isPro)
+    val savedPaper = activePaper(settings, isPro)
+    var cover by remember { mutableStateOf(savedCover) }
+    var paper by remember { mutableStateOf(savedPaper) }
+    val side = Modifier.padding(start = 48.dp, end = 24.dp)
+    val frame = RoundedCornerShape(12.dp)
+
+    Column(
+        side.padding(top = 8.dp).fillMaxWidth().height(gridUnit * 8).clip(frame)
+            .border(1.dp, MaterialTheme.colorScheme.outline, frame)
+            .background(MaterialTheme.colorScheme.background).paper(paper),
+    ) {
+        Row(Modifier.height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.padding(start = 12.dp).size(8.dp).background(cover.color, CircleShape))
+            Spacer(Modifier.width(16.dp))
+            Text(S.dayTitle(PREVIEW_DAY), style = Type.PageTitle, maxLines = 1)
+        }
+        listOf(Bullet.TASK to S.previewTask, Bullet.EVENT to S.previewEvent).forEach { (bullet, text) ->
+            Row(Modifier.height(gridUnit), verticalAlignment = Alignment.CenterVertically) {
+                Spacer(Modifier.width(24.dp))
+                BulletGlyph(bullet, TaskStatus.OPEN)
+                Text(text, style = Type.Ink, maxLines = 1)
+            }
+        }
+        Row(Modifier.height(gridUnit * 2).padding(start = 36.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.width(IntrinsicSize.Min)) {
+                Text(S.tabToday, style = Type.Body)
+                Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(2.dp).background(cover.color))
+            }
+        }
+    }
+
+    Cover.entries.chunked(4).forEach { row ->
+        Row(side) {
+            row.forEach { c ->
+                LookSwatch(S.coverName(c.id), looked = c == cover, saved = c == savedCover, shape = CircleShape, cover = c) {
+                    cover = c
+                    if (canUse(c, isPro)) BobbinRepository.settings { it.copy(cover = c.id) }
+                }
+            }
+        }
+    }
+    Row(side) {
+        Paper.entries.forEach { p ->
+            LookSwatch(S.paperName(p.id), looked = p == paper, saved = p == savedPaper, shape = RoundedCornerShape(6.dp), paper = p) {
+                paper = p
+                if (canUse(p, isPro)) BobbinRepository.settings { it.copy(paper = p.id) }
+            }
+        }
+    }
+    Text("${S.coverName(cover.id)}, ${S.paperName(paper.id)}", style = Type.Secondary, modifier = side)
+    if (!canUse(cover, isPro) || !canUse(paper, isPro)) {
+        Text(S.proLookHint, style = Type.Secondary, modifier = side.padding(top = 8.dp))
+        // Buying saves what was being looked at, so the choice is not lost on the way to the store.
+        Box(Modifier.padding(start = 40.dp)) {
+            TextAction(S.useThis) {
+                val c = cover
+                val p = paper
+                Paywall.show { BobbinRepository.settings { it.copy(cover = c.id, paper = p.id) } }
+            }
+        }
+    }
+}
+
+/**
+ * One cover (a 32dp circle of its colour) or one paper (a 32dp square with its pattern) in a 48dp
+ * target: a 2dp ring 3dp out on the one being looked at, `CHECK` inside the saved one.
+ */
+@Composable
+private fun LookSwatch(
+    name: String,
+    looked: Boolean,
+    saved: Boolean,
+    shape: Shape,
+    cover: Cover? = null,
+    paper: Paper? = null,
+    onClick: () -> Unit,
+) {
+    val ink = MaterialTheme.colorScheme.onBackground
+    val line = MaterialTheme.colorScheme.outline
+    val ring = if (shape == CircleShape) CircleShape else RoundedCornerShape(11.dp)
+    Box(
+        Modifier.size(48.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = if (saved) "$name, ${S.a11ySelected}" else name
+                selected = saved
+            }
+            .clickable(role = Role.RadioButton, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (looked) Box(Modifier.size(42.dp).border(2.dp, ink, ring))
+        val swatch = Modifier.size(32.dp).clip(shape)
+        if (cover != null) {
+            Box(swatch.background(cover.color))
+        } else if (paper != null) {
+            Box(
+                swatch.background(MaterialTheme.colorScheme.background).border(1.dp, line, shape)
+                    .drawBehind { miniPaper(paper, line) },
+            )
+        }
+        if (saved) GlyphIcon(Glyph.CHECK, tint = ink.copy(alpha = 0.7f))
+    }
+}
+
+/** The paper's pattern at a third of its size, so four fit in a 32dp square. */
+private fun DrawScope.miniPaper(kind: Paper, color: Color) {
+    val step = 8.dp.toPx()
+    val stroke = 1.dp.toPx()
+    var at = step
+    while (at < size.width) {
+        when (kind) {
+            Paper.Dotted -> {
+                var x = step
+                while (x < size.width) {
+                    drawCircle(color, radius = stroke, center = Offset(x, at))
+                    x += step
+                }
+            }
+            Paper.Lined -> drawLine(color, Offset(0f, at), Offset(size.width, at), stroke)
+            Paper.Grid -> {
+                drawLine(color, Offset(0f, at), Offset(size.width, at), stroke)
+                drawLine(color, Offset(at, 0f), Offset(at, size.height), stroke)
+            }
+            Paper.Blank -> return
+        }
+        at += step
     }
 }
 

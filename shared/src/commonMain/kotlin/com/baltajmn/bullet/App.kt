@@ -59,6 +59,7 @@ import com.baltajmn.bullet.ui.ProDialog
 import com.baltajmn.bullet.ui.ReviewScreen
 import com.baltajmn.bullet.ui.TodayScreen
 import com.baltajmn.bullet.ui.theme.BobbinTheme
+import com.baltajmn.bullet.ui.theme.activeCover
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import com.baltajmn.bullet.ui.theme.page
@@ -324,7 +325,7 @@ private fun TabBar(active: Screen, onSelect: (Screen) -> Unit) {
                     if (isActive) {
                         Box(
                             Modifier.padding(top = 4.dp).fillMaxWidth().height(2.dp)
-                                .background(MaterialTheme.colorScheme.primary),
+                                .background(activeCover(BobbinRepository.journal.settings, BobbinRepository.isPro).color),
                         )
                     }
                 }

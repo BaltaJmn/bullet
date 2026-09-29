@@ -47,6 +47,7 @@ import com.baltajmn.bullet.model.ofDay
 import com.baltajmn.bullet.model.openTasksBefore
 import com.baltajmn.bullet.model.openTasksOfMonth
 import com.baltajmn.bullet.model.unclosedMonth
+import com.baltajmn.bullet.ui.theme.activeCover
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import com.baltajmn.bullet.ui.theme.page
@@ -231,7 +232,7 @@ private fun TitleRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (isToday) {
-            Box(Modifier.padding(start = 12.dp).size(8.dp).background(MaterialTheme.colorScheme.primary, shape = CircleShape))
+            Box(Modifier.padding(start = 12.dp).size(8.dp).background(activeCover(BobbinRepository.journal.settings, BobbinRepository.isPro).color, shape = CircleShape))
             Spacer(Modifier.width(16.dp))
         } else {
             Spacer(Modifier.width(36.dp))

@@ -1035,7 +1035,8 @@ Secciones: `sectionDay` (DÍA), `sectionReminder` (RECORDATORIO), `sectionPrivac
   `previewEvent`: Cena con Ana, evento) y `tabToday` (Hoy) con la marca de 2 dp de la portada.
 - **Portadas.** Ocho círculos de 32 dp en dianas de 48, en dos filas de cuatro, en el orden de
   `docs/tecnico.md` 5. El que se está mirando lleva un anillo de 2 dp `onBackground` a 3 dp; el
-  guardado, `CHECK` en `onBackground` al 70 % dentro. Cada uno se describe con `coverName(id)` y, si es
+  guardado, `CHECK` en `onBackground` al 70 % dentro. "Guardado" es el que pinta la app
+  (`activeCover`, `activePaper`): sin Pro tras un reembolso, Salvia y punteado. Cada uno se describe con `coverName(id)` y, si es
   el guardado, `a11ySelected` (elegida).
 - **Papeles.** Cuatro muestras de 32 x 32, radio 6, borde 1 dp `outline`, con su dibujo en miniatura
   (puntos, rayas, cuadrícula, nada) en `outline`. Mismo anillo y mismo `CHECK`. `paperName(id)`.
