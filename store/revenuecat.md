@@ -50,23 +50,27 @@ es de Pro.
 Precondiciones: **un AAB subido a algún canal** (`lanzamiento.md`, fase 3) y el perfil de pagos
 verificado, que ya lo está desde Quilt.
 
-1. Play Console, **dentro de Bobbin**: *Monetizar con Play > Productos > Productos integrados en la
-   aplicación > Crear producto*.
-2. Id `bullet_pro`. Nombre y descripción por idioma, de la tabla.
-3. Precio 7,99 EUR, *Convertir* al resto de países y **Redondear precios**: sin eso salen cifras que
-   leen como un error de la tienda.
-4. **Activarlo.** Un producto inactivo no sale por la API y el diálogo se queda sin precio.
+1. Play Console, **dentro de Bobbin**: *Monetizar con Play > Productos > Productos únicos > Crear
+   producto único*.
+2. Id `bullet_pro`. Nombre y descripción por idioma, de la tabla (*Gestionar traducciones* añade
+   los cuatro idiomas que no son el predeterminado). Categoría fiscal, la que trae: *Ventas de apps
+   digitales*.
+3. Opción de compra: id `bulletpro` (Play no admite guion bajo aquí), tipo *Comprar*, contenido
+   digital, una unidad por compra.
+4. Precio 7,99 EUR, *Convertir* al resto de países y **Redondear precios**: sin eso salen cifras que
+   leen como un error de la tienda. Play no guarda el producto sin precio, ni como borrador.
+5. **Activarlo.** Un producto inactivo no sale por la API y el diálogo se queda sin precio.
 
-Play deriva el id de la opción de compra quitando el guion bajo (`bulletpro`) y la marca
-*Retrocompatible*. Es lo normal y lo que necesita RevenueCat.
+Play marca la primera opción de compra como *Retrocompatible*. Es lo normal y lo que necesita
+RevenueCat.
 
 | Idioma | Nombre | Descripción (tope 200) |
 |---|---|---|
-| en-US | Bobbin Pro | Seven covers, three papers, trackers past the first, the month widget and the lock screen widget. One-time payment, not a subscription. The method, the daily and monthly logs, export and the reminder stay free. |
-| es-ES | Bobbin Pro | Siete portadas, tres papeles, seguimientos a partir del segundo, el widget del mes y el de pantalla de bloqueo. Pago único, no es una suscripción. El método, el diario y el mes, exportar y el recordatorio siguen gratis. |
-| pt-BR | Bobbin Pro | Sete capas, tres papeis, rastreadores a partir do segundo, o widget do mes e o de tela de bloqueio. Pagamento unico, nao e assinatura. O metodo, o diario e o mes, exportar e o lembrete continuam gratis. |
-| de-DE | Bobbin Pro | Sieben Umschlagfarben, drei Papiere, Tracker ab dem zweiten, das Monats-Widget und das Sperrbildschirm-Widget. Einmalzahlung, kein Abo. Die Methode, Tages- und Monatslog, Export und Erinnerung bleiben kostenlos. |
-| fr-FR | Bobbin Pro | Sept couvertures, trois papiers, des suivis a partir du deuxieme, le widget du mois et celui de l'ecran verrouille. Paiement unique, pas d'abonnement. La methode, le jour et le mois, l'export et le rappel restent gratuits. |
+| en-US | Bobbin Pro | Seven more covers, lined, grid and blank paper, more than one tracker and the month widget. One-time payment, not a subscription. The method, export and the reminder stay free. |
+| es-ES | Bobbin Pro | Siete portadas más, papel rayado, cuadrícula y liso, más de un seguimiento y el widget del mes. Pago único, no es una suscripción. El método, exportar y el recordatorio siguen gratis. |
+| pt-BR | Bobbin Pro | Mais sete capas, papel pautado, quadriculado e liso, mais de um tracker e o widget do mês. Pagamento único, não é assinatura. O método, exportar e o lembrete continuam grátis. |
+| de-DE | Bobbin Pro | Sieben weitere Umschläge, liniertes, kariertes und blankes Papier, mehr als ein Tracker und das Monats-Widget. Einmalzahlung, kein Abo. Die Methode, Export und Erinnerung bleiben kostenlos. |
+| fr-FR | Bobbin Pro | Sept couvertures de plus, papier ligné, quadrillé et uni, plus d'un suivi et le widget du mois. Paiement unique, pas d'abonnement. La méthode, l'export et le rappel restent gratuits. |
 
 El widget de pantalla de bloqueo no se nombra en Play: en Android no existe.
 
