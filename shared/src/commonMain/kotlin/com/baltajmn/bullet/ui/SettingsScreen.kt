@@ -46,6 +46,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.baltajmn.bullet.data.AppInfo
 import com.baltajmn.bullet.data.BobbinRepository
+import com.baltajmn.bullet.data.Lock
 import com.baltajmn.bullet.data.PRIVACY_URL
 import com.baltajmn.bullet.data.SIBLINGS
 import com.baltajmn.bullet.data.fold
@@ -70,8 +71,8 @@ internal const val DIALOG_MAX_WIDTH_DP = 576
  * opening. Everything saved here lives in `Journal.settings`, so it travels whole in an export (#44);
  * only Pro lives outside, in `Prefs`.
  *
- * The rows that need machinery of their own arrive with it: `lockRow` (#39), the notebook's covers and
- * papers (#49), export and import (#44, #45), and Bobbin Pro and restoring a purchase (#47, #48).
+ * The rows that need machinery of their own arrive with it: the notebook's covers and papers (#49),
+ * export and import (#44, #45), and Bobbin Pro and restoring a purchase (#47, #48).
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -154,6 +155,31 @@ fun SettingsScreen(onBack: () -> Unit) {
             if (permission == NotifyPermission.DENIED) {
                 Box(Modifier.padding(start = 40.dp)) { TextAction(S.openSystemSettings, Reminders::openSystemSettings) }
             }
+
+            SettingsSection(S.sectionPrivacy)
+            // No screen lock on the phone, no switch to turn on: there would be nothing to ask for.
+            val lockAvailable = remember(permissionCheck) { Lock.isAvailable() }
+            fun setLock(on: Boolean) {
+                if (!on) {
+                    BobbinRepository.settings { it.copy(lockOn = false) }
+                    return
+                }
+                // Only saved once the phone has said yes, so a lock nobody can open is never switched on.
+                Lock.authenticate { ok -> if (ok) BobbinRepository.settings { it.copy(lockOn = true) } }
+            }
+            SettingsRow(
+                title = S.lockRow,
+                subtitle = if (lockAvailable || settings.lockOn) S.lockSubtitle else S.lockUnavailable,
+                onClick = if (lockAvailable || settings.lockOn) ({ setLock(!settings.lockOn) }) else null,
+                trailing = {
+                    Switch(
+                        checked = settings.lockOn,
+                        onCheckedChange = ::setLock,
+                        enabled = lockAvailable || settings.lockOn,
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+                    )
+                },
+            )
 
             // "Más apps" only exists while some sister app has a page on this platform (docs/tecnico.md 6.16).
             val siblings = SIBLINGS.filter { it.storeUrl != null }

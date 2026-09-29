@@ -6,8 +6,10 @@ import com.baltajmn.bullet.data.parseLink
 import com.baltajmn.bullet.i18n.S
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -39,6 +41,16 @@ class DataTest {
     fun reminderTextIsFixed() {
         assertTrue(S.reminderTitle.isNotBlank())
         assertTrue(S.reminderBody.isNotBlank())
+    }
+
+    /** Test 41 (#39): the part of it that is arithmetic. The thumbnail is checked by hand. */
+    @Test
+    fun aMinuteAwayLocksAgain() {
+        assertFalse(relocks(lockOn = true, away = 59.seconds))
+        assertTrue(relocks(lockOn = true, away = 60.seconds))
+        assertTrue(relocks(lockOn = true, away = 61.seconds))
+        assertFalse(relocks(lockOn = false, away = 61.seconds))
+        assertFalse(relocks(lockOn = true, away = null))
     }
 
     /** docs/tecnico.md 7: three links and nothing else. */

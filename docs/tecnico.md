@@ -1411,8 +1411,10 @@ expect object Lock {
   vez (sección 7).
 - En `App.kt`: `locked = settings.lockOn` al arrancar (un arranque en frío siempre pide). En `ON_STOP`,
   `backgroundAt = TimeSource.Monotonic.markNow()`. En `ON_RESUME`, si `lockOn` y
-  `backgroundAt.elapsedNow() >= RELOCK_AFTER` (60 s), `locked = true`. Con `locked`, `LockScreen` tapa
-  todo, se pinta antes que cualquier otra pantalla y llama a `authenticate` al aparecer.
+  `backgroundAt.elapsedNow() >= RELOCK_AFTER` (60 s), `locked = true`; la cuenta es
+  `relocks(lockOn, away)`, pura, y el test 41 la prueba con 59, 60 y 61 s. Con `locked`, `LockScreen` tapa
+  todo, se pinta después de cualquier otra pantalla (encima de hojas y overlays), se queda con Atrás para
+  que nada cambie detrás, y llama a `authenticate` al aparecer.
 - Encender el bloqueo: `authenticate`, y solo si responde `true` se guarda `lockOn = true`. Apagar: sin
   autenticar. Apagado por defecto.
 - Cifrar el fichero por encima es teatro: la clave tendría que estar donde el propio proceso la lea sin

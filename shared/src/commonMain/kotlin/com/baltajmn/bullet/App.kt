@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.baltajmn.bullet.data.BobbinRepository
+import com.baltajmn.bullet.data.Lock
 import com.baltajmn.bullet.data.Reminders
 import com.baltajmn.bullet.data.Route
 import com.baltajmn.bullet.i18n.S
@@ -47,6 +48,7 @@ import com.baltajmn.bullet.ui.Glyph
 import com.baltajmn.bullet.ui.GlyphButton
 import com.baltajmn.bullet.ui.IndexScreen
 import com.baltajmn.bullet.ui.KeyScreen
+import com.baltajmn.bullet.ui.LockScreen
 import com.baltajmn.bullet.ui.SearchScreen
 import com.baltajmn.bullet.ui.SettingsScreen
 import com.baltajmn.bullet.ui.MonthScreen
@@ -57,6 +59,9 @@ import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import com.baltajmn.bullet.ui.theme.page
 import kotlinx.coroutines.launch
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.monthsUntil
 
@@ -70,12 +75,26 @@ enum class Screen { TODAY, MONTH, FUTURE, INDEX, COLLECTION, REVIEW, SEARCH, KEY
 
 private val TABS = listOf(Screen.TODAY, Screen.MONTH, Screen.FUTURE, Screen.INDEX)
 
+/** A minute in the background. Short enough to protect, long enough to answer the door (docs/tecnico.md 6.15). */
+val RELOCK_AFTER = 60.seconds
+
+/** Whether coming back after [away] asks again. Stepping out to the permission dialog or a share sheet does not. */
+fun relocks(lockOn: Boolean, away: Duration?): Boolean = lockOn && away != null && away >= RELOCK_AFTER
+
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun App() {
     remember { BobbinRepository.ensureLoaded() }
     val scope = rememberCoroutineScope()
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { scope.launch { BobbinRepository.flush() } }
+    // A cold start always asks (docs/tecnico.md 6.15).
+    var locked by remember { mutableStateOf(BobbinRepository.journal.settings.lockOn) }
+    var backgroundAt by remember { mutableStateOf<TimeSource.Monotonic.ValueTimeMark?>(null) }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        backgroundAt = TimeSource.Monotonic.markNow()
+        scope.launch { BobbinRepository.flush() }
+    }
+    val lockOn = BobbinRepository.journal.settings.lockOn
+    LaunchedEffect(lockOn) { Lock.setHidesPreview(lockOn) }
 
     var today by remember { mutableStateOf(BobbinRepository.today()) }
     var viewedDay by remember { mutableStateOf(today) }
@@ -93,6 +112,8 @@ fun App() {
     // day change (docs/tecnico.md 6.1, test 38). If Hoy was showing today, it follows to the new
     // one, and Mes to the new month; a past day or month someone was reading stays put.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (relocks(BobbinRepository.journal.settings.lockOn, backgroundAt?.elapsedNow())) locked = true
+        backgroundAt = null
         val wasToday = viewedDay == today
         val wasThisMonth = viewedMonth == monthOf(today)
         today = BobbinRepository.today()
@@ -163,7 +184,7 @@ fun App() {
     // Nothing left to pop once the overlay is closed: Mes, Futuro e Índice fall back to Hoy, and
     // Hoy looking at another day falls back to today. On today, in Hoy, this lets the system close
     // the app (docs/pantallas.md 3: "Atrás").
-    BackHandler(overlay == null && (tab != Screen.TODAY || viewedDay != today)) {
+    BackHandler(!locked && overlay == null && (tab != Screen.TODAY || viewedDay != today)) {
         if (tab != Screen.TODAY) tab = Screen.TODAY else viewedDay = today
     }
 
@@ -245,6 +266,9 @@ fun App() {
                     else -> PlaceholderOverlay(screen, dismiss)
                 }
             }
+
+            // Painted last, so it covers every screen, sheet and overlay underneath.
+            if (locked) LockScreen { locked = false }
         }
     }
 }

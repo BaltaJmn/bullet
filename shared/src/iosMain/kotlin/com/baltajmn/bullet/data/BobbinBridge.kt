@@ -5,6 +5,9 @@ package com.baltajmn.bullet.data
  * notification delegate, so links and taps on the reminder arrive through here.
  */
 object BobbinBridge {
+    /** For the cover over the task switcher, which Swift paints before Compose could (docs/tecnico.md 6.15). */
+    fun isLockOn(): Boolean = BobbinRepository.journal.settings.lockOn
+
     /** onOpenURL, and the reminder's tap as `bobbin://review`. Anything else is left alone. */
     fun open(url: String) {
         parseLink(url)?.let { Route.pending = it }
