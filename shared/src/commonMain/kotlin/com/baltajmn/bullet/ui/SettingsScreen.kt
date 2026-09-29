@@ -25,6 +25,14 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.baltajmn.bullet.data.Reminders
+import com.baltajmn.bullet.data.NotifyPermission
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.Lifecycle
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,6 +81,35 @@ fun SettingsScreen(onBack: () -> Unit) {
     val systemWeekStart = systemFirstDayOfWeek()
     var dialog by remember { mutableStateOf<SettingsDialog?>(null) }
 
+    // Read again on every return from the system settings, so granting the permission there shows
+    // here without restarting (docs/tecnico.md 6.12).
+    var permissionCheck by remember { mutableStateOf(0) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { permissionCheck++ }
+    val permission = remember(permissionCheck) { Reminders.permission() }
+    // A permission taken away in the system turns the setting off the next time Settings shows,
+    // instead of leaving a switch that says on and a reminder that never comes.
+    LaunchedEffect(permission, settings.reminderOn) {
+        if (settings.reminderOn && permission != NotifyPermission.GRANTED) {
+            BobbinRepository.settings { it.copy(reminderOn = false) }
+            Reminders.sync()
+        }
+    }
+    val reminderOn = settings.reminderOn && permission == NotifyPermission.GRANTED
+
+    fun setReminder(on: Boolean) {
+        BobbinRepository.settings { it.copy(reminderOn = on) }
+        Reminders.sync()
+    }
+
+    fun turnReminderOn() = when (permission) {
+        NotifyPermission.GRANTED -> setReminder(true)
+        NotifyPermission.CAN_ASK -> Reminders.requestPermission { granted ->
+            permissionCheck++
+            if (granted) setReminder(true)
+        }
+        NotifyPermission.DENIED -> Reminders.openSystemSettings()
+    }
+
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).paper().page()) {
             Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
@@ -99,17 +136,24 @@ fun SettingsScreen(onBack: () -> Unit) {
             SettingsSection(S.sectionReminder)
             SettingsRow(
                 title = S.reminderRow,
-                // Off from the install (docs/pantallas.md 14). What it schedules is #36 and #38.
-                subtitle = if (settings.reminderOn) S.reminderAt(settings.reminderHour, settings.reminderMinute) else S.reminderOff,
-                onClick = { BobbinRepository.settings { it.copy(reminderOn = !it.reminderOn) } },
+                // Off from the install (docs/pantallas.md 14). On, the row opens the time; off, it turns it on.
+                subtitle = when {
+                    permission == NotifyPermission.DENIED -> S.reminderDenied
+                    reminderOn -> S.reminderAt(settings.reminderHour, settings.reminderMinute)
+                    else -> S.reminderOff
+                },
+                onClick = { if (reminderOn) dialog = SettingsDialog.REMINDER_TIME else turnReminderOn() },
                 trailing = {
                     Switch(
-                        checked = settings.reminderOn,
-                        onCheckedChange = { on -> BobbinRepository.settings { it.copy(reminderOn = on) } },
+                        checked = reminderOn,
+                        onCheckedChange = { on -> if (on) turnReminderOn() else setReminder(false) },
                         colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                     )
                 },
             )
+            if (permission == NotifyPermission.DENIED) {
+                Box(Modifier.padding(start = 40.dp)) { TextAction(S.openSystemSettings, Reminders::openSystemSettings) }
+            }
 
             // "Más apps" only exists while some sister app has a page on this platform (docs/tecnico.md 6.16).
             val siblings = SIBLINGS.filter { it.storeUrl != null }
@@ -158,6 +202,15 @@ fun SettingsScreen(onBack: () -> Unit) {
             },
             onClose = { dialog = null },
         )
+        SettingsDialog.REMINDER_TIME -> ReminderTimeDialog(
+            hour = settings.reminderHour,
+            minute = settings.reminderMinute,
+            onClose = { dialog = null },
+            onPick = { hour, minute ->
+                BobbinRepository.settings { it.copy(reminderHour = hour, reminderMinute = minute) }
+                Reminders.sync()
+            },
+        )
         SettingsDialog.WIPE -> WipeDialog(
             onClose = { dialog = null },
             onWipe = {
@@ -170,7 +223,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     }
 }
 
-private enum class SettingsDialog { DAY_START, WEEK_START, WIPE }
+private enum class SettingsDialog { DAY_START, WEEK_START, REMINDER_TIME, WIPE }
 
 /** A section label in `Eyebrow` with `2u` of air above it (docs/pantallas.md 14). */
 @Composable
@@ -243,6 +296,24 @@ private fun WipeDialog(onClose: () -> Unit, onWipe: () -> Unit) {
                 DialogAction(S.wipeContinue) { confirming = true }
             }
         },
+        dismissButton = { DialogAction(S.cancel, onClick = onClose) },
+    )
+}
+
+/** docs/pantallas.md 14: Material3's time picker in a dialog, 24 hours like every time the app writes. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReminderTimeDialog(hour: Int, minute: Int, onClose: () -> Unit, onPick: (Int, Int) -> Unit) {
+    val state = rememberTimePickerState(initialHour = hour, initialMinute = minute, is24Hour = true)
+    AlertDialog(
+        onDismissRequest = onClose,
+        modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH_DP.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 0.dp,
+        title = { Text(S.reminderRow, style = Type.Body) },
+        text = { TimePicker(state = state) },
+        confirmButton = { DialogAction(S.ok) { onPick(state.hour, state.minute); onClose() } },
         dismissButton = { DialogAction(S.cancel, onClick = onClose) },
     )
 }

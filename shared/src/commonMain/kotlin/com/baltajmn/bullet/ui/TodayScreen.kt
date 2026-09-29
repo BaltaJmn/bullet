@@ -22,6 +22,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.baltajmn.bullet.data.Reminders
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,9 +69,22 @@ fun TodayScreen(
     onSettings: () -> Unit,
     onReview: (ReviewScope) -> Unit,
     onNavigateTo: (Place) -> Unit,
+    reminderOfferOn: LocalDate?,
+    onReminderOffer: (LocalDate?) -> Unit,
+    focusSignal: Int,
 ) {
     val journal = BobbinRepository.journal
     val isToday = viewedDay == today
+
+    // Once, after the first bullet is saved (docs/pantallas.md 6.3). Marked as offered the moment it
+    // shows: closing the app without answering is also an answer, and it does not come back.
+    val firstBulletSaved = journal.entries.any { !it.gone }
+    LaunchedEffect(isToday, firstBulletSaved, journal.settings.reminderOffered) {
+        if (isToday && firstBulletSaved && !journal.settings.reminderOffered) {
+            BobbinRepository.settings { it.copy(reminderOffered = true) }
+            onReminderOffer(today)
+        }
+    }
     val maxDay = today.plus(1, DateTimeUnit.DAY)
 
     val daily = journal.ofDay(viewedDay).filter { it.place is Place.Daily }
@@ -97,7 +113,24 @@ fun TodayScreen(
                 Spacer(Modifier.height(gridUnit))
                 Text(S.prefixHint, style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
             } else if (isToday) {
-                NoticeStrip(journal, today, onReview)
+                NoticeStrip(
+                    journal = journal,
+                    today = today,
+                    onReview = onReview,
+                    offerReminder = reminderOfferOn == today,
+                    onOfferAnswered = { yes ->
+                        onReminderOffer(null)
+                        if (yes) {
+                            Reminders.requestPermission { granted ->
+                                // Without the permission the reminder stays off (docs/tecnico.md 6.12).
+                                if (granted) {
+                                    BobbinRepository.settings { it.copy(reminderOn = true) }
+                                    Reminders.sync()
+                                }
+                            }
+                        }
+                    },
+                )
             }
 
             Spacer(Modifier.height(gridUnit))
@@ -114,7 +147,7 @@ fun TodayScreen(
                 onReorder = BobbinRepository::reorder,
             )
 
-            CaptureRow(place = Place.Daily(viewedDay), dayKey = viewedDay)
+            CaptureRow(place = Place.Daily(viewedDay), dayKey = viewedDay, focusSignal = focusSignal)
 
             if (calendarLine.isNotEmpty()) {
                 Spacer(Modifier.height(gridUnit))
@@ -212,12 +245,29 @@ private fun SubtitleRow(day: LocalDate, isToday: Boolean, onBackToToday: () -> U
 
 /** One notice at a time is never the rule here (docs/pantallas.md 6.3): every line that applies shows, in order. */
 @Composable
-private fun NoticeStrip(journal: Journal, today: LocalDate, onReview: (ReviewScope) -> Unit) {
+private fun NoticeStrip(
+    journal: Journal,
+    today: LocalDate,
+    onReview: (ReviewScope) -> Unit,
+    offerReminder: Boolean,
+    onOfferAnswered: (Boolean) -> Unit,
+) {
     if (BobbinRepository.corrupt) {
         NoticeLine(S.noticeCorrupt, S.ok, BobbinRepository::dismissCorrupt)
     }
     if (BobbinRepository.saveFailed) {
         NoticeLine(S.noticeSaveFailed)
+    }
+    if (offerReminder) {
+        val settings = journal.settings
+        // Two answers do not fit on the notice's one line, so they go on the line under it.
+        Column(Modifier.fillMaxWidth().padding(start = 48.dp, end = 24.dp)) {
+            Text(S.offerReminder(settings.reminderHour, settings.reminderMinute), style = Type.Body)
+            Row(Modifier.offset(x = (-8).dp)) {
+                TextAction(S.notNow) { onOfferAnswered(false) }
+                TextAction(S.yes) { onOfferAnswered(true) }
+            }
+        }
     }
     journal.unclosedMonth(today)?.let { month ->
         NoticeLine(S.unclosedMonth(month, journal.openTasksOfMonth(month).size), action = { onReview(ReviewScope.Month(month)) })

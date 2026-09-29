@@ -120,6 +120,17 @@ object BobbinRepository {
     private var readOnly = false
     private var written: Journal? = null
 
+    private var loaded = false
+
+    /**
+     * What every door into the process calls: App, a receiver, a widget. Only the first one reads the
+     * disk. Reading it again would swap the diary in memory for the one on disk, which can be one
+     * write behind, and a recreated Activity or a reminder firing with the app open would lose it.
+     */
+    fun ensureLoaded() {
+        if (!loaded) load()
+    }
+
     /**
      * Reads the diary, falling back to the backup, and never writes over a file it could not read
      * or understand (docs/tecnico.md 6.14). [steps] is a parameter, not always [SCHEMA_STEPS], so
@@ -127,6 +138,7 @@ object BobbinRepository {
      */
     fun load(files: JournalFiles = Storage, steps: List<(JsonObject) -> JsonObject> = SCHEMA_STEPS) {
         this.files = files
+        loaded = true
         updateNeeded = false
         migrationFailed = false
         readOnly = false

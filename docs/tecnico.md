@@ -1184,7 +1184,9 @@ sistema (`ON_RESUME`) el interruptor refleja el permiso sin reiniciar.
   `bobbin-reflection` con `ic_notification`, un `PendingIntent` a `MainActivity` con `data =
   bobbin://review` y `autoCancel`, y vuelve a llamar a `sync()` para el día siguiente. `BootReceiver`
   escucha `BOOT_COMPLETED`, `MY_PACKAGE_REPLACED`, `TIME_SET` y `TIMEZONE_CHANGED` y llama a `sync()`.
-  La app llama a `sync()` al arrancar, en cada `ON_RESUME` y al cambiar el ajuste. Es el fallo de la
+  La app llama a `sync()` al arrancar, en cada `ON_RESUME` y al cambiar el ajuste. `MainActivity` deja en
+  `Reminders.host` una referencia débil a sí misma (para `shouldShowRequestPermissionRationale`) y en
+  `Reminders.launchRequest` su lanzador, cuyo resultado vuelve por `Reminders.onRequestResult`. Es el fallo de la
   app oficial, cuyo recordatorio desaparece. `permission()`: por debajo de API 33,
   `areNotificationsEnabled()` da `GRANTED` o `DENIED`; desde API 33, concedido es `GRANTED`, y si no,
   `CAN_ASK` mientras no se haya preguntado (`Prefs.notifyAsked`) o `shouldShowRequestPermissionRationale`
@@ -1193,8 +1195,11 @@ sistema (`ON_RESUME`) el interruptor refleja el permiso sin reiniciar.
   identificador `bobbin-reflection`. `sync()` quita la petición pendiente con ese identificador y, si
   toca, la vuelve a añadir; se llama al arrancar, al volver a primer plano y al cambiar el ajuste, así
   que un cambio de hora se recoge siempre. `permission()`: `authorized` es `GRANTED`, `notDetermined`
-  es `CAN_ASK`, `denied` es `DENIED`. Un delegado de `UNUserNotificationCenter`, puesto al arrancar,
-  lleva el toque a `Route` (`review`).
+  es `CAN_ASK`, `denied` es `DENIED` (`provisional` y `ephemeral` cuentan como concedido). iOS solo
+  responde en un callback, que llega en una cola propia: `permission()` lo espera con un semáforo de
+  hasta un segundo para que Ajustes pinte el interruptor sin estado intermedio. El delegado de
+  `UNUserNotificationCenter` es el `AppDelegate` de `iOSApp.swift`, puesto al arrancar, y lleva el
+  toque a `BobbinBridge.open("bobbin://review")`.
 
 ### 6.13 Estado de los widgets
 
@@ -1282,6 +1287,11 @@ expect object Storage : JournalFiles
 
 `commonTest` prueba toda la lógica con un `MemoryFiles : JournalFiles` en memoria (test 21), y
 `androidHostTest` prueba el disco de verdad (test 23).
+
+**Una sola carga por proceso.** `App`, los receptores y los widgets llaman a
+`BobbinRepository.ensureLoaded()`, que solo lee el disco la primera vez. Volver a llamar a `load()` con
+la app abierta (una `Activity` recreada, el recordatorio que salta mientras se escribe) cambiaría el
+diario en memoria por el del disco, que puede ir una escritura por detrás. `load()` queda para los tests.
 
 Ficheros, todos en `filesDir` (Android) o `Application Support/` (iOS):
 

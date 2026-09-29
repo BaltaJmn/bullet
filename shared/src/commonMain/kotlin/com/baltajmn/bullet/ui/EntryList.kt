@@ -318,7 +318,7 @@ private fun EntryEditField(initial: String, onSave: (String) -> Unit, modifier: 
  * uses it for a day its month does not have, which "no crea nada al pulsar Intro" (8, #25).
  */
 @Composable
-fun CaptureRow(place: Place, dayKey: Any, autoFocus: Boolean = true, beforeSave: () -> Boolean = { true }) {
+fun CaptureRow(place: Place, dayKey: Any, autoFocus: Boolean = true, focusSignal: Int = 0, beforeSave: () -> Boolean = { true }) {
     // A new day, month block or collection is a new field: neither its text nor its focus carries
     // over from another one.
     key(dayKey) {
@@ -328,8 +328,9 @@ fun CaptureRow(place: Place, dayKey: Any, autoFocus: Boolean = true, beforeSave:
         val focus = remember { FocusRequester() }
         val keyboard = LocalSoftwareKeyboardController.current
 
-        if (autoFocus) {
-            LaunchedEffect(Unit) {
+        // [focusSignal] goes up when a link asks for the keyboard again (`bobbin://today?focus`).
+        LaunchedEffect(focusSignal) {
+            if (autoFocus || focusSignal > 0) {
                 focus.requestFocus()
                 keyboard?.show()
             }

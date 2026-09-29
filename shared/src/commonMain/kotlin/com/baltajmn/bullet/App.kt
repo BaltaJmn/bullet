@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.baltajmn.bullet.data.BobbinRepository
+import com.baltajmn.bullet.data.Reminders
+import com.baltajmn.bullet.data.Route
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.FUTURE_MONTHS
 import com.baltajmn.bullet.model.FUTURE_MONTHS_MAX
@@ -54,6 +57,7 @@ import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import com.baltajmn.bullet.ui.theme.page
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.monthsUntil
 
 /**
@@ -69,7 +73,7 @@ private val TABS = listOf(Screen.TODAY, Screen.MONTH, Screen.FUTURE, Screen.INDE
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun App() {
-    remember { BobbinRepository.load() }
+    remember { BobbinRepository.ensureLoaded() }
     val scope = rememberCoroutineScope()
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { scope.launch { BobbinRepository.flush() } }
 
@@ -94,7 +98,13 @@ fun App() {
         today = BobbinRepository.today()
         if (wasToday) viewedDay = today
         if (wasThisMonth) viewedMonth = monthOf(today)
+        // A change of clock, of zone or of permission is only seen from here (docs/tecnico.md 6.12).
+        Reminders.sync()
     }
+    // The day the reminder offer was shown on (docs/pantallas.md 6.3): it goes with the answer, with
+    // the day, or with the process, and `reminderOffered` makes sure it never comes back.
+    var reminderOfferOn by remember { mutableStateOf<LocalDate?>(null) }
+    var focusToday by remember { mutableStateOf(0) }
 
     var tab by remember { mutableStateOf(Screen.TODAY) }
     // At most one screen open above the tab bar (docs/pantallas.md 3): each one owns its own
@@ -131,6 +141,25 @@ fun App() {
         }
     }
 
+    // A link from a widget or the notification, whether it started the app or found it running
+    // (docs/tecnico.md 7). Read and cleared at once, so a recomposition never follows it twice.
+    val link = Route.pending
+    LaunchedEffect(link) {
+        if (link == null) return@LaunchedEffect
+        Route.pending = null
+        val now = BobbinRepository.today()
+        when (link.screen) {
+            "today" -> {
+                overlay = null
+                tab = Screen.TODAY
+                viewedDay = now
+                if (link.focus) focusToday++
+            }
+            "review" -> openReview(ReviewScope.Day(now))
+            "pro" -> overlay = Screen.PRO
+        }
+    }
+
     // Nothing left to pop once the overlay is closed: Mes, Futuro e Índice fall back to Hoy, and
     // Hoy looking at another day falls back to today. On today, in Hoy, this lets the system close
     // the app (docs/pantallas.md 3: "Atrás").
@@ -152,6 +181,9 @@ fun App() {
                             onSettings = { overlay = Screen.SETTINGS },
                             onReview = ::openReview,
                             onNavigateTo = ::goTo,
+                            reminderOfferOn = reminderOfferOn,
+                            onReminderOffer = { reminderOfferOn = it },
+                            focusSignal = focusToday,
                         )
                         Screen.INDEX -> IndexScreen(
                             onSearch = { overlay = Screen.SEARCH },

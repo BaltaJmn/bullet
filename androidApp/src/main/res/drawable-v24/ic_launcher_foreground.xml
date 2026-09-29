@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="1024" android:viewportHeight="1024">
+    <group android:pivotX="512.0" android:pivotY="512.0" android:scaleX="0.7625" android:scaleY="0.7625">
+        <path android:fillColor="#FBF8F3" android:pathData="M242.00,232.00 H582.00 A30.00,30.00 0 0 1 612.00,262.00 V262.00 A30.00,30.00 0 0 1 582.00,292.00 H242.00 A30.00,30.00 0 0 1 212.00,262.00 V262.00 A30.00,30.00 0 0 1 242.00,232.00 Z"/>
+        <path android:fillColor="#FBF8F3" android:pathData="M242.00,732.00 H582.00 A30.00,30.00 0 0 1 612.00,762.00 V762.00 A30.00,30.00 0 0 1 582.00,792.00 H242.00 A30.00,30.00 0 0 1 212.00,762.00 V762.00 A30.00,30.00 0 0 1 242.00,732.00 Z"/>
+        <path android:fillColor="#B6D6AB" android:pathData="M296.00,296.00 H528.00 A24.00,24.00 0 0 1 552.00,320.00 V320.00 A24.00,24.00 0 0 1 528.00,344.00 H296.00 A24.00,24.00 0 0 1 272.00,320.00 V320.00 A24.00,24.00 0 0 1 296.00,296.00 Z"/>
+        <path android:fillColor="#B6D6AB" android:pathData="M296.00,360.00 H528.00 A24.00,24.00 0 0 1 552.00,384.00 V384.00 A24.00,24.00 0 0 1 528.00,408.00 H296.00 A24.00,24.00 0 0 1 272.00,384.00 V384.00 A24.00,24.00 0 0 1 296.00,360.00 Z"/>
+        <path android:fillColor="#B6D6AB" android:pathData="M296.00,424.00 H528.00 A24.00,24.00 0 0 1 552.00,448.00 V448.00 A24.00,24.00 0 0 1 528.00,472.00 H296.00 A24.00,24.00 0 0 1 272.00,448.00 V448.00 A24.00,24.00 0 0 1 296.00,424.00 Z"/>
+        <path android:fillColor="#B6D6AB" android:pathData="M296.00,488.00 H528.00 A24.00,24.00 0 0 1 552.00,512.00 V512.00 A24.00,24.00 0 0 1 528.00,536.00 H296.00 A24.00,24.00 0 0 1 272.00,512.00 V512.00 A24.00,24.00 0 0 1 296.00,488.00 Z"/>
+        <path android:fillColor="#B6D6AB" android:pathData="M296.00,552.00 H528.00 A24.00,24.00 0 0 1 552.00,576.00 V576.00 A24.00,24.00 0 0 1 528.00,600.00 H296.00 A24.00,24.00 0 0 1 272.00,576.00 V576.00 A24.00,24.00 0 0 1 296.00,552.00 Z"/>
+        <path android:fillColor="#B6D6AB" android:pathData="M296.00,616.00 H528.00 A24.00,24.00 0 0 1 552.00,640.00 V640.00 A24.00,24.00 0 0 1 528.00,664.00 H296.00 A24.00,24.00 0 0 1 272.00,640.00 V640.00 A24.00,24.00 0 0 1 296.00,616.00 Z"/>
+        <path android:fillColor="#B6D6AB" android:pathData="M296.00,680.00 H528.00 A24.00,24.00 0 0 1 552.00,704.00 V704.00 A24.00,24.00 0 0 1 528.00,728.00 H296.00 A24.00,24.00 0 0 1 272.00,704.00 V704.00 A24.00,24.00 0 0 1 296.00,680.00 Z"/>
+        <path android:strokeColor="#B6D6AB" android:strokeWidth="20" android:strokeLineCap="round" android:pathData="M552,576.0 Q660,700 756,640"/>
+        <path android:fillColor="#FBF8F3" android:pathData="M700.00,640.00 A56.00,56.00 0 1,0 812.00,640.00 A56.00,56.00 0 1,0 700.00,640.00 Z"/>
+    </group>
+</vector>
