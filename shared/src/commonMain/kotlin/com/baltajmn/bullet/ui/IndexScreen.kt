@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -211,13 +212,15 @@ private fun FilterField(query: String, onChange: (String) -> Unit, onClear: () -
 
 /**
  * One row of the Index (docs/pantallas.md 9): the title from x48, a dotted leader, and what kind of page
- * it is on the right. The leader and the label sit on the bottom of the title, so a title that wraps
- * keeps them on its last line instead of floating between the two.
+ * it is on the right. The leader is drawn inside the title from where its last line ends, so the title
+ * takes all the width before the label and only wraps when it has to, and a title that wraps keeps the
+ * leader on its last line instead of floating between the two.
  */
 @Composable
 private fun IndexRow(item: IndexItem, dim: Boolean = false, onClick: () -> Unit) {
     val dots = MaterialTheme.colorScheme.onSurfaceVariant
     val title = if (dim) Type.Ink.copy(color = dots) else Type.Ink
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
     Row(
         Modifier.fillMaxWidth().heightIn(min = gridUnit * 2)
@@ -225,15 +228,18 @@ private fun IndexRow(item: IndexItem, dim: Boolean = false, onClick: () -> Unit)
             .padding(start = 48.dp, end = 24.dp),
         verticalAlignment = Alignment.Bottom,
     ) {
-        Text(item.title, style = title, modifier = Modifier.weight(1f, fill = false))
-        Box(
-            Modifier.weight(1f).height(gridUnit).padding(horizontal = 8.dp).drawBehind {
+        Text(
+            item.title,
+            style = title,
+            onTextLayout = { layout = it },
+            modifier = Modifier.weight(1f).drawBehind {
+                val text = layout ?: return@drawBehind
                 // 1.5dp circles every 6dp, on the line the title ends on.
                 val radius = 1.5.dp.toPx() / 2
                 val step = 6.dp.toPx()
                 val y = size.height - 8.dp.toPx()
-                var x = radius
-                while (x < size.width) {
+                var x = text.getLineRight(text.lineCount - 1) + 8.dp.toPx() + radius
+                while (x < size.width - 8.dp.toPx()) {
                     drawCircle(dots, radius = radius, center = Offset(x, y))
                     x += step
                 }
