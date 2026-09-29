@@ -364,7 +364,7 @@ siguiendo al sistema; teléfono y tableta, vertical y horizontal; tema claro u o
 - **Captura desde fuera** (#67, Pro): baldosa de Ajustes rápidos en Android y App Intent de iOS para
   Siri y Atajos, pasando por el mismo `RapidParse`.
 - **Libro del cuaderno en PDF** (#68, Pro): clave, índice, meses y colecciones con los glifos y el
-  papel elegidos. El día que sale, el precio sube a 9,99 EUR (§7).
+  papel elegidos. Entra en Pro sin cambiar el precio (§7).
 
 ### v1.2: issues #69 a #72, retención profunda
 
@@ -747,20 +747,19 @@ La escalera real de la familia, leída de sus repositorios:
 | Quilt | 4,99 EUR |
 | Purl | 5,99 EUR en v1.0, 8,99 EUR desde v1.1 |
 | MoodTraker | 7,99 EUR |
-| **Bobbin** | **7,99 EUR en v1.0, 9,99 EUR desde v1.1** |
+| **Bobbin** | **1,99 EUR** |
 
-**Decisión: 7,99 EUR en v1.0.** Menos de la mitad de un cuaderno de papel bueno, por debajo de los
-9,99 $ de Things 3 y muy por debajo de cualquier compra única del sector (BujoFlow, 29,99 $; Daylio de
-por vida, 59,99 $). Y un solo año de cualquier suscripción de la categoría ya cuesta más: TickTick
-35,99 $, Daylio 35,99 $, Journey 29,99 $, Day One Silver 49,99 $. Bobbin sale más caro que Purl porque
-el paquete de pago de v1.0 es más ancho (portadas, papeles, seguimientos y dos widgets) y porque el
-método entero, gratis, ya vale más que el cuaderno de una línea.
+**Decisión: 1,99 EUR** (del autor, 29-09-2026; el plan anterior era 7,99 EUR y 9,99 desde v1.1).
+Muchas ventas pequeñas antes que pocas grandes: a 1,99 la compra es de impulso, se decide sin
+pensarlo y ya no compite con un cuaderno de papel sino con no comprar nada. Queda muy por debajo de
+cualquier compra única del sector (BujoFlow, 29,99 $; Daylio de por vida, 59,99 $; Things 3, 9,99 $)
+y de un solo mes de muchas suscripciones. Es la más barata de la familia a propósito: el método entero
+es gratis y Pro es el capricho de portadas, papeles, seguimientos y widgets, no una puerta.
 
-**Sube a 9,99 EUR en v1.1**, el día que sale el libro del cuaderno en PDF (#68). La subida se debe a
-que el libro añade coste de desarrollo real, no a estrategia de precios. **Quien compra antes de la
-subida conserva Pro para siempre, con todo lo que llegue después, sin recargo**: es un no consumible,
-la compra es de por vida y no por versión, y en RevenueCat subir el precio es tocar el panel, no el
-código.
+**No sube con la v1.1.** El libro del cuaderno en PDF (#68) entra en Pro sin tocar el precio: la
+subida a 9,99 tenía sentido con un escaparate caro, no con uno de impulso. **Quien compra conserva
+Pro para siempre, con todo lo que llegue después, sin recargo**: es un no consumible, la compra es de
+por vida y no por versión, y en RevenueCat cambiar el precio es tocar el panel, no el código.
 
 **Sin descuento de lanzamiento ni oferta por tiempo limitado.** El precio de salida es el precio final
 de v1.0: un descuento vende la rebaja, no el producto, y enseña a esperar a la siguiente.
@@ -773,19 +772,19 @@ código. Precio base en España; el resto de países, por la conversión automá
 ### Lo que llega al bolsillo
 
 ```
-7,99 EUR escaparate            9,99 EUR escaparate
-/ 1,21 (IVA 21%)  = 6,60 EUR   / 1,21 (IVA 21%)  = 8,26 EUR
-- 15 % comisión   = 5,61 EUR   - 15 % comisión   = 7,02 EUR netos
+1,99 EUR escaparate
+/ 1,21 (IVA 21%)  = 1,64 EUR
+- 15 % comisión   = 1,40 EUR netos
 ```
 
-| Objetivo | Ventas/mes a 7,99 | Descargas/mes a 7,99 | Ventas/mes a 9,99 | Descargas/mes a 9,99 |
-|---|---|---|---|---|
-| 500 EUR | ~90 | ~3.600 | ~72 | ~2.880 |
-| 1.000 EUR | ~179 | ~7.160 | ~143 | ~5.720 |
-| 3.000 EUR | ~535 | ~21.400 | ~428 | ~17.120 |
+| Objetivo | Ventas/mes | Descargas/mes |
+|---|---|---|
+| 500 EUR | ~358 | ~14.320 |
+| 1.000 EUR | ~716 | ~28.640 |
+| 3.000 EUR | ~2.147 | ~85.880 |
 
 Descargas calculadas al 2,5 % de conversión, la hipótesis de trabajo de la familia, no un dato medido
-de esta categoría. La comisión del 15 % exige el Small Business Program en Apple y el primer millón en
+de esta categoría; la apuesta del precio bajo es justo que esa conversión suba. La comisión del 15 % exige el Small Business Program en Apple y el primer millón en
 Google.
 
 ### Reglas
@@ -1220,7 +1219,7 @@ está en `docs/tecnico.md` 11.
 19. Ficha, capturas, privacidad y formularios (#57, #58, #59).
 20. Beta, dispositivo físico y lanzamiento (#60, #61, #62).
 21. **v1.1**: threading, nuevo cuaderno, reflexión guiada, fechas en lenguaje natural, captura desde
-    fuera y libro en PDF con la subida a 9,99 EUR (#63 a #68).
+    fuera y libro en PDF (#63 a #68).
 22. **v1.2**: sincronización, resumen del año, variaciones del índice e importar de las hermanas (#69
     a #72).
 

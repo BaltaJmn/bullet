@@ -1454,7 +1454,7 @@ expect object Lock {
 
 `billing/Billing.kt`, el de line: RevenueCat KMP, un solo producto no consumible (`bullet_pro`) que da
 el entitlement `pro`, sin niveles ni suscripción. El id del producto y el precio viven en el panel de
-RevenueCat y en las tiendas, **nunca en el código**: subir a 9,99 EUR en v1.1 es tocar el panel.
+RevenueCat y en las tiendas, **nunca en el código**: cambiar el precio es tocar el panel.
 
 - `Billing.configure()` al arrancar; `Billing.refresh()` en cada `ON_RESUME`. Sin clave
   (`revenueCatApiKey == null`), la app funciona como gratis sin fallar.
@@ -2285,8 +2285,8 @@ elegida, la clave, el índice (6.7), cada mes (calendario, tareas del mes y cada
 colección, en orden de creación; en v1.2, el resumen del año como apéndice (12.8). Se dibuja página a
 página en un fichero temporal, sin montar el libro en memoria, y se entrega al selector del sistema.
 Nombre `bobbin-book-AAAA-MM-DD.pdf`. Cancelable entre páginas. Se genera desde Ajustes y desde el
-Índice. El precio sube a 9,99 EUR el día que sale (**[autor]**, en el panel); quien compró antes lo
-tiene sin pagar de nuevo, porque la compra es de por vida.
+Índice. Entra en Pro sin cambiar el precio (SPEC §7); quien compró antes lo tiene sin pagar de nuevo,
+porque la compra es de por vida.
 
 ### 12.7 Sincronización
 

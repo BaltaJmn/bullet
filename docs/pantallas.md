@@ -974,7 +974,7 @@ Compra única, sin suscripción.
 
 El método entero es gratis, y lo seguirá siendo.
 
-                          Comprar por 7,99 EUR
+                          Comprar por 1,99 EUR
                                      Restaurar
                                       Ahora no
 ```
@@ -986,7 +986,7 @@ El método entero es gratis, y lo seguirá siendo.
   `proCapture` (Anotar desde Ajustes rápidos en Android; desde Siri y Atajos en iOS); v1.2 `proSync` y
   `proYearSummary`.
 - Debajo, en `Secondary`, `proFree` (El método entero es gratis, y lo seguirá siendo.).
-- Botones apilados a la derecha, uno por fila: `buy(precio)` (Comprar por 7,99 EUR) con el precio que
+- Botones apilados a la derecha, uno por fila: `buy(precio)` (Comprar por 1,99 EUR) con el precio que
   devuelve la tienda, nunca uno escrito en el código; `restore` (Restaurar), siempre, también con Pro;
   `notNow` (Ahora no).
 - Sin tienda: `storeUnavailable` (La tienda no está disponible ahora.) y sin `buy`.

@@ -41,8 +41,8 @@ Todas tomadas. El porqué de cada una, en `SPEC.md`.
       del xcconfig, los ficheros de `listings/` y `app-store/`, y la política. Los identificadores de
       la tabla de arriba no cambian: el nombre solo vive en textos, ficha, icono, esquema `bobbin://`
       y nombres de fichero de copia.
-- [x] Precio: **7,99 EUR** en v1.0, **9,99 EUR** desde v1.1, sin descuento de lanzamiento, precios
-      regionales activados (SPEC §7, `revenuecat.md`).
+- [x] Precio: **1,99 EUR**, también en v1.1, sin descuento de lanzamiento, precios regionales
+      activados (SPEC §7, `revenuecat.md`).
 - [x] Qué es Pro en v1.0: siete portadas, tres papeles, seguimientos a partir del segundo, widget del
       mes y widget de pantalla de bloqueo de iOS (SPEC §7).
 - [x] iPad: sí, universal como las hermanas (SPEC §8). Obliga a capturas de iPad (#58).
@@ -117,7 +117,7 @@ subido a mano, así que `release.yml` y `listings.yml` fallan si se ejecutan ant
    Textos en `listings/`, con los topes comprobados. (#57)
 5. **[autor] Imágenes**: icono de 512, gráfico de 1024x500 y capturas. La API de listings solo escribe
    texto. (#58)
-6. **[autor] Producto `bullet_pro`** a 7,99 EUR (`revenuecat.md` §1). (#47)
+6. **[autor] Producto `bullet_pro`** a 1,99 EUR (`revenuecat.md` §1). (#47)
 7. **[autor] Abrir la prueba cerrada** (canal `alpha`) con la lista de probadores como Grupo de
    Google, y **[código]** etiquetar: `git tag v1.0.0 && git push origin v1.0.0`, que publica en
    `alpha`. (#10)
@@ -182,9 +182,8 @@ no trae Play Billing.
 
 ## Después de la salida
 
-- **v1.1 sube el precio a 9,99 EUR** el día que sale el libro en PDF, no antes (`revenuecat.md` §7,
-  #68). Las notas de versión y la descripción larga dicen entonces "libro en PDF" en la lista de Pro,
-  en el mismo commit.
+- **v1.1 no cambia el precio**: el libro en PDF entra en Pro (`revenuecat.md` §7, #68). Las notas de
+  versión y la descripción larga dicen entonces "libro en PDF" en la lista de Pro, en el mismo commit.
 - **Actualizar la política y los formularios** en el mismo commit que añada cualquier cosa que salga
   del dispositivo o cualquier permiso nuevo.
 

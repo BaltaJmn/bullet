@@ -609,7 +609,7 @@ traducen como cualquier texto. `skip`, `previous` y `next` son los de las seccio
 | `proMonthWidget` | | The month widget | El widget del mes | O widget do mês | Das Monats-Widget | Le widget du mois |
 | `proLockWidget` | | The lock screen widget | El widget de la pantalla de bloqueo | O widget da tela de bloqueio | Das Sperrbildschirm-Widget | Le widget de l'écran verrouillé |
 | `proFree` | | The whole method is free, and it will stay that way. | El método entero es gratis, y lo seguirá siendo. | O método inteiro é grátis, e vai continuar assim. | Die ganze Methode ist kostenlos und bleibt es. | Toute la méthode est gratuite, et le restera. |
-| `buy`* | precio | Buy for 7.99 EUR | Comprar por 7,99 EUR | Comprar por 7,99 EUR | Für 7,99 EUR kaufen | Acheter pour 7,99 EUR |
+| `buy`* | precio | Buy for 1.99 EUR | Comprar por 1,99 EUR | Comprar por 1,99 EUR | Für 1,99 EUR kaufen | Acheter pour 1,99 EUR |
 | `restore`* | | Restore | Restaurar | Restaurar | Wiederherstellen | Restaurer |
 | `storeUnavailable` | | The store is not available right now. | La tienda no está disponible ahora. | A loja não está disponível agora. | Der Store ist gerade nicht verfügbar. | La boutique n'est pas disponible pour le moment. |
 | `buyFailed` | | The purchase could not be completed. | No se ha podido completar la compra. | Não foi possível concluir a compra. | Der Kauf konnte nicht abgeschlossen werden. | L'achat n'a pas pu être finalisé. |

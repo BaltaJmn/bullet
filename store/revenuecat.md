@@ -16,8 +16,7 @@ MoodTraker o Purl y sirven tal cual: `../line/store/revenuecat.md`.
 | Producto | Uno solo, compra única, **no consumible**. Nunca suscripción |
 | Identificador | `bullet_pro` en las dos tiendas. **Irreversible**: un id borrado no se reutiliza |
 | Nombre visible | Bobbin Pro |
-| Precio v1.0 | **7,99 EUR** de base en España, conversión automática al resto **con redondeo** |
-| Precio desde v1.1 | **9,99 EUR**, el día que sale el libro del cuaderno en PDF (§7) |
+| Precio | **1,99 EUR** de base en España, conversión automática al resto **con redondeo**. No sube con la v1.1 (SPEC §7) |
 | Descuento de lanzamiento | No |
 | Países | Todos |
 | Prueba gratuita | No. El plan gratis es la prueba |
@@ -57,7 +56,7 @@ verificado, que ya lo está desde Quilt.
    digitales*.
 3. Opción de compra: id `bulletpro` (Play no admite guion bajo aquí), tipo *Comprar*, contenido
    digital, una unidad por compra.
-4. Precio 7,99 EUR, *Convertir* al resto de países y **Redondear precios**: sin eso salen cifras que
+4. Precio 1,99 EUR, *Convertir* al resto de países y **Redondear precios**: sin eso salen cifras que
    leen como un error de la tienda. Play no guarda el producto sin precio, ni como borrador.
 5. **Activarlo.** Un producto inactivo no sale por la API y el diálogo se queda sin precio.
 
@@ -143,7 +142,7 @@ En App Store Connect, dentro de Bobbin, *Monetización > Compras dentro de la ap
 | Tipo | No consumible |
 | Nombre de referencia | Bobbin Pro |
 | Id de producto | `bullet_pro` |
-| Precio | País base **España**, 7,99 EUR; el resto, por la equivalencia automática de Apple |
+| Precio | País base **España**, 1,99 EUR; el resto, por la equivalencia automática de Apple |
 | Disponibilidad | Todos los países |
 | Captura para la revisión | El `ProDialog` abierto en un iPhone, desde el simulador |
 | Nota para la revisión | `Unlocks seven cover colors, three papers, trackers past the first, the month widget and the lock screen widget. One-time purchase. Restore Purchase is in Settings and in this dialog.` |
@@ -175,14 +174,10 @@ En RevenueCat, mismo proyecto Bobbin:
 Probar en el sandbox: cuenta de sandbox en *Usuarios y acceso > Sandbox*, sesión iniciada en el
 iPhone en *Ajustes > App Store > Cuenta de sandbox*, comprar, borrar la app, reinstalar y restaurar.
 
-## 7. Subir a 9,99 EUR con la v1.1
+## 7. La v1.1: el libro en PDF entra en Pro sin cambiar el precio
 
-Se hace **el día que la v1.1 se publica**, no antes: el precio sube porque crece lo que se da (#68).
+El precio se queda en 1,99 EUR (SPEC §7). El día que la v1.1 se publica:
 
-- **Play**: *Productos integrados*, `bullet_pro`, precio 9,99 EUR, *Convertir* y *Redondear*. Cambia
-  en unas horas.
-- **App Store**: *Programación de precios* del producto, *Añadir cambio de precio* con fecha de
-  inicio el día de publicación, país base España, 9,99 EUR.
 - **Descripciones**: se añade el libro en PDF a la lista de Pro en la tabla del §1, en `pro*` de
   `docs/textos.md` y en las dos fichas, en el mismo commit que etiqueta la v1.1.
-- Quien compró a 7,99 conserva Pro para siempre: es un no consumible y el derecho no caduca.
+- Quien ya compró tiene el libro sin pagar de nuevo: es un no consumible y el derecho no caduca.
