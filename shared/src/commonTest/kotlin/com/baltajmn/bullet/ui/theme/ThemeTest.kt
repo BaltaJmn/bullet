@@ -1,10 +1,12 @@
 package com.baltajmn.bullet.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -50,5 +52,13 @@ class ThemeTest {
         assertAA(Dark.onSurfaceVariant, Dark.surface, "onSurfaceVariant/surface dark")
         assertAA(Dark.primary, Dark.background, "primary/background dark")
         assertAA(Dark.primary, Dark.surface, "primary/surface dark")
+    }
+
+    /** #34: the cut falls exactly on 600, and 600 itself is already a tablet. */
+    @Test
+    fun wideScreenStartsAt600() {
+        assertFalse(isWideScreen(599.dp))
+        assertTrue(isWideScreen(600.dp))
+        assertTrue(isWideScreen(601.dp))
     }
 }

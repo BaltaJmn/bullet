@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,6 +45,9 @@ import com.baltajmn.bullet.model.indexItems
 import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
+import com.baltajmn.bullet.ui.theme.page
+import com.baltajmn.bullet.ui.theme.Spread
+import com.baltajmn.bullet.ui.theme.isWideScreen
 import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.YearMonth
 
@@ -72,52 +76,66 @@ fun IndexScreen(
     val (archived, active) = shown.partition { it is IndexItem.Collection && it.archived }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page(spread = true)) {
             TabHeaderIcons(onSearch, onSettings)
             Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
                 Text(S.tabIndex, style = Type.PageTitle, modifier = Modifier.padding(start = 48.dp))
             }
             Spacer(Modifier.height(gridUnit))
 
-            // Nothing to filter in an empty diary, so no field to ignore either.
-            if (items.isNotEmpty()) {
-                FilterField(query, onChange = { query = it }, onClear = { query = "" })
-                Spacer(Modifier.height(gridUnit))
-            }
-
-            when {
-                items.isEmpty() -> Text(S.indexEmpty, style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
-                shown.isEmpty() -> Text(S.indexNoMatch, style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
-            }
-
-            active.forEach { item -> IndexRow(item) { open(item, onOpenMonth, onOpenCollection) } }
-
-            // Only the title, and Intro creates it and opens it with its capture focused
-            // (docs/pantallas.md 9). Hidden while filtering, like the archived block.
-            if (query.isEmpty()) {
-                NewCollectionRow { title ->
-                    BobbinRepository.createCollection(title)?.let(onCreated)
+            // The Index fills the left page and goes on in the right one, in the same order
+            // (docs/pantallas.md 21). On a phone the two halves are just one after the other.
+            val half = (active.size + 1) / 2
+            val first: @Composable ColumnScope.() -> Unit = {
+                // Nothing to filter in an empty diary, so no field to ignore either.
+                if (items.isNotEmpty()) {
+                    FilterField(query, onChange = { query = it }, onClear = { query = "" })
+                    Spacer(Modifier.height(gridUnit))
                 }
-            }
 
-            if (archived.isNotEmpty()) {
-                Spacer(Modifier.height(gridUnit))
-                Row(
-                    Modifier.fillMaxWidth().height(gridUnit * 2)
-                        .clickable(role = Role.Button) { archivedOpen = !archivedOpen },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        S.archivedToggle(archived.size),
-                        style = Type.Body.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                        modifier = Modifier.padding(start = 48.dp),
-                    )
+                when {
+                    items.isEmpty() -> Text(S.indexEmpty, style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
+                    shown.isEmpty() -> Text(S.indexNoMatch, style = Type.Secondary, modifier = Modifier.padding(start = 48.dp))
                 }
-                if (archivedOpen) {
-                    archived.forEach { item ->
-                        IndexRow(item, dim = true) { open(item, onOpenMonth, onOpenCollection) }
+
+                active.take(half).forEach { item -> IndexRow(item) { open(item, onOpenMonth, onOpenCollection) } }
+            }
+            val second: @Composable ColumnScope.() -> Unit = {
+                active.drop(half).forEach { item -> IndexRow(item) { open(item, onOpenMonth, onOpenCollection) } }
+
+                // Only the title, and Intro creates it and opens it with its capture focused
+                // (docs/pantallas.md 9). Hidden while filtering, like the archived block.
+                if (query.isEmpty()) {
+                    NewCollectionRow { title ->
+                        BobbinRepository.createCollection(title)?.let(onCreated)
                     }
                 }
+
+                if (archived.isNotEmpty()) {
+                    Spacer(Modifier.height(gridUnit))
+                    Row(
+                        Modifier.fillMaxWidth().height(gridUnit * 2)
+                            .clickable(role = Role.Button) { archivedOpen = !archivedOpen },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            S.archivedToggle(archived.size),
+                            style = Type.Body.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                            modifier = Modifier.padding(start = 48.dp),
+                        )
+                    }
+                    if (archivedOpen) {
+                        archived.forEach { item ->
+                            IndexRow(item, dim = true) { open(item, onOpenMonth, onOpenCollection) }
+                        }
+                    }
+                }
+            }
+            if (isWideScreen()) {
+                Spread(first, second)
+            } else {
+                first()
+                second()
             }
             Spacer(Modifier.height(gridUnit * 2))
         }

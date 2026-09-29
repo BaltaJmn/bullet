@@ -50,8 +50,10 @@ import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.entriesAt
 import com.baltajmn.bullet.model.limitEdit
 import com.baltajmn.bullet.model.oneLine
+import com.baltajmn.bullet.ui.theme.MAX_CONTENT_WIDTH
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
+import com.baltajmn.bullet.ui.theme.page
 import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.LocalDate
 
@@ -88,7 +90,7 @@ fun CollectionScreen(
     var moreOpen by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
             Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
                 GlyphButton(Glyph.BACK, S.a11yBack, onBack)
                 Spacer(Modifier.weight(1f))
@@ -192,6 +194,7 @@ private fun CollectionTitleField(initial: String, onSave: (String) -> Unit, modi
 private fun CollectionSheet(archived: Boolean, onClose: () -> Unit, onArchive: () -> Unit, onDelete: () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onClose,
+        sheetMaxWidth = MAX_CONTENT_WIDTH,
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         tonalElevation = 0.dp,

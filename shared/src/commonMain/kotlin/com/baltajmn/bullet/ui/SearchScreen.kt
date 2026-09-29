@@ -55,6 +55,7 @@ import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
+import com.baltajmn.bullet.ui.theme.page
 import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.LocalDate
 
@@ -83,7 +84,7 @@ fun SearchScreen(
     val groups = search(journal, query, filters)
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
             SearchField(query, onChange = { query = it }, onClear = { query = "" }, onBack = onBack)
 
             FlowRow(Modifier.fillMaxWidth().padding(start = 48.dp, end = 24.dp)) {

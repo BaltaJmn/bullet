@@ -6,6 +6,10 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 /**
  * Ink on paper, not a generic task manager (docs/pantallas.md 1.2, SPEC 5). Adapted from the
@@ -46,3 +50,15 @@ internal val Dark = darkColorScheme(
 fun BobbinTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = if (darkTheme) Dark else Light, content = content)
 }
+
+/** docs/pantallas.md 21: the one cut between phone and tablet, the same on Android and on iOS. */
+val WIDE_SCREEN_FROM = 600.dp
+
+/** A page on a wide window: 24 columns of dots (docs/pantallas.md 1.1 and 21). */
+val MAX_CONTENT_WIDTH = 576.dp
+
+fun isWideScreen(windowWidth: Dp): Boolean = windowWidth >= WIDE_SCREEN_FROM
+
+/** The window's width decides, so portrait and landscape are the same rule (docs/pantallas.md 21). */
+@Composable
+fun isWideScreen(): Boolean = with(LocalDensity.current) { isWideScreen(LocalWindowInfo.current.containerSize.width.toDp()) }

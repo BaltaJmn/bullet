@@ -3,6 +3,7 @@ package com.baltajmn.bullet.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +37,9 @@ import com.baltajmn.bullet.model.futureMonths
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
+import com.baltajmn.bullet.ui.theme.page
+import com.baltajmn.bullet.ui.theme.Spread
+import com.baltajmn.bullet.ui.theme.isWideScreen
 import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
@@ -63,7 +67,7 @@ fun FutureScreen(
     var sheetEntryId by remember { mutableStateOf<String?>(null) }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page(spread = true)) {
             TabHeaderIcons(onSearch, onSettings)
             // No subtitle: the Future Log is not a month (docs/pantallas.md 8).
             Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
@@ -71,7 +75,7 @@ fun FutureScreen(
             }
             Spacer(Modifier.height(gridUnit))
 
-            for (month in futureMonths(today, shown)) {
+            val block: @Composable ColumnScope.(YearMonth) -> Unit = { month ->
                 Text(S.monthTitle(month).uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(start = 48.dp))
                 FutureBlock(
                     month = month,
@@ -85,6 +89,17 @@ fun FutureScreen(
                     onLinkHandled = onLinkHandled,
                 )
                 Spacer(Modifier.height(gridUnit))
+            }
+            val months = futureMonths(today, shown)
+            if (isWideScreen()) {
+                // Alternating left and right, in order, like the Future Log of a paper notebook
+                // opened flat (docs/pantallas.md 21).
+                Spread(
+                    left = { months.filterIndexed { i, _ -> i % 2 == 0 }.forEach { block(it) } },
+                    right = { months.filterIndexed { i, _ -> i % 2 == 1 }.forEach { block(it) } },
+                )
+            } else {
+                months.forEach { block(it) }
             }
 
             if (shown < FUTURE_MONTHS_MAX) {

@@ -44,6 +44,7 @@ import com.baltajmn.bullet.model.openTasksOfMonth
 import com.baltajmn.bullet.model.unclosedMonth
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
+import com.baltajmn.bullet.ui.theme.page
 import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -78,7 +79,7 @@ fun TodayScreen(
     var sheetEntryId by remember { mutableStateOf<String?>(null) }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
             HeaderIcons(onKey, onSearch, onSettings)
             TitleRow(
                 day = viewedDay,

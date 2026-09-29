@@ -48,6 +48,7 @@ import com.baltajmn.bullet.model.firstDayOfWeek
 import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
+import com.baltajmn.bullet.ui.theme.page
 import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.isoDayNumber
@@ -73,7 +74,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     var dialog by remember { mutableStateOf<SettingsDialog?>(null) }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).paper()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).paper().page()) {
             Row(Modifier.fillMaxWidth().height(gridUnit * 2), verticalAlignment = Alignment.CenterVertically) {
                 GlyphButton(Glyph.BACK, S.a11yBack, onBack)
             }

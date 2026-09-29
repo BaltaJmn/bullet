@@ -65,6 +65,7 @@ import com.baltajmn.bullet.model.reviewDays
 import com.baltajmn.bullet.model.reviewQueue
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
+import com.baltajmn.bullet.ui.theme.page
 import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
@@ -102,7 +103,7 @@ fun FutureReviewScreen(today: LocalDate, onClose: () -> Unit) {
     }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).paper()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).paper().page()) {
             ReviewHeader(onClose, position = if (queue.isEmpty()) null else S.reviewPosition(minOf(decided + 1, total), total))
 
             val entry = queue.firstOrNull()
@@ -179,7 +180,7 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit) {
     LaunchedEffect(entry?.id) { mode = Destination.NONE }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
             ReviewHeader(onClose, position = if (entry == null) null else S.reviewPosition(minOf(decided + 1, total), total))
 
             if (entry == null) {
@@ -251,7 +252,7 @@ private fun ReflectStep(scope: ReviewScope, journal: Journal, onClose: () -> Uni
     var note by remember { mutableStateOf("") }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding().paper().page()) {
             ReviewHeader(onClose, position = null)
             Text(
                 if (month != null) S.reflectTitle(month) else S.reflectTitle(),

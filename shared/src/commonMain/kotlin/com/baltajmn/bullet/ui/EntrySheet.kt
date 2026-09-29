@@ -50,6 +50,7 @@ import com.baltajmn.bullet.model.migrationCount
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.model.oneLine
+import com.baltajmn.bullet.ui.theme.MAX_CONTENT_WIDTH
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
 import kotlinx.datetime.DateTimeUnit
@@ -98,6 +99,7 @@ fun EntrySheet(
 
     ModalBottomSheet(
         onDismissRequest = onClose,
+        sheetMaxWidth = MAX_CONTENT_WIDTH,
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         tonalElevation = 0.dp,

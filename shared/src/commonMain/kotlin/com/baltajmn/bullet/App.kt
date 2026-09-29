@@ -52,6 +52,7 @@ import com.baltajmn.bullet.ui.TodayScreen
 import com.baltajmn.bullet.ui.theme.BobbinTheme
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.gridUnit
+import com.baltajmn.bullet.ui.theme.page
 import kotlinx.coroutines.launch
 import kotlinx.datetime.monthsUntil
 
@@ -223,7 +224,9 @@ private fun TabBar(active: Screen, onSelect: (Screen) -> Unit) {
     Row(
         Modifier.fillMaxWidth().height(gridUnit * 2)
             .background(MaterialTheme.colorScheme.background)
-            .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) },
+            .drawBehind { drawLine(line, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx()) }
+            // The line goes the whole width; the four labels share the width of the page (docs/pantallas.md 21).
+            .page(),
     ) {
         TABS.forEach { screen ->
             val isActive = screen == active

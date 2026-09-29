@@ -164,7 +164,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `i18n/Strings.kt` | `expect fun systemLanguage()`, `expect fun systemFirstDayOfWeek()`, `object S` con `t(en, es, pt, de, fr)`, plurales y nombres de mes y día | A `line/.../i18n/Strings.kt` |
 | `ui/theme/Theme.kt` | `BobbinTheme`, colores, `enum class Cover`, `enum class Paper`, `isWideScreen`, `MAX_CONTENT_WIDTH` | A `line/.../ui/theme/Theme.kt` |
 | `ui/theme/Grid.kt` | `gridUnit` | N (#17) |
-| `ui/theme/Paper.kt` | modificador que pinta el papel | N (#17) |
+| `ui/theme/Paper.kt` | modificador que pinta el papel; `page()` y `Spread`, la página y la doble página en ancho grande | N (#17, #34) |
 | `ui/theme/Type.kt` | `Ink`, `PageTitle`, `Body`, `Secondary`, `Eyebrow` | N (#17) |
 | `ui/BulletGlyph.kt` | los glifos del método en `Canvas` | N |
 | `ui/Icons.kt` | los pocos iconos de la cabecera | A `line/.../ui/Icons.kt` |
