@@ -728,7 +728,7 @@ barra de progreso ni porcentajes.
 - Título `rereadTitle(mes?)` y `rereadLead(n)`: dice cuántas quedaron y qué viene después.
 - El periodo en modo lectura: por cada día con entradas, `dayTitle` y sus entradas; en un mes, después,
   `calendarTitle` con los días que tienen algo, y `monthTasks`. Sin gestos.
-- La nota: `rereadNote(mes?)` y un campo con `rereadNoteHint`. Con texto, al seguir se guarda como
+- La nota: `rereadNote(mes?)` y un campo con la pregunta de 23.3 como pista. Con texto, al seguir se guarda como
   `NOTE` en `Monthly(m, null)` o en `Monthly(mes, hoy.day)` (`docs/tecnico.md` 6.6).
 - Abajo, `decideTasks(n)` (Decidir las 4 tareas; Terminar si no queda ninguna) y `notNow`, que cierra.
 
@@ -1281,7 +1281,7 @@ hasta el 31 de diciembre de 2026), como las archivadas: sigue legible, no se bor
 ### 23.3 Reflexión guiada (v1.1, #65)
 
 En el paso de releer (11.1), la pista del campo de nota es la pregunta del día (`S.question(i)`) en vez
-de `reflectHint`. Se ignora escribiendo otra cosa o saltando: nada más en la pantalla. Nunca sale fuera
+de una pista fija. Se ignora escribiendo otra cosa o saltando: nada más en la pantalla. Nunca sale fuera
 de este campo.
 
 ### 23.4 Fechas en lenguaje natural (v1.1, #66)

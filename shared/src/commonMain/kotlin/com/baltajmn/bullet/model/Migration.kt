@@ -1,5 +1,7 @@
 package com.baltajmn.bullet.model
 
+import com.baltajmn.bullet.i18n.QUESTION_COUNT
+import kotlin.random.Random
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.monthsUntil
@@ -248,6 +250,19 @@ fun Journal.reviewDays(scope: ReviewScope): List<Pair<LocalDate, List<Entry>>> {
         entriesAt(Place.Daily(date)).takeIf { it.isNotEmpty() }?.let { date to it }
     }
 }
+
+/**
+ * The question of a reflection (docs/tecnico.md 12.3): one not asked in this round, or once the bank is
+ * used up, any but the last one, so two reviews in a row never ask the same thing.
+ */
+fun nextQuestion(used: List<Int>, random: Random, count: Int = QUESTION_COUNT): Int {
+    val left = (0 until count).filter { it !in used }
+    return left.ifEmpty { (0 until count).filter { it != used.lastOrNull() } }.random(random)
+}
+
+/** `questionsUsed` once [asked] is shown: a full round starts again, keeping only the last one asked. */
+fun questionsAfter(used: List<Int>, asked: Int, count: Int = QUESTION_COUNT): List<Int> =
+    if (used.toSet().size >= count) listOfNotNull(used.lastOrNull(), asked).distinct() else used + asked
 
 /** Where a reflection note lands (docs/tecnico.md 6.6): the month's tasks for a month, that day's calendar line for a day. */
 fun ReviewScope.notePlace(): Place = when (this) {

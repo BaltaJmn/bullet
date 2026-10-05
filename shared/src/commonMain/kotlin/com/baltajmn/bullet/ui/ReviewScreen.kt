@@ -61,7 +61,10 @@ import com.baltajmn.bullet.model.limitEdit
 import com.baltajmn.bullet.model.migrationCount
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.model.monthOf
+import com.baltajmn.bullet.model.nextQuestion
 import com.baltajmn.bullet.model.notePlace
+import com.baltajmn.bullet.model.questionsAfter
+import kotlin.random.Random
 import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.model.placeDay
 import com.baltajmn.bullet.model.reviewDays
@@ -97,6 +100,9 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit, onTo
     when (step) {
         Step.INTRO -> {
             var note by remember { mutableStateOf("") }
+            // One question per review, taken out of the round as soon as it is shown (docs/tecnico.md 12.3).
+            val question = remember { nextQuestion(journal.settings.questionsUsed, Random) }
+            LaunchedEffect(Unit) { BobbinRepository.settings { it.copy(questionsUsed = questionsAfter(it.questionsUsed, question)) } }
             Page(
                 tab = false,
                 bottom = {
@@ -137,7 +143,7 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit, onTo
                 }
                 Column(Modifier.padding(horizontal = 24.dp)) {
                     Text(S.rereadNote(month), style = Type.Secondary, modifier = Modifier.padding(top = 18.dp, bottom = 6.dp))
-                    NoteField(note) { note = it }
+                    NoteField(note, hint = S.question(question)) { note = it }
                 }
             }
         }
@@ -325,13 +331,13 @@ private fun Footer(content: @Composable ColumnScope.() -> Unit) {
 
 /** The reflection note (docs/pantallas.md 11.1): one line like any entry, wrapping as it grows. */
 @Composable
-private fun NoteField(value: String, onChange: (String) -> Unit) {
+private fun NoteField(value: String, hint: String, onChange: (String) -> Unit) {
     var field by remember { mutableStateOf(TextFieldValue(value)) }
     Box(
         Modifier.fillMaxWidth().heightIn(min = 76.dp).fieldFrame(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.outline)
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
-        if (field.text.isEmpty()) Text(S.rereadNoteHint, style = Type.Ink.copy(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant))
+        if (field.text.isEmpty()) Text(hint, style = Type.Ink.copy(fontSize = 16.sp, lineHeight = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant))
         BasicTextField(
             value = field,
             onValueChange = { new ->

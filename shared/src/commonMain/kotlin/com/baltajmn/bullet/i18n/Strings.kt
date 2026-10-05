@@ -840,7 +840,6 @@ object S {
             )
         }
     }
-    val rereadNoteHint = t("What went well, what didn't...", "Qué salió bien, qué no...", "O que deu certo, o que não...", "Was gut lief, was nicht...", "Ce qui a marché, ce qui non...")
 
     fun decideTasks(n: Int): String = when {
         n == 0 -> t("Finish", "Terminar", "Terminar", "Fertig", "Terminer")
