@@ -1003,8 +1003,8 @@ El método entero es gratis, y lo seguirá siendo.
   borra nada.), con `importAction` (Importar) y `cancel` (Cancelar). Importando, `importAction` pasa a
   `working`.
 - Hecho: `importDone(n)` (Diario al día: 15 cambios.) con `ok`.
-- Error: `importFailedTitle` (No se ha podido importar) y el texto de su clave (`importNotBackup`,
-  `importDamaged`, `importTooNew`, `importEmpty`, `importIsSibling`, `docs/tecnico.md` 4.6), con `ok`.
+- Error: `importFailedTitle` (No se ha podido importar) y el texto de su clave (`importNotSibling`,
+  `importDamaged`, `importTooNew`, `importEmpty`, `docs/tecnico.md` 4.6), con `ok`.
 
 ### 15.3 Exportar
 

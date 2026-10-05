@@ -115,7 +115,7 @@ internal fun moveLabel(entry: Entry, today: LocalDate): String {
     }
 }
 
-private enum class SheetMode { MAIN, MONTHS, ELSEWHERE, LISTS, MARKS, EDIT }
+internal enum class SheetMode { MAIN, MONTHS, ELSEWHERE, LISTS, MARKS, EDIT }
 
 /**
  * The sheet of an entry (docs/pantallas.md 5.6), opened by touching its text: what it is, and every
@@ -149,11 +149,16 @@ fun EntrySheetHost(today: LocalDate, onNavigateTo: (Place) -> Unit) {
             SheetHeader(S.entryKind(entry.bullet, entry.status, Signifier.PRIORITY in entry.signifiers), entry.text, close)
             Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
                 val back = { mode = SheetMode.MAIN }
+                fun move(to: Place) {
+                    val where = placeLabel(to, BobbinRepository.journal, today)
+                    close()
+                    BobbinRepository.undoable(S.sentence(S.movedTo(where))) { BobbinRepository.migrate(entry.id, to) }
+                }
                 when (mode) {
                     SheetMode.MAIN -> MainActions(entry, journal, today, close, onNavigateTo) { mode = it }
                     SheetMode.MONTHS -> MonthChoices(entry, today, close, back)
-                    SheetMode.ELSEWHERE -> ElsewhereChoices(entry, journal, today, close, back) { mode = SheetMode.LISTS }
-                    SheetMode.LISTS -> ListChoices(entry, journal, today, close) { mode = SheetMode.ELSEWHERE }
+                    SheetMode.ELSEWHERE -> ElsewhereChoices(entry.place, journal, today, ::move, back) { mode = SheetMode.LISTS }
+                    SheetMode.LISTS -> ListChoices(entry.place, journal, ::move) { mode = SheetMode.ELSEWHERE }
                     SheetMode.MARKS -> MarkChoices(entry, close, back)
                     SheetMode.EDIT -> EditText(entry, close, back)
                 }
@@ -269,21 +274,16 @@ private fun MonthChoices(entry: Entry, today: LocalDate, close: () -> Unit, onBa
 
 /**
  * "Pasar a otro sitio" (docs/pantallas.md 5.7): today, tomorrow, this month's tasks, a day of this month
- * typed by hand, or a list. The entry's own place is never offered.
+ * typed by hand, or a list. The entry's own place, [current], is never offered.
  */
 @Composable
-private fun ElsewhereChoices(entry: Entry, journal: Journal, today: LocalDate, close: () -> Unit, onBack: () -> Unit, onLists: () -> Unit) {
+internal fun ElsewhereChoices(current: Place?, journal: Journal, today: LocalDate, move: (Place) -> Unit, onBack: () -> Unit, onLists: () -> Unit) {
     val month = monthOf(today)
-    fun move(to: Place) {
-        val where = placeLabel(to, journal, today)
-        close()
-        BobbinRepository.undoable(S.sentence(S.movedTo(where))) { BobbinRepository.migrate(entry.id, to) }
-    }
     listOf(
         S.toToday to Place.Daily(today),
         S.toTomorrow to Place.Daily(today.plus(1, DateTimeUnit.DAY)),
         S.toThisMonth to Place.Monthly(month),
-    ).filter { it.second != entry.place }.forEach { (label, to) ->
+    ).filter { it.second != current }.forEach { (label, to) ->
         ActionRow(label, placeLabel(to, journal, today).replaceFirstChar { it.uppercase() }, icon = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) { move(to) }
     }
 
@@ -318,14 +318,9 @@ private fun ElsewhereChoices(entry: Entry, journal: Journal, today: LocalDate, c
  * entries, so they are not offered.
  */
 @Composable
-private fun ListChoices(entry: Entry, journal: Journal, today: LocalDate, close: () -> Unit, onBack: () -> Unit) {
-    fun moveTo(id: String) {
-        val to = Place.InCollection(id)
-        val where = placeLabel(to, BobbinRepository.journal, today)
-        close()
-        BobbinRepository.undoable(S.sentence(S.movedTo(where))) { BobbinRepository.migrate(entry.id, to) }
-    }
-    journal.collections.filter { !it.archived && it.kind == CollectionKind.NOTES && entry.place != Place.InCollection(it.id) }
+internal fun ListChoices(current: Place?, journal: Journal, move: (Place) -> Unit, onBack: () -> Unit) {
+    fun moveTo(id: String) = move(Place.InCollection(id))
+    journal.collections.filter { !it.archived && it.kind == CollectionKind.NOTES && current != Place.InCollection(it.id) }
         .sortedBy { it.createdAt }
         .forEach { c -> ActionRow(c.title, icon = { GlyphIcon(Glyph.LIST) }) { moveTo(c.id) } }
 

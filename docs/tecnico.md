@@ -611,19 +611,20 @@ Se rechaza, con el diario intacto y la clave de texto indicada, si:
 
 | Caso | Clave |
 |---|---|
-| No empieza por `50 4B 03 04` (zip) ni por `{` tras espacios (JSON) | `importNotBackup` |
+| No empieza por `50 4B 03 04` (zip) ni por `{` tras espacios (JSON) | `importNotSibling` |
 | Zip truncado, CRC distinto, método distinto de 0 o entrada cifrada | `importDamaged` |
-| Zip sin `journal.json` | `importNotBackup` |
-| JSON sin `schemaVersion` entero o sin lista `entries` | `importNotBackup` |
+| Zip sin `journal.json` ni `entries.json` de Purl | `importNotSibling` |
+| JSON sin `schemaVersion` entero o sin lista `entries`, que tampoco es de una hermana (4.5) | `importNotSibling` |
 | `schemaVersion` mayor que `SCHEMA_VERSION` | `importTooNew` |
 | Una entrada o colección que no decodifica (`id` vacío, `bullet` o `status` desconocido, `place` inválido) | `importDamaged` |
 | Dos entradas o dos colecciones con el mismo `id` | `importDamaged` |
 | Un `InCollection` que apunta a una colección que no está en la copia, en una entrada que no es esqueleto | `importDamaged` |
 | Copia sin entradas ni colecciones | `importEmpty` |
-| Una copia de Purl, MoodTraker o Quilt por el botón de importar normal (4.5) | `importIsSibling` en v1.0 y v1.1; en v1.2 se desvía a su importación |
+| Una copia de Purl, MoodTraker o Quilt sin ningún candidato (4.5) | `importEmpty` |
 
-Un `schemaVersion` menor se convierte en memoria con los pasos de 6.14 antes de decodificar, sin
-tocar el disco. Un `from` que apunta a un `id` que no está se acepta: el original pudo borrarse. Un
+Una copia de Purl, MoodTraker o Quilt con candidatos no se rechaza: `readBackup` da
+`ReadBackup.Sibling(app, candidates, skipped)` y se revisa uno a uno (12.10). Un `schemaVersion` menor
+se convierte en memoria con los pasos de 6.14 antes de decodificar, sin tocar el disco. Un `from` que apunta a un `id` que no está se acepta: el original pudo borrarse. Un
 texto de más de 500 se acepta tal cual.
 
 ---
@@ -2011,7 +2012,7 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
     los nombres de colección se sanean y los repetidos llevan ` 2`; el `journal.json` del zip se relee
     igual y lleva los ajustes actuales.
 16. **Validación de importación** (#45): cada fila de 4.6 con su clave; un `schemaVersion` menor se
-    convierte en memoria; una copia de Purl, de MoodTraker y de Quilt da `importIsSibling`.
+    convierte en memoria; las copias de las hermanas van en el 35.
 17. **Compartir** (#43): una colección de 40 entradas con alturas distintas se reparte en varias páginas
     y ninguna entrada queda partida ni se pierde; el texto plano usa los símbolos ASCII y no incluye
     esqueletos.
@@ -2380,3 +2381,7 @@ mismo traspaso masivo que la migración evita.
   signifier no existe en el método: la marca de algo hecho es el aspa sobre una tarea (SPEC §2.3), y
   aquí manda el documento.
 - Un fichero que no es de ninguna de las tres da `importNotSibling` y no se adivina el formato. Sin red.
+- `Journal.addImported(c, place, now, newId)` (en `data/Export.kt`) es la única escritura: una entrada,
+  con el texto entero (el tope de 500 no se aplica al importar), al final de su sitio. El selector de
+  "A otro día o colección" es el de 5.7 (`ElsewhereChoices`, `ListChoices`), que no ofrece días pasados
+  salvo el original.

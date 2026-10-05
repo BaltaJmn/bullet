@@ -1,11 +1,17 @@
 package com.baltajmn.bullet.data
 
+import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.BulletCollection
 import com.baltajmn.bullet.model.CollectionKind
+import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.JournalJson
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.SCHEMA_VERSION
+import com.baltajmn.bullet.model.TaskStatus
+import com.baltajmn.bullet.model.dayExists
+import com.baltajmn.bullet.model.nextOrder
+import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.model.clampCodePoints
 import com.baltajmn.bullet.model.entriesAt
 import com.baltajmn.bullet.model.futureBlock
@@ -15,10 +21,12 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -111,11 +119,17 @@ fun exportZip(journal: Journal, sink: (ByteArray) -> Unit) {
 }
 
 /** Why a file could not be imported (docs/tecnico.md 4.6). Each one has its own text. */
-enum class ImportProblem { NOT_BACKUP, DAMAGED, TOO_NEW, EMPTY, SIBLING_PURL, SIBLING_MOOD, SIBLING_QUILT }
+enum class ImportProblem { NOT_BACKUP, DAMAGED, TOO_NEW, EMPTY }
+
+/** One entry a sister app's file offers (docs/tecnico.md 4.5), still only a proposal. */
+data class SiblingCandidate(val date: LocalDate, val bullet: Bullet, val status: TaskStatus, val text: String)
 
 sealed interface ReadBackup {
     data class Ok(val journal: Journal) : ReadBackup
     data class Failed(val problem: ImportProblem) : ReadBackup
+
+    /** A sister app's file, by date; [skipped] counts the lines whose date was not ISO (4.5). */
+    data class Sibling(val app: String, val candidates: List<SiblingCandidate>, val skipped: Int) : ReadBackup
 }
 
 /**
@@ -140,16 +154,16 @@ fun readBackup(source: (Int) -> ByteArray?, steps: List<(JsonObject) -> JsonObje
     val text: String
     if (isZip) {
         var journal: String? = null
-        var sibling = false
+        var purl: String? = null
         try {
             ZipReader(whole).forEach { name, bytes ->
                 if (name == JOURNAL_NAME) journal = bytes.decodeToString()
-                if (name == "entries.json") sibling = true
+                if (name == PURL_ENTRIES) purl = bytes.decodeToString()
             }
         } catch (e: ZipDamaged) {
             return ReadBackup.Failed(ImportProblem.DAMAGED)
         }
-        text = journal ?: return ReadBackup.Failed(if (sibling) ImportProblem.SIBLING_PURL else ImportProblem.NOT_BACKUP)
+        text = journal ?: purl ?: return ReadBackup.Failed(ImportProblem.NOT_BACKUP)
     } else {
         val bytes = mutableListOf<ByteArray>()
         while (true) bytes += whole(64 * 1024) ?: break
@@ -163,7 +177,7 @@ fun readBackup(source: (Int) -> ByteArray?, steps: List<(JsonObject) -> JsonObje
 fun parseBackup(text: String, steps: List<(JsonObject) -> JsonObject> = SCHEMA_STEPS): ReadBackup {
     val root = runCatching { Json.parseToJsonElement(text).jsonObject }.getOrNull()
         ?: return ReadBackup.Failed(ImportProblem.NOT_BACKUP)
-    siblingOf(root)?.let { return ReadBackup.Failed(it) }
+    readSibling(root)?.let { return it }
     val version = (root["schemaVersion"] as? JsonPrimitive)?.intOrNull
     if (version == null || root["entries"] !is JsonArray) return ReadBackup.Failed(ImportProblem.NOT_BACKUP)
     if (version > SCHEMA_VERSION) return ReadBackup.Failed(ImportProblem.TOO_NEW)
@@ -185,10 +199,61 @@ fun parseBackup(text: String, steps: List<(JsonObject) -> JsonObject> = SCHEMA_S
     return ReadBackup.Ok(journal)
 }
 
-/** A sister app's backup by its shape (docs/tecnico.md 4.5): in v1.0 it is refused with its own text. */
-private fun siblingOf(root: JsonObject): ImportProblem? = when {
-    (root["version"] as? JsonPrimitive)?.intOrNull != null && root["entries"] is JsonObject -> ImportProblem.SIBLING_PURL
-    (root["app"] as? JsonPrimitive)?.contentOrNull == "mood" -> ImportProblem.SIBLING_MOOD
-    root["habits"] is JsonArray -> ImportProblem.SIBLING_QUILT
-    else -> null
+private const val PURL_ENTRIES = "entries.json"
+
+/**
+ * A sister app's backup by its shape, read as candidates (docs/tecnico.md 4.5): only what the table
+ * takes, no text cut, and a line whose date is not ISO skipped and counted. Null for anything else.
+ */
+private fun readSibling(root: JsonObject): ReadBackup? {
+    val found = mutableListOf<SiblingCandidate>()
+    var skipped = 0
+    fun add(date: String?, bullet: Bullet, status: TaskStatus, text: String) {
+        if (text.isEmpty()) return
+        val day = date?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        if (day == null) skipped++ else found += SiblingCandidate(day, bullet, status, text)
+    }
+    fun JsonObject.string(key: String) = (this[key] as? JsonPrimitive)?.contentOrNull.orEmpty()
+    fun tagged(text: String, tags: JsonElement?): String {
+        val words = (tags as? JsonArray).orEmpty().mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.oneLine()?.trim()?.takeIf(String::isNotEmpty) }
+        return text.oneLine().trim().takeIf { it.isNotEmpty() }?.let { it + words.joinToString("") { w -> " #$w" } }.orEmpty()
+    }
+
+    val app = when {
+        (root["version"] as? JsonPrimitive)?.intOrNull != null && root["entries"] is JsonObject -> {
+            root.getValue("entries").jsonObject.forEach { (date, e) ->
+                val entry = e as? JsonObject ?: return@forEach
+                add(date, Bullet.EVENT, TaskStatus.OPEN, tagged(entry.string("text"), entry["tags"]))
+            }
+            "Purl"
+        }
+        (root["app"] as? JsonPrimitive)?.contentOrNull == "mood" -> {
+            ((root["store"] as? JsonObject)?.get("entries") as? JsonArray).orEmpty().forEach { e ->
+                val entry = e as? JsonObject ?: return@forEach
+                add(entry.string("date"), Bullet.EVENT, TaskStatus.OPEN, tagged(entry.string("note"), entry["tags"]))
+            }
+            "MoodTraker"
+        }
+        root["habits"] is JsonArray -> {
+            root.getValue("habits").jsonArray.forEach { h ->
+                val habit = h as? JsonObject ?: return@forEach
+                val target = (habit["target"] as? JsonPrimitive)?.intOrNull ?: 1
+                val name = listOf(habit.string("emoji"), habit.string("name")).map { it.oneLine().trim() }.filter { it.isNotEmpty() }.joinToString(" ")
+                (habit["log"] as? JsonObject)?.forEach { (date, value) ->
+                    if (((value as? JsonPrimitive)?.intOrNull ?: 0) >= target) add(date, Bullet.TASK, TaskStatus.DONE, name)
+                }
+            }
+            "Quilt"
+        }
+        else -> return null
+    }
+    if (found.isEmpty()) return ReadBackup.Failed(ImportProblem.EMPTY)
+    return ReadBackup.Sibling(app, found.sortedBy { it.date }, skipped)
+}
+
+/** One decided candidate (docs/tecnico.md 12.10): a new entry with its own id, its text whole. */
+fun Journal.addImported(c: SiblingCandidate, place: Place, now: Long, newId: String): Journal? {
+    if (!place.dayExists) return null
+    val entry = Entry(id = newId, bullet = c.bullet, text = c.text, status = c.status, place = place, order = nextOrder(place), createdAt = now, updatedAt = now)
+    return copy(entries = entries + entry)
 }

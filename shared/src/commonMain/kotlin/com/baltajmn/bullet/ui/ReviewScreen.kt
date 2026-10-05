@@ -42,6 +42,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.BobbinRepository
+import com.baltajmn.bullet.data.ReadBackup
 import com.baltajmn.bullet.data.askReviewAfter
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
@@ -336,6 +337,64 @@ fun YearSummaryScreen(today: LocalDate, onClose: () -> Unit) {
                 summary.mostMigrated.forEach { (entry, n) ->
                     EntryRow(entry, journal, today, onNavigateTo = {}, still = true, showFrom = false)
                     Text(S.timesMoved(n), style = Type.Secondary.copy(fontSize = 12.sp), modifier = Modifier.padding(start = 52.dp, bottom = 6.dp))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A sister app's file (docs/pantallas.md 23.10, docs/tecnico.md 12.10): one candidate at a time, to its
+ * own day, somewhere else with the picker of 5.7, or skipped. Each decision writes only its own entry,
+ * so leaving half way keeps what was imported and nothing else.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun SiblingReviewScreen(sibling: ReadBackup.Sibling, today: LocalDate, onClose: () -> Unit) {
+    BackHandler(true, onClose)
+    val journal = BobbinRepository.journal
+    var at by remember { mutableStateOf(0) }
+    var imported by remember { mutableStateOf(0) }
+    var mode by remember { mutableStateOf(SheetMode.MAIN) }
+    val total = sibling.candidates.size
+    val c = sibling.candidates.getOrNull(at)
+
+    if (c == null) {
+        Page(tab = false, bottom = { Footer { PrimaryButton(S.close, onClose, block = true) } }) {
+            ReviewTop(onClose)
+            Column(Modifier.padding(horizontal = 24.dp)) {
+                Text(sibling.app.uppercase(), style = Type.Eyebrow)
+                Text(S.importSiblingDone(imported), style = Type.Heading, modifier = Modifier.padding(top = 10.dp, bottom = 8.dp).semantics { heading() })
+            }
+        }
+        return
+    }
+    fun next() {
+        at++
+        mode = SheetMode.MAIN
+    }
+    fun take(place: Place) {
+        if (BobbinRepository.importSibling(c, place)) imported++
+        next()
+    }
+    Page(tab = false) {
+        ReviewTop(onClose, S.entryOf(at + 1, total), at + 1, total)
+        Column(Modifier.padding(horizontal = 24.dp)) {
+            Text(S.siblingFrom(sibling.app, c.date).uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(top = 14.dp))
+            Row(Modifier.padding(top = 8.dp)) {
+                BulletGlyph(c.bullet, c.status, Modifier.padding(top = 4.dp, end = 10.dp))
+                Text(c.text, style = Type.Heading, modifier = Modifier.weight(1f))
+            }
+        }
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            when (mode) {
+                SheetMode.ELSEWHERE -> ElsewhereChoices(null, journal, today, ::take, { mode = SheetMode.MAIN }) { mode = SheetMode.LISTS }
+                SheetMode.LISTS -> ListChoices(null, journal, ::take) { mode = SheetMode.ELSEWHERE }
+                else -> {
+                    val day = Place.Daily(c.date)
+                    ActionRow(S.importToDay, placeLabel(day, journal, today).replaceFirstChar { it.uppercase() }, icon = { BulletGlyph(c.bullet, c.status) }) { take(day) }
+                    ActionRow(S.importElsewhere, icon = { GlyphIcon(Glyph.FORWARD) }) { mode = SheetMode.ELSEWHERE }
+                    ActionRow(S.importSkip, icon = { GlyphIcon(Glyph.LATER) }, onClick = ::next)
                 }
             }
         }

@@ -126,7 +126,14 @@ internal const val DIALOG_MAX_WIDTH_DP = 576
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onKey: () -> Unit, onGuide: () -> Unit, onNotebook: () -> Unit, onYearSummary: () -> Unit) {
+fun SettingsScreen(
+    onBack: () -> Unit,
+    onKey: () -> Unit,
+    onGuide: () -> Unit,
+    onNotebook: () -> Unit,
+    onYearSummary: () -> Unit,
+    onSibling: (ReadBackup.Sibling) -> Unit,
+) {
     BackHandler(true, onBack)
     val settings = BobbinRepository.journal.settings
     val systemWeekStart = systemFirstDayOfWeek()
@@ -279,6 +286,8 @@ fun SettingsScreen(onBack: () -> Unit, onKey: () -> Unit, onGuide: () -> Unit, o
                             when (val r = read) {
                                 null -> if (picked == PickResult.Failed) importProblem = ImportProblem.NOT_BACKUP
                                 is ReadBackup.Failed -> importProblem = r.problem
+                                // A sister app's file is reviewed one by one, never merged (docs/pantallas.md 23.10).
+                                is ReadBackup.Sibling -> onSibling(r)
                                 // Nothing is applied yet: this is the merge done dry, for the summary.
                                 is ReadBackup.Ok -> importPreview = r.journal to merge(BobbinRepository.journal, r.journal)
                             }
@@ -640,13 +649,10 @@ private fun ReminderTimeDialog(hour: Int, minute: Int, onClose: () -> Unit, onPi
 }
 
 private fun importProblemText(problem: ImportProblem): String = when (problem) {
-    ImportProblem.NOT_BACKUP -> S.importNotBackup
+    ImportProblem.NOT_BACKUP -> S.importNotSibling
     ImportProblem.DAMAGED -> S.importDamaged
     ImportProblem.TOO_NEW -> S.importTooNew
     ImportProblem.EMPTY -> S.importEmpty
-    ImportProblem.SIBLING_PURL -> S.importIsSibling("Purl")
-    ImportProblem.SIBLING_MOOD -> S.importIsSibling("MoodTraker")
-    ImportProblem.SIBLING_QUILT -> S.importIsSibling("Quilt")
 }
 
 /**

@@ -3,6 +3,8 @@ package com.baltajmn.bullet
 import com.baltajmn.bullet.data.ImportProblem
 import com.baltajmn.bullet.data.JOURNAL_NAME
 import com.baltajmn.bullet.data.ReadBackup
+import com.baltajmn.bullet.data.SiblingCandidate
+import com.baltajmn.bullet.data.addImported
 import com.baltajmn.bullet.data.ZipDamaged
 import com.baltajmn.bullet.data.ZipReader
 import com.baltajmn.bullet.data.ZipWriter
@@ -190,12 +192,59 @@ class BackupTest {
         assertEquals(null, problem(zipOf(JOURNAL_NAME to """{"schemaVersion":1,"entries":[$entry]}""".encodeToByteArray())))
     }
 
+    // 35. Importar de las hermanas (v1.2, #72).
+    private fun sibling(bytes: ByteArray) = readBackup(sourceOf(bytes)) as ReadBackup.Sibling
+    private fun sibling(json: String) = sibling(json.encodeToByteArray())
+
     @Test
-    fun theSistersBackupsAreRecognisedAndRefused() {
-        assertEquals(ImportProblem.SIBLING_PURL, problem(zipOf("entries.json" to "{}".encodeToByteArray(), "journal.md" to "#".encodeToByteArray())))
-        assertEquals(ImportProblem.SIBLING_PURL, problem("""{"version":1,"entries":{"2026-09-22":{"text":"x"}}}"""))
-        assertEquals(ImportProblem.SIBLING_MOOD, problem("""{"app":"mood","store":{"entries":[]}}"""))
-        assertEquals(ImportProblem.SIBLING_QUILT, problem("""{"habits":[]}"""))
+    fun aPurlFileBecomesEventsWithTheirDateAndTextWhole() {
+        val long = "Paseo largo por el río ".repeat(30) + "🙂"
+        val json = """{"version":1,"entries":{"2026-03-14":{"text":"Primera\nlínea","tags":["casa","río"]},"2026-03-02":{"text":"$long"},"14/03/2026":{"text":"mala"},"2026-03-20":{"text":"  "}}}"""
+        val read = sibling(json)
+        assertEquals("Purl", read.app)
+        assertEquals(1, read.skipped)
+        assertEquals(
+            listOf(
+                SiblingCandidate(LocalDate(2026, 3, 2), Bullet.EVENT, TaskStatus.OPEN, long),
+                SiblingCandidate(LocalDate(2026, 3, 14), Bullet.EVENT, TaskStatus.OPEN, "Primera línea #casa #río"),
+            ),
+            read.candidates,
+        )
+        // Purl's own export is a zip with entries.json and the photos beside it.
+        assertEquals(read, sibling(zipOf("entries.json" to json.encodeToByteArray(), "photos/p-1.jpg" to byteArrayOf(1, 2))))
+    }
+
+    @Test
+    fun moodTrakerNotesAndQuiltHabitsBecomeCandidates() {
+        val mood = sibling("""{"app":"mood","store":{"entries":[{"date":"2025-12-01","moodId":"good","note":"Cena con Ana","tags":["amigos"]},{"date":"2025-12-02","moodId":"bad"},{"date":"ayer","note":"x"}]}}""")
+        assertEquals("MoodTraker", mood.app)
+        assertEquals(listOf(SiblingCandidate(LocalDate(2025, 12, 1), Bullet.EVENT, TaskStatus.OPEN, "Cena con Ana #amigos")), mood.candidates)
+        assertEquals(1, mood.skipped)
+
+        val quilt = sibling("""{"habits":[{"name":"Leer","emoji":"📚","target":2,"log":{"2026-01-02":2,"2026-01-01":1}},{"name":"Correr","log":{"2026-01-01":1}}]}""")
+        assertEquals("Quilt", quilt.app)
+        assertEquals(
+            listOf(
+                SiblingCandidate(LocalDate(2026, 1, 1), Bullet.TASK, TaskStatus.DONE, "Correr"),
+                SiblingCandidate(LocalDate(2026, 1, 2), Bullet.TASK, TaskStatus.DONE, "📚 Leer"),
+            ),
+            quilt.candidates,
+        )
+    }
+
+    @Test
+    fun aFileFromNoneOfThemIsNotGuessed() {
+        assertEquals(ImportProblem.NOT_BACKUP, problem("""{"notes":[{"date":"2026-01-01","text":"x"}]}"""))
+        assertEquals(ImportProblem.NOT_BACKUP, problem(zipOf("notes.json" to "{}".encodeToByteArray())))
+        assertEquals(ImportProblem.EMPTY, problem("""{"habits":[]}"""))
+    }
+
+    @Test
+    fun anImportedCandidateIsANewEntryAndNeverCut() {
+        val c = SiblingCandidate(LocalDate(2026, 3, 2), Bullet.EVENT, TaskStatus.OPEN, "x".repeat(600))
+        val j = Journal(entries = listOf(e("a", Place.Daily(c.date)))).addImported(c, Place.Daily(c.date), now = 5, newId = "b")!!
+        val added = j.entries.last()
+        assertEquals(listOf("b", 600, 1), listOf(added.id, added.text.length, added.order))
     }
 
     // 22. Fusion (#45).

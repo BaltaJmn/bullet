@@ -630,11 +630,9 @@ traducen como cualquier texto. `skip`, `previous` y `next` son los de las seccio
 | `importDone` | n | Journal up to date: 15 changes. | Diario al día: 15 cambios. | Diário em dia: 15 alterações. | Journal aktuell: 15 Änderungen. | Journal à jour : 15 modifications. |
 | `importDone` | 0 | Journal up to date: there was nothing to change. | Diario al día: no había nada que cambiar. | Diário em dia: não havia nada para mudar. | Journal aktuell: es gab nichts zu ändern. | Journal à jour : il n'y avait rien à changer. |
 | `importFailedTitle` | | Couldn't import | No se ha podido importar | Não foi possível importar | Import fehlgeschlagen | Échec de l'import |
-| `importNotBackup` | | That file is not a Bobbin backup. | Ese fichero no es una copia de Bobbin. | Esse arquivo não é uma cópia do Bobbin. | Diese Datei ist keine Sicherung von Bobbin. | Ce fichier n'est pas une copie de Bobbin. |
 | `importDamaged` | | The backup is incomplete or damaged. Your journal wasn't touched. | La copia está incompleta o dañada. Tu diario no se ha tocado. | A cópia está incompleta ou danificada. Seu diário não foi alterado. | Die Sicherung ist unvollständig oder beschädigt. Dein Journal wurde nicht verändert. | La copie est incomplète ou endommagée. Ton journal n'a pas été touché. |
 | `importTooNew` | | This backup is from a newer version of Bobbin. Update the app and try again. | Esta copia es de una versión más nueva de Bobbin. Actualiza la app y vuelve a probar. | Esta cópia é de uma versão mais nova do Bobbin. Atualize o app e tente de novo. | Diese Sicherung stammt aus einer neueren Version von Bobbin. Aktualisiere die App und versuch es erneut. | Cette copie vient d'une version plus récente de Bobbin. Mets à jour l'app et réessaie. |
 | `importEmpty` | | The backup has no entries or collections. | La copia no tiene entradas ni colecciones. | A cópia não tem entradas nem coleções. | Die Sicherung enthält keine Einträge und keine Sammlungen. | La copie ne contient ni entrées ni collections. |
-| `importIsSibling` | app | This is a backup from Purl. You'll be able to bring its entries in a future version. | Es una copia de Purl. Podrás traer sus entradas en una próxima versión. | Isso é uma cópia do Purl. Você vai poder trazer as entradas dele numa próxima versão. | Das ist eine Sicherung von Purl. Du kannst ihre Einträge in einer späteren Version übernehmen. | C'est une copie de Purl. Tu pourras importer ses entrées dans une prochaine version. |
 | `exportFailed` | | Couldn't save the backup. | No se ha podido guardar la copia. | Não foi possível salvar a cópia. | Die Sicherung konnte nicht gespeichert werden. | Impossible d'enregistrer la copie. |
 | `wipeTitle` | | Delete the whole journal? | ¿Borrar todo el diario? | Apagar todo o diário? | Das ganze Journal löschen? | Supprimer tout le journal ? |
 | `wipeText` | | All entries, collections and settings on this phone are deleted. Backups you exported are not touched, and Bobbin Pro stays. | Se borran todas las entradas, colecciones y ajustes de este teléfono. Las copias que hayas exportado no se tocan, y Bobbin Pro se conserva. | Todas as entradas, coleções e ajustes deste telefone são apagados. As cópias que você exportou não são alteradas, e o Bobbin Pro continua. | Alle Einträge, Sammlungen und Einstellungen auf diesem Handy werden gelöscht. Exportierte Sicherungen bleiben unberührt, und Bobbin Pro bleibt. | Toutes les entrées, collections et réglages de ce téléphone sont supprimés. Les copies que tu as exportées ne sont pas touchées, et Bobbin Pro est conservé. |
@@ -651,8 +649,8 @@ traducen como cualquier texto. `skip`, `previous` y `next` son los de las seccio
 - `importDone(n)` cuenta `added + updated`, con su frase propia para 0: importar la copia que ya se
   tiene no cambia nada, y "0 cambios" suena a fallo. El singular (decisión de #16, fila `cambio` de
   la regla del método 3) es "1 change", "1 cambio", "1 alteração", "1 Änderung", "1 modification".
-- `importIsSibling` recibe el nombre de la app reconocida (`Purl`, `MoodTraker` o `Quilt`, 4.5) y
-  vale para v1.0 y v1.1; en v1.2 la importación se desvía (sección 24).
+- Un fichero que no es una copia se explica con `importNotSibling` (sección 24): desde v1.2 la misma
+  fila importa también de Purl, MoodTraker y Quilt.
 - `wipeConfirmTitle` lleva dentro `wipeWord` del mismo idioma, y la comparación es con `fold`
   (`docs/pantallas.md` 15.4): en alemán vale "löschen" o "loschen".
 - Exportar no tiene más textos: `exportFailed` con `ok`; cancelar no enseña nada.

@@ -276,6 +276,13 @@ object BobbinRepository {
         return saved
     }
 
+    /** One candidate from a sister app, decided (docs/tecnico.md 12.10). Returns whether it saved. */
+    fun importSibling(c: SiblingCandidate, place: Place): Boolean {
+        var saved = false
+        edit { j -> j.addImported(c, place, now(), newId("e", j.entries.map { it.id }.toSet()))?.also { saved = true } }
+        return saved
+    }
+
     /** The one way the UI changes an ajuste: `settings { it.copy(futureSeen = m) }`. */
     fun settings(change: (Settings) -> Settings) = edit { j -> j.copy(settings = change(j.settings)) }
 

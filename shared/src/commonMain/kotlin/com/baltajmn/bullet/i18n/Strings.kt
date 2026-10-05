@@ -1408,13 +1408,6 @@ object S {
     }
 
     val importFailedTitle = t("Couldn't import", "No se ha podido importar", "Não foi possível importar", "Import fehlgeschlagen", "Échec de l'import")
-    val importNotBackup = t(
-        "That file is not a Bobbin backup.",
-        "Ese fichero no es una copia de Bobbin.",
-        "Esse arquivo não é uma cópia do Bobbin.",
-        "Diese Datei ist keine Sicherung von Bobbin.",
-        "Ce fichier n'est pas une copie de Bobbin.",
-    )
     val importDamaged = t(
         "The backup is incomplete or damaged. Your journal wasn't touched.",
         "La copia está incompleta o dañada. Tu diario no se ha tocado.",
@@ -1435,13 +1428,6 @@ object S {
         "A cópia não tem entradas nem coleções.",
         "Die Sicherung enthält keine Einträge und keine Sammlungen.",
         "La copie ne contient ni entrées ni collections.",
-    )
-    fun importIsSibling(app: String) = t(
-        "This is a backup from $app. You'll be able to bring its entries in a future version.",
-        "Es una copia de $app. Podrás traer sus entradas en una próxima versión.",
-        "Isso é uma cópia do $app. Você vai poder trazer as entradas dele numa próxima versão.",
-        "Das ist eine Sicherung von $app. Du kannst ihre Einträge in einer späteren Version übernehmen.",
-        "C'est une copie de $app. Tu pourras importer ses entrées dans une prochaine version.",
     )
     val exportFailed = t(
         "Couldn't save the backup.",
