@@ -2207,9 +2207,12 @@ resueltas están en la columna de notas.
 
 `BulletCollection.threadFrom` existe desde el esquema 1. v1.1 añade:
 
-- `continueCollection(j, id, title, now, newId)`: una colección nueva, del mismo `kind`, con
-  `threadFrom = id` y el título que escriba el usuario (se le propone el de la actual). No crea
-  entradas ni páginas: solo el enlace. Solo se ofrece si la colección no tiene ya continuación.
+- `continueCollection(j, id, title, now, newId)`: una lista nueva con `threadFrom = id` y el título que
+  escriba el usuario (se le propone el de la actual). No crea entradas ni páginas: solo el enlace. Solo
+  se ofrece si la lista no tiene ya continuación. **Solo listas**: en un seguimiento `threadFrom` ya
+  enlaza sus páginas de cada mes (6.18), y una continuación sería otra página más del mismo hilo.
+- El Índice une un hilo solo dentro de su bloque (activas o archivadas): `IndexItem.Collection.threaded`
+  marca las que van sangradas bajo la anterior.
 - `threadPrev(c) = threadFrom`; `threadNext(c)` = la colección cuyo `threadFrom` es `c.id`. La cabecera
   enseña "viene de" y "sigue en", navegables. Archivar cualquiera de las dos no rompe el enlace.
 - El Índice agrupa un hilo en la posición de su primera colección, con las siguientes debajo en orden.

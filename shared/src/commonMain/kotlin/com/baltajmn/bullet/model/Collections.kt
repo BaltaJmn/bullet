@@ -29,6 +29,8 @@ sealed interface IndexItem {
         override val createdAt: Long,
         val kind: CollectionKind = CollectionKind.NOTES,
         val archived: Boolean = false,
+        /** It continues an earlier list of its block, so the Index paints it under that one (12.1). */
+        val threaded: Boolean = false,
     ) : IndexItem
 }
 
@@ -54,16 +56,54 @@ fun Journal.indexItems(monthTitle: (YearMonth) -> String): List<IndexItem> {
 
     // A tracker is one row however many months it has: its newest page, in the place its first one started.
     val tails = trackerTails().mapTo(mutableSetOf()) { it.id }
+    val byId = collections.associateBy { it.id }
+    // A list that continues another of the same block goes where that thread started, right under the
+    // list before it (12.1). Archived and active are two blocks, so a thread is only joined inside one.
+    val position = mutableMapOf<String, Pair<Long, Int>>()
     val collections = this.collections
         .filter { it.kind != CollectionKind.TRACKER || it.id in tails }
         .map {
-            val started = if (it.kind == CollectionKind.TRACKER) trackerThread(it.id).first().createdAt else it.createdAt
-            IndexItem.Collection(it.id, it.title, started, it.kind, it.archived)
+            if (it.kind == CollectionKind.TRACKER) {
+                IndexItem.Collection(it.id, it.title, trackerThread(it.id).first().createdAt, it.kind, it.archived)
+            } else {
+                var root = it
+                var steps = 0
+                while (true) {
+                    val previous = root.threadFrom?.let(byId::get) ?: break
+                    if (previous.kind != CollectionKind.NOTES || previous.archived != it.archived || steps > byId.size) break
+                    root = previous
+                    steps++
+                }
+                position[it.id] = root.createdAt to steps
+                IndexItem.Collection(it.id, it.title, it.createdAt, it.kind, it.archived, threaded = steps > 0)
+            }
         }
 
+    val order = compareBy<IndexItem>({ (it as? IndexItem.Collection)?.let { c -> position[c.id]?.first } ?: it.createdAt }, { (it as? IndexItem.Collection)?.let { c -> position[c.id]?.second } ?: 0 })
     val (archived, active) = (months + collections).partition { it is IndexItem.Collection && it.archived }
-    return active.sortedBy { it.createdAt } + archived.sortedBy { it.createdAt }
+    return active.sortedWith(order) + archived.sortedWith(order)
 }
+
+/**
+ * A new list continuing [id] (docs/tecnico.md 12.1): its own title, `threadFrom = id`, and nothing else.
+ * No entry is created or moved, so a thread is only a link between two pages. Only a list continues
+ * this way: a tracker already continues itself one month at a time (6.18). Null when [id] is not a list,
+ * already has a continuation, or the title is empty.
+ */
+fun Journal.continueCollection(id: String, title: String, now: Long, newId: String): Journal? {
+    val from = collections.find { it.id == id && it.kind == CollectionKind.NOTES } ?: return null
+    if (threadNext(from) != null) return null
+    val made = createCollection(title, now, newId) ?: return null
+    return made.copy(collections = made.collections.map { if (it.id == newId) it.copy(threadFrom = id) else it })
+}
+
+/** The list [c] continues, archived or not (docs/tecnico.md 12.1). */
+fun Journal.threadPrev(c: BulletCollection): BulletCollection? =
+    c.threadFrom?.let { from -> collections.find { it.id == from && it.kind == CollectionKind.NOTES } }
+
+/** The list that continues [c], archived or not (docs/tecnico.md 12.1). */
+fun Journal.threadNext(c: BulletCollection): BulletCollection? =
+    if (c.kind != CollectionKind.NOTES) null else collections.find { it.threadFrom == c.id && it.kind == CollectionKind.NOTES }
 
 /** The Index filter (docs/tecnico.md 6.7): by title, without telling case or accents apart. An empty query filters nothing. */
 fun filterIndex(items: List<IndexItem>, query: String): List<IndexItem> {

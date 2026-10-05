@@ -7,6 +7,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -68,6 +69,8 @@ import com.baltajmn.bullet.model.limitEdit
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.model.oneLine
+import com.baltajmn.bullet.model.threadNext
+import com.baltajmn.bullet.model.threadPrev
 import com.baltajmn.bullet.model.trackerPage
 import com.baltajmn.bullet.model.trackerThread
 import com.baltajmn.bullet.ui.theme.MAX_CONTENT_WIDTH
@@ -112,8 +115,11 @@ fun CollectionScreen(
     var sharing by remember { mutableStateOf<ShareContent?>(null) }
     var renaming by remember(id) { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
+    var continuing by remember(id) { mutableStateOf(false) }
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
+    val previous = journal.threadPrev(collection)
+    val next = journal.threadNext(collection)
 
     Page(
         tab = false,
@@ -143,6 +149,13 @@ fun CollectionScreen(
                 titleModifier = Modifier.clickable(role = Role.Button) { renaming = true },
             )
         }
+        // Where the thread comes from and where it goes, archived or not (docs/pantallas.md 23.1).
+        if (previous != null || next != null) {
+            FlowRow(Modifier.padding(start = HEAD_START, end = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                previous?.let { LinkText(S.threadFrom(it.title), { onNavigateTo(Place.InCollection(it.id)) }) }
+                next?.let { LinkText(S.threadNext(it.title), { onNavigateTo(Place.InCollection(it.id)) }) }
+            }
+        }
         Spacer(Modifier.height(10.dp))
         if (entries.isEmpty()) EmptyText(S.listEmpty) else EntryListSection(entries, place, journal, today, onNavigateTo)
     }
@@ -155,12 +168,23 @@ fun CollectionScreen(
             onClose = { moreOpen = false },
             onShare = if (entries.isNotEmpty()) ({ moreOpen = false; sharing = collectionShare(journal, id) }) else null,
             onRename = { moreOpen = false; renaming = true },
+            onContinue = if (next == null) ({ moreOpen = false; continuing = true }) else null,
             onArchive = { BobbinRepository.archiveCollection(id, !collection.archived); moreOpen = false; onBack() },
             onDelete = { BobbinRepository.deleteCollection(id); moreOpen = false },
         )
     }
+    if (continuing) {
+        ContinueDialog(collection.title, onDismiss = { continuing = false }) { title ->
+            BobbinRepository.continueCollection(id, title)?.also { onNavigateTo(Place.InCollection(it)) } != null
+        }
+    }
     sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
 }
+
+/** "Continuar en..." (docs/pantallas.md 23.1): the current title proposed, and the new list opens. */
+@Composable
+internal fun ContinueDialog(title: String, onDismiss: () -> Unit, onCreate: (String) -> Boolean) =
+    TextDialog(S.continueTitle, title, S.create, COLLECTION_TITLE_MAX, onDismiss, onCreate)
 
 /** docs/pantallas.md 10.1: renaming in line, capped at `COLLECTION_TITLE_MAX`. An empty title does not save. */
 @Composable
@@ -196,6 +220,7 @@ private fun MoreSheet(
     onClose: () -> Unit,
     onShare: (() -> Unit)?,
     onRename: () -> Unit,
+    onContinue: (() -> Unit)? = null,
     onArchive: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -210,6 +235,7 @@ private fun MoreSheet(
         Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp).padding(bottom = 18.dp)) {
             onShare?.let { ActionRow(S.shareList, icon = { GlyphIcon(Glyph.SHARE) }, onClick = it) }
             ActionRow(S.rename, icon = { GlyphIcon(Glyph.EDIT) }, onClick = onRename)
+            onContinue?.let { ActionRow(S.continueCollection, icon = { GlyphIcon(Glyph.FORWARD) }, onClick = it) }
             ActionRow(if (archived) S.unarchive else S.archive, icon = { GlyphIcon(Glyph.BOOK) }, onClick = onArchive)
             ActionRow(S.deleteCollection, S.deleteHow, icon = { GlyphIcon(Glyph.TRASH) }, onClick = onDelete)
         }

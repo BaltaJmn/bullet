@@ -98,6 +98,15 @@ import com.baltajmn.bullet.ui.theme.page
 import com.baltajmn.bullet.ui.theme.paper
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.isoDayNumber
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
+import com.baltajmn.bullet.model.limitEdit
 
 /** The dialog width of docs/pantallas.md 15, shared by every dialog of the app. */
 internal const val DIALOG_MAX_WIDTH_DP = 576
@@ -633,7 +642,7 @@ private fun importProblemText(problem: ImportProblem): String = when (problem) {
  * `cancel`; without it, only `ok`.
  */
 @Composable
-private fun MessageDialog(title: String, text: String, onDismiss: () -> Unit, confirm: String? = null, onConfirm: () -> Unit = {}) {
+internal fun MessageDialog(title: String, text: String, onDismiss: () -> Unit, confirm: String? = null, onConfirm: () -> Unit = {}) {
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH_DP.dp),
@@ -644,6 +653,43 @@ private fun MessageDialog(title: String, text: String, onDismiss: () -> Unit, co
         text = { Text(text, style = Type.Body) },
         confirmButton = { if (confirm != null) DialogAction(confirm, onClick = onConfirm) else DialogAction(S.ok, onClick = onDismiss) },
         dismissButton = if (confirm != null) ({ DialogAction(S.cancel, onClick = onDismiss) }) else null,
+    )
+}
+
+/**
+ * One line to type and one button (docs/pantallas.md 23.1): [initial] proposed and selected, [max] code
+ * points at most. [onConfirm] returning false keeps the dialog open, as an empty title does.
+ */
+@Composable
+internal fun TextDialog(title: String, initial: String, confirm: String, max: Int, onDismiss: () -> Unit, onConfirm: (String) -> Boolean) {
+    var value by remember { mutableStateOf(TextFieldValue(initial, TextRange(0, initial.length))) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH_DP.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 0.dp,
+        title = { Text(title, style = Type.Body) },
+        text = {
+            BasicTextField(
+                value = value,
+                onValueChange = { new ->
+                    val edit = limitEdit(value.text.oneLine(), new.text.oneLine(), new.selection.end, max)
+                    value = TextFieldValue(edit.text, TextRange(edit.cursor))
+                },
+                modifier = Modifier.fillMaxWidth().fieldFrame(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.outline, 12.dp)
+                    .padding(horizontal = 12.dp, vertical = 12.dp).focusRequester(focus),
+                textStyle = Type.Ink,
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { if (onConfirm(value.text)) onDismiss() }),
+            )
+        },
+        confirmButton = { DialogAction(confirm, enabled = value.text.isNotBlank()) { if (onConfirm(value.text)) onDismiss() } },
+        dismissButton = { DialogAction(S.cancel, onClick = onDismiss) },
     )
 }
 

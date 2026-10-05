@@ -24,6 +24,7 @@ import com.baltajmn.bullet.model.Settings
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.archiveCollection
 import com.baltajmn.bullet.model.capture
+import com.baltajmn.bullet.model.continueCollection
 import com.baltajmn.bullet.model.captureNote
 import com.baltajmn.bullet.model.createCollection
 import com.baltajmn.bullet.model.delete
@@ -331,6 +332,16 @@ object BobbinRepository {
         edit { j ->
             val id = collectionId(j)
             j.createCollection(title, now(), id, kind, monthOf(today()))?.also { made = id }
+        }
+        return made
+    }
+
+    /** A list continuing [id] (docs/tecnico.md 12.1). Returns its id, or null when nothing was created. */
+    fun continueCollection(id: String, title: String): String? {
+        var made: String? = null
+        edit { j ->
+            val newId = collectionId(j)
+            j.continueCollection(id, title, now(), newId)?.also { made = newId }
         }
         return made
     }

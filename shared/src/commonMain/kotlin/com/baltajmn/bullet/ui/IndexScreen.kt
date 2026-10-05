@@ -85,7 +85,7 @@ fun IndexScreen(
 
         Eyebrow(S.indexLists, S.indexListsHint)
         Column(Modifier.padding(start = HEAD_START, end = 12.dp)) {
-            active.filter { it.kind != CollectionKind.TRACKER }.forEach { IndexRow(Glyph.LIST, it.title) { onOpenCollection(it.id) } }
+            active.filter { it.kind != CollectionKind.TRACKER }.forEach { IndexRow(Glyph.LIST, it.title, indent = it.threaded) { onOpenCollection(it.id) } }
             if (adding == CollectionKind.NOTES) {
                 NameField(S.listNameHint) { title ->
                     val made = BobbinRepository.createCollection(title) ?: return@NameField false
@@ -126,7 +126,7 @@ fun IndexScreen(
             if (archivedOpen) {
                 Column(Modifier.padding(start = HEAD_START, end = 12.dp)) {
                     archived.forEach {
-                        IndexRow(if (it.kind == CollectionKind.TRACKER) Glyph.GRID else Glyph.LIST, it.title, dim = true) { onOpenCollection(it.id) }
+                        IndexRow(if (it.kind == CollectionKind.TRACKER) Glyph.GRID else Glyph.LIST, it.title, dim = true, indent = it.threaded) { onOpenCollection(it.id) }
                     }
                 }
             }
@@ -136,10 +136,12 @@ fun IndexScreen(
 
 /** One page of the Index (docs/pantallas.md 9): what kind it is as an icon, its title, and a chevron. */
 @Composable
-private fun IndexRow(icon: Glyph, title: String, dim: Boolean = false, onClick: () -> Unit) {
+private fun IndexRow(icon: Glyph, title: String, dim: Boolean = false, indent: Boolean = false, onClick: () -> Unit) {
     val line = MaterialTheme.colorScheme.outline
     Row(
         Modifier.fillMaxWidth().heightIn(min = 52.dp)
+            // A thread's later lists sit 24 under the first one (docs/pantallas.md 23.1).
+            .padding(start = if (indent) 24.dp else 0.dp)
             .drawBehind { drawLine(line, Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx()) }
             .clickable(role = Role.Button, onClick = onClick)
             .padding(start = 2.dp, end = 4.dp),
