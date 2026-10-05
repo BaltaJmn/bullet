@@ -2250,13 +2250,18 @@ La pregunta nunca sale en una notificación ni fuera de la reflexión.
 
 ```kotlin
 data class DateHint(val date: LocalDate, val range: IntRange)   // range: dónde está la expresión en el texto
-fun dateHint(text: String, lang: String, today: LocalDate, firstDayOfWeek: DayOfWeek): DateHint?
+fun dateHint(text: String, lang: String, today: LocalDate): DateHint?
 ```
 
 Reconoce, en `en`, `es`, `pt`, `de` y `fr`: hoy y mañana ("mañana", "tomorrow", "amanhã", "morgen",
-"demain"), pasado mañana, un día de la semana (el siguiente de ese nombre, nunca hoy), "el 14", "14 de
-marzo" y "14/3" (día y mes; si ya pasó este año, el que viene). Las tablas de palabras van en
-`i18n/Strings.kt`. Al detectar una fecha, bajo el campo aparece una pastilla "Programar para 14 mar";
+"demain"), pasado mañana, un día de la semana (el siguiente de ese nombre, nunca hoy), "el 14" (el
+siguiente día 14, hoy incluido), "14 de marzo" y "14/3" (día y mes; si ya pasó este año, el que viene).
+Las palabras sueltas, los meses y los días de la semana salen de `i18n/Strings.kt` con el idioma que se
+pasa (`monthNames(code)`, `weekdayNames(code)`, `dateWord*(code)`), nunca cambiando el de `S`; los
+patrones de cada idioma viven en `DateHint.kt`. Se prueba en este orden y gana el primero: día y mes
+con nombre, en cifras, día de la semana, pasado mañana, mañana, hoy y día suelto, así "el lunes por la
+mañana" es el lunes. Se compara sobre el texto plegado con `fold`, con fronteras de palabra ASCII. Sin
+primer día de la semana: ninguna expresión reconocida lo necesita. Al detectar una fecha, bajo el campo aparece una pastilla "Programar para 14 mar";
 **nunca se aplica sola**. Tocarla crea la entrada en `Monthly(mes, día)` si la fecha es de este mes, o
 en `Future(mes, día)` si es de uno posterior. El texto se guarda tal cual lo escribió el usuario.
 Gratis.

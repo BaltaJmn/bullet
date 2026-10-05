@@ -1287,7 +1287,8 @@ de este campo.
 ### 23.4 Fechas en lenguaje natural (v1.1, #66)
 
 Mientras se escribe en una captura, si `dateHint` encuentra una fecha, bajo la fila aparece una línea
-de `2u` con la acción `scheduleFor(fecha)` (Programar para el 14 mar) en `primary`. Nunca se aplica
+de `2u` con el glifo de programada y la acción `scheduleFor(fecha)` (Programar para el 14 mar), los dos
+en `primary`. Nunca se aplica
 sola: Intro sigue guardando en el lugar de la captura. Tocar la acción guarda la entrada en
 `Monthly(mes, día)` o `Future(mes, día)` (`docs/tecnico.md` 12.4) y deja el foco en la captura.
 

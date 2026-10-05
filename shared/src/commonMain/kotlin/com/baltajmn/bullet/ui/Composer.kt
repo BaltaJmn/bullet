@@ -62,6 +62,8 @@ import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.TEXT_LIMIT
 import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.codePointCount
+import com.baltajmn.bullet.model.dateHint
+import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.model.limitEdit
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.model.oneLine
@@ -111,6 +113,19 @@ fun Composer(
     val parsed = rapidParse(value.text, picked)
     val shown = parsed?.bullet ?: picked
     val count = value.text.codePointCount()
+    // Only ever offered, never applied: Intro keeps saving where the composer says (docs/tecnico.md 12.4).
+    val hint = remember(value.text, today) { dateHint(value.text, S.lang, today) }
+
+    /** The pill of docs/pantallas.md 23.4: the calendar line of this month, or the Future Log of a later one. */
+    fun schedule(date: LocalDate) {
+        val m = monthOf(date)
+        val to = if (m == monthOf(today)) Place.Monthly(m, date.day) else Place.Future(m, date.day)
+        if (BobbinRepository.capture(value.text, to, picked)) {
+            value = TextFieldValue("")
+            Flash.show(S.added(shown, S.targetLabel(to, today, null)))
+            focus.requestFocus()
+        }
+    }
 
     fun submit() {
         if (futureMonth != null && day != null && day !in 1..monthDays(futureMonth)) {
@@ -194,6 +209,18 @@ fun Composer(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(S.add, style = Type.Label.copy(color = MaterialTheme.colorScheme.onPrimary, fontSize = 14.sp))
+            }
+        }
+        hint?.let { h ->
+            Box(
+                Modifier.heightIn(min = 40.dp).padding(top = 6.dp).clip(RoundedCornerShape(12.dp))
+                    .clickable(role = Role.Button) { schedule(h.date) }.padding(horizontal = 6.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BulletGlyph(Bullet.TASK, TaskStatus.SCHEDULED, tint = MaterialTheme.colorScheme.primary)
+                    Text(S.scheduleFor(h.date), style = Type.Label.copy(color = MaterialTheme.colorScheme.primary, fontSize = 14.sp))
+                }
             }
         }
         if (count >= COUNTER_FROM) {

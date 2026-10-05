@@ -39,7 +39,10 @@ object S {
 
     internal var lang = normalizeLanguage(systemLanguage())
 
-    private fun t(en: String, es: String, pt: String, de: String, fr: String): String = when (lang) {
+    private fun t(en: String, es: String, pt: String, de: String, fr: String): String = tIn(lang, en, es, pt, de, fr)
+
+    /** [t] in [code] rather than the device language: what a parser told the language reads (12.4). */
+    private fun tIn(code: String, en: String, es: String, pt: String, de: String, fr: String): String = when (code) {
         "es" -> es
         "pt" -> pt
         "de" -> de
@@ -120,7 +123,8 @@ object S {
 
     // --- 1. Fechas y horas ----------------------------------------------------------------
 
-    fun monthNames(): List<String> = t(
+    fun monthNames(code: String = lang): List<String> = tIn(
+        code,
         "January, February, March, April, May, June, July, August, September, October, November, December",
         "enero, febrero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre, noviembre, diciembre",
         "janeiro, fevereiro, março, abril, maio, junho, julho, agosto, setembro, outubro, novembro, dezembro",
@@ -136,7 +140,8 @@ object S {
         "janv., févr., mars, avr., mai, juin, juil., août, sept., oct., nov., déc.",
     ).split(", ")
 
-    fun weekdayNames(): List<String> = t(
+    fun weekdayNames(code: String = lang): List<String> = tIn(
+        code,
         "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday",
         "lunes, martes, miércoles, jueves, viernes, sábado, domingo",
         "segunda-feira, terça-feira, quarta-feira, quinta-feira, sexta-feira, sábado, domingo",
@@ -1763,9 +1768,9 @@ object S {
     // Natural language dates (v1.1, docs/tecnico.md 12.4): the single-word vocabulary that
     // model/DateHint.kt reads; the multi-word recognition patterns of docs/textos.md 23 stay in
     // that document for DateHint.kt (#66) to consult directly.
-    fun dateWordToday() = t("today", "hoy", "hoje", "heute", "aujourd'hui")
-    fun dateWordTomorrow() = t("tomorrow", "mañana", "amanhã", "morgen", "demain")
-    fun dateWordDayAfterTomorrow() = t("day after tomorrow", "pasado mañana", "depois de amanhã", "übermorgen", "après-demain")
+    fun dateWordToday(code: String = lang) = tIn(code, "today", "hoy", "hoje", "heute", "aujourd'hui")
+    fun dateWordTomorrow(code: String = lang) = tIn(code, "tomorrow", "mañana", "amanhã", "morgen", "demain")
+    fun dateWordDayAfterTomorrow(code: String = lang) = tIn(code, "day after tomorrow", "pasado mañana", "depois de amanhã", "übermorgen", "après-demain")
 
     // Question bank (docs/tecnico.md 12.3): S.question(i) with i in 0 until QUESTION_COUNT.
 

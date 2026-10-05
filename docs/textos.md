@@ -853,9 +853,10 @@ En inglés, "3/14" es mes y día; en los otros cuatro, día y mes. `dateHint` re
 
 Decisión de #16: de esta tabla, `Strings.kt` solo expone como funciones las tres palabras sueltas y
 sin ambigüedad (`dateWordToday`, `dateWordTomorrow`, `dateWordDayAfterTomorrow`); los patrones de
-varias formas por idioma ("on the 14th, the 14th", "March 14, 14 March"...) se quedan en esta tabla
-para que `model/DateHint.kt` (#66) los lea directamente de aquí, porque reconocerlos es lógica de
-párser, no una cadena que traducir.
+varias formas por idioma ("on the 14th, the 14th", "March 14, 14 March"...) están escritos como
+expresiones regulares en `model/DateHint.kt` (#66) siguiendo esta tabla, porque reconocerlos es lógica
+de párser, no una cadena que traducir. Las palabras sueltas, `monthNames` y `weekdayNames` aceptan el
+idioma como parámetro para que el párser no tenga que cambiar el de toda la app.
 
 ### Siri y Atajos (iOS)
 
