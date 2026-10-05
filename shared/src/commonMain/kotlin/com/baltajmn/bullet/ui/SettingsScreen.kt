@@ -122,7 +122,7 @@ internal const val DIALOG_MAX_WIDTH_DP = 576
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onKey: () -> Unit, onGuide: () -> Unit, onNotebook: () -> Unit) {
+fun SettingsScreen(onBack: () -> Unit, onKey: () -> Unit, onGuide: () -> Unit, onNotebook: () -> Unit, onYearSummary: () -> Unit) {
     BackHandler(true, onBack)
     val settings = BobbinRepository.journal.settings
     val systemWeekStart = systemFirstDayOfWeek()
@@ -241,6 +241,7 @@ fun SettingsScreen(onBack: () -> Unit, onKey: () -> Unit, onGuide: () -> Unit, o
             NotebookLook(settings)
             Spacer(Modifier.height(8.dp))
             SettingsRow(title = S.newNotebookRow, subtitle = S.newNotebookSub, onClick = onNotebook)
+            SettingsRow(title = S.yearSummaryRow, subtitle = null, onClick = onYearSummary, trailing = { if (!BobbinRepository.isPro) ProChip() })
 
             if (FilePicker.available) {
                 SettingsSection(S.sectionBackup)

@@ -1337,7 +1337,8 @@ Ajustes, CUADERNO: `yearSummaryRow` (Resumen del año); también como último pa
 REVIEW en modo lectura, de una sola página: `yearSummaryTitle(año)` (Tu 2026) en `PageTitle` y tres
 bloques con su `Eyebrow`, `summaryInspirations` (INSPIRACIONES), `summaryPriorities` (PRIORIDADES
 HECHAS) y `summaryMostMigrated` (LAS QUE MÁS VIAJARON), cada uno con sus entradas como en una lista (en
-la última, `migratedTimes(n)` detrás de cada una). Solo texto. Un año sin nada: `summaryEmpty` (Este
+la última, `timesMoved(n)` bajo cada una). Solo texto. Flechas de año como las de un seguimiento, a los
+años que tienen algo; en enero abre en el año que acaba de terminar. Un año sin nada: `summaryEmpty` (Este
 año no marcaste inspiraciones ni prioridades. El que viene está en blanco.) en `Body`. Sin Pro, el
 `ProDialog`.
 

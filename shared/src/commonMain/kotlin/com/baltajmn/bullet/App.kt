@@ -70,6 +70,9 @@ import com.baltajmn.bullet.ui.KeyScreen
 import com.baltajmn.bullet.ui.LockScreen
 import com.baltajmn.bullet.ui.MonthScreen
 import com.baltajmn.bullet.ui.NotebookScreen
+import com.baltajmn.bullet.ui.YearSummaryScreen
+import com.baltajmn.bullet.ui.LinkText
+import com.baltajmn.bullet.ui.proOr
 import com.baltajmn.bullet.ui.Paywall
 import com.baltajmn.bullet.ui.ProDialog
 import com.baltajmn.bullet.ui.ReviewScreen
@@ -133,6 +136,7 @@ fun App() {
     var reviewScope by remember { mutableStateOf<ReviewScope?>(null) }
     var reviewFutureLog by remember { mutableStateOf(false) }
     var reviewNotebook by remember { mutableStateOf(false) }
+    var reviewYear by remember { mutableStateOf(false) }
     var openCollection by remember { mutableStateOf<String?>(null) }
     var collectionJustCreated by remember { mutableStateOf(false) }
     // Coming back to the foreground is the only guaranteed moment a backgrounded app can catch a
@@ -283,14 +287,21 @@ fun App() {
                 if (WindowInsets.ime.getBottom(LocalDensity.current) == 0) TabBar(active = tab, onSelect = { tab = it })
             }
 
-            val dismiss = { overlay = null; reviewFutureLog = false; reviewNotebook = false; reviewScope = null; openCollection = null }
+            val dismiss = { overlay = null; reviewFutureLog = false; reviewNotebook = false; reviewYear = false; reviewScope = null; openCollection = null }
             overlay?.let { screen ->
                 val scope = reviewScope
                 val collection = openCollection
                 when {
                     screen == Screen.REVIEW && reviewFutureLog -> FutureReviewScreen(today = today, onClose = dismiss)
                     // A new notebook is a review whose scope is the whole notebook (docs/pantallas.md 23.2).
-                    screen == Screen.REVIEW && reviewNotebook -> NotebookScreen(today = today, onClose = { reviewNotebook = false; overlay = Screen.SETTINGS })
+                    screen == Screen.REVIEW && reviewNotebook -> NotebookScreen(
+                        today = today,
+                        onClose = { reviewNotebook = false; overlay = Screen.SETTINGS },
+                    ) {
+                        // The year summary as the last step of a new notebook (docs/pantallas.md 23.8).
+                        LinkText(S.yearSummaryRow, { proOr { reviewNotebook = false; reviewYear = true } })
+                    }
+                    screen == Screen.REVIEW && reviewYear -> YearSummaryScreen(today = today, onClose = { reviewYear = false; overlay = Screen.SETTINGS })
                     screen == Screen.REVIEW && scope != null -> ReviewScreen(
                         scope = scope,
                         today = today,
@@ -303,6 +314,7 @@ fun App() {
                         onKey = { overlay = Screen.KEY },
                         onGuide = { overlay = Screen.GUIDE },
                         onNotebook = { reviewNotebook = true; overlay = Screen.REVIEW },
+                        onYearSummary = { proOr { reviewYear = true; overlay = Screen.REVIEW } },
                     )
                     screen == Screen.GUIDE -> GuideScreen(today) {
                         runCatching { Prefs.setBool(PREF_GUIDE_SEEN, true) }

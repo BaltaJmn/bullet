@@ -2,7 +2,11 @@ package com.baltajmn.bullet.model
 
 import com.baltajmn.bullet.i18n.QUESTION_COUNT
 import kotlin.random.Random
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.monthsUntil
 
@@ -250,6 +254,51 @@ fun Journal.reviewDays(scope: ReviewScope): List<Pair<LocalDate, List<Entry>>> {
         entriesAt(Place.Daily(date)).takeIf { it.isNotEmpty() }?.let { date to it }
     }
 }
+
+/** The year in words (docs/tecnico.md 12.8): no counts, no charts, only the entries themselves. */
+data class YearSummary(val inspirations: List<Entry>, val prioritiesDone: List<Entry>, val mostMigrated: List<Pair<Entry, Int>>) {
+    val isEmpty get() = inspirations.isEmpty() && prioritiesDone.isEmpty() && mostMigrated.isEmpty()
+}
+
+/** How many tasks "Las que más viajaron" shows at most. */
+const val SUMMARY_MOST_MIGRATED = 10
+
+/**
+ * [year]'s inspirations, its priorities done, and the ten tasks that travelled the most, counted on the
+ * last link of each chain (the one no copy came out of) and only from [MIGRATION_SHOWN_FROM]. "Created in
+ * [year]" reads `createdAt` in [tz], the only clock this needs.
+ */
+@OptIn(ExperimentalTime::class)
+fun Journal.yearSummary(year: Int, tz: TimeZone): YearSummary {
+    val inYear = entries.filter { !it.gone && Instant.fromEpochMilliseconds(it.createdAt).toLocalDateTime(tz).year == year }
+    val byId = entries.associateBy { it.id }
+    val copied = entries.mapNotNullTo(mutableSetOf()) { it.from }
+    fun chain(e: Entry): Int {
+        var count = 0
+        var current = e
+        val seen = mutableSetOf(e.id)
+        while (true) {
+            val from = current.from ?: return count
+            count++
+            current = byId[from] ?: return count
+            if (!seen.add(current.id)) return count
+        }
+    }
+    return YearSummary(
+        inspirations = inYear.filter { Signifier.INSPIRATION in it.signifiers }.sortedBy { it.createdAt },
+        prioritiesDone = inYear.filter { it.bullet == Bullet.TASK && it.status == TaskStatus.DONE && Signifier.PRIORITY in it.signifiers }.sortedBy { it.createdAt },
+        mostMigrated = inYear.filter { it.bullet == Bullet.TASK && it.id !in copied }
+            .map { it to chain(it) }
+            .filter { it.second >= MIGRATION_SHOWN_FROM }
+            .sortedWith(compareByDescending<Pair<Entry, Int>> { it.second }.thenBy { it.first.createdAt })
+            .take(SUMMARY_MOST_MIGRATED),
+    )
+}
+
+/** The years that have something written, oldest first: where the summary's arrows can go. */
+@OptIn(ExperimentalTime::class)
+fun Journal.yearsWritten(tz: TimeZone): List<Int> =
+    entries.filter { !it.gone }.map { Instant.fromEpochMilliseconds(it.createdAt).toLocalDateTime(tz).year }.distinct().sorted()
 
 /**
  * The question of a reflection (docs/tecnico.md 12.3): one not asked in this round, or once the bank is

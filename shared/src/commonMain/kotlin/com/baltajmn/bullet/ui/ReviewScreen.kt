@@ -49,7 +49,11 @@ import com.baltajmn.bullet.model.CollectionKind
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.notebookCollections
 import com.baltajmn.bullet.model.notebookTasks
+import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
+import com.baltajmn.bullet.model.yearSummary
+import com.baltajmn.bullet.model.yearsWritten
 import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.FUTURE_MONTHS
 import com.baltajmn.bullet.model.FUTURE_MONTHS_MAX
@@ -285,6 +289,53 @@ fun NotebookScreen(today: LocalDate, onClose: () -> Unit, endExtra: @Composable 
                     Text(S.newNotebookRow.uppercase(), style = Type.Eyebrow)
                     Text(S.notebookDone(today), style = Type.Heading, modifier = Modifier.padding(top = 10.dp, bottom = 8.dp).semantics { heading() })
                     endExtra()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The year summary (docs/pantallas.md 23.8, docs/tecnico.md 12.8): a review that only reads, one page, the
+ * entries themselves under three headings and no number anywhere but the times a task travelled.
+ * January looks back at the year that just ended; the arrows go to the other years with something.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun YearSummaryScreen(today: LocalDate, onClose: () -> Unit) {
+    BackHandler(true, onClose)
+    val journal = BobbinRepository.journal
+    val tz = TimeZone.currentSystemDefault()
+    val years = remember(journal) { journal.yearsWritten(tz) }
+    var year by remember { mutableStateOf(if (today.month == Month.JANUARY) today.year - 1 else today.year) }
+    val summary = remember(journal, year) { journal.yearSummary(year, tz) }
+    val previous = years.filter { it < year }.maxOrNull()
+    val next = years.filter { it > year }.minOrNull()
+
+    Page(tab = false, bottom = { Footer { PrimaryButton(S.close, onClose, block = true) } }) {
+        ReviewTop(onClose)
+        PageHead(S.yearSummaryTitle(year)) {
+            if (previous != null) GlyphButton(Glyph.BACK, S.a11yPreviousYear, { year = previous })
+            if (next != null) GlyphButton(Glyph.FORWARD, S.a11yNextYear, { year = next })
+        }
+        if (summary.isEmpty) {
+            Text(S.summaryEmpty, style = Type.Body, modifier = Modifier.padding(start = HEAD_START, end = 24.dp, top = 12.dp))
+            return@Page
+        }
+        Column(Modifier.padding(start = 8.dp, end = 8.dp)) {
+            if (summary.inspirations.isNotEmpty()) {
+                Eyebrow(S.summaryInspirations)
+                summary.inspirations.forEach { EntryRow(it, journal, today, onNavigateTo = {}, still = true, showFrom = false) }
+            }
+            if (summary.prioritiesDone.isNotEmpty()) {
+                Eyebrow(S.summaryPriorities)
+                summary.prioritiesDone.forEach { EntryRow(it, journal, today, onNavigateTo = {}, still = true, showFrom = false) }
+            }
+            if (summary.mostMigrated.isNotEmpty()) {
+                Eyebrow(S.summaryMostMigrated)
+                summary.mostMigrated.forEach { (entry, n) ->
+                    EntryRow(entry, journal, today, onNavigateTo = {}, still = true, showFrom = false)
+                    Text(S.timesMoved(n), style = Type.Secondary.copy(fontSize = 12.sp), modifier = Modifier.padding(start = 52.dp, bottom = 6.dp))
                 }
             }
         }

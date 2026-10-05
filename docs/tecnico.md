@@ -2332,7 +2332,7 @@ Pro. Solo texto: sin gráficas, porcentajes ni comparativas.
 
 ```kotlin
 data class YearSummary(val inspirations: List<Entry>, val prioritiesDone: List<Entry>, val mostMigrated: List<Pair<Entry, Int>>)
-fun Journal.yearSummary(year: Int): YearSummary
+fun Journal.yearSummary(year: Int, tz: TimeZone): YearSummary   // "creada en year" lee createdAt en tz
 ```
 
 - `inspirations`: entradas no esqueleto con `INSPIRATION` creadas en `year`.

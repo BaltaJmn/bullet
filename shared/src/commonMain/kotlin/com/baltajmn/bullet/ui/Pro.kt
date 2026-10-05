@@ -16,6 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.baltajmn.bullet.data.BobbinRepository
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,6 +60,11 @@ object Paywall {
     }
 }
 
+/** Runs [action] with Pro, or opens the paywall and runs it once bought (docs/tecnico.md 6.16). */
+fun proOr(action: () -> Unit) {
+    if (BobbinRepository.isPro) action() else Paywall.show(action)
+}
+
 @Composable
 fun ProDialog() {
     val scope = rememberCoroutineScope()
@@ -88,7 +94,7 @@ fun ProDialog() {
         },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                listOfNotNull(S.proCovers, S.proPapers, S.proTrackers, S.proMonthWidget, S.proLockWidget.takeIf { onIos })
+                listOfNotNull(S.proCovers, S.proPapers, S.proTrackers, S.proMonthWidget, S.proLockWidget.takeIf { onIos }, S.proYearSummary)
                     .forEach { line ->
                         Row(Modifier.heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
                             BulletGlyph(Bullet.NOTE, TaskStatus.OPEN)

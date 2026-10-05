@@ -315,7 +315,7 @@ private fun AddRow(label: String, pro: Boolean = false, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ProChip() {
+internal fun ProChip() {
     Box(
         Modifier.clip(RoundedCornerShape(10.dp)).background(coverSoft(activeCover(BobbinRepository.journal.settings, BobbinRepository.isPro)))
             .padding(horizontal = 8.dp, vertical = 5.dp),

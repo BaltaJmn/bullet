@@ -2148,6 +2148,8 @@ object S {
     val summaryInspirations = t("Inspirations", "Inspiraciones", "Inspirações", "Inspirationen", "Inspirations")
     val summaryPriorities = t("Priorities done", "Prioridades hechas", "Prioridades feitas", "Erledigte Prioritäten", "Priorités faites")
     val summaryMostMigrated = t("Travelled the most", "Las que más viajaron", "As que mais viajaram", "Am weitesten gereist", "Les plus voyageuses")
+    val a11yPreviousYear = t("Previous year", "Año anterior", "Ano anterior", "Vorheriges Jahr", "Année précédente")
+    val a11yNextYear = t("Next year", "Año siguiente", "Próximo ano", "Nächstes Jahr", "Année suivante")
     val summaryEmpty = t(
         "This year you marked no inspirations or priorities. Next year starts blank.",
         "Este año no marcaste inspiraciones ni prioridades. El que viene está en blanco.",

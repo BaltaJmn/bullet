@@ -971,6 +971,8 @@ y lo vivido; ninguna presupone algo triste, habla de salud mental ni pide un nú
 | `summaryInspirations` | | Inspirations | Inspiraciones | Inspirações | Inspirationen | Inspirations |
 | `summaryPriorities` | | Priorities done | Prioridades hechas | Prioridades feitas | Erledigte Prioritäten | Priorités faites |
 | `summaryMostMigrated` | | Travelled the most | Las que más viajaron | As que mais viajaram | Am weitesten gereist | Les plus voyageuses |
+| `a11yPreviousYear` | | Previous year | Año anterior | Ano anterior | Vorheriges Jahr | Année précédente |
+| `a11yNextYear` | | Next year | Año siguiente | Próximo ano | Nächstes Jahr | Année suivante |
 | `summaryEmpty` | | This year you marked no inspirations or priorities. Next year starts blank. | Este año no marcaste inspiraciones ni prioridades. El que viene está en blanco. | Este ano você não marcou inspirações nem prioridades. O próximo está em branco. | Dieses Jahr hast du keine Inspirationen oder Prioritäten markiert. Das nächste ist noch leer. | Cette année, tu n'as marqué ni inspirations ni priorités. La prochaine est vierge. |
 | `iconAndTheme` | | Icon and theme | Icono y tema | Ícone e tema | Symbol und Thema | Icône et thème |
 | `iconNone` | | No icon | Sin icono | Sem ícone | Kein Symbol | Sans icône |
