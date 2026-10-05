@@ -116,6 +116,7 @@ fun CollectionScreen(
     var renaming by remember(id) { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
     var continuing by remember(id) { mutableStateOf(false) }
+    var marking by remember(id) { mutableStateOf(false) }
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
     val previous = journal.threadPrev(collection)
@@ -169,10 +170,12 @@ fun CollectionScreen(
             onShare = if (entries.isNotEmpty()) ({ moreOpen = false; sharing = collectionShare(journal, id) }) else null,
             onRename = { moreOpen = false; renaming = true },
             onContinue = if (next == null) ({ moreOpen = false; continuing = true }) else null,
+            onMark = { moreOpen = false; marking = true },
             onArchive = { BobbinRepository.archiveCollection(id, !collection.archived); moreOpen = false; onBack() },
             onDelete = { BobbinRepository.deleteCollection(id); moreOpen = false },
         )
     }
+    if (marking) MarkSheet(collection) { marking = false }
     if (continuing) {
         ContinueDialog(collection.title, onDismiss = { continuing = false }) { title ->
             BobbinRepository.continueCollection(id, title)?.also { onNavigateTo(Place.InCollection(it)) } != null
@@ -180,6 +183,16 @@ fun CollectionScreen(
     }
     sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
 }
+
+/** "Icono y tema" of a list or a tracker (docs/pantallas.md 23.9). */
+@Composable
+private fun MarkSheet(collection: BulletCollection, onClose: () -> Unit) = IconThemeSheet(
+    title = collection.title,
+    icon = collection.icon,
+    theme = collection.theme,
+    onSave = { icon, theme -> BobbinRepository.markCollection(collection.id, icon, theme) },
+    onClose = onClose,
+)
 
 /** "Continuar en..." (docs/pantallas.md 23.1): the current title proposed, and the new list opens. */
 @Composable
@@ -221,6 +234,7 @@ private fun MoreSheet(
     onShare: (() -> Unit)?,
     onRename: () -> Unit,
     onContinue: (() -> Unit)? = null,
+    onMark: () -> Unit,
     onArchive: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -236,6 +250,7 @@ private fun MoreSheet(
             onShare?.let { ActionRow(S.shareList, icon = { GlyphIcon(Glyph.SHARE) }, onClick = it) }
             ActionRow(S.rename, icon = { GlyphIcon(Glyph.EDIT) }, onClick = onRename)
             onContinue?.let { ActionRow(S.continueCollection, icon = { GlyphIcon(Glyph.FORWARD) }, onClick = it) }
+            ActionRow(S.iconAndTheme, icon = { IndexIcon("star") }, onClick = onMark)
             ActionRow(if (archived) S.unarchive else S.archive, icon = { GlyphIcon(Glyph.BOOK) }, onClick = onArchive)
             ActionRow(S.deleteCollection, S.deleteHow, icon = { GlyphIcon(Glyph.TRASH) }, onClick = onDelete)
         }
@@ -263,6 +278,7 @@ private fun TrackerScreen(id: String, today: LocalDate, justCreated: Boolean, on
 
     var renaming by remember(id) { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
+    var marking by remember(id) { mutableStateOf(false) }
     var sheetRowId by remember { mutableStateOf<String?>(null) }
     var renamingRowId by remember { mutableStateOf<String?>(null) }
 
@@ -309,10 +325,12 @@ private fun TrackerScreen(id: String, today: LocalDate, justCreated: Boolean, on
             onClose = { moreOpen = false },
             onShare = null,
             onRename = { moreOpen = false; renaming = true },
+            onMark = { moreOpen = false; marking = true },
             onArchive = { BobbinRepository.archiveCollection(tail.id, !tail.archived); moreOpen = false; onBack() },
             onDelete = { BobbinRepository.deleteTracker(tail.id); moreOpen = false },
         )
     }
+    if (marking) MarkSheet(tail) { marking = false }
     sheetRowId?.let { rowId ->
         val index = page.rows.indexOfFirst { it.id == rowId }
         val row = page.rows.getOrNull(index)

@@ -1346,10 +1346,12 @@ tema). Una hoja con los 12 iconos de `INDEX_ICONS` en una rejilla de 4 x 3 diana
 los glifos, trazo de 1,5 dp en caja de 24), `iconNone` (Sin icono), y un campo de una línea `themeHint`
 (Tema) de hasta 24 puntos de código.
 
-- El icono se pinta en la columna de bullets de la fila del Índice.
-- Si alguna colección tiene tema, bajo el filtro del Índice sale una fila de filtros por tema, como los
-  de Buscar, y `groupByTheme` agrupa con `Eyebrow` por tema y los sin tema al final (`themeNone`: SIN
-  TEMA).
+- El icono se pinta en la columna de bullets de la fila del Índice, en lugar del de su tipo.
+- Si alguna página tiene tema, bajo la cabecera del Índice sale una fila de filtros por tema, como los
+  de Buscar: uno encendido deja solo las páginas de ese tema, meses incluidos. Sin filtro, dentro de
+  Listas y de Seguimientos `groupByTheme` agrupa con un `Eyebrow` de 11 sp por tema y los sin tema al
+  final (`themeNone`: SIN TEMA).
+- La hoja se guarda al tocar un icono y, el tema, al cerrarla o con Intro.
 - Un mes pasado ya migrado por completo (`docs/tecnico.md` 12.9) lleva su título subrayado con 1 dp
   `onSurfaceVariant` a 3 dp bajo la línea base, como en el papel.
 - Sin iconos ni temas, el Índice se ve exactamente igual que en v1.0.

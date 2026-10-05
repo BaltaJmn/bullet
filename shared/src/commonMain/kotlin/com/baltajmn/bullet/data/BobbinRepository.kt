@@ -25,6 +25,8 @@ import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.archiveCollection
 import com.baltajmn.bullet.model.capture
 import com.baltajmn.bullet.model.continueCollection
+import com.baltajmn.bullet.model.markCollection
+import com.baltajmn.bullet.model.markMonth
 import com.baltajmn.bullet.model.captureNote
 import com.baltajmn.bullet.model.createCollection
 import com.baltajmn.bullet.model.delete
@@ -345,6 +347,10 @@ object BobbinRepository {
         }
         return made
     }
+
+    /** Icon and theme of a page of the Index (docs/tecnico.md 12.9). */
+    fun markCollection(id: String, icon: String?, theme: String?) = edit { j -> j.markCollection(id, icon, theme, now()) }
+    fun markMonth(month: YearMonth, icon: String?, theme: String?) = edit { j -> j.markMonth(month, icon, theme) }
 
     private fun collectionId(j: Journal) = newId("c", j.collections.map { it.id }.toSet())
 

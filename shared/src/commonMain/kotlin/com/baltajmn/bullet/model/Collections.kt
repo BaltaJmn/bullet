@@ -1,6 +1,7 @@
 package com.baltajmn.bullet.model
 
 import com.baltajmn.bullet.data.fold
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
 
 /** The Index, the collections and the trackers (docs/tecnico.md 6.7, 6.18). */
@@ -21,7 +22,19 @@ sealed interface IndexItem {
     /** What the Index sorts by, ascending and never alphabetically: the order the pages were started in. */
     val createdAt: Long
 
-    data class Month(val month: YearMonth, override val title: String, override val createdAt: Long) : IndexItem
+    /** One of [INDEX_ICONS], or null for the page's own kind of icon (12.9). */
+    val icon: String?
+
+    /** A free label of one line the Index can filter and group by (12.9). */
+    val theme: String?
+
+    data class Month(
+        val month: YearMonth,
+        override val title: String,
+        override val createdAt: Long,
+        override val icon: String? = null,
+        override val theme: String? = null,
+    ) : IndexItem
 
     data class Collection(
         val id: String,
@@ -31,8 +44,15 @@ sealed interface IndexItem {
         val archived: Boolean = false,
         /** It continues an earlier list of its block, so the Index paints it under that one (12.1). */
         val threaded: Boolean = false,
+        override val icon: String? = null,
+        override val theme: String? = null,
     ) : IndexItem
 }
+
+/** The method's own index marks (docs/tecnico.md 12.9), drawn like the glyphs. The order is [com.baltajmn.bullet.i18n.S.iconName]'s. */
+val INDEX_ICONS = listOf("star", "heart", "book", "home", "work", "travel", "money", "health", "food", "music", "idea", "people")
+
+const val THEME_MAX = 24
 
 /**
  * The Index in order (docs/tecnico.md 6.7): months with content and collections by their own moment of
@@ -52,7 +72,10 @@ fun Journal.indexItems(monthTitle: (YearMonth) -> String): List<IndexItem> {
             }
         }
         .groupBy({ it.first }, { it.second })
-        .map { (month, times) -> IndexItem.Month(month, monthTitle(month), times.min()) }
+        .map { (month, times) ->
+            val mark = this.months[month.toString()]
+            IndexItem.Month(month, monthTitle(month), times.min(), mark?.icon, mark?.theme)
+        }
 
     // A tracker is one row however many months it has: its newest page, in the place its first one started.
     val tails = trackerTails().mapTo(mutableSetOf()) { it.id }
@@ -64,7 +87,7 @@ fun Journal.indexItems(monthTitle: (YearMonth) -> String): List<IndexItem> {
         .filter { it.kind != CollectionKind.TRACKER || it.id in tails }
         .map {
             if (it.kind == CollectionKind.TRACKER) {
-                IndexItem.Collection(it.id, it.title, trackerThread(it.id).first().createdAt, it.kind, it.archived)
+                IndexItem.Collection(it.id, it.title, trackerThread(it.id).first().createdAt, it.kind, it.archived, icon = it.icon, theme = it.theme)
             } else {
                 var root = it
                 var steps = 0
@@ -75,7 +98,7 @@ fun Journal.indexItems(monthTitle: (YearMonth) -> String): List<IndexItem> {
                     steps++
                 }
                 position[it.id] = root.createdAt to steps
-                IndexItem.Collection(it.id, it.title, it.createdAt, it.kind, it.archived, threaded = steps > 0)
+                IndexItem.Collection(it.id, it.title, it.createdAt, it.kind, it.archived, threaded = steps > 0, icon = it.icon, theme = it.theme)
             }
         }
 
@@ -104,6 +127,53 @@ fun Journal.threadPrev(c: BulletCollection): BulletCollection? =
 /** The list that continues [c], archived or not (docs/tecnico.md 12.1). */
 fun Journal.threadNext(c: BulletCollection): BulletCollection? =
     if (c.kind != CollectionKind.NOTES) null else collections.find { it.threadFrom == c.id && it.kind == CollectionKind.NOTES }
+
+/** A theme as it is kept: one line, trimmed, at most [THEME_MAX] code points, and null when empty (12.9). */
+fun cleanTheme(theme: String?): String? = theme?.oneLine()?.trim()?.clampCodePoints(THEME_MAX)?.ifEmpty { null }
+
+/**
+ * The icon and the theme of a collection (docs/tecnico.md 12.9). A tracker's go on every page of its
+ * thread, so next month's page, which is a copy of the newest, keeps them. Null when nothing changes.
+ */
+fun Journal.markCollection(id: String, icon: String?, theme: String?, now: Long): Journal? {
+    val target = collections.find { it.id == id } ?: return null
+    val i = icon?.takeIf { it in INDEX_ICONS }
+    val t = cleanTheme(theme)
+    val ids = if (target.kind == CollectionKind.TRACKER) trackerThread(id).mapTo(mutableSetOf()) { it.id } else setOf(id)
+    if (collections.none { it.id in ids && (it.icon != i || it.theme != t) }) return null
+    return copy(collections = collections.map { if (it.id in ids) it.copy(icon = i, theme = t, updatedAt = now) else it })
+}
+
+/** The same for a month of the Index, kept in `months["yyyy-MM"]` and dropped when both are empty. */
+fun Journal.markMonth(month: YearMonth, icon: String?, theme: String?): Journal? {
+    val mark = IndexMark(icon?.takeIf { it in INDEX_ICONS }, cleanTheme(theme))
+    val key = month.toString()
+    if ((months[key] ?: IndexMark()) == mark) return null
+    return copy(months = if (mark == IndexMark()) months - key else months + (key to mark))
+}
+
+/**
+ * The Index by theme (docs/tecnico.md 12.9): one group per theme in the order the themes first appear,
+ * the pages without one last, and the creation order of [items] kept inside each group.
+ */
+fun groupByTheme(items: List<IndexItem>): List<Pair<String?, List<IndexItem>>> {
+    val (themed, plain) = items.partition { it.theme != null }
+    val groups = themed.groupBy { it.theme }.toList()
+    return if (plain.isEmpty()) groups else groups + (null to plain)
+}
+
+/**
+ * A past month whose tasks were all decided and at least one of them migrated (docs/tecnico.md 12.9):
+ * the Index underlines it, as a page crossed through on paper.
+ */
+fun Journal.monthMigrated(m: YearMonth, today: LocalDate): Boolean =
+    m < monthOf(today) && openTasksOfMonth(m).isEmpty() && entries.any { e ->
+        !e.gone && e.status == TaskStatus.MIGRATED && when (val p = e.place) {
+            is Place.Daily -> monthOf(p.date) == m
+            is Place.Monthly -> p.month == m
+            else -> false
+        }
+    }
 
 /** The Index filter (docs/tecnico.md 6.7): by title, without telling case or accents apart. An empty query filters nothing. */
 fun filterIndex(items: List<IndexItem>, query: String): List<IndexItem> {

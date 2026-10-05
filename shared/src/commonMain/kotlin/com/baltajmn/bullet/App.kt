@@ -245,6 +245,7 @@ fun App() {
                             autoFocus = overlay != Screen.GUIDE,
                         )
                         Screen.INDEX -> IndexScreen(
+                            today = today,
                             onSearch = { overlay = Screen.SEARCH },
                             onSettings = { overlay = Screen.SETTINGS },
                             onOpenMonth = { tab = Screen.MONTH; viewedMonth = it },

@@ -2334,8 +2334,10 @@ fun Journal.yearSummary(year: Int): YearSummary
 Gratis: son del método original. Todo opcional; un Índice sin iconos ni temas se ve igual que antes.
 
 - **Icono**: `BulletCollection.icon` y `Journal.months["yyyy-MM"].icon`, uno de `INDEX_ICONS`, 12 glifos
-  dibujados en `Canvas` como los del método: `star`, `heart`, `book`, `home`, `work`, `travel`, `money`,
-  `health`, `food`, `music`, `idea`, `people`.
+  dibujados en `Canvas` como los del método (`ui/IndexIcons.kt`): `star`, `heart`, `book`, `home`,
+  `work`, `travel`, `money`, `health`, `food`, `music`, `idea`, `people`. Un id desconocido se guarda
+  como sin icono. En un seguimiento, `markCollection` marca todas las páginas del hilo, así la del mes
+  nuevo, que copia la última, lo conserva. Un mes sin icono ni tema sale de `months`.
 - **Tema**: `theme`, una etiqueta libre de una línea (hasta 24 puntos de código). El Índice ofrece un
   filtro por tema y `groupByTheme(items)` agrupa con los sin tema al final, manteniendo el orden de
   creación dentro de cada grupo.
