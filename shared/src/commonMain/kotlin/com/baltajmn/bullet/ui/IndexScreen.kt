@@ -13,7 +13,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
 import com.baltajmn.bullet.model.groupByTheme
 import com.baltajmn.bullet.model.monthMigrated
+import com.baltajmn.bullet.model.inOldNotebook
+import com.baltajmn.bullet.model.nextDayStart
+import kotlin.time.ExperimentalTime
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,6 +72,7 @@ import kotlinx.datetime.YearMonth
  * the trackers, each group in the order it was started. Never alphabetical, and with no page number
  * anywhere, because this paper has no physical pages to number.
  */
+@OptIn(ExperimentalTime::class)
 @Composable
 fun IndexScreen(
     today: LocalDate,
@@ -81,12 +88,19 @@ fun IndexScreen(
     val themes = all.mapNotNull { it.theme }.distinct()
     var themeFilter by remember { mutableStateOf<String?>(null) }
     if (themeFilter != null && themeFilter !in themes) themeFilter = null
-    val items = themeFilter?.let { t -> all.filter { it.theme == t } } ?: all
+    val filtered = themeFilter?.let { t -> all.filter { it.theme == t } } ?: all
+    // A new notebook folds what came before it (docs/tecnico.md 12.2): readable, never deleted.
+    val notebook = journal.settings.notebooks.lastOrNull()
+    val (old, items) = if (notebook == null) emptyList<IndexItem>() to filtered else {
+        val start = nextDayStart(notebook.minus(1, DateTimeUnit.DAY), journal.settings.dayStartHour, TimeZone.currentSystemDefault()).toEpochMilliseconds()
+        filtered.partition { inOldNotebook(it, start, notebook) }
+    }
     val months = items.filterIsInstance<IndexItem.Month>()
     val collections = items.filterIsInstance<IndexItem.Collection>()
     val (archived, active) = collections.partition { it.archived }
     // Folded again on every visit (docs/pantallas.md 9: "Se pliega al salir").
     var archivedOpen by remember { mutableStateOf(false) }
+    var oldOpen by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf<CollectionKind?>(null) }
     var marking by remember { mutableStateOf<IndexItem.Month?>(null) }
 
@@ -101,7 +115,7 @@ fun IndexScreen(
 
         Eyebrow(S.indexMonths)
         Column(Modifier.padding(start = HEAD_START, end = 12.dp)) {
-            if (months.isEmpty()) Text(S.indexEmpty, style = Type.Secondary, modifier = Modifier.padding(start = 6.dp, top = 4.dp))
+            if (months.isEmpty() && old.none { it is IndexItem.Month }) Text(S.indexEmpty, style = Type.Secondary, modifier = Modifier.padding(start = 6.dp, top = 4.dp))
             months.forEach {
                 IndexRow(
                     Glyph.MONTH,
@@ -149,6 +163,22 @@ fun IndexScreen(
             } else {
                 AddRow(S.newTracker, pro = locked) {
                     if (locked) Paywall.show { adding = CollectionKind.TRACKER } else adding = CollectionKind.TRACKER
+                }
+            }
+        }
+
+        if (notebook != null && old.isNotEmpty()) {
+            Box(Modifier.padding(start = HEAD_START - 6.dp, top = 16.dp)) {
+                QuietButton(S.notebookUntil(notebook.minus(1, DateTimeUnit.DAY)), { oldOpen = !oldOpen })
+            }
+            if (oldOpen) {
+                Column(Modifier.padding(start = HEAD_START, end = 12.dp)) {
+                    old.forEach {
+                        when (it) {
+                            is IndexItem.Month -> IndexRow(Glyph.MONTH, it.title, mark = it.icon, dim = true, underline = journal.monthMigrated(it.month, today)) { onOpenMonth(it.month) }
+                            is IndexItem.Collection -> IndexRow(if (it.kind == CollectionKind.TRACKER) Glyph.GRID else Glyph.LIST, it.title, mark = it.icon, dim = true, indent = it.threaded) { onOpenCollection(it.id) }
+                        }
+                    }
                 }
             }
         }

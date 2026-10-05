@@ -120,6 +120,36 @@ fun Journal.continueCollection(id: String, title: String, now: Long, newId: Stri
     return made.copy(collections = made.collections.map { if (it.id == newId) it.copy(threadFrom = id) else it })
 }
 
+// --- Nuevo cuaderno (docs/tecnico.md 12.2) ------------------------------------------------------------
+
+/** Step 1 of a new notebook: every list and tracker not archived, one at a time, in the Index's order. */
+fun Journal.notebookCollections(): List<BulletCollection> {
+    val byId = collections.associateBy { it.id }
+    return indexItems { "" }.filterIsInstance<IndexItem.Collection>().filterNot { it.archived }.mapNotNull { byId[it.id] }
+}
+
+/** Step 2: every open task anywhere but the Future Log of the months still to come, oldest first. */
+fun Journal.notebookTasks(today: LocalDate): List<Entry> = entries
+    .filter { e ->
+        !e.gone && e.bullet == Bullet.TASK && e.status == TaskStatus.OPEN &&
+            ((e.place as? Place.Future)?.let { it.month <= monthOf(today) } ?: true)
+    }
+    .sortedWith(compareBy<Entry> { it.createdAt }.then(ENTRY_ORDER))
+
+/** The last step: the day the new notebook starts. Nothing else changes, nothing is deleted. */
+fun Journal.startNotebook(today: LocalDate): Journal? =
+    if (settings.notebooks.lastOrNull() == today) null else copy(settings = settings.copy(notebooks = settings.notebooks + today))
+
+/**
+ * What the Index folds under "Cuaderno hasta" (docs/tecnico.md 12.2): the months before the notebook's
+ * month, and the lists and trackers archived that were started before [start], the notebook's first
+ * moment. What is still active was kept, so it stays where it is.
+ */
+fun inOldNotebook(item: IndexItem, start: Long, notebook: LocalDate): Boolean = when (item) {
+    is IndexItem.Month -> item.month < monthOf(notebook)
+    is IndexItem.Collection -> item.archived && item.createdAt < start
+}
+
 /** The list [c] continues, archived or not (docs/tecnico.md 12.1). */
 fun Journal.threadPrev(c: BulletCollection): BulletCollection? =
     c.threadFrom?.let { from -> collections.find { it.id == from && it.kind == CollectionKind.NOTES } }

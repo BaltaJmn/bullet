@@ -1269,9 +1269,10 @@ iOS, el de la plantilla de las hermanas. Nada más: la primera imagen es Hoy.
 Ajustes, CUADERNO: `newNotebookRow` (Nuevo cuaderno) con `newNotebookSub` (Repasa colecciones y tareas
 para empezar otro). Abre REVIEW con alcance de cuaderno, gratis, un elemento cada vez:
 
-1. **Cada colección** no archivada, incluidos los seguimientos: su título en `PageTitle`, la etiqueta
-   del Índice en `Secondary` y tres acciones de `2u` en `primary`: `notebookKeep` (Mantener),
-   `notebookContinue` (Continuar en una nueva, 23.1) y `notebookArchive` (Archivar).
+1. **Cada colección** no archivada, incluidos los seguimientos: `collectionOf(n, total)` arriba, su
+   título en `Heading`, la etiqueta del Índice en `Secondary` y las acciones como filas de la revisión:
+   `notebookKeep` (Mantener), `notebookContinue` (Continuar en una nueva, 23.1, que archiva la original;
+   solo en listas) y `notebookArchive` (Archivar).
 2. **Cada tarea abierta**, salvo las del Future Log de meses que vienen, con las cinco acciones de 11.2.
 
 Posición `reviewPosition` arriba, como en 11.2. Al terminar, `notebookDone(fecha)` (Cuaderno nuevo desde

@@ -27,6 +27,7 @@ import com.baltajmn.bullet.model.capture
 import com.baltajmn.bullet.model.continueCollection
 import com.baltajmn.bullet.model.markCollection
 import com.baltajmn.bullet.model.markMonth
+import com.baltajmn.bullet.model.startNotebook
 import com.baltajmn.bullet.model.captureNote
 import com.baltajmn.bullet.model.createCollection
 import com.baltajmn.bullet.model.delete
@@ -347,6 +348,21 @@ object BobbinRepository {
         }
         return made
     }
+
+    /**
+     * "Continuar en una nueva" of a new notebook (docs/tecnico.md 12.2): the continuation, and the old list
+     * archived so it stays in the notebook it belongs to. One decision on one list, in one write.
+     */
+    fun continueAndArchive(id: String, title: String): String? {
+        var made: String? = null
+        edit { j ->
+            val newId = collectionId(j)
+            j.continueCollection(id, title, now(), newId)?.archiveCollection(id, true, now())?.also { made = newId }
+        }
+        return made
+    }
+
+    fun startNotebook() = edit { j -> j.startNotebook(today()) }
 
     /** Icon and theme of a page of the Index (docs/tecnico.md 12.9). */
     fun markCollection(id: String, icon: String?, theme: String?) = edit { j -> j.markCollection(id, icon, theme, now()) }

@@ -442,6 +442,7 @@ La fila de crear una lista es `newList` (sección 4). Cada grupo lleva su pista 
 | `decideTasks`* | n | Decide the 4 tasks / Decide the task / Finish | Decidir las 4 tareas / Decidir la tarea / Terminar | Decidir as 4 tarefas / Decidir a tarefa / Terminar | 4 Aufgaben entscheiden / Aufgabe entscheiden / Fertig | Décider les 4 tâches / Décider la tâche / Terminer |
 | `taskOf` | i, n | Task 2 of 4 | Tarea 2 de 4 | Tarefa 2 de 4 | Aufgabe 2 von 4 | Tâche 2 sur 4 |
 | `entryOf` | i, n | Entry 1 of 3 | Entrada 1 de 3 | Entrada 1 de 3 | Eintrag 1 von 3 | Entrée 1 sur 3 |
+| `collectionOf` | i, n | Collection 2 of 5 | Colección 2 de 5 | Coleção 2 de 5 | Sammlung 2 von 5 | Collection 2 sur 5 |
 | `doneStaysIn` | mes? | Stays in August, marked with an x. / Se queda en su sitio, marcada con una x. | Se queda en agosto, marcada con una x. / Se queda en su sitio, marcada con una x. | Fica em agosto, marcada com um x. / Se queda en su sitio, marcada con una x. | Bleibt im August, mit einem x markiert. / Se queda en su sitio, marcada con una x. | Reste en août, marquée d'un x. / Se queda en su sitio, marcada con una x. |
 | `decideLater`* | | Decide later | Decidir luego | Decidir depois | Später entscheiden | Décider plus tard |
 | `decideLaterHow` | | It stays open and the notice stays. | Sigue abierta y el aviso no se va. | Continua aberta e o aviso não sai. | Bleibt offen, und der Hinweis bleibt. | Elle reste ouverte et l'avis ne part pas. |

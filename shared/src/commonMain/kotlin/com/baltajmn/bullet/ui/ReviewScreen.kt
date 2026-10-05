@@ -45,6 +45,11 @@ import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.askReviewAfter
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
+import com.baltajmn.bullet.model.CollectionKind
+import com.baltajmn.bullet.model.Journal
+import com.baltajmn.bullet.model.notebookCollections
+import com.baltajmn.bullet.model.notebookTasks
+import kotlinx.datetime.YearMonth
 import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.FUTURE_MONTHS
 import com.baltajmn.bullet.model.FUTURE_MONTHS_MAX
@@ -152,32 +157,11 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit, onTo
             val entry = queue.firstOrNull()
             LaunchedEffect(entry == null) { if (entry == null) step = Step.END }
             if (entry == null) return
-            var months by remember(entry.id) { mutableStateOf(false) }
             val position = (total - queue.size + 1).coerceIn(1, maxOf(total, 1))
             Page(tab = false) {
                 ReviewTop(onClose, S.taskOf(position, total), position, total)
                 TaskUnderReview(originOf(entry), entry, journal.migrationCount(entry.id))
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                    if (months) {
-                        ScheduleChoices(today, entry) { months = false }
-                    } else {
-                        ActionRow(S.actionDone, S.doneStaysIn(month), icon = { BulletGlyph(Bullet.TASK, TaskStatus.DONE) }) {
-                            BobbinRepository.undoable(S.toastDone) { BobbinRepository.toggleDone(entry.id) }
-                        }
-                        val to = moveTarget(entry, today)
-                        val where = placeLabel(to, journal, today)
-                        ActionRow(moveLabel(entry, today), "${S.copiesTo(where)} ${S.leavesMark(">", month)}", icon = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) {
-                            BobbinRepository.undoable(S.sentence(S.movedTo(where))) { BobbinRepository.migrate(entry.id, to) }
-                        }
-                        ActionRow(S.moveOtherMonth, "${S.otherMonthHow} ${S.leavesMark("<", month)}", icon = { BulletGlyph(Bullet.TASK, TaskStatus.SCHEDULED) }) {
-                            months = true
-                        }
-                        ActionRow(S.actionDiscard, S.discardHow, icon = { DiscardGlyph() }) {
-                            BobbinRepository.undoable(S.toastDiscarded) { BobbinRepository.discard(entry.id) }
-                        }
-                        ActionRow(S.decideLater, S.decideLaterHow, icon = { GlyphIcon(Glyph.LATER) }) { later = later + entry.id }
-                    }
-                }
+                TaskActions(entry, today, month) { later = later + entry.id }
             }
         }
 
@@ -191,6 +175,116 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit, onTo
                     Text(S.reviewFinished.uppercase(), style = Type.Eyebrow)
                     Text(S.reviewEndTitle(month, left), style = Type.Heading, modifier = Modifier.padding(top = 10.dp, bottom = 8.dp).semantics { heading() })
                     Text(S.reviewEndLead(left), style = Type.Secondary.copy(fontSize = 15.sp, lineHeight = 22.sp))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The five ways out of an open task (docs/pantallas.md 11.2), each saying what it will do, shared by a
+ * review and a new notebook. [month] is the month a month review closes, which "Hecha" and the marks
+ * name; null anywhere else.
+ */
+@Composable
+private fun TaskActions(entry: Entry, today: LocalDate, month: YearMonth?, onLater: () -> Unit) {
+    val journal = BobbinRepository.journal
+    var months by remember(entry.id) { mutableStateOf(false) }
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+        if (months) {
+            ScheduleChoices(today, entry) { months = false }
+            return@Column
+        }
+        ActionRow(S.actionDone, S.doneStaysIn(month), icon = { BulletGlyph(Bullet.TASK, TaskStatus.DONE) }) {
+            BobbinRepository.undoable(S.toastDone) { BobbinRepository.toggleDone(entry.id) }
+        }
+        val to = moveTarget(entry, today)
+        val where = placeLabel(to, journal, today)
+        ActionRow(moveLabel(entry, today), "${S.copiesTo(where)} ${S.leavesMark(">", month)}", icon = { BulletGlyph(Bullet.TASK, TaskStatus.MIGRATED) }) {
+            BobbinRepository.undoable(S.sentence(S.movedTo(where))) { BobbinRepository.migrate(entry.id, to) }
+        }
+        ActionRow(S.moveOtherMonth, "${S.otherMonthHow} ${S.leavesMark("<", month)}", icon = { BulletGlyph(Bullet.TASK, TaskStatus.SCHEDULED) }) {
+            months = true
+        }
+        ActionRow(S.actionDiscard, S.discardHow, icon = { DiscardGlyph() }) {
+            BobbinRepository.undoable(S.toastDiscarded) { BobbinRepository.discard(entry.id) }
+        }
+        ActionRow(S.decideLater, S.decideLaterHow, icon = { GlyphIcon(Glyph.LATER) }, onClick = onLater)
+    }
+}
+
+private enum class NotebookStep { COLLECTIONS, TASKS, END }
+
+/**
+ * A new notebook (docs/pantallas.md 23.2, docs/tecnico.md 12.2): every list and tracker, then every open
+ * task, one at a time and nothing that decides two. Each decision changes its own element at once, so
+ * leaving half way keeps what was decided; only reaching the end writes the notebook's date.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun NotebookScreen(today: LocalDate, onClose: () -> Unit, endExtra: @Composable ColumnScope.() -> Unit = {}) {
+    BackHandler(true, onClose)
+    val journal = BobbinRepository.journal
+    var step by remember { mutableStateOf(NotebookStep.COLLECTIONS) }
+    val collectionIds = remember { journal.notebookCollections().map { it.id } }
+    var decided by remember { mutableStateOf(emptySet<String>()) }
+    var continuing by remember { mutableStateOf(false) }
+    var later by remember { mutableStateOf(emptySet<String>()) }
+    val totalTasks = remember { journal.notebookTasks(today).size }
+
+    when (step) {
+        NotebookStep.COLLECTIONS -> {
+            val current = collectionIds.filterNot { it in decided }
+                .firstNotNullOfOrNull { id -> journal.collections.find { it.id == id && !it.archived } }
+            LaunchedEffect(current == null) { if (current == null) step = if (totalTasks > 0) NotebookStep.TASKS else NotebookStep.END }
+            if (current == null) return
+            val position = (decided.size + 1).coerceAtMost(collectionIds.size)
+            val isList = current.kind == CollectionKind.NOTES
+            Page(tab = false) {
+                ReviewTop(onClose, S.collectionOf(position, collectionIds.size), position, collectionIds.size)
+                Column(Modifier.padding(horizontal = 24.dp)) {
+                    Text(S.newNotebookRow.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(top = 14.dp))
+                    Text(current.title, style = Type.Heading, modifier = Modifier.padding(top = 10.dp).semantics { heading() })
+                    Text(if (isList) S.listSubtitle else S.indexTrackers, style = Type.Secondary, modifier = Modifier.padding(top = 4.dp))
+                }
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                    ActionRow(S.notebookKeep, icon = { GlyphIcon(Glyph.CHECK) }) { decided = decided + current.id }
+                    // A tracker already continues itself month by month (docs/tecnico.md 12.1).
+                    if (isList) ActionRow(S.notebookContinue, icon = { GlyphIcon(Glyph.FORWARD) }) { continuing = true }
+                    ActionRow(S.notebookArchive, icon = { GlyphIcon(Glyph.BOOK) }) {
+                        BobbinRepository.archiveCollection(current.id, true)
+                        decided = decided + current.id
+                    }
+                }
+            }
+            if (continuing) {
+                ContinueDialog(current.title, onDismiss = { continuing = false }) { title ->
+                    (BobbinRepository.continueAndArchive(current.id, title) != null).also { if (it) decided = decided + current.id }
+                }
+            }
+        }
+
+        NotebookStep.TASKS -> {
+            val queue = journal.notebookTasks(today).filterNot { it.id in later }
+            val entry = queue.firstOrNull()
+            LaunchedEffect(entry == null) { if (entry == null) step = NotebookStep.END }
+            if (entry == null) return
+            val position = (totalTasks - queue.size + 1).coerceIn(1, maxOf(totalTasks, 1))
+            Page(tab = false) {
+                ReviewTop(onClose, S.taskOf(position, totalTasks), position, totalTasks)
+                TaskUnderReview(originOf(entry, journal), entry, journal.migrationCount(entry.id))
+                TaskActions(entry, today, month = null) { later = later + entry.id }
+            }
+        }
+
+        NotebookStep.END -> {
+            LaunchedEffect(Unit) { BobbinRepository.startNotebook() }
+            Page(tab = false, bottom = { Footer { PrimaryButton(S.close, onClose, block = true) } }) {
+                ReviewTop(onClose)
+                Column(Modifier.padding(horizontal = 24.dp)) {
+                    Text(S.newNotebookRow.uppercase(), style = Type.Eyebrow)
+                    Text(S.notebookDone(today), style = Type.Heading, modifier = Modifier.padding(top = 10.dp, bottom = 8.dp).semantics { heading() })
+                    endExtra()
                 }
             }
         }
@@ -267,12 +361,12 @@ fun FutureReviewScreen(today: LocalDate, onClose: () -> Unit) {
     }
 }
 
-/** docs/pantallas.md 11.2: where the task under review comes from. */
-private fun originOf(entry: Entry): String = when (val p = entry.place) {
+/** docs/pantallas.md 11.2: where the task under review comes from. A list says its title, as in the sheet. */
+private fun originOf(entry: Entry, journal: Journal = BobbinRepository.journal): String = when (val p = entry.place) {
     is Place.Daily -> S.fromDay(p.date)
     is Place.Monthly -> if (p.day == null) S.fromMonthTasks(p.month) else S.fromCalendar(LocalDate(p.month.year, p.month.month, p.day))
     is Place.Future -> S.fromFuture(p.month, p.day)
-    is Place.InCollection -> ""
+    is Place.InCollection -> journal.collections.find { it.id == p.id }?.title.orEmpty()
 }
 
 /** `CLOSE` on the left and, while there is a task, where the review is: "Tarea 2 de 4" and a dot per task. */

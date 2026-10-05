@@ -2228,9 +2228,17 @@ elemento cada vez y sin ninguna acción masiva (test 9 cubre las funciones nueva
 2. **Cada tarea abierta** de cualquier lugar salvo el Future Log de meses posteriores, con las cinco
    acciones de la revisión (6.6).
 
-Al terminar, `settings.notebooks += hoy`. El Índice pliega bajo "Cuaderno hasta <fecha>" todo lo creado
-antes de la última fecha de `notebooks`: sigue legible, no se borra nada. Salir a medias conserva lo
-decidido, porque cada decisión ya cambió su elemento.
+Al terminar, `settings.notebooks += hoy` (`startNotebook`). El Índice pliega bajo "Cuaderno hasta <fecha>"
+lo anterior a la última fecha de `notebooks` (`inOldNotebook`): los meses anteriores al mes del cuaderno
+y las colecciones archivadas que se crearon antes de su primer instante (las 00:00 más `dayStartHour`).
+Lo que sigue activo se mantuvo, así que se queda donde estaba. Sigue legible, no se borra nada. Salir a
+medias conserva lo decidido, porque cada decisión ya cambió su elemento.
+
+- "Continuar en una nueva" crea la continuación (12.1) y archiva la original en la misma escritura
+  (`continueAndArchive`): la vieja se queda en el cuaderno anterior. Un seguimiento solo ofrece
+  mantener o archivar, porque ya continúa solo cada mes.
+- Las tareas van por `createdAt`, la más antigua primero (`notebookTasks`).
+- En la app es la pantalla REVIEW en modo cuaderno, no un destino más.
 
 ### 12.3 Reflexión guiada
 

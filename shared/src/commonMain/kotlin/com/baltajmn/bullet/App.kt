@@ -69,6 +69,7 @@ import com.baltajmn.bullet.ui.IndexScreen
 import com.baltajmn.bullet.ui.KeyScreen
 import com.baltajmn.bullet.ui.LockScreen
 import com.baltajmn.bullet.ui.MonthScreen
+import com.baltajmn.bullet.ui.NotebookScreen
 import com.baltajmn.bullet.ui.Paywall
 import com.baltajmn.bullet.ui.ProDialog
 import com.baltajmn.bullet.ui.ReviewScreen
@@ -131,6 +132,7 @@ fun App() {
     // the Future Log one of 11.4, which has no scope because its queue is the Future Log itself.
     var reviewScope by remember { mutableStateOf<ReviewScope?>(null) }
     var reviewFutureLog by remember { mutableStateOf(false) }
+    var reviewNotebook by remember { mutableStateOf(false) }
     var openCollection by remember { mutableStateOf<String?>(null) }
     var collectionJustCreated by remember { mutableStateOf(false) }
     // Coming back to the foreground is the only guaranteed moment a backgrounded app can catch a
@@ -281,12 +283,14 @@ fun App() {
                 if (WindowInsets.ime.getBottom(LocalDensity.current) == 0) TabBar(active = tab, onSelect = { tab = it })
             }
 
-            val dismiss = { overlay = null; reviewFutureLog = false; reviewScope = null; openCollection = null }
+            val dismiss = { overlay = null; reviewFutureLog = false; reviewNotebook = false; reviewScope = null; openCollection = null }
             overlay?.let { screen ->
                 val scope = reviewScope
                 val collection = openCollection
                 when {
                     screen == Screen.REVIEW && reviewFutureLog -> FutureReviewScreen(today = today, onClose = dismiss)
+                    // A new notebook is a review whose scope is the whole notebook (docs/pantallas.md 23.2).
+                    screen == Screen.REVIEW && reviewNotebook -> NotebookScreen(today = today, onClose = { reviewNotebook = false; overlay = Screen.SETTINGS })
                     screen == Screen.REVIEW && scope != null -> ReviewScreen(
                         scope = scope,
                         today = today,
@@ -298,6 +302,7 @@ fun App() {
                         onBack = dismiss,
                         onKey = { overlay = Screen.KEY },
                         onGuide = { overlay = Screen.GUIDE },
+                        onNotebook = { reviewNotebook = true; overlay = Screen.REVIEW },
                     )
                     screen == Screen.GUIDE -> GuideScreen(today) {
                         runCatching { Prefs.setBool(PREF_GUIDE_SEEN, true) }

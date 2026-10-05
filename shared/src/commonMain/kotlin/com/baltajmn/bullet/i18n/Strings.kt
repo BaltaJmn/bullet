@@ -854,6 +854,7 @@ object S {
 
     fun taskOf(i: Int, n: Int) = t("Task $i of $n", "Tarea $i de $n", "Tarefa $i de $n", "Aufgabe $i von $n", "Tâche $i sur $n")
     fun entryOf(i: Int, n: Int) = t("Entry $i of $n", "Entrada $i de $n", "Entrada $i de $n", "Eintrag $i von $n", "Entrée $i sur $n")
+    fun collectionOf(i: Int, n: Int) = t("Collection $i of $n", "Colección $i de $n", "Coleção $i de $n", "Sammlung $i von $n", "Collection $i sur $n")
 
     /** The review's own "Hecha": in a month review the task stays in that month (docs/pantallas.md 11.2). */
     fun doneStaysIn(month: YearMonth?): String {
