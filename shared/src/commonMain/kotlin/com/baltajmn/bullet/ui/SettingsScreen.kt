@@ -107,6 +107,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import com.baltajmn.bullet.model.limitEdit
+import com.baltajmn.bullet.book.bookName
+import com.baltajmn.bullet.book.makeBook
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.graphics.toArgb
 
 /** The dialog width of docs/pantallas.md 15, shared by every dialog of the app. */
 internal const val DIALOG_MAX_WIDTH_DP = 576
@@ -136,6 +140,7 @@ fun SettingsScreen(onBack: () -> Unit, onKey: () -> Unit, onGuide: () -> Unit, o
     var exportFailed by remember { mutableStateOf(false) }
     var restoring by remember { mutableStateOf(false) }
     var restored by remember { mutableStateOf<Boolean?>(null) }
+    var makingBook by remember { mutableStateOf(false) }
 
     // Read again on every return from the system settings, so granting the permission there shows
     // here without restarting (docs/tecnico.md 6.12).
@@ -242,6 +247,9 @@ fun SettingsScreen(onBack: () -> Unit, onKey: () -> Unit, onGuide: () -> Unit, o
             Spacer(Modifier.height(8.dp))
             SettingsRow(title = S.newNotebookRow, subtitle = S.newNotebookSub, onClick = onNotebook)
             SettingsRow(title = S.yearSummaryRow, subtitle = null, onClick = onYearSummary, trailing = { if (!BobbinRepository.isPro) ProChip() })
+            if (FilePicker.available) {
+                SettingsRow(title = S.bookRow, subtitle = S.bookSub, onClick = { proOr { makingBook = true } }, trailing = { if (!BobbinRepository.isPro) ProChip() })
+            }
 
             if (FilePicker.available) {
                 SettingsSection(S.sectionBackup)
@@ -350,6 +358,7 @@ fun SettingsScreen(onBack: () -> Unit, onKey: () -> Unit, onGuide: () -> Unit, o
     importProblem?.let { MessageDialog(title = S.importFailedTitle, text = importProblemText(it), onDismiss = { importProblem = null }) }
     restored?.let { MessageDialog(title = S.restoreRow, text = if (it) S.restoreDone else S.restoreNothing, onDismiss = { restored = null }) }
     if (exportFailed) MessageDialog(title = S.exportRow, text = S.exportFailed, onDismiss = { exportFailed = false })
+    if (makingBook) BookDialog { makingBook = false }
 
     when (dialog) {
         null -> Unit
@@ -694,6 +703,59 @@ internal fun TextDialog(title: String, initial: String, confirm: String, max: In
         confirmButton = { DialogAction(confirm, enabled = value.text.isNotBlank()) { if (onConfirm(value.text)) onDismiss() } },
         dismissButton = { DialogAction(S.cancel, onClick = onDismiss) },
     )
+}
+
+/**
+ * The book (docs/pantallas.md 23.6): laid out and drawn while this says on which page it is, then handed
+ * to the system picker. Cancelling stops between two pages and leaves nothing behind.
+ */
+@Composable
+internal fun BookDialog(onClose: () -> Unit) {
+    var page by remember { mutableStateOf(0 to 0) }
+    var failed by remember { mutableStateOf(false) }
+    var picking by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val job = remember {
+        scope.launch {
+            val journal = BobbinRepository.journal
+            val isPro = BobbinRepository.isPro
+            val cover = activeCover(journal.settings, isPro).color.toArgb().toLong() and 0xFFFFFFFFL
+            val path = makeBook(journal, cover, activePaper(journal.settings, isPro).id) { n, total -> page = n to total }
+            if (path == null) {
+                failed = true
+                return@launch
+            }
+            picking = true
+            FilePicker.exportPdf(path, bookName(BobbinRepository.today())) { result ->
+                if (result == PickResult.Failed) failed = true else onClose()
+            }
+        }
+    }
+    when {
+        failed -> MessageDialog(title = S.bookRow, text = S.bookFailed, onDismiss = onClose)
+        picking -> Unit
+        else -> AlertDialog(
+            onDismissRequest = {},
+            modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH_DP.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(24.dp),
+            tonalElevation = 0.dp,
+            title = { Text(S.bookRow, style = Type.Body) },
+            text = {
+                val (n, total) = page
+                Column {
+                    Text(if (total == 0) S.working else S.bookMaking(n, total), style = Type.Body)
+                    LinearProgressIndicator(
+                        progress = { if (total == 0) 0f else n.toFloat() / total },
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+                }
+            },
+            confirmButton = { DialogAction(S.cancel) { job.cancel(); onClose() } },
+        )
+    }
 }
 
 internal class Choice(val label: String, val current: Boolean, val onPick: () -> Unit)

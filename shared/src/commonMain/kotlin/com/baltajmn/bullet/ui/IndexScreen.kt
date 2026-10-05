@@ -11,6 +11,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
+import com.baltajmn.bullet.data.FilePicker
 import com.baltajmn.bullet.model.groupByTheme
 import com.baltajmn.bullet.model.monthMigrated
 import com.baltajmn.bullet.model.inOldNotebook
@@ -103,6 +104,7 @@ fun IndexScreen(
     var oldOpen by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf<CollectionKind?>(null) }
     var marking by remember { mutableStateOf<IndexItem.Month?>(null) }
+    var makingBook by remember { mutableStateOf(false) }
 
     Page(tab = true) {
         TopBar(onSearch, onSettings)
@@ -167,6 +169,13 @@ fun IndexScreen(
             }
         }
 
+        // The book, as the last row after the ones that create (docs/pantallas.md 23.6).
+        if (FilePicker.available && all.isNotEmpty()) {
+            Column(Modifier.padding(start = HEAD_START, end = 12.dp, top = 16.dp)) {
+                AddRow(S.bookAction, glyph = Glyph.BOOK, pro = !BobbinRepository.isPro) { proOr { makingBook = true } }
+            }
+        }
+
         if (notebook != null && old.isNotEmpty()) {
             Box(Modifier.padding(start = HEAD_START - 6.dp, top = 16.dp)) {
                 QuietButton(S.notebookUntil(notebook.minus(1, DateTimeUnit.DAY)), { oldOpen = !oldOpen })
@@ -196,6 +205,8 @@ fun IndexScreen(
             }
         }
     }
+
+    if (makingBook) BookDialog { makingBook = false }
 
     marking?.let { m ->
         IconThemeSheet(
@@ -298,7 +309,7 @@ private fun IndexRow(
 
 /** "Nueva lista", "Nuevo seguimiento": the row that asks for a name, with PRO beside it when it is the door to Pro. */
 @Composable
-private fun AddRow(label: String, pro: Boolean = false, onClick: () -> Unit) {
+private fun AddRow(label: String, glyph: Glyph = Glyph.PLUS, pro: Boolean = false, onClick: () -> Unit) {
     val line = MaterialTheme.colorScheme.outline
     Row(
         Modifier.fillMaxWidth().heightIn(min = 52.dp)
@@ -307,7 +318,7 @@ private fun AddRow(label: String, pro: Boolean = false, onClick: () -> Unit) {
             .padding(start = 2.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        GlyphIcon(Glyph.PLUS, tint = MaterialTheme.colorScheme.primary)
+        GlyphIcon(glyph, tint = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.width(12.dp))
         Text(label, style = Type.Body.copy(color = MaterialTheme.colorScheme.primary), modifier = Modifier.weight(1f))
         if (pro) ProChip()

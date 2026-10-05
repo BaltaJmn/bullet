@@ -11,6 +11,7 @@ actual object FilePicker {
 
     /** Set by MainActivity: opening and creating a document both need an Activity. */
     var createDocument: ((String) -> Unit)? = null
+    var createPdf: ((String) -> Unit)? = null
     var openDocument: (() -> Unit)? = null
 
     /**
@@ -56,6 +57,30 @@ actual object FilePicker {
                                 write { bytes -> out.write(bytes) }
                             } ?: error("no output stream")
                         }.isSuccess
+                    }
+                    onDone(if (ok) PickResult.Done else PickResult.Failed)
+                }
+            }
+        }
+        launch(suggestedName)
+    }
+
+    actual fun exportPdf(path: String, suggestedName: String, onDone: (PickResult) -> Unit) {
+        val book = java.io.File(path)
+        val launch = createPdf ?: return onDone(PickResult.Failed).also { book.delete() }
+        if (waiting != null) return onDone(PickResult.Cancelled).also { book.delete() }
+        waiting = { uri ->
+            if (uri == null) {
+                book.delete()
+                onDone(PickResult.Cancelled)
+            } else {
+                scope.launch {
+                    val ok = withContext(Dispatchers.IO) {
+                        runCatching {
+                            AndroidContext.value.contentResolver.openOutputStream(uri, "wt")?.use { out ->
+                                book.inputStream().use { it.copyTo(out) }
+                            } ?: error("no output stream")
+                        }.isSuccess.also { book.delete() }
                     }
                     onDone(if (ok) PickResult.Done else PickResult.Failed)
                 }

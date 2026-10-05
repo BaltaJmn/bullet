@@ -18,6 +18,12 @@ expect object FilePicker {
     fun exportZip(suggestedName: String, write: (sink: (ByteArray) -> Unit) -> Unit, onDone: (PickResult) -> Unit)
 
     /**
+     * Asks where to put the book (docs/tecnico.md 12.6) and moves the finished PDF at [path] there. The
+     * temporary file is gone afterwards, whatever the answer.
+     */
+    fun exportPdf(path: String, suggestedName: String, onDone: (PickResult) -> Unit)
+
+    /**
      * Asks for a file and calls [read] with a pull source while it is open: the source hands back up
      * to the bytes asked for, and null at the end. [onDone] says whether a file was read at all.
      */

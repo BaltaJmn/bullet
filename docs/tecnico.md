@@ -2298,9 +2298,14 @@ con el `dayStartHour` vigente, igual que Hoy.
 
 ### 12.6 Libro en PDF
 
-Pro. `book/Book.kt` (común) calcula las páginas; `expect object BookRenderer` las dibuja: Android con
-`PdfDocument` y un `Typeface` de la misma Literata; iOS con `UIGraphicsPDFRenderer` y la fuente
-registrada con `CTFontManagerRegisterFontsForURL`. A5, 420 x 595 puntos, con el papel elegido
+Pro. `book/Book.kt` (común) maqueta el libro entero en `Mark` (relleno, texto, línea, punto) en puntos,
+con el ancho de cada texto medido por la plataforma; `expect object BookRenderer` solo rellena, traza y
+escribe, página a página: Android con `PdfDocument` y un `Typeface` de la misma Literata (escrita a la
+caché, porque `Typeface` lee de fichero); iOS con un contexto PDF de UIKit
+(`UIGraphicsBeginPDFContextToFile`, que deja dibujar y cancelar entre páginas) y la fuente registrada con
+`CTFontManagerRegisterFontsForURL`. El papel es una sola lista de marcas que comparten todas las páginas
+menos la portada. `FilePicker.exportPdf` lleva el fichero temporal al selector del sistema y lo borra
+después, se guarde o no. A5, 420 x 595 puntos, con el papel elegido
 (`activePaper`) y los glifos de `BulletGlyph` con su misma geometría. Páginas: portada con la portada
 elegida, la clave, el índice (6.7), cada mes (calendario, tareas del mes y cada Daily Log) y cada
 colección, en orden de creación; en v1.2, el resumen del año como apéndice (12.8). Se dibuja página a

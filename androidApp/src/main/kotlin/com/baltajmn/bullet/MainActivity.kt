@@ -27,6 +27,9 @@ class MainActivity : FragmentActivity() {
     private val createBackup =
         registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip"), FilePicker::onPicked)
 
+    private val createBook =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf"), FilePicker::onPicked)
+
     private val openBackup =
         registerForActivityResult(ActivityResultContracts.OpenDocument(), FilePicker::onPicked)
 
@@ -39,6 +42,7 @@ class MainActivity : FragmentActivity() {
         Reminders.host = WeakReference(this)
         Reminders.launchRequest = { askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS) }
         FilePicker.createDocument = { name -> createBackup.launch(name) }
+        FilePicker.createPdf = { name -> createBook.launch(name) }
         FilePicker.openDocument = { openBackup.launch(arrayOf("application/zip", "application/json", "*/*")) }
         // A recreated Activity gets the same intent again: the link was already followed.
         if (savedInstanceState == null) parseLink(intent?.dataString)?.let { Route.pending = it }
@@ -56,6 +60,7 @@ class MainActivity : FragmentActivity() {
     // hold the dead Activity and then throw when something tried to launch it.
     override fun onDestroy() {
         FilePicker.createDocument = null
+        FilePicker.createPdf = null
         FilePicker.openDocument = null
         Reminders.launchRequest = null
         Reminders.host = null

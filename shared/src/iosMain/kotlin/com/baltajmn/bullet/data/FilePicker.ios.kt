@@ -71,6 +71,26 @@ actual object FilePicker {
         }
     }
 
+    actual fun exportPdf(path: String, suggestedName: String, onDone: (PickResult) -> Unit) {
+        val fm = NSFileManager.defaultManager
+        val root = rootController
+        if (root == null || held != null) {
+            fm.removeItemAtPath(path, null)
+            return onDone(if (root == null) PickResult.Failed else PickResult.Cancelled)
+        }
+        // The picker keeps the file's own name, so it gets the book's before it is offered.
+        val named = NSTemporaryDirectory() + suggestedName
+        fm.removeItemAtPath(named, null)
+        if (!fm.moveItemAtPath(path, named, null)) {
+            fm.removeItemAtPath(path, null)
+            return onDone(PickResult.Failed)
+        }
+        present(UIDocumentPickerViewController(forExportingURLs = listOf(NSURL.fileURLWithPath(named))), root) { urls ->
+            fm.removeItemAtPath(named, null)
+            onDone(if (urls.isEmpty()) PickResult.Cancelled else PickResult.Done)
+        }
+    }
+
     actual fun importFile(read: (source: (Int) -> ByteArray?) -> Unit, onDone: (PickResult) -> Unit) {
         val root = rootController ?: return onDone(PickResult.Failed)
         if (held != null) return onDone(PickResult.Cancelled)
