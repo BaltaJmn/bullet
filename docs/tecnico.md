@@ -2282,14 +2282,19 @@ con el `dayStartHour` vigente, igual que Hoy.
 - **Android**: `CaptureTileService` (`TileService`, etiqueta `S.tileLabel`) abre `CaptureActivity`, una
   actividad con tema de diálogo que enseña solo el campo sobre la pantalla actual. Sin Pro, abre
   `MainActivity` con `bobbin://pro`. Se declaran en el manifiesto con
-  `android.permission.BIND_QUICK_SETTINGS_TILE`.
+  `android.permission.BIND_QUICK_SETTINGS_TILE`. Los dos viven en `androidApp/.../Capture.kt`, como
+  `MainActivity`, porque solo hospedan: la lógica es `BobbinRepository.captureFromOutside` y la vista es
+  `CaptureSheet` (común), la misma barra de escribir. Con el teléfono bloqueado la baldosa pide
+  desbloquear (`unlockAndRun`): nada se escribe desde la pantalla de bloqueo. La etiqueta del selector
+  de baldosas es `tile_label` de `strings.xml`; la de la baldosa puesta, `S.tileLabel`.
 - **iOS**: `iosApp/iosApp/Shortcuts.swift` con `struct CaptureIntent: AppIntent,
   ForegroundContinuableIntent`, `@Parameter var text: String`, título "Note in Bobbin" y descripción
   **literales** en inglés, y `AppShortcutsProvider` con frases que llevan `\(.applicationName)`. Las
   traducciones van en `<lang>.lproj/Localizable.strings`: un valor de la tabla de idiomas rompe el build
   con `No AppIntents metadata have been exported`. `perform()` llama a `BobbinBridge.shared.capture`:
   `Saved` responde `S.captureSaved`; `NeedsPro` pide continuar en primer plano y deja `Route` en `pro`;
-  `Empty` responde que no había texto.
+  `Empty` responde que no había texto. `capture` espera a que el diario esté en disco antes de
+  responder, porque el sistema puede suspender la app en cuanto el intent contesta.
 
 ### 12.6 Libro en PDF
 

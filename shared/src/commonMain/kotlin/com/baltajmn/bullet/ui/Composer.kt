@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -68,6 +71,7 @@ import com.baltajmn.bullet.model.limitEdit
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.model.rapidParse
+import com.baltajmn.bullet.ui.theme.BobbinTheme
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.page
 import kotlinx.datetime.LocalDate
@@ -225,6 +229,31 @@ fun Composer(
         }
         if (count >= COUNTER_FROM) {
             Text(S.counter(count, TEXT_LIMIT), style = Type.Secondary.copy(fontSize = 12.sp), modifier = Modifier.align(Alignment.End).padding(top = 4.dp))
+        }
+    }
+}
+
+/**
+ * The capture from outside of docs/pantallas.md 23.5 on Android: only the composer, pinned to the
+ * keyboard over whatever was on screen, writing in today. Touching outside it closes without saving.
+ */
+@Composable
+fun CaptureSheet(onSaved: () -> Unit, onDismiss: () -> Unit) {
+    BobbinTheme {
+        Box(
+            Modifier.fillMaxSize().clickable(interactionSource = null, indication = null, onClick = onDismiss).imePadding(),
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                    .background(MaterialTheme.colorScheme.background)
+                    .clickable(interactionSource = null, indication = null, onClick = {})
+                    .padding(top = 8.dp)
+                    .navigationBarsPadding(),
+            ) {
+                val today = BobbinRepository.today()
+                Composer(place = Place.Daily(today), today = today, autoFocus = true, onSaved = onSaved)
+            }
         }
     }
 }

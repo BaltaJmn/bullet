@@ -7,4 +7,5 @@
     <string name="widget_preview_done">feitas</string>
     <string name="widget_preview_events">eventos</string>
     <string name="widget_preview_month">SETEMBRO</string>
+    <string name="tile_label">Anotar no Bobbin</string>
 </resources>

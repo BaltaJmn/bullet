@@ -1,0 +1,3 @@
+/* Frases de Siri (docs/textos.md 23). */
+"Note in ${applicationName}" = "Note dans ${applicationName}";
+"Add an entry to ${applicationName}" = "Ajoute une entrée à ${applicationName}";

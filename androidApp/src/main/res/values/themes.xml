@@ -3,4 +3,12 @@
     <style name="Theme.Bobbin" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">#FBF8F3</item>
     </style>
+
+    <!-- La captura desde fuera: transparente y atenuada, la barra de escribir pegada al teclado. -->
+    <style name="Theme.Bobbin.Capture" parent="Theme.Bobbin">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.InputMethod</item>
+    </style>
 </resources>

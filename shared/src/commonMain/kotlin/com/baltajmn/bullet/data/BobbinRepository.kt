@@ -70,6 +70,9 @@ import kotlinx.serialization.json.jsonPrimitive
 /** How long Deshacer stays offered after a delete (docs/pantallas.md 5.8, docs/tecnico.md 6.4). */
 const val UNDO_MS = 5_000L
 
+/** What a capture from outside the app came to (docs/tecnico.md 12.5). */
+enum class OutsideCapture { Saved, NeedsPro, Empty }
+
 /** What the undo line is offering to put back (docs/pantallas.md 5.8): its text says which. */
 enum class UndoKind { ENTRY, COLLECTION, ROW, ACTION }
 
@@ -239,6 +242,16 @@ object BobbinRepository {
                 ?.also { saved = true }
         }
         return saved
+    }
+
+    /**
+     * Quick Settings and Shortcuts (docs/tecnico.md 12.5): the same [capture] as Hoy, into today's Daily
+     * Log with the day start in force, and only with Pro. Without it nothing is written, whatever the text.
+     */
+    fun captureFromOutside(text: String): OutsideCapture {
+        ensureLoaded()
+        if (!isPro) return OutsideCapture.NeedsPro
+        return if (capture(text, Place.Daily(today()))) OutsideCapture.Saved else OutsideCapture.Empty
     }
 
     // --- Estados, signifiers, migrar, programar, descartar, editar y borrar (docs/tecnico.md 6.3,

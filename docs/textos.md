@@ -791,6 +791,7 @@ se traducen aquí con la clave igual al literal inglés y el valor de la columna
 | `widget_preview_done` | done | hechas | feitas | erledigt | faites |
 | `widget_preview_events` | events | eventos | eventos | Ereignisse | événements |
 | `widget_preview_month` | SEPTEMBER | SEPTIEMBRE | SETEMBRO | SEPTEMBER | SEPTEMBRE |
+| `tile_label` | = `tileLabel` | | | | |
 
 Las `widget_preview_*` las leen los XML de previsualización del selector, que se mantienen a mano
 (`docs/tecnico.md` 8.2): enseñan un miércoles 23 de septiembre con números de ejemplo en plural.
