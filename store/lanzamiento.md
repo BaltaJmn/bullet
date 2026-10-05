@@ -23,6 +23,7 @@ Aquí solo va lo que cambia de una app a otra.
 | Bundle id de iOS | `com.baltajmn.bullet` (`APP_BUNDLE_ID` en `iosApp/Configuration/Config.xcconfig`) |
 | Bundle id del widget | `com.baltajmn.bullet.widget` |
 | App Group | `group.com.baltajmn.bullet` |
+| Contenedor de iCloud | `iCloud.com.baltajmn.bullet` |
 | Producto de compra | `bullet_pro`, no consumible, en las dos tiendas |
 | Derecho de RevenueCat | `pro` |
 | Nombre visible | Bobbin |
@@ -153,6 +154,11 @@ no trae Play Billing.
 
 - [ ] **[autor] Clave de la App Store Connect API** (rol *App Manager*) y los cuatro secretos de
       Apple (`ci.md`). Con ellos, la misma etiqueta `v*` archiva y sube a TestFlight. (#7)
+- [ ] **[autor] iCloud en el App ID** `com.baltajmn.bullet`: en *Certificates, Identifiers &
+      Profiles*, crear el contenedor `iCloud.com.baltajmn.bullet` y activar *iCloud* (*iCloud
+      Documents*) con ese contenedor en el App ID de la app, no en el del widget. `iosApp.entitlements`
+      ya lo declara para la sincronización (#69): sin esto, el archivado de la etiqueta falla al firmar.
+      Se comprueba en TestFlight encendiendo *Sincronizar* en dos dispositivos con la misma cuenta.
 - [ ] **[autor] `TEAM_ID`** en `Config.xcconfig`. **[código]** lo commitea: no es secreto. (#8)
 - [ ] **[autor] Producto `bullet_pro`** en App Store Connect (`revenuecat.md` §6) con su captura de
       revisión. (#47)

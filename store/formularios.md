@@ -16,6 +16,11 @@ Hechos de partida, todos de `docs/tecnico.md`:
   texto del diario (4.2).
 - La notificación del recordatorio es un texto fijo que no cita el diario (6.12).
 - La valoración la pide el sistema una sola vez (`StoreReview`, 6.6) y la app no manda nada con ella.
+- La sincronización (Pro, v1.2, 12.7) está apagada por defecto. Encendida, escribe el diario entero en
+  `bobbin-sync.json` en la nube del propio usuario: el contenedor de iCloud Drive de la app en iOS, y en
+  Android el fichero que elige o crea con el selector del sistema (Drive u otro proveedor). La app no
+  abre ninguna conexión para ello: sube el fichero el sistema o el proveedor, con la cuenta del
+  usuario. Nunca llega al desarrollador.
 
 ---
 
@@ -49,7 +54,7 @@ Lo que **no** se marca, y por qué:
 
 | Tipo | Por qué no |
 |---|---|
-| Otro contenido generado por el usuario (el texto del diario) | No sale del dispositivo |
+| Otro contenido generado por el usuario (el texto del diario) | No llega nunca al desarrollador. Solo sale si el usuario enciende la sincronización, y entonces va a su propio almacenamiento a través del selector del sistema (ver abajo) |
 | Fotos, mensajes, contactos, ubicación, salud, actividad | La app no los toca |
 | Registros de fallos, diagnóstico | No hay SDK que los mande |
 
@@ -60,6 +65,12 @@ Google excluye de "recogido" lo que va cifrado de extremo a extremo y solo puede
 receptor ([Seguridad de los datos, ayuda de Play Console](https://support.google.com/googleplay/android-developer/answer/10787469)).
 Es una **inferencia**: la ayuda no nombra la copia del sistema (SPEC §9). Si Google publica algo
 concreto, se revisa aquí.
+
+**La sincronización.** Con ella encendida, la app escribe `bobbin-sync.json` en un documento que el
+usuario elige con el selector del sistema, igual que cuando exporta. Quien lo sube es el proveedor de
+ese documento (Drive, por ejemplo), con la cuenta del usuario, y el desarrollador no lo recibe ni puede
+leerlo. Por eso no se marca como recogido ni compartido: es una acción iniciada por el usuario hacia un
+destino suyo. También es **inferencia**, con la misma salvedad que la copia del sistema.
 
 ## 2. Play: clasificación de contenido (IARC)
 
@@ -166,6 +177,11 @@ Textos de la ficha: `listings/<idioma>/`. Notas de versión: `whatsnew/`. Gráfi
 
 Es exactamente lo que dice `PrivacyInfo.xcprivacy` (`docs/tecnico.md` 8.3). Si el informe de
 privacidad de Xcode sobre el primer archivo añade algo, se añade en los dos sitios.
+
+La sincronización por iCloud Drive (v1.2) no cambia la respuesta: el fichero vive en el contenedor de
+iCloud del propio usuario, lo sube el sistema, y el desarrollador no tiene acceso a él. Apple solo
+cuenta como recogido lo que el desarrollador o sus terceros pueden leer. No usa ninguna API de motivo
+obligado nueva (`NSMetadataQuery`, `NSFileCoordinator` y el contenedor de ubicuidad no lo son).
 
 URL de la política: `https://bullet.baltajmn.dev/`.
 

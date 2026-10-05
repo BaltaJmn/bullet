@@ -27,6 +27,7 @@ Irreversibles en cuanto se publica la primera build (SPEC §8).
 | Bundle id del widget iOS | `com.baltajmn.bullet.widget` (`$(APP_BUNDLE_ID).widget`) |
 | Target y producto del widget | `BobbinWidget`, `BobbinWidgetExtension` |
 | App Group | `group.com.baltajmn.bullet`. Solo contiene `widget.json` (4.2) |
+| Contenedor de iCloud | `iCloud.com.baltajmn.bullet` (v1.2, 12.7). Solo contiene `Documents/bobbin-sync.json` |
 | Kinds de WidgetKit | `BobbinTodayWidget`, `BobbinMonthWidget`, `BobbinLockWidget` |
 | Esquema de URL | `bobbin` (`bobbin://today?focus`, `bobbin://review`, `bobbin://pro`) |
 | Canal de notificación Android | `bobbin-reflection` |
@@ -150,7 +151,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `data/Widgets.kt` | `expect fun writeWidgetState`, `expect fun refreshWidgets`, `syncWidgets` | C `line/.../data/Widgets.kt` |
 | `data/Merge.kt` | `merge`, `MergeResult` | N |
 | `data/Zip.kt` | `ZipWriter`, `ZipReader`, `crc32`, `ZipDamaged` | C `line/.../data/Zip.kt` |
-| `data/Export.kt` | `exportName`, `monthMarkdown`, `collectionMarkdown`, `collectionFileNames`, `exportZip`, `readBackup`, `parseBackup`, `ReadBackup`, `ImportProblem` | A `line/.../data/Export.kt` |
+| `data/Export.kt` | `exportName`, `monthMarkdown`, `collectionMarkdown`, `collectionFileNames`, `exportZip`, `readBackup`, `parseBackup`, `ReadBackup`, `ImportProblem`; en v1.2 también `SiblingCandidate` y `addImported` (4.5, 12.10) | A `line/.../data/Export.kt` |
 | `data/FilePicker.kt` | `expect object FilePicker`, `PickResult` | C `line/.../data/FilePicker.kt` |
 | `data/Lock.kt` | `expect object Lock` | C `line/.../data/Lock.kt` |
 | `data/Reminders.kt` | `expect object Reminders`, `nextReminder`, `NotifyPermission` | A `line/.../data/Reminder.kt` |
@@ -158,7 +159,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `data/StoreReview.kt` | `expect object StoreReview`, `shouldAskReview`, `askReviewAfter` | N |
 | `data/Route.kt` | `object Route`: a qué pantalla pide ir un widget, un enlace o la notificación | A `line/.../data/Route.kt` |
 | `data/AppInfo.kt` | `PRIVACY_URL`, `SIBLINGS`, `expect object AppInfo` | A `line/.../data/AppInfo.kt` |
-| `data/SiblingImport.kt` | v1.2: leer las copias de Purl, MoodTraker y Quilt (4.5, 12.10) | N |
+| `data/Sync.kt` | v1.2: `SYNC_NAME`, `Remote`, `expect object SyncFile`, `syncStep`, `SyncStep`, `object Sync` (12.7) | N |
 | `billing/Billing.kt` | `expect val revenueCatApiKey`, `object Billing` | A `line/.../billing/Billing.kt`: el derecho va a `Prefs`, no al diario |
 | `i18n/Strings.kt` | `expect fun systemLanguage()`, `expect fun systemFirstDayOfWeek()`, `object S` con `t(en, es, pt, de, fr)`, plurales y nombres de mes y día | A `line/.../i18n/Strings.kt` |
 | `ui/theme/Theme.kt` | `BobbinTheme`, colores, `enum class Cover`, `enum class Paper`, `isWideScreen`, `MAX_CONTENT_WIDTH` | A `line/.../ui/theme/Theme.kt` |
@@ -200,6 +201,7 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `data/FilePicker.android.kt` | C line: `OpenDocument` para importar, `CreateDocument("application/zip")` para exportar |
 | `data/Storage.android.kt` | A line: los nombres de 6.14 en `filesDir`, `keepCopy`, `readCopy` y `wipe` |
 | `data/Prefs.android.kt` | N: `SharedPreferences` `bobbin` |
+| `data/Sync.android.kt` | N, v1.2: el fichero del selector con permiso persistente (12.7) |
 | `data/Lock.android.kt` | C line |
 | `data/Reminders.android.kt` y `data/ReminderReceiver.kt` (con `BootReceiver`) | A line: texto fijo, sin comprobar si el día está escrito |
 | `data/Widgets.android.kt` | A line: `widget.json` en `filesDir`, `updateAll` de los dos widgets y la alarma del cambio de día (6.13) |
@@ -220,6 +222,7 @@ en `files/` y no en `font/`, donde el generador la tomaría por una fuente más.
 | `data/AppInfo.ios.kt`, `data/FilePicker.ios.kt` | C line |
 | `data/Storage.ios.kt` | A line: Application Support, **no** el App Group |
 | `data/Prefs.ios.kt` | N: `NSUserDefaults.standardUserDefaults` |
+| `data/Sync.ios.kt` | N, v1.2: el contenedor de iCloud con `NSMetadataQuery` y `NSFileCoordinator` (12.7) |
 | `data/Lock.ios.kt` | C line |
 | `data/Reminders.ios.kt` | N: un `UNCalendarNotificationTrigger` que se repite (6.12) |
 | `data/Widgets.ios.kt` | A line: `widget.json` en el App Group y `WidgetCenter` vía `BobbinBridge` |
@@ -2323,8 +2326,9 @@ usuario, sin cuenta en la app y sin servidor nuestro. iOS: el contenedor de iClo
 fichero elegido o creado con el selector del sistema (`OpenDocument` o `CreateDocument`, que incluye
 Drive), con `takePersistableUriPermission`.
 
-Cada dispositivo guarda `sync/base.json`, la última versión sincronizada. Al arrancar, en `ON_RESUME`
-y tras cada guardado:
+Cada dispositivo guarda la última versión sincronizada como la copia con nombre `sync-base`
+(`journal.sync-base.json`, con `keepCopy` de 6.14). Al arrancar, en `ON_RESUME` y tras cada guardado
+(agrupando los guardados seguidos en uno, 1,5 s después del último), `syncStep(local, remoto, base)`:
 
 | Local frente a `base` | Remoto frente a `base` | Qué pasa |
 |---|---|---|
@@ -2336,6 +2340,37 @@ y tras cada guardado:
 **Nunca hay fusión silenciosa.** Tras cualquier resolución, `base` pasa a ser lo escrito. Activarlo
 toca en el mismo commit `store/privacy/index.html`, `store/formularios.md` y `PrivacyInfo.xcprivacy`:
 el diario pasa a salir hacia la nube del usuario.
+
+Decisiones de #69:
+
+- **Sin `base`** (primera vez en este dispositivo, o tras elegir otro fichero): si los dos son iguales
+  no pasa nada; un diario vacío toma el remoto; cualquier otra diferencia es `Conflict`. Nunca se sube
+  un diario encima de otro sin preguntar.
+- **Lo del dispositivo no viaja.** El bloqueo y el recordatorio (`lockOn`, `reminderOn`, su hora y
+  `reminderOffered`) son de cada teléfono: uno puede no tener bloqueo de pantalla o no tener permiso.
+  Se comparan los diarios sin esos campos (`syncedPart`) y al aplicar el remoto se conservan los
+  locales. Sin esto, dos dispositivos con ajustes distintos se reescribirían el uno al otro sin fin.
+- **El remoto**, `Remote`: `Missing` (no hay fichero o está vacío: se sube el local), `Pending` (no se
+  puede leer ahora: no se hace nada) o `Text`. En iOS solo es `Missing` cuando `NSMetadataQuery` ha
+  terminado de reunir resultados y no lo encuentra: antes, un dispositivo nuevo vería la nube vacía y
+  subiría su diario vacío encima del otro. Si no está descargado, se pide la descarga y se espera a la
+  siguiente notificación de la consulta. Un remoto que no pasa `parseBackup` (dañado, o de un Bobbin
+  más nuevo) no se toca.
+- **Aplicar el remoto** (`replaceFromSync`) guarda antes `pre-sync` y no hace nada si el diario cambió
+  mientras se leía la nube: esa edición no se pierde y el siguiente ciclo decide otra vez.
+- **"Juntar los dos"** es `merge(este, remoto)` de 6.9, con su resumen antes; el resultado se aplica
+  aquí (con `pre-sync`) y se sube.
+- **Android**: al encender, `ChoiceDialog` con `syncCreate` (`CreateDocument("application/json")` con
+  el nombre `bobbin-sync.json`) o `syncOpen` (`OpenDocument`, el que ya escribe otro dispositivo). Drive
+  permite nombres repetidos, así que el segundo dispositivo tiene que abrir el existente, no crear otro.
+  La URI se guarda en `Prefs` (`syncUri`) con `takePersistableUriPermission`.
+- **iOS**: `iosApp.entitlements` declara el contenedor (`icloud-container-identifiers`,
+  `ubiquity-container-identifiers` y `icloud-services` = `CloudDocuments`). Sin sesión de iCloud o sin
+  iCloud Drive, encender enseña `syncNoICloud` y no se activa.
+- Encendida o no, la hora de la última vez y el fichero elegido son de cada dispositivo (`Prefs`:
+  `syncOn`, `syncLast`, `syncUri`), nunca del diario. Sin Pro no se sincroniza, pero no se apaga.
+- **Borrar todos los datos** apaga la sincronización en este dispositivo antes de borrar: la copia de
+  la nube no es de este teléfono y se queda donde está, y si siguiera encendida el diario volvería.
 
 ### 12.8 Resumen del año
 

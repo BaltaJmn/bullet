@@ -173,8 +173,8 @@ fun readBackup(source: (Int) -> ByteArray?, steps: List<(JsonObject) -> JsonObje
     return parseBackup(text, steps)
 }
 
-/** The checks of docs/tecnico.md 4.6 on the text of a `journal.json`. */
-fun parseBackup(text: String, steps: List<(JsonObject) -> JsonObject> = SCHEMA_STEPS): ReadBackup {
+/** The checks of docs/tecnico.md 4.6 on the text of a `journal.json`. A synced diary may be empty (12.7). */
+fun parseBackup(text: String, steps: List<(JsonObject) -> JsonObject> = SCHEMA_STEPS, allowEmpty: Boolean = false): ReadBackup {
     val root = runCatching { Json.parseToJsonElement(text).jsonObject }.getOrNull()
         ?: return ReadBackup.Failed(ImportProblem.NOT_BACKUP)
     readSibling(root)?.let { return it }
@@ -195,7 +195,7 @@ fun parseBackup(text: String, steps: List<(JsonObject) -> JsonObject> = SCHEMA_S
         entryIds.size != entryIds.toSet().size || journal.collections.size != collectionIds.size ||
         journal.entries.any { e -> !e.gone && (e.place as? Place.InCollection)?.let { it.id !in collectionIds } == true }
     if (damaged) return ReadBackup.Failed(ImportProblem.DAMAGED)
-    if (journal.entries.isEmpty() && journal.collections.isEmpty()) return ReadBackup.Failed(ImportProblem.EMPTY)
+    if (!allowEmpty && journal.entries.isEmpty() && journal.collections.isEmpty()) return ReadBackup.Failed(ImportProblem.EMPTY)
     return ReadBackup.Ok(journal)
 }
 

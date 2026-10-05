@@ -1325,11 +1325,14 @@ PDF) en `primary`. Sin Pro, abre el `ProDialog`.
 
 Ajustes, COPIA: `syncRow` (Sincronizar) con interruptor. Subtítulo: `syncOff` (Apagada), `syncICloud`
 (Con iCloud Drive) o `syncFile(nombre)` (Con bobbin-sync.json, en la carpeta que elegiste), y
-`syncLast(hora)` (Última vez, 18:40). Encender sin Pro abre el `ProDialog`; en Android abre el selector
-del sistema. Conflicto (`docs/tecnico.md` 12.7): diálogo `syncConflictTitle` (Los dos lados han
+`syncLast(hora)` (Última vez, 18:40) en una segunda línea. Encender sin Pro abre el `ProDialog`. En
+Android, antes del selector del sistema, un `ChoiceDialog` con título `syncRow` y dos opciones:
+`syncCreate` (Crear un bobbin-sync.json nuevo) y `syncOpen` (Usar el de otro dispositivo). En iOS, sin
+iCloud Drive, `syncNoICloud` en un diálogo con `ok` y el interruptor se queda apagado. Conflicto (`docs/tecnico.md` 12.7): diálogo `syncConflictTitle` (Los dos lados han
 cambiado) con `syncConflictText`, y tres botones apilados: `syncKeepThis` (Usar este
 teléfono), `syncKeepOther` (Usar el otro) y `syncMerge` (Juntar los dos), que enseña el resumen
-de 15.2 antes de aplicar. Nunca fusión silenciosa.
+de 15.2 antes de aplicar, con `syncMerge` y `cancel`. Nunca fusión silenciosa. Sale sobre cualquier
+pantalla menos el bloqueo; cerrarlo sin elegir no decide nada y el siguiente ciclo vuelve a preguntar.
 
 ### 23.8 Resumen del año (v1.2, #70, Pro)
 

@@ -6,6 +6,7 @@
     <false/>
     <key>NSPrivacyTrackingDomains</key>
     <array/>
+    <!-- Sync (v1.2) is not collection: bobbin-sync.json lives in the user's own iCloud container and the developer never receives it. See store/formularios.md 5. -->
     <key>NSPrivacyCollectedDataTypes</key>
     <array>
         <dict>

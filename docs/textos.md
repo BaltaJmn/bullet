@@ -963,6 +963,9 @@ y lo vivido; ninguna presupone algo triste, habla de salud mental ni pide un nú
 | `syncKeepThis`* | | Keep this phone | Usar este teléfono | Manter este telefone | Dieses Handy behalten | Garder ce téléphone |
 | `syncKeepOther`* | | Keep the other | Usar el otro | Manter o outro | Das andere behalten | Garder l'autre |
 | `syncMerge`* | | Merge both | Juntar los dos | Juntar os dois | Beide zusammenführen | Fusionner les deux |
+| `syncCreate` | | Create a new bobbin-sync.json | Crear un bobbin-sync.json nuevo | Criar um bobbin-sync.json novo | Neue bobbin-sync.json erstellen | Créer un nouveau bobbin-sync.json |
+| `syncOpen` | | Use the one from another device | Usar el de otro dispositivo | Usar o de outro dispositivo | Die von einem anderen Gerät verwenden | Utiliser celui d'un autre appareil |
+| `syncNoICloud` | | To sync, sign in to iCloud and turn on iCloud Drive in Settings. | Para sincronizar, inicia sesión en iCloud y activa iCloud Drive en Ajustes. | Para sincronizar, entre no iCloud e ative o iCloud Drive nos Ajustes. | Melde dich zum Synchronisieren in den Einstellungen bei iCloud an und aktiviere iCloud Drive. | Pour synchroniser, connecte-toi à iCloud et active iCloud Drive dans Réglages. |
 | `proSync` | | Sync through your own cloud | Sincronizar con tu propia nube | Sincronizar pela sua própria nuvem | Synchronisieren über deine eigene Cloud | Synchroniser via ton propre cloud |
 | `proYearSummary` | | The year summary | El resumen del año | O resumo do ano | Der Jahresrückblick | Le bilan de l'année |
 | `yearSummaryRow` | | Year summary | Resumen del año | Resumo do ano | Jahresrückblick | Bilan de l'année |

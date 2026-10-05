@@ -60,6 +60,13 @@ import com.baltajmn.bullet.data.PickResult
 import com.baltajmn.bullet.data.MergeResult
 import com.baltajmn.bullet.data.ImportProblem
 import com.baltajmn.bullet.data.FilePicker
+import com.baltajmn.bullet.data.SYNC_NAME
+import com.baltajmn.bullet.data.Sync
+import com.baltajmn.bullet.data.onIos
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import com.baltajmn.bullet.data.Reminders
@@ -148,6 +155,7 @@ fun SettingsScreen(
     var restoring by remember { mutableStateOf(false) }
     var restored by remember { mutableStateOf<Boolean?>(null) }
     var makingBook by remember { mutableStateOf(false) }
+    var noICloud by remember { mutableStateOf(false) }
 
     // Read again on every return from the system settings, so granting the permission there shows
     // here without restarting (docs/tecnico.md 6.12).
@@ -294,6 +302,22 @@ fun SettingsScreen(
                         }
                     },
                 )
+                // Pro (docs/pantallas.md 23.7). On iOS iCloud Drive is the only place; Android asks where.
+                fun startSync() {
+                    if (onIos) Sync.turnOn(create = false) { ok -> if (!ok) noICloud = true } else dialog = SettingsDialog.SYNC_HOW
+                }
+                SettingsRow(
+                    title = S.syncRow,
+                    subtitle = syncSubtitle(),
+                    onClick = { if (Sync.on) Sync.turnOff() else proOr(::startSync) },
+                    trailing = {
+                        Switch(
+                            checked = Sync.on,
+                            onCheckedChange = { on -> if (on) proOr(::startSync) else Sync.turnOff() },
+                            colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+                        )
+                    },
+                )
             }
 
             SettingsSection(S.sectionPro)
@@ -368,6 +392,7 @@ fun SettingsScreen(
     restored?.let { MessageDialog(title = S.restoreRow, text = if (it) S.restoreDone else S.restoreNothing, onDismiss = { restored = null }) }
     if (exportFailed) MessageDialog(title = S.exportRow, text = S.exportFailed, onDismiss = { exportFailed = false })
     if (makingBook) BookDialog { makingBook = false }
+    if (noICloud) MessageDialog(title = S.syncRow, text = S.syncNoICloud, onDismiss = { noICloud = false })
 
     when (dialog) {
         null -> Unit
@@ -403,13 +428,68 @@ fun SettingsScreen(
         SettingsDialog.WIPE -> WipeDialog(
             onClose = { dialog = null },
             onWipe = {
+                // The cloud copy is not this phone's diary: it stays, and stops being synced from here.
+                Sync.turnOff()
                 BobbinRepository.wipe()
                 dialog = null
                 // Back to Hoy with an empty diary, without restarting (docs/pantallas.md 15.4).
                 onBack()
             },
         )
+        SettingsDialog.SYNC_HOW -> ChoiceDialog(
+            title = S.syncRow,
+            options = listOf(
+                Choice(S.syncCreate, false) { Sync.turnOn(create = true) {} },
+                Choice(S.syncOpen, false) { Sync.turnOn(create = false) {} },
+            ),
+            onClose = { dialog = null },
+        )
     }
+}
+
+/** docs/pantallas.md 23.7: where the copy lives and, once there was one, the time of the last sync. */
+@OptIn(ExperimentalTime::class)
+private fun syncSubtitle(): String {
+    if (!Sync.on) return S.syncOff
+    val where = if (onIos) S.syncICloud else S.syncFile(SYNC_NAME)
+    val last = Sync.lastAt?.let { Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.currentSystemDefault()) }
+    return if (last == null) where else where + "\n" + S.syncLast(last.hour, last.minute)
+}
+
+/**
+ * Both sides changed (docs/pantallas.md 23.7): three stacked buttons, and "Juntar los dos" shows the
+ * summary of 15.2 before doing anything. Closing it decides nothing: the next sync asks again.
+ */
+@Composable
+internal fun SyncConflictDialog() {
+    val conflict = Sync.conflict ?: return
+    var summary by remember(conflict) { mutableStateOf<MergeResult?>(null) }
+    summary?.let { r ->
+        MessageDialog(
+            title = S.syncMerge,
+            text = S.importSummary(r.added, r.updated, r.same),
+            confirm = S.syncMerge,
+            onConfirm = Sync::mergeBoth,
+            onDismiss = { summary = null },
+        )
+        return
+    }
+    AlertDialog(
+        onDismissRequest = Sync::dismissConflict,
+        modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH_DP.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 0.dp,
+        title = { Text(S.syncConflictTitle, style = Type.Body) },
+        text = { Text(S.syncConflictText, style = Type.Body) },
+        confirmButton = {
+            Column(horizontalAlignment = Alignment.End) {
+                DialogAction(S.syncKeepThis, onClick = Sync::keepThis)
+                DialogAction(S.syncKeepOther, onClick = Sync::keepOther)
+                DialogAction(S.syncMerge) { summary = Sync.mergePreview(conflict) }
+            }
+        },
+    )
 }
 
 /** A Wednesday the 23rd, so the preview says the same day in every language (docs/pantallas.md 14.1). */
@@ -553,7 +633,7 @@ private fun DrawScope.miniPaper(kind: Paper, color: Color) {
     }
 }
 
-private enum class SettingsDialog { DAY_START, WEEK_START, REMINDER_TIME, WIPE }
+private enum class SettingsDialog { DAY_START, WEEK_START, REMINDER_TIME, WIPE, SYNC_HOW }
 
 /** A section label in `Eyebrow` with `2u` of air above it (docs/pantallas.md 14). */
 @Composable

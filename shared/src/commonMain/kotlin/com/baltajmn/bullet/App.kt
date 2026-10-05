@@ -77,6 +77,8 @@ import com.baltajmn.bullet.ui.LinkText
 import com.baltajmn.bullet.ui.proOr
 import com.baltajmn.bullet.ui.Paywall
 import com.baltajmn.bullet.ui.ProDialog
+import com.baltajmn.bullet.ui.SyncConflictDialog
+import com.baltajmn.bullet.data.Sync
 import com.baltajmn.bullet.ui.ReviewScreen
 import com.baltajmn.bullet.ui.SearchScreen
 import com.baltajmn.bullet.ui.SettingsScreen
@@ -114,6 +116,7 @@ fun App() {
     remember {
         BobbinRepository.ensureLoaded()
         Billing.configure()
+        Sync.start()
     }
     val scope = rememberCoroutineScope()
     // A cold start always asks (docs/tecnico.md 6.15).
@@ -158,6 +161,7 @@ fun App() {
         // The widgets may be showing yesterday, or a Pro that the store has since confirmed (6.13).
         syncWidgets(BobbinRepository.journal, BobbinRepository.isPro, today)
         proCheck++
+        Sync.later()
     }
     // A purchase or a refund on another device (docs/tecnico.md 6.16). A failure keeps the known Pro.
     LaunchedEffect(proCheck) { Billing.refresh() }
@@ -352,6 +356,7 @@ fun App() {
 
             // A dialog is a window of its own and would float over the lock screen, so it waits for the unlock.
             if (Paywall.open && !locked) ProDialog()
+            if (!locked) SyncConflictDialog()
 
             // Painted last, so it covers every screen, sheet and overlay underneath.
             if (locked) LockScreen { locked = false }

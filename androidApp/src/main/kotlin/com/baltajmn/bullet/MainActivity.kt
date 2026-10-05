@@ -33,6 +33,12 @@ class MainActivity : FragmentActivity() {
     private val openBackup =
         registerForActivityResult(ActivityResultContracts.OpenDocument(), FilePicker::onPicked)
 
+    private val createSyncFile =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/json"), FilePicker::onPicked)
+
+    private val openSyncFile =
+        registerForActivityResult(ActivityResultContracts.OpenDocument(), FilePicker::onPicked)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -44,6 +50,8 @@ class MainActivity : FragmentActivity() {
         FilePicker.createDocument = { name -> createBackup.launch(name) }
         FilePicker.createPdf = { name -> createBook.launch(name) }
         FilePicker.openDocument = { openBackup.launch(arrayOf("application/zip", "application/json", "*/*")) }
+        FilePicker.createSync = { name -> createSyncFile.launch(name) }
+        FilePicker.openSync = { openSyncFile.launch(arrayOf("application/json", "*/*")) }
         // A recreated Activity gets the same intent again: the link was already followed.
         if (savedInstanceState == null) parseLink(intent?.dataString)?.let { Route.pending = it }
         setContent { App() }
@@ -62,6 +70,8 @@ class MainActivity : FragmentActivity() {
         FilePicker.createDocument = null
         FilePicker.createPdf = null
         FilePicker.openDocument = null
+        FilePicker.createSync = null
+        FilePicker.openSync = null
         Reminders.launchRequest = null
         Reminders.host = null
         Lock.host = null

@@ -13,6 +13,8 @@ actual object FilePicker {
     var createDocument: ((String) -> Unit)? = null
     var createPdf: ((String) -> Unit)? = null
     var openDocument: (() -> Unit)? = null
+    var createSync: ((String) -> Unit)? = null
+    var openSync: (() -> Unit)? = null
 
     /**
      * The answer of the picker comes back to the Activity, which may be a new instance by then, so
@@ -87,6 +89,14 @@ actual object FilePicker {
             }
         }
         launch(suggestedName)
+    }
+
+    /** The sync file (docs/tecnico.md 12.7): a new [SYNC_NAME], or one another device already writes. */
+    fun pickSync(create: Boolean, onPicked: (Uri?) -> Unit) {
+        val launch = (if (create) createSync?.let { { it(SYNC_NAME) } } else openSync) ?: return onPicked(null)
+        if (waiting != null) return onPicked(null)
+        waiting = onPicked
+        launch()
     }
 
     actual fun importFile(read: (source: (Int) -> ByteArray?) -> Unit, onDone: (PickResult) -> Unit) {

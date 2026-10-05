@@ -94,7 +94,7 @@ fun ProDialog() {
         },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                listOfNotNull(S.proCovers, S.proPapers, S.proTrackers, S.proMonthWidget, S.proLockWidget.takeIf { onIos }, S.proCapture(onIos), S.proBook, S.proYearSummary)
+                listOfNotNull(S.proCovers, S.proPapers, S.proTrackers, S.proMonthWidget, S.proLockWidget.takeIf { onIos }, S.proCapture(onIos), S.proBook, S.proSync, S.proYearSummary)
                     .forEach { line ->
                         Row(Modifier.heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
                             BulletGlyph(Bullet.NOTE, TaskStatus.OPEN)

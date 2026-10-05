@@ -557,6 +557,32 @@ object BobbinRepository {
         return result.added + result.updated
     }
 
+    /**
+     * The cloud copy taking over (docs/tecnico.md 12.7): this device's diary is kept as `pre-sync`
+     * first, and nothing happens if it changed since [expected] was read, so a sync never swallows an
+     * edit made while it ran. Lock and reminder stay this device's own ([Journal.syncedPart]).
+     */
+    internal suspend fun replaceFromSync(expected: Journal, incoming: Journal): Boolean {
+        flush()
+        if (journal !== expected) return false
+        withContext(Dispatchers.IO) { files.keepCopy("pre-sync", encode(expected)) }
+        pendingUndo = null
+        undoToken++
+        journal = incoming.withDeviceSettings(expected.settings)
+        flush()
+        return true
+    }
+
+    /** The last version this device and the cloud agreed on (docs/tecnico.md 12.7). */
+    internal fun syncBase(): Journal? = decode(runCatching { files.readCopy(SYNC_BASE) }.getOrNull())
+
+    internal fun setSyncBase(j: Journal?) {
+        runCatching { files.keepCopy(SYNC_BASE, if (j == null) "" else encode(j)) }
+    }
+
+    /** Called after every good save: sync listens here (docs/tecnico.md 12.7). */
+    internal var onSaved: (() -> Unit)? = null
+
     private suspend fun persist() = writeLock.withLock { writeLocked() }
 
     /** The write itself. The caller already holds [writeLock], so [wipe] can delete and rewrite as one. */
@@ -570,6 +596,7 @@ object BobbinRepository {
             saveFailed = false
             // After every good save and only then: the widgets never show what the disk does not have.
             syncWidgets(snapshot, isPro, today())
+            onSaved?.invoke()
         } else {
             saveFailed = true
         }

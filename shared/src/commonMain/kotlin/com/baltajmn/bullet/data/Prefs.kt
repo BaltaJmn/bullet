@@ -7,6 +7,10 @@ package com.baltajmn.bullet.data
 expect object Prefs {
     fun bool(key: String): Boolean
     fun setBool(key: String, value: Boolean)
+    fun string(key: String): String?
+
+    /** Null removes the key. */
+    fun setString(key: String, value: String?)
 }
 
 /** The last Pro entitlement the store confirmed (docs/tecnico.md 6.16). Wiping the diary keeps it. */

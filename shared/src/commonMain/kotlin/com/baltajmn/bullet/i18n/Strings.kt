@@ -2121,6 +2121,27 @@ object S {
     val syncKeepThis = t("Keep this phone", "Usar este teléfono", "Manter este telefone", "Dieses Handy behalten", "Garder ce téléphone")
     val syncKeepOther = t("Keep the other", "Usar el otro", "Manter o outro", "Das andere behalten", "Garder l'autre")
     val syncMerge = t("Merge both", "Juntar los dos", "Juntar os dois", "Beide zusammenführen", "Fusionner les deux")
+    val syncCreate = t(
+        "Create a new bobbin-sync.json",
+        "Crear un bobbin-sync.json nuevo",
+        "Criar um bobbin-sync.json novo",
+        "Neue bobbin-sync.json erstellen",
+        "Créer un nouveau bobbin-sync.json",
+    )
+    val syncOpen = t(
+        "Use the one from another device",
+        "Usar el de otro dispositivo",
+        "Usar o de outro dispositivo",
+        "Die von einem anderen Gerät verwenden",
+        "Utiliser celui d'un autre appareil",
+    )
+    val syncNoICloud = t(
+        "To sync, sign in to iCloud and turn on iCloud Drive in Settings.",
+        "Para sincronizar, inicia sesión en iCloud y activa iCloud Drive en Ajustes.",
+        "Para sincronizar, entre no iCloud e ative o iCloud Drive nos Ajustes.",
+        "Melde dich zum Synchronisieren in den Einstellungen bei iCloud an und aktiviere iCloud Drive.",
+        "Pour synchroniser, connecte-toi à iCloud et active iCloud Drive dans Réglages.",
+    )
     val proSync = t(
         "Sync through your own cloud",
         "Sincronizar con tu propia nube",
