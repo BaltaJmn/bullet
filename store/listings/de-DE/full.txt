@@ -6,7 +6,7 @@ RAPID LOGGING, WIE ES GEMEINT IST
 Ein Punkt für eine Aufgabe, ein Kreis für ein Ereignis, ein Strich für eine Notiz. Tippe o, - oder einen Signifier an den Anfang der Zeile, und das Bullet ändert sich beim Schreiben. Eine Aufgabe ist offen, erledigt, migriert, eingeplant oder verworfen, und Priorität, Inspiration und Erkunden markieren, was zählt. Die Legende erklärt jedes Symbol.
 
 DAILY LOG, MONTHLY LOG, FUTURE LOG UND INDEX
-Heute ist das Daily Log. Monat ist das Monthly Log: der Kalender als Liste von Tagen und die Aufgaben des Monats. Zukunft ist das Future Log, in Monatsblöcken. Der Index zeigt jeden Monat, in dem du geschrieben hast, und jede Sammlung, in der Reihenfolge, in der du sie begonnen hast.
+Heute ist das Daily Log. Monat ist das Monthly Log: der Kalender als Liste von Tagen und die Aufgaben des Monats. Zukunft ist das Future Log, in Monatsblöcken. Der Index zeigt jeden Monat, in dem du geschrieben hast, und jede Sammlung, nach Beginn geordnet.
 
 MIGRATION VON HAND
 Nichts bewegt sich von selbst. Die offenen Aufgaben von gestern tauchen heute nicht auf, ein neuer Monat kopiert den alten nicht, und das Future Log wartet auf dich. Am Monatsende zeigt Durchsehen eine offene Aufgabe nach der anderen: migrieren, einplanen, in eine Sammlung verschieben oder verwerfen. Eine dreimal migrierte Aufgabe sagt es, und das ist der einzige Druck, den Bobbin macht.
@@ -15,19 +15,22 @@ NACHLESEN, BEVOR DU ENTSCHEIDEST
 Jedes Durchsehen beginnt mit dem Nachlesen des Zeitraums, mit Platz für eine kurze Reflexion. Eine optionale tägliche Erinnerung, standardmäßig aus, mit einem festen Text, der nie aus deinem Journal zitiert.
 
 SAMMLUNGEN UND TRACKER
-Sammlungen für Bücher, Reisen oder alles mit einem Namen. Ein Tracker nimmt einen Tipp pro Tag für die Zeilen, die du festlegst, eine Seite pro Monat. Bobbin führt keine Gewohnheitsstatistik und keine Serien: Dafür gibt es Quilt, eine Schwester-App mit Erinnerungen und Statistik.
+Sammlungen für Bücher, Reisen oder alles mit einem Namen. Ein Tracker nimmt einen Tipp pro Tag für die Zeilen, die du festlegst, eine Seite pro Monat. Bobbin führt keine Gewohnheitsstatistik: Dafür gibt es Quilt, die Schwester-App.
+
+MEHR VON DER METHODE
+Sammlungen lassen sich in neuen fortsetzen, beide verknüpft. Ein neues Notizbuch geht mit dir Sammlungen und Aufgaben durch; der Index klappt das alte weg, ohne zu löschen. Die Reflexion kann eine Frage anbieten. Schreib "morgen" oder "14. März": Ein Vorschlag bietet das Einplanen an, nie von selbst; gelesen wird nur auf deinem Handy. Der Index trägt je Sammlung oder Monat Symbol und Thema, mit Themenfilter; vergangene, ganz migrierte Monate sind unterstrichen. Einträge aus Purl, MoodTraker und Quilt übernimmst du einzeln.
 
 DEIN JOURNAL BLEIBT AUF DEINEM HANDY
-Kein Konto, keine Cloud von uns, keine Analyse. Exportiere das ganze Journal als Zip mit lesbarem Markdown, importiere es auf einem anderen Handy, ohne etwas zu verlieren, und sperre es mit Fingerabdruck, Gesicht oder Bildschirmsperre. Teile einen Tag, einen Monat oder eine Sammlung als gepunktete Seite.
+Kein Konto, keine Cloud von uns, keine Analyse. Exportiere das ganze Journal als Zip mit lesbarem Markdown, importiere es auf einem anderen Handy, ohne etwas zu verlieren, und sperre es mit Fingerabdruck, Gesicht oder Bildschirmsperre. Teile einen Tag, einen Monat oder eine Sammlung als gepunktete Seite. Mit Pro optional Sync über deine eigene Cloud, etwa Google Drive, in einer Datei deiner Wahl; ändern sich beide Seiten, fragt die App zuerst.
 
 WIDGET UND TABLET
-Ein Heute-Widget mit offenen und erledigten Aufgaben und Ereignissen, nie mit deinem Text. Auf dem Tablet öffnen sich Index und Zukunft als Doppelseite, wie ein aufgeschlagenes Notizbuch.
+Ein Heute-Widget mit offenen und erledigten Aufgaben und Ereignissen, nie mit deinem Text. Auf dem Tablet öffnen sich Index und Zukunft als Doppelseite.
 
 KOSTENLOS, FÜR IMMER
-Die ganze Methode, die Suche, Export und Import, Teilen, die Erinnerung, die Sperre und das Heute-Widget: kostenlos und ohne Zeitlimit.
+Die ganze Methode samt "Mehr von der Methode", die Suche, Export und Import, Teilen, die Erinnerung, die Sperre und das Heute-Widget: kostenlos und ohne Zeitlimit.
 
 BOBBIN PRO, EINE ZAHLUNG
-Sieben weitere Umschläge, liniertes, kariertes und blankes Papier, mehr als ein Tracker und das Monats-Widget. Einmal bezahlt, nie ein Abo.
+Sieben weitere Umschläge, liniertes, kariertes und blankes Papier, mehr als ein Tracker, das Monats-Widget, das Notizbuch als PDF-Buch, Notieren aus den Schnelleinstellungen, Sync über deine eigene Cloud und der Jahresrückblick. Einmal bezahlt, nie ein Abo.
 
 WAS DU HIER NICHT FINDEST
 Keine KI, die deine Tage zusammenfasst, keine Versprechen für die psychische Gesundheit, keine Serien, keine Werbung, keine Analyse. Wenn du eine Zeile am Tag willst, die du jedes Jahr wieder liest, probier Purl.

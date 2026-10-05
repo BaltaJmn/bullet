@@ -6,7 +6,7 @@ LE VRAI RAPID LOGGING
 Un point pour une tâche, un cercle pour un événement, un tiret pour une note. Tape o, - ou un signifier en début de ligne et le bullet change pendant que tu écris. Une tâche est ouverte, faite, migrée, planifiée ou écartée, et priorité, inspiration et explorer marquent ce qui compte. La Légende explique chaque symbole.
 
 DAILY LOG, MONTHLY LOG, FUTURE LOG ET INDEX
-Aujourd'hui est le Daily Log. Mois est le Monthly Log : le calendrier en liste de jours et les tâches du mois. Futur est le Future Log, en blocs de mois. L'Index réunit chaque mois où tu as écrit et chaque collection, dans l'ordre où tu les as commencés.
+Aujourd'hui est le Daily Log. Mois est le Monthly Log : le calendrier en liste de jours et les tâches du mois. Futur est le Future Log, en blocs de mois. L'Index réunit chaque mois où tu as écrit et chaque collection, par ordre de début.
 
 LA MIGRATION À LA MAIN
 Rien ne bouge tout seul. Les tâches ouvertes d'hier n'apparaissent pas aujourd'hui, un nouveau mois ne copie pas le précédent et le Future Log t'attend. À la fin du mois, Revoir montre une tâche ouverte à la fois : tu la migres, tu la planifies, tu la déplaces dans une collection ou tu l'écartes. Une tâche migrée trois fois le dit, et c'est la seule pression que met Bobbin.
@@ -15,19 +15,22 @@ RELIRE AVANT DE DÉCIDER
 Chaque revue commence par relire la période, avec de la place pour une courte réflexion. Un rappel quotidien facultatif, désactivé par défaut, avec un texte fixe qui ne cite jamais ton journal.
 
 COLLECTIONS ET SUIVIS
-Des collections pour les livres, les voyages ou tout ce qui a un nom. Un suivi prend une touche par jour pour les lignes que tu définis, une page par mois. Bobbin ne tient ni statistiques d'habitudes ni séries : pour ça il y a Quilt, une app sœur, avec rappels et statistiques.
+Des collections pour les livres, les voyages ou tout ce qui a un nom. Un suivi prend une touche par jour pour les lignes que tu définis, une page par mois. Bobbin ne tient ni statistiques d'habitudes ni séries : pour ça il y a Quilt, l'app sœur.
+
+PLUS DE MÉTHODE
+Une collection peut se poursuivre dans une nouvelle, les deux reliées. Un nouveau carnet te fait repasser collections et tâches une à une, et l'Index replie l'ancien sans effacer. La note de réflexion peut offrir une question. Écris "demain" ou "14 mars" et une suggestion propose de planifier ; la date est lue sur ton téléphone et ne s'applique jamais seule. L'Index prend une icône et un thème par collection ou mois, avec un filtre par thème, et les mois passés entièrement migrés sont soulignés, comme sur papier. Tu peux reprendre des entrées de Purl, MoodTraker et Quilt, une à une.
 
 TON JOURNAL RESTE SUR TON TÉLÉPHONE
-Pas de compte, pas de cloud à nous, pas d'analytique. Exporte tout le journal dans un zip avec du Markdown lisible, importe-le sur un autre téléphone sans rien perdre et verrouille-le avec ton empreinte, ton visage ou le verrouillage de l'écran. Partage un jour, un mois ou une collection comme une page pointillée.
+Pas de compte, pas de cloud à nous, pas d'analytique. Exporte tout le journal dans un zip avec du Markdown lisible, importe-le sur un autre téléphone sans rien perdre et verrouille-le avec ton empreinte, ton visage ou le verrouillage de l'écran. Partage un jour, un mois ou une collection comme une page pointillée. Avec Pro, synchronisation facultative via ton propre cloud, dans un fichier que tu choisis, par exemple sur Google Drive ; si les deux côtés ont changé, l'app demande d'abord.
 
 WIDGET ET TABLETTE
-Un widget Aujourd'hui avec les tâches ouvertes, les tâches faites et les événements, jamais ton texte. Sur tablette, l'Index et le Futur s'ouvrent en double page, comme un carnet ouvert.
+Un widget Aujourd'hui avec les tâches ouvertes et faites et les événements, jamais ton texte. Sur tablette, l'Index et le Futur s'ouvrent en double page.
 
 GRATUIT, POUR DE BON
-Toute la méthode, la recherche, l'export et l'import, le partage, le rappel, le verrouillage et le widget Aujourd'hui : gratuits et sans limite de temps.
+Toute la méthode, "Plus de méthode" compris, la recherche, l'export et l'import, le partage, le rappel, le verrouillage et le widget Aujourd'hui : gratuits et sans limite de temps.
 
 BOBBIN PRO, UN SEUL PAIEMENT
-Sept couvertures de plus, papier ligné, quadrillé et uni, plus d'un suivi et le widget du mois. Payé une fois, jamais un abonnement.
+Sept couvertures de plus, papier ligné, quadrillé et uni, plus d'un suivi, le widget du mois, le carnet en livre PDF, noter depuis les réglages rapides, la synchronisation via ton propre cloud et le bilan de l'année. Payé une fois, jamais un abonnement.
 
 CE QUE TU NE TROUVERAS PAS
 Aucune IA qui résume tes journées, aucune promesse de santé mentale, ni séries, ni publicité, ni analytique. Si tu veux une ligne par jour à relire chaque année, essaie Purl.

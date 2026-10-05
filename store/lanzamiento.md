@@ -192,8 +192,11 @@ no trae Play Billing.
 
 ## Después de la salida
 
-- **v1.1 no cambia el precio**: el libro en PDF entra en Pro (`revenuecat.md` §7, #68). Las notas de
-  versión y la descripción larga dicen entonces "libro en PDF" en la lista de Pro, en el mismo commit.
+- **v1.1 y v1.2 no cambian el precio**: el libro en PDF, la captura desde fuera, la sincronización y el
+  resumen del año entran en Pro (`revenuecat.md` §7, #67 a #70). La descripción larga de `listings/` y
+  las descripciones del producto de `revenuecat.md` ya llevan la lista completa de Pro, y quien ya
+  compró lo recibe sin pagar de nuevo. Las notas de versión de cada una (`whatsnew/`) dicen qué trae,
+  en el mismo commit que la etiqueta.
 - **Actualizar la política y los formularios** en el mismo commit que añada cualquier cosa que salga
   del dispositivo o cualquier permiso nuevo.
 

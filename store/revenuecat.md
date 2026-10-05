@@ -16,23 +16,37 @@ MoodTraker o Purl y sirven tal cual: `../line/store/revenuecat.md`.
 | Producto | Uno solo, compra única, **no consumible**. Nunca suscripción |
 | Identificador | `bullet_pro` en las dos tiendas. **Irreversible**: un id borrado no se reutiliza |
 | Nombre visible | Bobbin Pro |
-| Precio | **1,99 EUR** de base en España, conversión automática al resto **con redondeo**. No sube con la v1.1 (SPEC §7) |
+| Precio | **1,99 EUR** de base en España, conversión automática al resto **con redondeo**. No sube con la v1.1 ni con la v1.2 (SPEC §7) |
 | Descuento de lanzamiento | No |
 | Países | Todos |
 | Prueba gratuita | No. El plan gratis es la prueba |
 
-Qué abre el pago en v1.0, y solo esto (SPEC §7):
+Qué abre el pago hoy (v1.0, v1.1 y v1.2, todo ya en `main`), y solo esto (SPEC §7):
 
 - **Siete portadas**: todas menos `sage`.
 - **Tres papeles**: rayado, cuadrícula y liso; todos menos `dotted`.
 - **Seguimientos a partir del segundo** (`FREE_TRACKER_LIMIT = 1`, cuenta los que existen ahora).
 - **Widget del mes**, Android e iOS.
 - **Widget de pantalla de bloqueo**, solo iOS.
+- **El libro del cuaderno en PDF** (v1.1, #68): Ajustes, Cuaderno, libro. El diario entero maquetado
+  como libro A5 imprimible, con portada, clave, índice y los resúmenes del año de apéndice.
+- **Captura desde fuera** (v1.1, #67): baldosa de Ajustes rápidos en Android, y Siri y Atajos
+  ("Anotar en Bobbin") en iOS. Cada una escribe una línea en hoy.
+- **Sincronización por tu propia nube** (v1.2, #69): un único `bobbin-sync.json` en iCloud Drive (iOS)
+  o en el fichero que el usuario elige con el selector del sistema, por ejemplo en Drive (Android).
+  Sin cuenta ni servidor nuestros; si cambiaron los dos lados, pregunta (usar este, usar el otro o
+  juntar tras un resumen), nunca fusiona en silencio.
+- **El resumen del año en texto** (v1.2, #70): inspiraciones, prioridades hechas y las tareas que más
+  viajaron.
 
 Qué no se cobra nunca, porque lo prometen la ficha y la política: el método entero (rapid logging, los
 cinco estados, la migración, la revisión y la reflexión), Hoy, Mes, Future Log e Índice, colecciones
 ilimitadas, la clave de símbolos, la búsqueda, el recordatorio y el bloqueo, el widget de hoy,
-compartir, exportar e importar, y una portada (salvia) y un papel (punteado).
+compartir, exportar e importar, y una portada (salvia) y un papel (punteado). Y lo nuevo del método
+en v1.1 y v1.2, que es método y por eso es gratis: continuar una colección en otra (threading), el
+nuevo cuaderno anual, las preguntas de la reflexión guiada, las fechas en lenguaje natural al escribir
+(se leen en el dispositivo), las variaciones del índice (icono y tema por colección o mes, filtro por
+tema, meses ya migrados subrayados) e importar de Purl, MoodTraker y Quilt, entrada por entrada.
 
 > Si cambia cualquiera de las dos listas, se tocan en el **mismo commit** las claves `pro*` de
 > `docs/textos.md`, la descripción larga de las dos fichas (`listings/`, `app-store/`) y las
@@ -65,13 +79,14 @@ RevenueCat.
 
 | Idioma | Nombre | Descripción (tope 200) |
 |---|---|---|
-| en-US | Bobbin Pro | Seven more covers, lined, grid and blank paper, more than one tracker and the month widget. One-time payment, not a subscription. The method, export and the reminder stay free. |
-| es-ES | Bobbin Pro | Siete portadas más, papel rayado, cuadrícula y liso, más de un seguimiento y el widget del mes. Pago único, no es una suscripción. El método, exportar y el recordatorio siguen gratis. |
-| pt-BR | Bobbin Pro | Mais sete capas, papel pautado, quadriculado e liso, mais de um tracker e o widget do mês. Pagamento único, não é assinatura. O método, exportar e o lembrete continuam grátis. |
-| de-DE | Bobbin Pro | Sieben weitere Umschläge, liniertes, kariertes und blankes Papier, mehr als ein Tracker und das Monats-Widget. Einmalzahlung, kein Abo. Die Methode, Export und Erinnerung bleiben kostenlos. |
-| fr-FR | Bobbin Pro | Sept couvertures de plus, papier ligné, quadrillé et uni, plus d'un suivi et le widget du mois. Paiement unique, pas d'abonnement. La méthode, l'export et le rappel restent gratuits. |
+| en-US | Bobbin Pro | Seven more covers, lined, grid and blank paper, more than one tracker, month widget, PDF book, Quick Settings note, sync via your own cloud and year summary. Paid once. The method stays free. |
+| es-ES | Bobbin Pro | Siete portadas más, papeles, más de un seguimiento, widget del mes, libro en PDF, anotar desde Ajustes rápidos, sincronización por tu nube y resumen del año. Pago único. El método sigue gratis. |
+| pt-BR | Bobbin Pro | Mais sete capas, papéis, mais de um tracker, widget do mês, livro em PDF, anotar pelas Configurações rápidas, sincronização pela sua nuvem e resumo do ano. Pagamento único. O método segue grátis. |
+| de-DE | Bobbin Pro | Sieben weitere Umschläge, Papiere, mehr als ein Tracker, Monats-Widget, PDF-Buch, Notieren per Schnelleinstellungen, Sync über deine Cloud, Jahresrückblick. Einmalzahlung. Methode bleibt kostenlos. |
+| fr-FR | Bobbin Pro | Sept couvertures de plus, papiers, plus d'un suivi, widget du mois, livre PDF, noter via les réglages rapides, synchro via ton cloud et bilan de l'année. Paiement unique. La méthode reste gratuite. |
 
-El widget de pantalla de bloqueo no se nombra en Play: en Android no existe.
+Ninguna llega a 200 caracteres. No nombran ni el widget de pantalla de bloqueo ni Siri y Atajos: en
+Android no existen, y esta tabla es la de Play.
 
 ## 2. La cuenta de servicio de RevenueCat en Google
 
@@ -145,17 +160,20 @@ En App Store Connect, dentro de Bobbin, *Monetización > Compras dentro de la ap
 | Precio | País base **España**, 1,99 EUR; el resto, por la equivalencia automática de Apple |
 | Disponibilidad | Todos los países |
 | Captura para la revisión | El `ProDialog` abierto en un iPhone, desde el simulador |
-| Nota para la revisión | `Unlocks seven cover colors, three papers, trackers past the first, the month widget and the lock screen widget. One-time purchase. Restore Purchase is in Settings and in this dialog.` |
+| Nota para la revisión | `Unlocks seven cover colors, three papers, trackers past the first, the month widget, the lock screen widget, the notebook as a PDF book, noting with Siri and Shortcuts, sync through the user's own iCloud Drive and the year summary. One-time purchase. Restore Purchase is in Settings and in this dialog.` |
 
 Nombre visible (tope 30) y descripción (tope 45) por idioma:
 
 | Idioma | Nombre | Descripción |
 |---|---|---|
-| en-US | Bobbin Pro | Covers, papers, trackers, widgets. Pay once. |
-| es-ES | Bobbin Pro | Portadas, papeles, seguimientos, widgets. Pago único. |
-| pt-BR | Bobbin Pro | Capas, papeis, rastreadores, widgets. Pagamento unico. |
-| de-DE | Bobbin Pro | Umschlage, Papiere, Tracker, Widgets. Einmalzahlung. |
-| fr-FR | Bobbin Pro | Couvertures, papiers, suivis, widgets. Achat unique. |
+| en-US | Bobbin Pro | Covers, papers, widgets, PDF, sync. Pay once. |
+| es-ES | Bobbin Pro | Portadas, widgets, PDF, sync. Pago único. |
+| pt-BR | Bobbin Pro | Capas, widgets, PDF, sync. Pagamento único. |
+| de-DE | Bobbin Pro | Umschläge, Widgets, PDF, Sync. Einmalzahlung. |
+| fr-FR | Bobbin Pro | Couvertures, PDF, synchro. Achat unique. |
+
+Las cinco caben en el tope de 45. Con tan poco sitio no cabe todo: el detalle de qué incluye Pro lo
+da la nota para la revisión de arriba y el `ProDialog`.
 
 **La primera compra solo se revisa junto a una versión**: se adjunta en la página de la versión, en
 *Compras dentro de la app*, antes de enviar a revisión.
@@ -174,10 +192,18 @@ En RevenueCat, mismo proyecto Bobbin:
 Probar en el sandbox: cuenta de sandbox en *Usuarios y acceso > Sandbox*, sesión iniciada en el
 iPhone en *Ajustes > App Store > Cuenta de sandbox*, comprar, borrar la app, reinstalar y restaurar.
 
-## 7. La v1.1: el libro en PDF entra en Pro sin cambiar el precio
+## 7. La v1.1 y la v1.2: el libro, la captura, la sincronización y el resumen del año entran en Pro sin cambiar el precio
 
-El precio se queda en 1,99 EUR (SPEC §7). El día que la v1.1 se publica:
+`main` ya lleva la v1.1 y la v1.2. El precio se queda en 1,99 EUR (SPEC §7), el producto sigue siendo
+`bullet_pro` y el derecho sigue siendo `pro`: no hay nada nuevo que crear en las tiendas ni en
+RevenueCat.
 
-- **Descripciones**: se añade el libro en PDF a la lista de Pro en la tabla del §1, en `pro*` de
-  `docs/textos.md` y en las dos fichas, en el mismo commit que etiqueta la v1.1.
-- Quien ya compró tiene el libro sin pagar de nuevo: es un no consumible y el derecho no caduca.
+- **Listas y descripciones**: las listas del §0 ya incluyen el libro en PDF y la captura desde fuera
+  (v1.1) y la sincronización y el resumen del año en texto (v1.2). Lo mismo valen las tablas de
+  descripciones del §1 (Play) y del §6 (App Store), los `pro*` de `docs/textos.md` y
+  `store/listings/`. Lo demás de las dos versiones (threading, nuevo cuaderno, reflexión guiada, fechas
+  en lenguaje natural, variaciones del índice, importar de las hermanas) es método y es gratis.
+- **En las consolas**: cuando salga la versión, el autor pega las descripciones del §1 y del §6 en
+  Play Console y App Store Connect, y la nota para la revisión del §6 en la versión que las incluya.
+- **Quien ya compró** tiene todo lo anterior sin pagar de nuevo: es un no consumible y el derecho `pro`
+  no caduca. Quien compre después paga lo mismo y recibe lo mismo.

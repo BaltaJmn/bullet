@@ -17,17 +17,20 @@ Every review starts by reading the period again, with room for a short reflectio
 COLLECTIONS AND TRACKERS
 Collections for books, trips or anything with a name. A tracker takes one tap per day for the rows you define, one page per month. Bobbin keeps no habit statistics and no streaks: for that there is Quilt, a sister app, a habit tracker with reminders and statistics.
 
+MORE OF THE METHOD
+A collection can continue in a new one, linked both ways. A new notebook walks you through collections and tasks one by one, and the Index folds the old one away, deleting nothing. The reflection note can offer a question. Write "tomorrow", "on Friday" or "March 14" and a suggestion offers to schedule it; the date is read on your phone and never applied by itself. The Index takes an icon and a theme per collection or month, with a filter by theme, and past months fully migrated are underlined, like on paper. You can bring in entries from Purl, MoodTraker and Quilt, one by one.
+
 YOUR JOURNAL STAYS ON YOUR PHONE
-No account, no cloud of ours, no analytics. Export the whole journal as a zip with readable Markdown, import it on another phone without losing anything, and lock it with your fingerprint, your face or your screen lock. Share a day, a month or a collection as a dotted page.
+No account, no cloud of ours, no analytics. Export the whole journal as a zip with readable Markdown, import it on another phone without losing anything, and lock it with your fingerprint, your face or your screen lock. Share a day, a month or a collection as a dotted page. With Pro, optional sync through your own cloud, in a file you choose, for example in Google Drive: no account, no server of ours, and if both sides changed, it asks first.
 
 WIDGET AND TABLET
 A Today widget with open tasks, done tasks and events, never your text. On a tablet, the Index and the Future Log open as a two page spread, like a digital planner lying open.
 
 FREE, FOR GOOD
-The whole method, search, export and import, sharing, the reminder, the lock and the Today widget: free, with no time limit.
+The whole method and everything under "More of the method", search, export and import, sharing, the reminder, the lock and the Today widget: free, with no time limit.
 
 BOBBIN PRO, ONE PAYMENT
-Seven more covers, lined, grid and blank paper, more than one tracker and the month widget. Paid once, never a subscription.
+Seven more covers, lined, grid and blank paper, more than one tracker, the month widget, the notebook as a PDF book, noting from Quick Settings, sync through your own cloud and the year summary in text. Paid once, never a subscription.
 
 WHAT YOU WILL NOT FIND
 No AI summing up your days, no mental health promises, no streaks, no ads, no analytics. A journal app for writing and deciding, not a productivity journal that grades you. If what you want is one line a day to read again every year, try Purl.

@@ -17,17 +17,20 @@ Cada revisão começa relendo o período, com espaço para uma reflexão curta. 
 COLEÇÕES E TRACKERS
 Coleções para livros, viagens ou qualquer coisa com nome. Um tracker marca um toque por dia nas linhas que você define, uma página por mês. O Bobbin não tem estatísticas de hábitos nem sequências: para isso existe o Quilt, um app irmão, com lembretes e estatísticas.
 
+MAIS DO MÉTODO
+Uma coleção pode continuar em uma nova, ligadas nos dois sentidos. Um caderno novo repassa com você coleções e tarefas, uma a uma, e o Índice dobra o antigo sem apagar nada. A nota de reflexão pode oferecer uma pergunta. Escreva "amanhã", "na sexta" ou "14 de março" e uma sugestão propõe agendar; a data é lida no seu celular e nunca é aplicada sozinha. O Índice aceita um ícone e um tema por coleção ou mês, com filtro por tema, e os meses passados totalmente migrados ficam sublinhados, como no papel. Você pode trazer entradas do Purl, do MoodTraker e do Quilt, uma a uma.
+
 SEU DIÁRIO FICA NO SEU CELULAR
-Sem conta, sem nuvem nossa, sem análise de uso. Exporte o diário inteiro num zip com Markdown legível, importe em outro celular sem perder nada e bloqueie com a sua digital, o seu rosto ou o bloqueio de tela. Compartilhe um dia, um mês ou uma coleção como página pontilhada.
+Sem conta, sem nuvem nossa, sem análise de uso. Exporte o diário inteiro num zip com Markdown legível, importe em outro celular sem perder nada e bloqueie com a sua digital, o seu rosto ou o bloqueio de tela. Compartilhe um dia, um mês ou uma coleção como página pontilhada. Com o Pro, sincronização opcional pela sua própria nuvem, num arquivo que você escolhe, por exemplo no Google Drive: sem conta, sem servidor nosso e, se os dois lados mudaram, o app pergunta antes.
 
 WIDGET E TABLET
 Um widget de Hoje com as tarefas abertas, as feitas e os eventos, nunca o seu texto. No tablet, o Índice e o Futuro abrem em página dupla, como um caderno aberto.
 
 GRÁTIS, PARA SEMPRE
-O método inteiro, a busca, exportar e importar, compartilhar, o lembrete, o bloqueio e o widget de Hoje: grátis e sem limite de tempo.
+O método inteiro e tudo de "Mais do método", a busca, exportar e importar, compartilhar, o lembrete, o bloqueio e o widget de Hoje: grátis e sem limite de tempo.
 
 BOBBIN PRO, UM SÓ PAGAMENTO
-Mais sete capas, papel pautado, quadriculado e liso, mais de um tracker e o widget do mês. Um pagamento, uma só vez, nunca uma assinatura.
+Mais sete capas, papel pautado, quadriculado e liso, mais de um tracker, o widget do mês, o caderno como livro em PDF, anotar pelas Configurações rápidas, sincronização pela sua própria nuvem e o resumo do ano em texto. Um pagamento, uma só vez, nunca uma assinatura.
 
 O QUE VOCÊ NÃO VAI ENCONTRAR
 Nenhuma IA resumindo os seus dias, nenhuma promessa de saúde mental, nem sequências, nem anúncios, nem análise de uso. Se o que você quer é uma linha por dia para reler todo ano, experimente o Purl.
