@@ -55,6 +55,7 @@ fun ShareSheet(content: ShareContent, onClose: () -> Unit) {
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         tonalElevation = 0.dp,
+        dragHandle = { SheetHandle() },
     ) {
         Column(Modifier.fillMaxWidth()) {
             Image(

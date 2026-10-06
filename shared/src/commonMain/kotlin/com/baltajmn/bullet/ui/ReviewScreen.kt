@@ -50,6 +50,7 @@ import com.baltajmn.bullet.model.CollectionKind
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.notebookCollections
 import com.baltajmn.bullet.model.notebookTasks
+import com.baltajmn.bullet.model.threadNext
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
@@ -254,8 +255,9 @@ fun NotebookScreen(today: LocalDate, onClose: () -> Unit, endExtra: @Composable 
                 }
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
                     ActionRow(S.notebookKeep, icon = { GlyphIcon(Glyph.CHECK) }) { decided = decided + current.id }
-                    // A tracker already continues itself month by month (docs/tecnico.md 12.1).
-                    if (isList) ActionRow(S.notebookContinue, icon = { GlyphIcon(Glyph.FORWARD) }) { continuing = true }
+                    // A tracker already continues itself month by month (docs/tecnico.md 12.1), and a list
+                    // that already goes on somewhere has nowhere new to continue.
+                    if (isList && journal.threadNext(current) == null) ActionRow(S.notebookContinue, icon = { GlyphIcon(Glyph.FORWARD) }) { continuing = true }
                     ActionRow(S.notebookArchive, icon = { GlyphIcon(Glyph.BOOK) }) {
                         BobbinRepository.archiveCollection(current.id, true)
                         decided = decided + current.id
@@ -336,7 +338,8 @@ fun YearSummaryScreen(today: LocalDate, onClose: () -> Unit) {
                 Eyebrow(S.summaryMostMigrated)
                 summary.mostMigrated.forEach { (entry, n) ->
                     EntryRow(entry, journal, today, onNavigateTo = {}, still = true, showFrom = false)
-                    Text(S.timesMoved(n), style = Type.Secondary.copy(fontSize = 12.sp), modifier = Modifier.padding(start = 52.dp, bottom = 6.dp))
+                    // Under the entry's text: the row's 6 dp, the signifier margin of 22 and the glyph's 40.
+                    Text(S.timesMoved(n), style = Type.Secondary.copy(fontSize = 12.sp), modifier = Modifier.padding(start = 68.dp, bottom = 6.dp))
                 }
             }
         }
@@ -479,6 +482,9 @@ private fun originOf(entry: Entry, journal: Journal = BobbinRepository.journal):
     is Place.InCollection -> journal.collections.find { it.id == p.id }?.title.orEmpty()
 }
 
+/** Beyond this many, the dots no longer fit beside the text on a 360 dp phone: the text says it alone. */
+private const val REVIEW_DOTS_MAX = 12
+
 /** `CLOSE` on the left and, while there is a task, where the review is: "Tarea 2 de 4" and a dot per task. */
 @Composable
 private fun ReviewTop(onClose: () -> Unit, position: String? = null, at: Int = 0, total: Int = 0) {
@@ -486,12 +492,13 @@ private fun ReviewTop(onClose: () -> Unit, position: String? = null, at: Int = 0
         GlyphButton(Glyph.CLOSE, S.close, onClose)
         if (position != null) {
             Text(position, style = Type.Secondary, modifier = Modifier.padding(start = 4.dp, end = 8.dp))
+        }
+        if (position != null && total <= REVIEW_DOTS_MAX) {
             Row(Modifier.clearAndSetSemantics {}, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
                 val ink = MaterialTheme.colorScheme.onBackground
                 val line = MaterialTheme.colorScheme.outline
                 val muted = MaterialTheme.colorScheme.onSurfaceVariant
-                // ponytail: one dot per task; a review of dozens runs off the edge, a count would scale.
-                for (k in 1..minOf(total, 24)) {
+                for (k in 1..total) {
                     Box(
                         Modifier.height(6.dp).width(if (k == at) 18.dp else 6.dp).clip(RoundedCornerShape(3.dp))
                             .background(if (k == at) ink else if (k < at) muted else line),

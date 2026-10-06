@@ -98,6 +98,14 @@ columnas fijas de 24 dp, que no crecen con la fuente para que el texto conserve 
 `error` no se usa en ninguna pantalla. Por si un componente de Material lo busca solo, vale lo mismo
 que `onSurfaceVariant`. Ningún borrado ni aviso se pinta en rojo ni en un pariente.
 
+Los contenedores que Material usa por su cuenta (la pista del interruptor, la esfera y los campos del
+selector de hora) también son papel y tinta: `surfaceContainer*` va del `surface` al `surfaceVariant`
+(de `FFFFFF` a `EAE4D9` en claro, de `12100B` a `2C2820` en oscuro), `secondaryContainer` y
+`tertiaryContainer` son `surfaceVariant`, y `primaryContainer` es el `primary` lavado en el papel
+(`D6E5DE` y `2A4A40`), todos con texto `onBackground`. Sin ellos salen en el lila de base de Material.
+El interruptor apagado lleva pulgar y contorno `onSurfaceVariant` sobre `background`; encendido, pista
+`primary`.
+
 Contraste de cada par de texto y fondo que existe en la app (test 25 lo calcula en `commonTest`):
 
 | Texto sobre fondo | Claro | Oscuro |
@@ -759,6 +767,8 @@ barra de progreso ni porcentajes.
   `decideLater` (Decidir luego: `decideLaterHow`), que la deja sin tocar solo para esta revisión.
 - Cada decisión enseña su aviso con `undo` y pasa a la siguiente al instante. Ningún botón decide más
   de una. El `n` se cuenta al abrir y no se mueve.
+- Un punto por tarea mientras sean 12 o menos; con más (un cuaderno nuevo, una importación de un año de
+  Purl) no caben junto al texto en 360 dp y solo queda "Tarea 2 de 40".
 
 ### 11.3 Fin
 
@@ -1272,7 +1282,7 @@ para empezar otro). Abre REVIEW con alcance de cuaderno, gratis, un elemento cad
 1. **Cada colección** no archivada, incluidos los seguimientos: `collectionOf(n, total)` arriba, su
    título en `Heading`, la etiqueta del Índice en `Secondary` y las acciones como filas de la revisión:
    `notebookKeep` (Mantener), `notebookContinue` (Continuar en una nueva, 23.1, que archiva la original;
-   solo en listas) y `notebookArchive` (Archivar).
+   solo en listas que aún no siguen en otra) y `notebookArchive` (Archivar).
 2. **Cada tarea abierta**, salvo las del Future Log de meses que vienen, con las cinco acciones de 11.2.
 
 Posición `reviewPosition` arriba, como en 11.2. Al terminar, `notebookDone(fecha)` (Cuaderno nuevo desde
@@ -1296,8 +1306,8 @@ sola: Intro sigue guardando en el lugar de la captura. Tocar la acción guarda l
 ### 23.5 Captura desde fuera (v1.1, #67, Pro)
 
 - Android: la baldosa de Ajustes rápidos, `tileLabel` (Anotar en Bobbin) con `ic_notification`. Abre
-  `CaptureActivity`, una hoja sobre `surface` pegada al teclado con solo la fila de captura y la de
-  accesorios; Intro guarda en `Daily(hoy)` y cierra, con `captureSaved` (Anotado en Bobbin.) como
+  `CaptureActivity`, una hoja sobre `background` (la barra de escribir levantada, con su línea de
+  arriba como borde) pegada al teclado con solo la fila de captura y la de accesorios; Intro guarda en `Daily(hoy)` y cierra, con `captureSaved` (Anotado en Bobbin.) como
   aviso del sistema. Sin Pro, abre la app con el `ProDialog`.
 - iOS: el App Intent `Note in Bobbin` (texto literal en inglés; las traducciones en
   `Localizable.strings`), sin pantalla propia; responde `captureSaved`.
@@ -1336,7 +1346,8 @@ pantalla menos el bloqueo; cerrarlo sin elegir no decide nada y el siguiente cic
 
 ### 23.8 Resumen del año (v1.2, #70, Pro)
 
-Ajustes, CUADERNO: `yearSummaryRow` (Resumen del año); también como último paso del Nuevo cuaderno. Es
+Ajustes, CUADERNO: `yearSummaryRow` (Resumen del año) con `yearSummarySub` (Inspiraciones, prioridades
+hechas y lo que más viajó), como sus vecinas; también como último paso del Nuevo cuaderno. Es
 REVIEW en modo lectura, de una sola página: `yearSummaryTitle(año)` (Tu 2026) en `PageTitle` y tres
 bloques con su `Eyebrow`, `summaryInspirations` (INSPIRACIONES), `summaryPriorities` (PRIORIDADES
 HECHAS) y `summaryMostMigrated` (LAS QUE MÁS VIAJARON), cada uno con sus entradas como en una lista (en
@@ -1356,7 +1367,8 @@ los glifos, trazo de 1,5 dp en caja de 24), `iconNone` (Sin icono), y un campo d
 - Si alguna página tiene tema, bajo la cabecera del Índice sale una fila de filtros por tema, como los
   de Buscar: uno encendido deja solo las páginas de ese tema, meses incluidos. Sin filtro, dentro de
   Listas y de Seguimientos `groupByTheme` agrupa con un `Eyebrow` de 11 sp por tema y los sin tema al
-  final (`themeNone`: SIN TEMA).
+  final (`themeNone`: SIN TEMA). Un bloque en el que nada tiene tema no se agrupa, y con un filtro
+  encendido el bloque de meses sin ninguno de ese tema no sale (su frase de vacío diría que no hay).
 - La hoja se guarda al tocar un icono y, el tema, al cerrarla o con Intro.
 - Un mes pasado ya migrado por completo (`docs/tecnico.md` 12.9) lleva su título subrayado con 1 dp
   `onSurfaceVariant` a 3 dp bajo la línea base, como en el papel.
@@ -1366,7 +1378,7 @@ los glifos, trazo de 1,5 dp en caja de 24), `iconNone` (Sin icono), y un campo d
 
 La misma fila `importRow`. Si el fichero es de Purl, MoodTraker o Quilt, en vez del resumen de 15.2 se
 abre REVIEW candidato a candidato: el origen en `Eyebrow` (`siblingFrom(app, fecha)`: PURL, 14 DE MARZO
-DE 2025), la entrada en `PageTitle` con su glifo (evento; tarea hecha para Quilt) y tres acciones:
+DE 2025), la entrada en `Heading` con su glifo, como la tarea de 11.2, (evento; tarea hecha para Quilt) y tres acciones:
 `importToDay` (Importar a ese día), `importElsewhere` (A otro día o colección, con el selector de 5.7) y
 `importSkip` (Saltar). Nada se escribe hasta decidir cada uno. Al final, `importSiblingDone(n)` (15
 entradas importadas.) y `close`. Un fichero que no es de ninguna: `importNotSibling` en el diálogo de

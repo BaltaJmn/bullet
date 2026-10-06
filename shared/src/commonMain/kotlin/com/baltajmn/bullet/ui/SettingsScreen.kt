@@ -224,7 +224,7 @@ fun SettingsScreen(
                     Switch(
                         checked = reminderOn,
                         onCheckedChange = { on -> if (on) turnReminderOn() else setReminder(false) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+                        colors = switchColors(),
                     )
                 },
             )
@@ -252,7 +252,7 @@ fun SettingsScreen(
                         checked = settings.lockOn,
                         onCheckedChange = ::setLock,
                         enabled = lockAvailable || settings.lockOn,
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+                        colors = switchColors(),
                     )
                 },
             )
@@ -261,7 +261,7 @@ fun SettingsScreen(
             NotebookLook(settings)
             Spacer(Modifier.height(8.dp))
             SettingsRow(title = S.newNotebookRow, subtitle = S.newNotebookSub, onClick = onNotebook)
-            SettingsRow(title = S.yearSummaryRow, subtitle = null, onClick = onYearSummary, trailing = { if (!BobbinRepository.isPro) ProChip() })
+            SettingsRow(title = S.yearSummaryRow, subtitle = S.yearSummarySub, onClick = onYearSummary, trailing = { if (!BobbinRepository.isPro) ProChip() })
             if (FilePicker.available) {
                 SettingsRow(title = S.bookRow, subtitle = S.bookSub, onClick = { proOr { makingBook = true } }, trailing = { if (!BobbinRepository.isPro) ProChip() })
             }
@@ -314,7 +314,7 @@ fun SettingsScreen(
                         Switch(
                             checked = Sync.on,
                             onCheckedChange = { on -> if (on) proOr(::startSync) else Sync.turnOff() },
-                            colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+                            colors = switchColors(),
                         )
                     },
                 )
@@ -491,6 +491,18 @@ internal fun SyncConflictDialog() {
         },
     )
 }
+
+/**
+ * docs/pantallas.md 1.2: on, the track in `primary`; off, an outline and thumb in `onSurfaceVariant` on the
+ * paper, 4.8:1, where Material's own `outline` would leave the thumb barely visible on this palette.
+ */
+@Composable
+private fun switchColors() = SwitchDefaults.colors(
+    checkedTrackColor = MaterialTheme.colorScheme.primary,
+    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    uncheckedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    uncheckedTrackColor = MaterialTheme.colorScheme.background,
+)
 
 /** A Wednesday the 23rd, so the preview says the same day in every language (docs/pantallas.md 14.1). */
 private val PREVIEW_DAY = LocalDate(2026, 9, 23)

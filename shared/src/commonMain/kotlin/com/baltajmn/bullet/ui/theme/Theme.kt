@@ -19,7 +19,9 @@ import com.baltajmn.bullet.model.Settings
  * family's palette (line/docs/pantallas.md 1.1) with two changes in light, for AA contrast on the
  * paper: `onSurfaceVariant` (was 8B8479, 3.5:1) and `primary` (was 6FAE9B, 2.4:1). Dark already
  * passed and is unchanged. `error` is never shown; it reads as `onSurfaceVariant` in case a
- * Material component reaches for it on its own, so nothing is ever painted red.
+ * Material component reaches for it on its own, so nothing is ever painted red. The containers
+ * Material reaches for on its own (the switch's track, the time picker's dial and fields) are paper
+ * and ink too: left out, they come in Material's baseline lilac.
  */
 internal val Light = lightColorScheme(
     primary = Color(0xFF3F7A69),
@@ -33,6 +35,19 @@ internal val Light = lightColorScheme(
     outline = Color(0xFFE3DCD1),
     outlineVariant = Color(0xFFEFE9DF),
     error = Color(0xFF736D63),
+    secondary = Color(0xFF736D63),
+    tertiary = Color(0xFF3F7A69),
+    primaryContainer = Color(0xFFD6E5DE),
+    onPrimaryContainer = Color(0xFF39352E),
+    secondaryContainer = Color(0xFFF0EBE2),
+    onSecondaryContainer = Color(0xFF39352E),
+    tertiaryContainer = Color(0xFFF0EBE2),
+    onTertiaryContainer = Color(0xFF39352E),
+    surfaceContainerLowest = Color(0xFFFFFFFF),
+    surfaceContainerLow = Color(0xFFFBF8F3),
+    surfaceContainer = Color(0xFFF5F1EA),
+    surfaceContainerHigh = Color(0xFFF0EBE2),
+    surfaceContainerHighest = Color(0xFFEAE4D9),
 )
 
 internal val Dark = darkColorScheme(
@@ -47,6 +62,19 @@ internal val Dark = darkColorScheme(
     outline = Color(0xFF3A352B),
     outlineVariant = Color(0xFF2C2820),
     error = Color(0xFF9C9486),
+    secondary = Color(0xFF9C9486),
+    tertiary = Color(0xFF8FC9B6),
+    primaryContainer = Color(0xFF2A4A40),
+    onPrimaryContainer = Color(0xFFECE5D9),
+    secondaryContainer = Color(0xFF2C2820),
+    onSecondaryContainer = Color(0xFFECE5D9),
+    tertiaryContainer = Color(0xFF2C2820),
+    onTertiaryContainer = Color(0xFFECE5D9),
+    surfaceContainerLowest = Color(0xFF12100B),
+    surfaceContainerLow = Color(0xFF17150F),
+    surfaceContainer = Color(0xFF1D1A14),
+    surfaceContainerHigh = Color(0xFF26221B),
+    surfaceContainerHighest = Color(0xFF2C2820),
 )
 
 @Composable

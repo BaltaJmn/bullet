@@ -141,9 +141,7 @@ fun EntrySheetHost(today: LocalDate, onNavigateTo: (Place) -> Unit) {
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         tonalElevation = 0.dp,
-        dragHandle = {
-            Box(Modifier.padding(top = 10.dp, bottom = 6.dp).size(36.dp, 4.dp).clip(RoundedCornerShape(2.dp)).background(MaterialTheme.colorScheme.outline))
-        },
+        dragHandle = { SheetHandle() },
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 18.dp)) {
             SheetHeader(S.entryKind(entry.bullet, entry.status, Signifier.PRIORITY in entry.signifiers), entry.text, close)
@@ -165,6 +163,12 @@ fun EntrySheetHost(today: LocalDate, onNavigateTo: (Place) -> Unit) {
             }
         }
     }
+}
+
+/** The handle of every sheet (docs/pantallas.md 1.4): 36 x 4 in `outline`, not Material's own. */
+@Composable
+fun SheetHandle() {
+    Box(Modifier.padding(top = 10.dp, bottom = 6.dp).size(36.dp, 4.dp).clip(RoundedCornerShape(2.dp)).background(MaterialTheme.colorScheme.outline))
 }
 
 /** What the sheet is about (docs/pantallas.md 5.6): its kind in plain words and the entry itself. */

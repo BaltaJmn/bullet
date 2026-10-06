@@ -115,9 +115,10 @@ fun IndexScreen(
             }
         }
 
-        Eyebrow(S.indexMonths)
+        // A filter that leaves no month hides the block: its empty sentence would say there are none.
+        if (themeFilter == null || months.isNotEmpty()) Eyebrow(S.indexMonths)
         Column(Modifier.padding(start = HEAD_START, end = 12.dp)) {
-            if (months.isEmpty() && old.none { it is IndexItem.Month }) Text(S.indexEmpty, style = Type.Secondary, modifier = Modifier.padding(start = 6.dp, top = 4.dp))
+            if (themeFilter == null && months.isEmpty() && old.none { it is IndexItem.Month }) Text(S.indexEmpty, style = Type.Secondary, modifier = Modifier.padding(start = 6.dp, top = 4.dp))
             months.forEach {
                 IndexRow(
                     Glyph.MONTH,
@@ -225,7 +226,8 @@ fun IndexScreen(
  */
 @Composable
 private fun ByTheme(items: List<IndexItem.Collection>, grouped: Boolean, row: @Composable (IndexItem.Collection) -> Unit) {
-    if (!grouped) {
+    // A block where nothing has a theme is one list: a lone "SIN TEMA" would label nothing.
+    if (!grouped || items.none { it.theme != null }) {
         items.forEach { row(it) }
         return
     }

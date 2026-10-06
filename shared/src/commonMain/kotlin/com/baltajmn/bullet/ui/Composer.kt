@@ -73,6 +73,7 @@ import com.baltajmn.bullet.model.oneLine
 import com.baltajmn.bullet.model.rapidParse
 import com.baltajmn.bullet.ui.theme.BobbinTheme
 import com.baltajmn.bullet.ui.theme.Type
+import com.baltajmn.bullet.ui.theme.gridUnit
 import com.baltajmn.bullet.ui.theme.page
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
@@ -217,7 +218,7 @@ fun Composer(
         }
         hint?.let { h ->
             Box(
-                Modifier.heightIn(min = 40.dp).padding(top = 6.dp).clip(RoundedCornerShape(12.dp))
+                Modifier.heightIn(min = gridUnit * 2).clip(RoundedCornerShape(12.dp))
                     .clickable(role = Role.Button) { schedule(h.date) }.padding(horizontal = 6.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
@@ -248,7 +249,6 @@ fun CaptureSheet(onSaved: () -> Unit, onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                     .background(MaterialTheme.colorScheme.background)
                     .clickable(interactionSource = null, indication = null, onClick = {})
-                    .padding(top = 8.dp)
                     .navigationBarsPadding(),
             ) {
                 val today = BobbinRepository.today()

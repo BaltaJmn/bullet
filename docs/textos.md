@@ -969,6 +969,7 @@ y lo vivido; ninguna presupone algo triste, habla de salud mental ni pide un nú
 | `proSync` | | Sync through your own cloud | Sincronizar con tu propia nube | Sincronizar pela sua própria nuvem | Synchronisieren über deine eigene Cloud | Synchroniser via ton propre cloud |
 | `proYearSummary` | | The year summary | El resumen del año | O resumo do ano | Der Jahresrückblick | Le bilan de l'année |
 | `yearSummaryRow` | | Year summary | Resumen del año | Resumo do ano | Jahresrückblick | Bilan de l'année |
+| `yearSummarySub` | | Inspirations, priorities done and what travelled the most | Inspiraciones, prioridades hechas y lo que más viajó | Inspirações, prioridades feitas e o que mais viajou | Inspirationen, erledigte Prioritäten und was am weitesten reiste | Inspirations, priorités faites et ce qui a le plus voyagé |
 | `yearSummaryTitle` | año | Your 2026 | Tu 2026 | Seu 2026 | Dein 2026 | Ton 2026 |
 | `summaryInspirations` | | Inspirations | Inspiraciones | Inspirações | Inspirationen | Inspirations |
 | `summaryPriorities` | | Priorities done | Prioridades hechas | Prioridades feitas | Erledigte Prioritäten | Priorités faites |

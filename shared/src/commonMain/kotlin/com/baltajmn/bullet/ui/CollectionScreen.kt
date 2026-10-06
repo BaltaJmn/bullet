@@ -244,6 +244,7 @@ private fun MoreSheet(
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         tonalElevation = 0.dp,
+        dragHandle = { SheetHandle() },
     ) {
         SheetHeader(kind, title, onClose)
         Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp).padding(bottom = 18.dp)) {
@@ -448,6 +449,7 @@ private fun TrackerRowSheet(
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         tonalElevation = 0.dp,
+        dragHandle = { SheetHandle() },
     ) {
         SheetHeader(S.indexTrackers, title, onClose)
         Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp).padding(bottom = 18.dp)) {

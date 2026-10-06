@@ -172,6 +172,7 @@ fun IconThemeSheet(title: String, icon: String?, theme: String?, onSave: (String
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         tonalElevation = 0.dp,
+        dragHandle = { SheetHandle() },
     ) {
         SheetHeader(S.iconAndTheme, title, close)
         Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 24.dp)) {

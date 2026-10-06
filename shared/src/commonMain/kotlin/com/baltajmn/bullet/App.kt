@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -175,6 +176,10 @@ fun App() {
     // BackHandler, so one that still has a sheet or a dialog of its own open can close that first.
     // A failed read counts as seen: a guide shown twice is worse than one never shown.
     var overlay by remember { mutableStateOf(if (runCatching { Prefs.bool(PREF_GUIDE_SEEN) }.getOrDefault(true)) null else Screen.GUIDE) }
+    // The composer underneath keeps its focus otherwise, and its keyboard stays up over Ajustes. A
+    // screen that wants the keyboard (Buscar, a list just created) asks for it again in its own effect.
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(overlay) { if (overlay != null) focusManager.clearFocus() }
 
     /** [created] is true only straight from the Index's own capture row, which is when it opens focused. */
     fun goToCollection(id: String, created: Boolean) {

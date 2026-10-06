@@ -2151,6 +2151,13 @@ object S {
     )
     val proYearSummary = t("The year summary", "El resumen del año", "O resumo do ano", "Der Jahresrückblick", "Le bilan de l'année")
     val yearSummaryRow = t("Year summary", "Resumen del año", "Resumo do ano", "Jahresrückblick", "Bilan de l'année")
+    val yearSummarySub = t(
+        "Inspirations, priorities done and what travelled the most",
+        "Inspiraciones, prioridades hechas y lo que más viajó",
+        "Inspirações, prioridades feitas e o que mais viajou",
+        "Inspirationen, erledigte Prioritäten und was am weitesten reiste",
+        "Inspirations, priorités faites et ce qui a le plus voyagé",
+    )
     fun yearSummaryTitle(year: Int) = t("Your $year", "Tu $year", "Seu $year", "Dein $year", "Ton $year")
     val summaryInspirations = t("Inspirations", "Inspiraciones", "Inspirações", "Inspirationen", "Inspirations")
     val summaryPriorities = t("Priorities done", "Prioridades hechas", "Prioridades feitas", "Erledigte Prioritäten", "Priorités faites")
