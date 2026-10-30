@@ -891,22 +891,36 @@ La escalera real de la familia, leída de sus repositorios:
 | Quilt | 4,99 EUR |
 | Purl | 5,99 EUR en v1.0, 8,99 EUR desde v1.1 |
 | MoodTraker | 7,99 EUR |
-| **Bobbin** | **1,99 EUR** |
+| **Bobbin** | 1,99 EUR hasta v1.2; **4,99 EUR desde v1.3** |
 
-**Decisión: 1,99 EUR** (del autor, 29-09-2026; el plan anterior era 7,99 EUR y 9,99 desde v1.1).
-Muchas ventas pequeñas antes que pocas grandes: a 1,99 la compra es de impulso, se decide sin
-pensarlo y ya no compite con un cuaderno de papel sino con no comprar nada. Queda muy por debajo de
-cualquier compra única del sector (BujoFlow, 29,99 $; Daylio de por vida, 59,99 $; Things 3, 9,99 $)
-y de un solo mes de muchas suscripciones. Es la más barata de la familia a propósito: el método entero
-es gratis y Pro es el capricho de portadas, papeles, seguimientos y widgets, no una puerta.
+**Decisión: 4,99 EUR desde la v1.3** (del autor, 30-10-2026, #74). La historia, para que no se
+repita la discusión: el plan de salida era 7,99 EUR y 9,99 desde v1.1; el 29-09-2026 el autor lo bajó a
+1,99 EUR para que la compra fuera de impulso, y así salen v1.0, v1.1 y v1.2.
 
-**No sube con la v1.1.** El libro del cuaderno en PDF (#68) entra en Pro sin tocar el precio: la
-subida a 9,99 tenía sentido con un escaparate caro, no con uno de impulso. **Quien compra conserva
-Pro para siempre, con todo lo que llegue después, sin recargo**: es un no consumible, la compra es de
-por vida y no por versión, y en RevenueCat cambiar el precio es tocar el panel, no el código.
+Por qué sube, con los datos del repaso de octubre de 2026 (§1):
 
-**Sin descuento de lanzamiento ni oferta por tiempo limitado.** El precio de salida es el precio final
-de v1.0: un descuento vende la rebaja, no el producto, y enseña a esperar a la siguiente.
+- **1,99 deja 1,40 EUR por venta**, y Pro ya no es el capricho de portadas y papeles de la v1.0: lleva
+  sincronización, libro en PDF, dos widgets, seguimientos, captura desde fuera y el resumen del año.
+- **Los desbloqueos únicos comparables cuestan de 5,99 a 14,99 $** (Streaks 5,99; Things 3, 9,99;
+  Diarium 14,99) y los vitalicios del nicho, mucho más (BujoFlow 29,99 $; Daylio 59,99 $; Bullet de
+  Mui Studio 79,99 $; Structured 99,99 $).
+- **El precio bajo no convierte más.** El informe de RevenueCat de 2026 da un 1,4 % de conversión a 35
+  días en precio bajo frente al 2,8 % en precio alto. Es un dato de suscripciones, no de compras
+  únicas, pero desmiente la hipótesis que sostenía el 1,99.
+- **4,99 EUR es el precio de Quilt**: Bobbin sigue siendo, con ella, la más barata de la familia, y
+  queda por debajo de un mes de casi cualquier suscripción de diario.
+
+**Sube con una versión, no con una campaña.** El cambio se hace en las dos consolas el día que la
+v1.3 sale a producción, con más cosas en la app. **Quien compró a 1,99 conserva Pro para siempre, con
+todo lo que llegue después, sin recargo**: es un no consumible, la compra es de por vida y no por
+versión, y en RevenueCat cambiar el precio es tocar el panel, no el código.
+
+**Compartir en familia, activado en iOS desde la v1.3.** Una compra sirve a toda la familia de Apple,
+que es lo justo para un diario que cada uno lleva en su teléfono. Apple no deja desactivarlo una vez
+activado, y Google Play no permite compartir compras dentro de la app: en Android no hay equivalente.
+
+**Sin descuento de lanzamiento ni oferta por tiempo limitado.** Ni en v1.0 ni en la subida: un
+descuento vende la rebaja, no el producto, y enseña a esperar a la siguiente.
 
 **Precios regionales activados en las dos tiendas desde el primer día**, no solo EUR y USD: es lo
 único que hace que "asequible" no sea solo una palabra fuera de la eurozona, y no cuesta una línea de
@@ -916,20 +930,21 @@ código. Precio base en España; el resto de países, por la conversión automá
 ### Lo que llega al bolsillo
 
 ```
-1,99 EUR escaparate
-/ 1,21 (IVA 21%)  = 1,64 EUR
-- 15 % comisión   = 1,40 EUR netos
+4,99 EUR escaparate
+/ 1,21 (IVA 21%)  = 4,12 EUR
+- 15 % comisión   = 3,51 EUR netos
 ```
 
 | Objetivo | Ventas/mes | Descargas/mes |
 |---|---|---|
-| 500 EUR | ~358 | ~14.320 |
-| 1.000 EUR | ~716 | ~28.640 |
-| 3.000 EUR | ~2.147 | ~85.880 |
+| 500 EUR | ~143 | ~5.720 |
+| 1.000 EUR | ~286 | ~11.440 |
+| 3.000 EUR | ~856 | ~34.240 |
 
-Descargas calculadas al 2,5 % de conversión, la hipótesis de trabajo de la familia, no un dato medido
-de esta categoría; la apuesta del precio bajo es justo que esa conversión suba. La comisión del 15 % exige el Small Business Program en Apple y el primer millón en
-Google.
+Con 1,99 EUR hacían falta dos veces y media más ventas para lo mismo (~358, ~716 y ~2.147). Descargas
+calculadas al 2,5 % de conversión, la hipótesis de trabajo de la familia, no un dato medido de esta
+categoría; la mediana de RevenueCat para freemium en 2025 es del 2,1 %. La comisión del 15 % exige el
+Small Business Program en Apple y el primer millón en Google.
 
 ### Reglas
 
@@ -1428,7 +1443,9 @@ con el andamiaje (#10), el calendario se alarga aunque el código esté terminad
    itera la velocidad de Revisar, no la regla.
 3. **El paquete de pago puede parecer fino** en v1.0: portadas, papeles, seguimientos y dos widgets.
    Se mide en la beta: si en dos semanas no compra nadie, el problema es el paquete, no el precio. Por
-   eso el precio sube cuando llega el libro en PDF, no antes (§7).
+   eso el precio sube con la v1.3, cuando Pro ya lleva libro, sincronización y captura desde fuera, y
+   no antes (§7). La subida puede traer alguna reseña de "antes costaba 1,99": quien compró lo
+   conserva todo, y la ficha nunca ha anunciado un precio.
 4. **"He cambiado de móvil y he perdido mi bujo"** es la reseña de una estrella previsible hasta v1.2.
    La defensa es la copia cifrada del sistema, el traspaso entre dispositivos y exportar gratis.
 5. **Reescribir el fichero entero en cada cambio** puede notarse tras años de uso. Se mide en #55 con
@@ -1480,7 +1497,8 @@ Van aquí para que nadie las vuelva a buscar:
 
 Del repaso de octubre de 2026:
 
-- **Bullet Journal Companion** es de compra única (4,99 $), no de suscripción, y solo de iPhone: su
+- **Bullet Journal Companion** cuesta 4,99 $ de compra única y es solo de iPhone (la tabla decía solo
+  "de pago"; una comparativa de 2026 le pone 2,99 $ al mes, y la ficha de la tienda lo desmiente). Su
   última versión es la 2.5.0, del 1 de noviembre de 2023, y la ayuda oficial da Android por retirado.
   Lo de "abandonware en reseñas de 2026" no se pudo comprobar en la ficha: se quita de la tabla y queda
   el dato verificable, que dice lo mismo.

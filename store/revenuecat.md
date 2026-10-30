@@ -16,7 +16,8 @@ MoodTraker o Purl y sirven tal cual: `../line/store/revenuecat.md`.
 | Producto | Uno solo, compra única, **no consumible**. Nunca suscripción |
 | Identificador | `bullet_pro` en las dos tiendas. **Irreversible**: un id borrado no se reutiliza |
 | Nombre visible | Bobbin Pro |
-| Precio | **1,99 EUR** de base en España, conversión automática al resto **con redondeo**. No sube con la v1.1 ni con la v1.2 (SPEC §7) |
+| Precio | **4,99 EUR desde la v1.3** de base en España, conversión automática al resto **con redondeo**. Hasta la v1.2, 1,99 EUR (SPEC §7, #74). El cambio, en el §8 |
+| Compartir en familia | Activado en iOS desde la v1.3. **Irreversible.** Google Play no lo tiene para compras dentro de la app |
 | Descuento de lanzamiento | No |
 | Países | Todos |
 | Prueba gratuita | No. El plan gratis es la prueba |
@@ -70,7 +71,8 @@ verificado, que ya lo está desde Quilt.
    digitales*.
 3. Opción de compra: id `bulletpro` (Play no admite guion bajo aquí), tipo *Comprar*, contenido
    digital, una unidad por compra.
-4. Precio 1,99 EUR, *Convertir* al resto de países y **Redondear precios**: sin eso salen cifras que
+4. Precio 4,99 EUR (1,99 hasta la v1.2; el cambio, §8), *Convertir* al resto de países y
+   **Redondear precios**: sin eso salen cifras que
    leen como un error de la tienda. Play no guarda el producto sin precio, ni como borrador.
 5. **Activarlo.** Un producto inactivo no sale por la API y el diálogo se queda sin precio.
 
@@ -157,7 +159,8 @@ En App Store Connect, dentro de Bobbin, *Monetización > Compras dentro de la ap
 | Tipo | No consumible |
 | Nombre de referencia | Bobbin Pro |
 | Id de producto | `bullet_pro` |
-| Precio | País base **España**, 1,99 EUR; el resto, por la equivalencia automática de Apple |
+| Precio | País base **España**, 4,99 EUR desde la v1.3 (1,99 hasta la v1.2); el resto, por la equivalencia automática de Apple |
+| Compartir en familia | Activado desde la v1.3 (§8). No se puede desactivar después |
 | Disponibilidad | Todos los países |
 | Captura para la revisión | El `ProDialog` abierto en un iPhone, desde el simulador |
 | Nota para la revisión | `Unlocks seven cover colors, three papers, trackers past the first, the month widget, the lock screen widget, the notebook as a PDF book, noting with Siri and Shortcuts, sync through the user's own iCloud Drive and the year summary. One-time purchase. Restore Purchase is in Settings and in this dialog.` |
@@ -194,9 +197,9 @@ iPhone en *Ajustes > App Store > Cuenta de sandbox*, comprar, borrar la app, rei
 
 ## 7. La v1.1 y la v1.2: el libro, la captura, la sincronización y el resumen del año entran en Pro sin cambiar el precio
 
-`main` ya lleva la v1.1 y la v1.2. El precio se queda en 1,99 EUR (SPEC §7), el producto sigue siendo
-`bullet_pro` y el derecho sigue siendo `pro`: no hay nada nuevo que crear en las tiendas ni en
-RevenueCat.
+`main` ya lleva la v1.1 y la v1.2. Las dos salen a 1,99 EUR; la subida llega con la v1.3 (§8). El
+producto sigue siendo `bullet_pro` y el derecho sigue siendo `pro`: no hay nada nuevo que crear en las
+tiendas ni en RevenueCat.
 
 - **Listas y descripciones**: las listas del §0 ya incluyen el libro en PDF y la captura desde fuera
   (v1.1) y la sincronización y el resumen del año en texto (v1.2). Lo mismo valen las tablas de
@@ -207,3 +210,26 @@ RevenueCat.
   Play Console y App Store Connect, y la nota para la revisión del §6 en la versión que las incluya.
 - **Quien ya compró** tiene todo lo anterior sin pagar de nuevo: es un no consumible y el derecho `pro`
   no caduca. Quien compre después paga lo mismo y recibe lo mismo.
+
+## 8. La v1.3: Pro a 4,99 EUR y Compartir en familia
+
+Decidido por el autor el 30-10-2026 (SPEC §7, #74). Nada de esto toca el código: el `ProDialog` lee el
+precio de la tienda. Todo el mismo día que la v1.3 sale a producción, ni antes ni después.
+
+1. **[autor] Play Console**, dentro de Bobbin: *Monetizar con Play > Productos > Productos únicos >
+   `bullet_pro` > opción de compra `bulletpro` > Precio*. España a 4,99 EUR, *Convertir* al resto de
+   países y **Redondear precios**. Guardar.
+2. **[autor] App Store Connect**: *Monetización > Compras dentro de la app > Bobbin Pro > Precio >
+   Añadir cambio de precio*. País base España, 4,99 EUR, equivalencias automáticas, con fecha de
+   inicio la de salida de la v1.3.
+3. **[autor] App Store Connect**, misma compra: *Compartir en familia > Activar*. **Irreversible**: una
+   vez activado no se puede quitar. Quien ya compró también lo comparte.
+4. **[autor] Países de renta baja**: tras la conversión, revisar a mano India, Brasil, México,
+   Indonesia y Turquía en las dos consolas, y bajarlos al nivel que no pase del precio de un café
+   allí. Es lo que hace que "precio justo" lo sea fuera de la eurozona.
+5. **[autor] RevenueCat**: nada que tocar. El producto y el paquete son los mismos; el panel enseña el
+   precio nuevo cuando las tiendas lo propagan, que puede tardar unas horas.
+6. **Comprobar**: en un teléfono con una cuenta que no compró, el `ProDialog` enseña 4,99 EUR en las
+   dos plataformas; con la cuenta que compró a 1,99, Pro sigue activo tras reinstalar y restaurar.
+
+Quien compró antes no pierde ni paga nada: el derecho `pro` no caduca.

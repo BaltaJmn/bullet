@@ -42,8 +42,9 @@ Todas tomadas. El porqué de cada una, en `SPEC.md`.
       del xcconfig, los ficheros de `listings/` y `app-store/`, y la política. Los identificadores de
       la tabla de arriba no cambian: el nombre solo vive en textos, ficha, icono, esquema `bobbin://`
       y nombres de fichero de copia.
-- [x] Precio: **1,99 EUR**, también en v1.1, sin descuento de lanzamiento, precios regionales
-      activados (SPEC §7, `revenuecat.md`).
+- [x] Precio: **1,99 EUR** en v1.0, v1.1 y v1.2, y **4,99 EUR desde la v1.3** con Compartir en
+      familia en iOS (#74), sin descuento de lanzamiento, precios regionales activados (SPEC §7,
+      `revenuecat.md` §8).
 - [x] Qué es Pro en v1.0: siete portadas, tres papeles, seguimientos a partir del segundo, widget del
       mes y widget de pantalla de bloqueo de iOS (SPEC §7).
 - [x] iPad: sí, universal como las hermanas (SPEC §8). Obliga a capturas de iPad (#58).
@@ -118,7 +119,8 @@ subido a mano, así que `release.yml` y `listings.yml` fallan si se ejecutan ant
    Textos en `listings/`, con los topes comprobados. (#57)
 5. **[autor] Imágenes**: icono de 512, gráfico de 1024x500 y capturas. La API de listings solo escribe
    texto. (#58)
-6. **[autor] Producto `bullet_pro`** a 1,99 EUR (`revenuecat.md` §1). (#47)
+6. **[autor] Producto `bullet_pro`** a 1,99 EUR, el precio de v1.0 a v1.2 (`revenuecat.md` §1; sube a
+   4,99 EUR con la v1.3, §8). (#47)
 7. **[autor] Abrir la prueba cerrada** (canal `alpha`) con la lista de probadores como Grupo de
    Google, y **[código]** etiquetar: `git tag v1.0.0 && git push origin v1.0.0`, que publica en
    `alpha`. (#10)
@@ -197,6 +199,9 @@ no trae Play Billing.
   las descripciones del producto de `revenuecat.md` ya llevan la lista completa de Pro, y quien ya
   compró lo recibe sin pagar de nuevo. Las notas de versión de cada una (`whatsnew/`) dicen qué trae,
   en el mismo commit que la etiqueta.
+- **v1.3 sube el precio a 4,99 EUR** el día que sale a producción, en las dos consolas a la vez, y
+  activa Compartir en familia en iOS (`revenuecat.md` §8, #74). Quien ya compró conserva Pro. Las notas
+  de versión no hablan del precio: hablan de lo que trae.
 - **Actualizar la política y los formularios** en el mismo commit que añada cualquier cosa que salga
   del dispositivo o cualquier permiso nuevo.
 
