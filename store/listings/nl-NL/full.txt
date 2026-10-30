@@ -1,0 +1,36 @@
+Eenmalige aankoop, geen account, geen advertenties. Bobbin is een digitale bullet journal die de papieren methode intact laat: rapid logging, drie bullets, vijf taakstatussen en migratie met de hand, item voor item.
+
+De app opent in Vandaag met het toetsenbord open. Schrijf een regel, druk op Enter, schrijf de volgende. Niets om eerst in te stellen, geen sjablonen, geen stickers: een bujo-app en dagplanner die op je notitieboek lijkt.
+
+RAPID LOGGING, ZOALS HET HOORT
+Een stip voor een taak, een cirkel voor een gebeurtenis, een streepje voor een notitie. Typ o, - of een signifier vooraan een regel en de bullet verandert terwijl je schrijft. Een taak is open, voltooid, gemigreerd, ingepland of geschrapt; prioriteit, inspiratie en verkennen markeren wat telt. De Legenda legt elk symbool uit.
+
+DAILY LOG, MONTHLY LOG, FUTURE LOG EN INDEX
+Vandaag is het Daily Log. Maand is het Monthly Log: de kalender als lijst van dagen en de taken van de maand. Toekomst is het Future Log, in maandblokken. De Index toont elke maand waarin je schreef en elke collectie, op volgorde van aanmaak.
+
+MIGRATIE MET DE HAND
+Niets verplaatst zich vanzelf: open taken van gisteren duiken vandaag niet op, een nieuwe maand kopieert de vorige niet en het Future Log wacht op jou. Aan het eind van de maand toont Doornemen één open taak tegelijk: migreren, inplannen, naar een collectie verplaatsen of schrappen. Een drie keer gemigreerde taak zegt dat; dat is de enige druk van Bobbin.
+
+EERST TERUGLEZEN, DAN BESLISSEN
+Doornemen begint altijd met het teruglezen van de periode, met ruimte voor een korte reflectie. Een optionele dagelijkse herinnering, standaard uit, heeft een vaste tekst die je dagboek nooit citeert.
+
+COLLECTIES EN TRACKERS
+Collecties voor boeken, reizen of alles met een naam. Een tracker neemt één tik per dag voor je eigen rijen, één pagina per maand. Bobbin houdt geen gewoontestatistieken of streaks bij: daarvoor is er Quilt, een zusterapp.
+
+MEER VAN DE METHODE
+Een collectie kan doorlopen in een nieuwe, aan beide kanten gekoppeld. Een nieuw notitieboek loopt collecties en taken een voor een met je langs en de Index klapt het oude in, zonder iets te verwijderen. De reflectienotitie kan een vraag voorstellen. Schrijf "morgen", "vrijdag" of "14 maart" en een suggestie stelt voor het in te plannen; de datum wordt op je telefoon gelezen en nooit vanzelf toegepast. Elke collectie of maand krijgt een pictogram en thema, met filter; volledig gemigreerde maanden zijn onderstreept. Items uit Purl, MoodTraker en Quilt neem je een voor een over.
+
+JE DAGBOEK BLIJFT OP JE TELEFOON
+Geen account, geen cloud van ons, geen analytics. Exporteer het dagboek als zip met leesbare Markdown, importeer het op een andere telefoon zonder verlies en vergrendel het met vingerafdruk, gezicht of schermvergrendeling. Deel een dag, maand of collectie als gestippelde pagina. Met Pro optioneel synchroniseren via je eigen cloud, in een bestand dat je kiest, bijvoorbeeld Google Drive; bij wijzigingen aan beide kanten vraagt de app eerst.
+
+WIDGET EN TABLET
+Een Vandaag-widget met open taken, voltooide taken en gebeurtenissen, nooit je tekst. Op een tablet openen Index en Future Log als dubbele pagina.
+
+GRATIS, VOOR ALTIJD
+De hele methode en alles onder "Meer van de methode", zoeken, exporteren en importeren, delen, de herinnering, de vergrendeling en de Vandaag-widget: gratis en zonder tijdslimiet.
+
+BOBBIN PRO, ÉÉN BETALING
+Zeven extra omslagen, gelinieerd, geruit en blanco papier, meer dan één tracker, de maandwidget, het notitieboek als PDF-boek, noteren via Snelle instellingen, de Schrijven-widget of een andere app, synchroniseren via je eigen cloud en het jaaroverzicht in tekst. Eén keer betalen, nooit een abonnement.
+
+WAT JE HIER NIET VINDT
+Geen AI die je dagen samenvat, geen beloftes over geestelijke gezondheid, geen streaks, geen advertenties, geen analytics. Wil je één regel per dag om elk jaar opnieuw te lezen, probeer dan Purl.

@@ -1,0 +1,36 @@
+Jednorazowy zakup, bez konta, bez reklam. Bobbin to cyfrowy bullet journal z papierową metodą bez zmian: rapid logging, trzy bullety, pięć stanów zadania i ręczna migracja, wpis po wpisie.
+
+Otwiera się na zakładce Dziś z otwartą klawiaturą. Piszesz linijkę, naciskasz Enter, piszesz następną. Nic do ustawiania, bez szablonów i naklejek: aplikacja bujo i planer dnia jak twój notatnik.
+
+PRAWDZIWY RAPID LOGGING
+Kropka dla zadania, kółko dla wydarzenia, kreska dla notatki. Wpisz o, - albo signifier na początku linijki, a bullet zmienia się podczas pisania. Zadanie jest otwarte, zrobione, zmigrowane, zaplanowane albo odrzucone, a priorytet, inspiracja i znak do zbadania oznaczają to, co ważne. Legenda objaśnia każdy symbol.
+
+DAILY LOG, MONTHLY LOG, FUTURE LOG I INDEKS
+Dziś to Daily Log. Miesiąc to Monthly Log: kalendarz jako lista dni i zadania miesiąca. Przyszłość to Future Log, w blokach miesięcy. Indeks zbiera każdy miesiąc z wpisami i każdą kolekcję, w kolejności, w jakiej je zaczynasz.
+
+RĘCZNA MIGRACJA
+Nic nie rusza się samo. Wczorajsze otwarte zadania nie wracają dziś, nowy miesiąc nie kopiuje poprzedniego, a Future Log czeka na ciebie. Na koniec miesiąca przegląd pokazuje po jednym otwartym zadaniu: zmigruj je, zaplanuj, przenieś do kolekcji albo odrzuć. Zadanie zmigrowane trzy razy daje o tym znać i to jedyna presja, jaką wywiera Bobbin.
+
+PRZECZYTAJ PONOWNIE, ZANIM ZDECYDUJESZ
+Każdy przegląd zaczyna się od ponownego przeczytania okresu, z miejscem na krótką refleksję. Opcjonalne codzienne przypomnienie, domyślnie wyłączone, ze stałym tekstem, który nigdy nie cytuje twojego dziennika.
+
+KOLEKCJE I TRACKERY
+Kolekcje na książki, podróże albo cokolwiek, co ma nazwę. Tracker to jedno dotknięcie dziennie w wierszach, które ustalasz, jedna strona na miesiąc. Bobbin nie prowadzi statystyk nawyków ani serii: do tego jest Quilt, aplikacja siostrzana, tracker nawyków z przypomnieniami i statystykami.
+
+WIĘCEJ METODY
+Kolekcja może być kontynuowana w nowej, powiązanej w obie strony. Nowy notatnik przeprowadza cię przez kolekcje i zadania, jedno po drugim, a Indeks składa stary, niczego nie usuwając. Notatka refleksji może podsunąć pytanie. Wpisz "jutro", "w piątek" lub "14 marca", a podpowiedź zaproponuje zaplanowanie; datę czyta telefon i nigdy nie stosuje jej sama. Indeks przyjmuje ikonę i motyw dla kolekcji lub miesiąca, z filtrem po motywie, a minione miesiące w pełni zmigrowane są podkreślone, jak na papierze. Wpisy z Purl, MoodTraker i Quilt możesz zaimportować po jednym.
+
+TWÓJ DZIENNIK ZOSTAJE NA TWOIM TELEFONIE
+Bez konta, bez naszej chmury, bez analityki. Wyeksportuj cały dziennik jako zip z czytelnym Markdown, zaimportuj go na innym telefonie, niczego nie tracąc, i zablokuj odciskiem palca, twarzą albo blokadą ekranu. Udostępnij dzień, miesiąc lub kolekcję jako stronę w kropki. W Pro opcjonalna synchronizacja przez własną chmurę, w pliku, który wybierzesz, na przykład w Google Drive: bez konta, bez naszego serwera, a jeśli zmieniły się obie strony, najpierw zapyta.
+
+WIDŻET I TABLET
+Widżet Dziś z otwartymi zadaniami, zrobionymi zadaniami i wydarzeniami, nigdy z twoim tekstem. Na tablecie Indeks i Future Log otwierają się jako rozkładówka, jak cyfrowy planer leżący otwarty.
+
+ZA DARMO, NA ZAWSZE
+Cała metoda i wszystko z części "Więcej metody", wyszukiwanie, eksport i import, udostępnianie, przypomnienie, blokada i widżet Dziś: za darmo, bez limitu czasu.
+
+BOBBIN PRO, JEDNA PŁATNOŚĆ
+Siedem dodatkowych okładek, papier w linie, w kratkę i gładki, więcej niż jeden tracker, widżet miesiąca, notatnik jako książka w PDF, zapisywanie z Szybkich ustawień, z widżetu Napisz lub z innej aplikacji, synchronizacja przez własną chmurę i podsumowanie roku w tekście. Płatność jednorazowa, nigdy subskrypcja.
+
+CZEGO TU NIE ZNAJDZIESZ
+Żadnej AI streszczającej twoje dni, żadnych obietnic dotyczących zdrowia psychicznego, żadnych serii, reklam ani analityki. Jeśli chcesz jednej linijki dziennie do ponownego czytania co roku, spróbuj Purl.

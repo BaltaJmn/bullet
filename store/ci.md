@@ -48,7 +48,7 @@ que espera Play, tope 500 caracteres. Se reescriben en cada versión que cambie 
 
 ## La ficha de tienda
 
-`listings.yml` sube los cinco idiomas de golpe con la API de Android Publisher, a mano desde
+`listings.yml` sube todos los idiomas de golpe con la API de Android Publisher, a mano desde
 *Actions*, o valida los topes solo (sin subir) en cada push que toque `store/listings/**`. Textos en
 `store/listings/<idioma>/` con los topes de Play: título 30, corta 80, larga 4000.
 
