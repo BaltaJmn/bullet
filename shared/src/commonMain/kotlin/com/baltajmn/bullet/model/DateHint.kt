@@ -22,37 +22,54 @@ data class DateHint(val date: LocalDate, val range: IntRange)
 fun dateHint(text: String, lang: String, today: LocalDate): DateHint? {
     val (folded, origin) = foldWithOrigin(text)
     // Folded names are letters, hyphens, spaces and an apostrophe: nothing a pattern would read as syntax.
-    val months = S.monthNames(lang).map(::fold).joinToString("|")
+    // Polish and Russian name the month of a date in the genitive ("14 marca", "14 марта").
+    val monthList = S.monthNamesInDate(lang).map(::fold)
+    val months = monthList.joinToString("|")
     val weekdays = S.weekdayNames(lang).map(::fold)
 
-    fun find(pattern: String): MatchResult? = Regex("(?<![a-z0-9])(?:$pattern)(?![a-z0-9])").find(folded)
+    // A word ends at anything that is not a Latin or Cyrillic letter or a digit; Japanese and Korean
+    // write without spaces, so for them a kanji or a hangul next to the expression is no boundary.
+    val letter = "a-z0-9\u00c0-\u024f\u0400-\u04ff"
+    fun find(pattern: String): MatchResult? = Regex("(?<![$letter])(?:$pattern)(?![$letter])").find(folded)
     fun hint(m: MatchResult, date: LocalDate?) = date?.let { DateHint(it, origin[m.range.first]..origin[m.range.last]) }
-    fun monthIndex(name: String) = S.monthNames(lang).map(::fold).indexOf(name) + 1
 
     val dayMonth = when (lang) {
         "en" -> "(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?($months)|($months)\\s+(?:the\\s+)?(\\d{1,2})(?:st|nd|rd|th)?"
         "de" -> "(\\d{1,2})\\.\\s*($months)"
         "fr" -> "(\\d{1,2})(?:er)?\\s+($months)"
-        else -> "(\\d{1,2})\\s+de\\s+($months)"
+        "es", "pt" -> "(\\d{1,2})\\s+de\\s+($months)"
+        "ja" -> "($months)\\s*(\\d{1,2})日"
+        "ko" -> "($months)\\s*(\\d{1,2})일"
+        else -> "(\\d{1,2})\\.?\\s+($months)"
     }
     find(dayMonth)?.let { m ->
-        val g = m.groupValues
-        val (day, month) = if (g[1].isNotEmpty()) g[1] to g[2] else g[4] to g[3]
-        return hint(m, nextDayMonth(day.toInt(), monthIndex(month), today))
+        // The day is the group made of digits only; the month, the other one ("9月" has digits too).
+        val parts = m.groupValues.drop(1).filter { it.isNotEmpty() }
+        val day = parts.first { it.all(Char::isDigit) }
+        val month = parts.first { !it.all(Char::isDigit) }
+        return hint(m, nextDayMonth(day.toInt(), monthList.indexOf(month) + 1, today))
     }
 
     val figures = if (lang == "de") "(\\d{1,2})\\.(\\d{1,2})\\." else "(\\d{1,2})/(\\d{1,2})"
     find(figures)?.let { m ->
         val (a, b) = m.groupValues[1].toInt() to m.groupValues[2].toInt()
-        // In English 3/14 is the month first; in the other four, the day.
-        return hint(m, if (lang == "en") nextDayMonth(b, a, today) else nextDayMonth(a, b, today))
+        // In English, Japanese and Korean 3/14 is the month first; in the others, the day.
+        return hint(m, if (lang in setOf("en", "ja", "ko")) nextDayMonth(b, a, today) else nextDayMonth(a, b, today))
     }
 
-    // "segunda-feira" is also just "segunda" in Portuguese.
-    val weekdayPattern = weekdays.joinToString("|") { if (it.endsWith("-feira")) it.removeSuffix("-feira") + "(?:-feira)?" else it }
-    find("($weekdayPattern)")?.let { m ->
+    // "segunda-feira" is also just "segunda" in Portuguese; Russian and Polish say a weekday after
+    // "в" and "w" in the accusative ("в пятницу", "w środę").
+    val weekdayForms = weekdays.map {
+        when {
+            it.endsWith("-feira") -> it.removeSuffix("-feira") + "(?:-feira)?"
+            lang == "ru" && it.endsWith("а") -> it.dropLast(1) + "[ау]"
+            lang == "pl" && it.endsWith("a") -> it.dropLast(1) + "[aę]"
+            else -> it
+        }
+    }
+    find("(${weekdayForms.joinToString("|")})")?.let { m ->
         val said = m.groupValues[1]
-        val iso = weekdays.indexOfFirst { it == said || it.removeSuffix("-feira") == said } + 1
+        val iso = weekdayForms.indexOfFirst { Regex(it).matches(said) } + 1
         val ahead = ((iso - today.dayOfWeek.isoDayNumber) + 7) % 7
         return hint(m, today.plus(DatePeriod(days = if (ahead == 0) 7 else ahead)))
     }
@@ -66,7 +83,15 @@ fun dateHint(text: String, lang: String, today: LocalDate): DateHint? {
         "es" -> "el\\s+(\\d{1,2})"
         "pt" -> "(?:no\\s+)?dia\\s+(\\d{1,2})"
         "de" -> "am\\s+(\\d{1,2})\\."
-        else -> "le\\s+(\\d{1,2})(?:er)?"
+        "fr" -> "le\\s+(\\d{1,2})(?:er)?"
+        "it" -> "il\\s+(\\d{1,2})"
+        "nl" -> "de\\s+(\\d{1,2})(?:e|ste)?"
+        "ru" -> "(\\d{1,2})-?го"
+        "id" -> "tanggal\\s+(\\d{1,2})"
+        "ja" -> "(\\d{1,2})日"
+        "ko" -> "(\\d{1,2})일"
+        // Polish and Turkish say a bare day only with a declined number: no hint for it.
+        else -> return null
     }
     // Not "el 14:30" nor "el 14,5": a bare number followed by more number is not a day.
     find("$bareDay(?![.:,/]?\\d)")?.let { m -> return hint(m, nextDay(m.groupValues[1].toInt(), today)) }

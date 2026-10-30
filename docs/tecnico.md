@@ -17,7 +17,7 @@ Irreversibles en cuanto se publica la primera build (SPEC §8).
 
 | Qué | Valor |
 |---|---|
-| Nombre visible | `Bobbin` (los cinco idiomas) |
+| Nombre visible | `Bobbin` (todos los idiomas) |
 | Nombre de tienda | `Bobbin: Bullet Journal` |
 | `applicationId` y `namespace` de `androidApp` | `com.baltajmn.bullet` |
 | `namespace` de `shared` | `com.baltajmn.bullet.shared` |
@@ -161,7 +161,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `data/AppInfo.kt` | `PRIVACY_URL`, `SIBLINGS`, `expect object AppInfo` | A `line/.../data/AppInfo.kt` |
 | `data/Sync.kt` | v1.2: `SYNC_NAME`, `Remote`, `expect object SyncFile`, `syncStep`, `SyncStep`, `object Sync` (12.7) | N |
 | `billing/Billing.kt` | `expect val revenueCatApiKey`, `object Billing` | A `line/.../billing/Billing.kt`: el derecho va a `Prefs`, no al diario |
-| `i18n/Strings.kt` | `expect fun systemLanguage()`, `expect fun systemFirstDayOfWeek()`, `object S` con `t(en, es, pt, de, fr)`, plurales y nombres de mes y día | A `line/.../i18n/Strings.kt` |
+| `i18n/Strings.kt` | `expect fun systemLanguage()`, `expect fun systemFirstDayOfWeek()`, `object S` con `t(en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko)`, plurales y nombres de mes y día | A `line/.../i18n/Strings.kt` |
 | `ui/theme/Theme.kt` | `BobbinTheme`, colores, `enum class Cover`, `enum class Paper`, `isWideScreen`, `MAX_CONTENT_WIDTH` | A `line/.../ui/theme/Theme.kt` |
 | `ui/theme/Grid.kt` | `gridUnit` | N (#17) |
 | `ui/theme/Paper.kt` | modificador que pinta el papel; `page()` y `Spread`, la página y la doble página en ancho grande | N (#17, #34) |
@@ -274,7 +274,7 @@ Simulador de iOS (9). Solo va a `androidHostTest` lo que necesita disco real o r
 | `androidApp/src/main/kotlin/com/baltajmn/bullet/MainActivity.kt` | `FragmentActivity`; lanzadores de ficheros y de permiso; `Lock.host` y `StoreReview.host`; el `data` del intent a `Route` | A line |
 | `androidApp/src/main/res/xml/` | `data_extraction_rules.xml`, `backup_rules.xml`, `locales_config.xml`, `file_paths.xml`, `today_widget_info.xml`, `month_widget_info.xml` (8.2) | A line |
 | `androidApp/src/main/res/layout/today_widget_preview.xml`, `month_widget_preview.xml` | previsualización del selector de widgets, mantenida a mano | A line |
-| `androidApp/src/main/res/values*/strings.xml` | `app_name` = `Bobbin` y las descripciones de los widgets, en los cinco idiomas | A line |
+| `androidApp/src/main/res/values*/strings.xml` | `app_name` = `Bobbin` y las descripciones de los widgets, en los trece idiomas (`values-in` para el indonesio) | A line |
 | `androidApp/src/main/res/values*/themes.xml`, `colors.xml` | `Theme.Bobbin` y los colores de la previsualización (8.2) | A line |
 | `androidApp/src/main/res/mipmap-*`, `drawable/` | icono, generado (#18) | N |
 | `iosApp/Configuration/Config.xcconfig` | 8.3 | A line |
@@ -532,7 +532,7 @@ momento de exportar. Orden fijo:
    orden ascendente (4.4).
 3. `collections/<nombre>.md`, uno por colección, en orden de creación (4.4).
 
-Los nombres de dentro son fijos y en inglés en los cinco idiomas. `AAAA-MM-DD` es la fecha lógica de
+Los nombres de dentro son fijos y en inglés en todos los idiomas. `AAAA-MM-DD` es la fecha lógica de
 hoy. Sin fotos: el método es texto (SPEC §3).
 
 ### 4.4 Exportación Markdown
@@ -815,7 +815,7 @@ de iconos; geometría en `docs/pantallas.md`):
 La copia de una migrada o programada es `copyOf(j, id)`: la entrada no esqueleto cuyo `from` es `id`.
 
 Lectura para TalkBack y VoiceOver: `S.entryDescription(bullet, status, signifiers, text)`, "Tarea
-hecha, prioridad: comprar pan", en los cinco idiomas (#53). Su acción principal abre la hoja, y
+hecha, prioridad: comprar pan", en todos los idiomas (#53). Su acción principal abre la hoja, y
 completar, ir a la copia y reordenar son además acciones personalizadas del lector
 (`CustomAccessibilityAction`), sin depender de ningún gesto.
 
@@ -1622,8 +1622,11 @@ nunca por su cuenta.
 | `object AppInfo`, `val Sibling.storeUrl`, `val onIos` | `data/AppInfo.kt` | versión visible, abrir una URL, la tienda de la plataforma | C line | C line |
 | `fun systemLanguage()`, `fun systemFirstDayOfWeek()` | `i18n/Strings.kt` | idioma de dos letras del sistema; primer día de la semana del locale | `Locale.getDefault()`, `Calendar.getInstance().firstDayOfWeek` | `NSLocale.preferredLanguages`, `NSCalendar.currentCalendar.firstWeekday` |
 
-`Strings.kt` obliga a los cinco idiomas por firma de función (`t(en, es, pt, de, fr)`) y se copia de
-`docs/textos.md`. Los textos no salen de Compose Resources: parte se pinta fuera de un `@Composable`
+`Strings.kt` obliga a los trece idiomas por firma de función
+(`t(en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko)`); los cinco primeros se copian de
+`docs/textos.md` y los otros ocho viven solo aquí. Android da el indonesio como `in`, su código antiguo:
+`normalizeLanguage` lo lee como `id`. Las mayúsculas de las etiquetas pasan por `S.caps` (`caps()`),
+porque la i del turco lleva punto. Los textos no salen de Compose Resources: parte se pinta fuera de un `@Composable`
 (receptor, Glance, `Canvas`, notificación). Plurales y nombres de mes y de día de la semana, por tabla
 propia, sin depender del locale de la plataforma.
 
@@ -2059,7 +2062,7 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
     `journal.tmp.json` a medias y un `journal.json` ilegible cargan la `.bak`; un corte simulado entre
     escribir el `.tmp` y el rename conserva el último estado válido; la cuarentena mueve los dos a
     `corrupt/`; `wipe` no deja nada en la carpeta.
-24. **Textos** (#16): cada función de `S` devuelve texto no vacío en los cinco idiomas; los plurales de
+24. **Textos** (#16): cada función de `S` devuelve texto no vacío en los trece idiomas; los plurales de
     0, 1 y 2 tareas y entradas son correctos en cada idioma; los doce meses y los siete días existen en
     cada idioma.
 25. **Tema** (#17, #34): contraste de cada par de texto y fondo de `docs/pantallas.md` 1, en claro y en
@@ -2291,7 +2294,7 @@ medias conserva lo decidido, porque cada decisión ya cambió su elemento.
 
 ### 12.3 Reflexión guiada
 
-`S.question(i)` con `i` en `0 until QUESTION_COUNT`, en los cinco idiomas. En el paso de reflexión
+`S.question(i)` con `i` en `0 until QUESTION_COUNT`, en los trece idiomas. En el paso de reflexión
 (6.6), una pregunta junto al campo de nota, opcional y que se salta igual que el paso. Elección:
 
 ```kotlin
@@ -2310,14 +2313,18 @@ data class DateHint(val date: LocalDate, val range: IntRange)   // range: dónde
 fun dateHint(text: String, lang: String, today: LocalDate): DateHint?
 ```
 
-Reconoce, en `en`, `es`, `pt`, `de` y `fr`: hoy y mañana ("mañana", "tomorrow", "amanhã", "morgen",
-"demain"), pasado mañana, un día de la semana (el siguiente de ese nombre, nunca hoy), "el 14" (el
+Reconoce, en los trece idiomas: hoy y mañana ("mañana", "tomorrow", "amanhã", "morgen",
+"demain", "明日"...), pasado mañana, un día de la semana (el siguiente de ese nombre, nunca hoy), "el 14" (el
 siguiente día 14, hoy incluido), "14 de marzo" y "14/3" (día y mes; si ya pasó este año, el que viene).
 Las palabras sueltas, los meses y los días de la semana salen de `i18n/Strings.kt` con el idioma que se
-pasa (`monthNames(code)`, `weekdayNames(code)`, `dateWord*(code)`), nunca cambiando el de `S`; los
-patrones de cada idioma viven en `DateHint.kt`. Se prueba en este orden y gana el primero: día y mes
+pasa (`monthNamesInDate(code)`, `weekdayNames(code)`, `dateWord*(code)`), nunca cambiando el de `S`;
+los patrones de cada idioma viven en `DateHint.kt`. Se prueba en este orden y gana el primero: día y mes
 con nombre, en cifras, día de la semana, pasado mañana, mañana, hoy y día suelto, así "el lunes por la
-mañana" es el lunes. Se compara sobre el texto plegado con `fold`, con fronteras de palabra ASCII. Sin
+mañana" es el lunes. Polaco y ruso leen el mes en genitivo ("14 marca", "14 марта") y el día de la
+semana también en acusativo ("w środę", "в пятницу"); inglés, japonés y coreano leen "3/14" con el mes
+primero; polaco y turco no tienen día suelto. Se compara sobre el texto plegado con `fold`; una palabra
+acaba en cualquier cosa que no sea letra latina, cirílica o cifra, así "завтрак" no es "завтра" y en
+japonés y coreano, que no separan palabras, un kanji o un hangul pegado no impide el aviso. Sin
 primer día de la semana: ninguna expresión reconocida lo necesita. Al detectar una fecha, bajo el campo aparece una pastilla "Programar para 14 mar";
 **nunca se aplica sola**. Tocarla crea la entrada en `Monthly(mes, día)` si la fecha es de este mes, o
 en `Future(mes, día)` si es de uno posterior. El texto se guarda tal cual lo escribió el usuario.

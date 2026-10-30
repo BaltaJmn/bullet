@@ -4,75 +4,201 @@ import WidgetKit
 
 /// The mirror of `Strings.kt` for the extension, which cannot reach Kotlin (docs/textos.md 19).
 enum L {
-    private static var code: String { String((Locale.preferredLanguages.first ?? "en").prefix(2)) }
+    private static var code: String {
+        let two = String((Locale.preferredLanguages.first ?? "en").prefix(2))
+        return two == "in" ? "id" : two
+    }
 
-    static func t(_ en: String, _ es: String, _ pt: String, _ de: String, _ fr: String) -> String {
+    static func t(_ en: String, _ es: String, _ pt: String, _ de: String, _ fr: String, _ it: String, _ nl: String,
+                  _ pl: String, _ ru: String, _ tr: String, _ id: String, _ ja: String, _ ko: String) -> String {
         switch code {
         case "es": return es
         case "pt": return pt
         case "de": return de
         case "fr": return fr
+        case "it": return it
+        case "nl": return nl
+        case "pl": return pl
+        case "ru": return ru
+        case "tr": return tr
+        case "id": return id
+        case "ja": return ja
+        case "ko": return ko
         default: return en
         }
     }
 
-    private static func word(_ n: Int, _ en: (String, String), _ es: (String, String), _ pt: (String, String),
-                             _ de: (String, String), _ fr: (String, String)) -> String {
-        let pair: (String, String)
-        switch code {
-        case "es": pair = es
-        case "pt": pair = pt
-        case "de": pair = de
-        case "fr": pair = fr
-        default: pair = en
-        }
-        return n == 1 ? pair.0 : pair.1
+    /// One form, "one|other" (French takes the singular for 0 too), or Polish and Russian "one|few|many".
+    private static func word(_ n: Int, _ forms: String) -> String {
+        let f = forms.components(separatedBy: "|")
+        if f.count == 1 { return f[0] }
+        if f.count == 2 { return (code == "fr" ? n < 2 : n == 1) ? f[0] : f[1] }
+        let tens = n % 100, units = n % 10
+        if n == 1 || (code == "ru" && units == 1 && tens != 11) { return f[0] }
+        return (2...4).contains(units) && !(12...14).contains(tens) ? f[1] : f[2]
     }
 
     static func open(_ n: Int) -> String {
-        word(n, ("open", "open"), ("abierta", "abiertas"), ("aberta", "abertas"), ("offen", "offen"), ("ouverte", "ouvertes"))
-    }
-    static func done(_ n: Int) -> String {
-        word(n, ("done", "done"), ("hecha", "hechas"), ("feita", "feitas"), ("erledigt", "erledigt"), ("faite", "faites"))
-    }
-    static func events(_ n: Int) -> String {
-        word(n, ("event", "events"), ("evento", "eventos"), ("evento", "eventos"), ("Ereignis", "Ereignisse"),
-             ("événement", "événements"))
-    }
-    static var review: String { t("To review", "Por revisar", "Para revisar", "Durchsehen", "À revoir") }
-    static var proTitle: String { "Bobbin Pro" }
-    static var unlock: String {
-        t("Tap to turn it on", "Toca para activarlo", "Toque para ativar", "Tippen zum Aktivieren", "Touche pour l'activer")
+        word(n, t(
+            "open",
+            "abierta|abiertas",
+            "aberta|abertas",
+            "offen",
+            "ouverte|ouvertes",
+            "aperta|aperte",
+            "open",
+            "otwarte|otwarte|otwartych",
+            "открыта|открыты|открыто",
+            "açık",
+            "terbuka",
+            "未完了",
+            "미완료"
+        ))
     }
 
-    private static func list(_ en: String, _ es: String, _ pt: String, _ de: String, _ fr: String) -> [String] {
-        t(en, es, pt, de, fr).components(separatedBy: ", ")
+    static func done(_ n: Int) -> String {
+        word(n, t(
+            "done",
+            "hecha|hechas",
+            "feita|feitas",
+            "erledigt",
+            "faite|faites",
+            "fatta|fatte",
+            "voltooid",
+            "zrobione|zrobione|zrobionych",
+            "выполнена|выполнены|выполнено",
+            "yapıldı",
+            "selesai",
+            "完了",
+            "완료"
+        ))
+    }
+
+    static func events(_ n: Int) -> String {
+        word(n, t(
+            "event|events",
+            "evento|eventos",
+            "evento|eventos",
+            "Ereignis|Ereignisse",
+            "événement|événements",
+            "evento|eventi",
+            "gebeurtenis|gebeurtenissen",
+            "wydarzenie|wydarzenia|wydarzeń",
+            "событие|события|событий",
+            "etkinlik",
+            "acara",
+            "イベント",
+            "일정"
+        ))
+    }
+
+    static var review: String {
+        t(
+            "To review",
+            "Por revisar",
+            "Para revisar",
+            "Durchsehen",
+            "À revoir",
+            "Da rivedere",
+            "Door te nemen",
+            "Do przejrzenia",
+            "Нужно просмотреть",
+            "Gözden geçirilecek",
+            "Perlu ditinjau",
+            "見直し待ち",
+            "살펴볼 것"
+        )
+    }
+
+    static var proTitle: String { "Bobbin Pro" }
+    static var unlock: String {
+        t(
+            "Tap to turn it on",
+            "Toca para activarlo",
+            "Toque para ativar",
+            "Tippen zum Aktivieren",
+            "Touche pour l'activer",
+            "Tocca per attivarlo",
+            "Tik om in te schakelen",
+            "Dotknij, aby włączyć",
+            "Нажми, чтобы включить",
+            "Açmak için dokun",
+            "Ketuk untuk mengaktifkan",
+            "タップしてオンにする",
+            "탭해서 켜기"
+        )
     }
 
     static var weekdayShort: [String] {
-        list("Mon, Tue, Wed, Thu, Fri, Sat, Sun", "lun, mar, mié, jue, vie, sáb, dom", "seg, ter, qua, qui, sex, sáb, dom",
-             "Mo, Di, Mi, Do, Fr, Sa, So", "lun, mar, mer, jeu, ven, sam, dim")
+        t(
+            "Mon, Tue, Wed, Thu, Fri, Sat, Sun",
+            "lun, mar, mié, jue, vie, sáb, dom",
+            "seg, ter, qua, qui, sex, sáb, dom",
+            "Mo, Di, Mi, Do, Fr, Sa, So",
+            "lun, mar, mer, jeu, ven, sam, dim",
+            "lun, mar, mer, gio, ven, sab, dom",
+            "ma, di, wo, do, vr, za, zo",
+            "pon, wt, śr, czw, pt, sob, niedz",
+            "пн, вт, ср, чт, пт, сб, вс",
+            "Pzt, Sal, Çar, Per, Cum, Cmt, Paz",
+            "Sen, Sel, Rab, Kam, Jum, Sab, Min",
+            "月, 火, 水, 木, 金, 土, 日",
+            "월, 화, 수, 목, 금, 토, 일"
+        ).components(separatedBy: ", ")
     }
+
     static var monthShort: [String] {
-        list("Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec",
-             "ene, feb, mar, abr, may, jun, jul, ago, sept, oct, nov, dic",
-             "jan, fev, mar, abr, mai, jun, jul, ago, set, out, nov, dez",
-             "Jan., Feb., März, Apr., Mai, Juni, Juli, Aug., Sept., Okt., Nov., Dez.",
-             "janv., févr., mars, avr., mai, juin, juil., août, sept., oct., nov., déc.")
+        t(
+            "Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec",
+            "ene, feb, mar, abr, may, jun, jul, ago, sept, oct, nov, dic",
+            "jan, fev, mar, abr, mai, jun, jul, ago, set, out, nov, dez",
+            "Jan., Feb., März, Apr., Mai, Juni, Juli, Aug., Sept., Okt., Nov., Dez.",
+            "janv., févr., mars, avr., mai, juin, juil., août, sept., oct., nov., déc.",
+            "gen, feb, mar, apr, mag, giu, lug, ago, set, ott, nov, dic",
+            "jan, feb, mrt, apr, mei, jun, jul, aug, sep, okt, nov, dec",
+            "sty, lut, mar, kwi, maj, cze, lip, sie, wrz, paź, lis, gru",
+            "янв., февр., мар., апр., мая, июн., июл., авг., сент., окт., нояб., дек.",
+            "Oca, Şub, Mar, Nis, May, Haz, Tem, Ağu, Eyl, Eki, Kas, Ara",
+            "Jan, Feb, Mar, Apr, Mei, Jun, Jul, Agu, Sep, Okt, Nov, Des",
+            "1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月",
+            "1월, 2월, 3월, 4월, 5월, 6월, 7월, 8월, 9월, 10월, 11월, 12월"
+        ).components(separatedBy: ", ")
     }
+
     static var weekdayNames: [String] {
-        list("Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday",
-             "lunes, martes, miércoles, jueves, viernes, sábado, domingo",
-             "segunda-feira, terça-feira, quarta-feira, quinta-feira, sexta-feira, sábado, domingo",
-             "Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag",
-             "lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche")
+        t(
+            "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday",
+            "lunes, martes, miércoles, jueves, viernes, sábado, domingo",
+            "segunda-feira, terça-feira, quarta-feira, quinta-feira, sexta-feira, sábado, domingo",
+            "Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag",
+            "lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche",
+            "lunedì, martedì, mercoledì, giovedì, venerdì, sabato, domenica",
+            "maandag, dinsdag, woensdag, donderdag, vrijdag, zaterdag, zondag",
+            "poniedziałek, wtorek, środa, czwartek, piątek, sobota, niedziela",
+            "понедельник, вторник, среда, четверг, пятница, суббота, воскресенье",
+            "Pazartesi, Salı, Çarşamba, Perşembe, Cuma, Cumartesi, Pazar",
+            "Senin, Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu",
+            "月曜日, 火曜日, 水曜日, 木曜日, 金曜日, 土曜日, 日曜日",
+            "월요일, 화요일, 수요일, 목요일, 금요일, 토요일, 일요일"
+        ).components(separatedBy: ", ")
     }
+
     static var monthNames: [String] {
-        list("January, February, March, April, May, June, July, August, September, October, November, December",
-             "enero, febrero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre, noviembre, diciembre",
-             "janeiro, fevereiro, março, abril, maio, junho, julho, agosto, setembro, outubro, novembro, dezembro",
-             "Januar, Februar, März, April, Mai, Juni, Juli, August, September, Oktober, November, Dezember",
-             "janvier, février, mars, avril, mai, juin, juillet, août, septembre, octobre, novembre, décembre")
+        t(
+            "January, February, March, April, May, June, July, August, September, October, November, December",
+            "enero, febrero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre, noviembre, diciembre",
+            "janeiro, fevereiro, março, abril, maio, junho, julho, agosto, setembro, outubro, novembro, dezembro",
+            "Januar, Februar, März, April, Mai, Juni, Juli, August, September, Oktober, November, Dezember",
+            "janvier, février, mars, avril, mai, juin, juillet, août, septembre, octobre, novembre, décembre",
+            "gennaio, febbraio, marzo, aprile, maggio, giugno, luglio, agosto, settembre, ottobre, novembre, dicembre",
+            "januari, februari, maart, april, mei, juni, juli, augustus, september, oktober, november, december",
+            "styczeń, luty, marzec, kwiecień, maj, czerwiec, lipiec, sierpień, wrzesień, październik, listopad, grudzień",
+            "январь, февраль, март, апрель, май, июнь, июль, август, сентябрь, октябрь, ноябрь, декабрь",
+            "Ocak, Şubat, Mart, Nisan, Mayıs, Haziran, Temmuz, Ağustos, Eylül, Ekim, Kasım, Aralık",
+            "Januari, Februari, Maret, April, Mei, Juni, Juli, Agustus, September, Oktober, November, Desember",
+            "1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月",
+            "1월, 2월, 3월, 4월, 5월, 6월, 7월, 8월, 9월, 10월, 11월, 12월"
+        ).components(separatedBy: ", ")
     }
 
     /// Monday is 0, as in the app; Calendar counts from Sunday.
@@ -80,11 +206,22 @@ enum L {
     static func monthIndex(_ day: Date) -> Int { BobbinStore.calendar.component(.month, from: day) - 1 }
     static func dayNumber(_ day: Date) -> Int { BobbinStore.calendar.component(.day, from: day) }
 
-    /// WED 23 SEP, the same shape as `S.widgetDate`.
+    /// WED 23 SEP, 9月23日(水): the same shape as `S.widgetDate`, upper case as the language writes it.
     static func date(_ day: Date) -> String {
-        let month = monthShort[monthIndex(day)].replacingOccurrences(of: ".", with: "")
-        return "\(weekdayShort[weekdayIndex(day)]) \(dayNumber(day)) \(month)".uppercased()
+        let w = weekdayShort[weekdayIndex(day)]
+        let m = monthShort[monthIndex(day)].replacingOccurrences(of: ".", with: "")
+        let n = dayNumber(day)
+        let text: String
+        switch code {
+        case "ja": text = "\(m)\(n)日(\(w))"
+        case "ko": text = "\(m) \(n)일 (\(w))"
+        default: text = "\(w) \(n) \(m)"
+        }
+        return caps(text)
     }
+
+    /// Upper case as the language writes it: Turkish dots its capital i.
+    static func caps(_ text: String) -> String { text.uppercased(with: Locale(identifier: code)) }
 }
 
 /// The method's glyphs with the coordinates of docs/pantallas.md 1.5, in a 24 point box.

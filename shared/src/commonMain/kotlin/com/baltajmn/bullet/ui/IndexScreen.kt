@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.caps
 import com.baltajmn.bullet.model.COLLECTION_TITLE_MAX
 import com.baltajmn.bullet.model.CollectionKind
 import com.baltajmn.bullet.model.IndexItem
@@ -233,7 +234,7 @@ private fun ByTheme(items: List<IndexItem.Collection>, grouped: Boolean, row: @C
     }
     groupByTheme(items).forEach { (theme, group) ->
         Text(
-            (theme ?: S.themeNone).uppercase(),
+            (theme ?: S.themeNone).caps(),
             style = Type.Eyebrow.copy(fontSize = 11.sp),
             modifier = Modifier.padding(start = 6.dp, top = 12.dp, bottom = 2.dp).semantics { heading() },
         )

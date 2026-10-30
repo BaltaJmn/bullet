@@ -42,6 +42,39 @@ class DateHintTest {
         Triple("fr", "Dîner vendredi", d(9, 25)),
         Triple("fr", "Anniversaire 14 mars", d(3, 14, 2027)),
         Triple("fr", "Payer le 1er", d(10, 1)),
+        Triple("it", "Cena venerdì", d(9, 25)),
+        Triple("it", "Compleanno 14 marzo", d(3, 14, 2027)),
+        Triple("it", "Pagare il 14", d(10, 14)),
+        Triple("nl", "Etentje vrijdag", d(9, 25)),
+        Triple("nl", "Verjaardag 14 maart", d(3, 14, 2027)),
+        Triple("pl", "Kolacja w piątek", d(9, 25)),
+        Triple("pl", "Basen w środę", d(9, 30)),
+        Triple("pl", "Urodziny 14 marca", d(3, 14, 2027)),
+        Triple("ru", "Ужин в пятницу", d(9, 25)),
+        Triple("ru", "День рождения 14 марта", d(3, 14, 2027)),
+        Triple("ru", "Заплатить 14-го", d(10, 14)),
+        Triple("tr", "Cuma akşam yemeği", d(9, 25)),
+        Triple("tr", "Cumartesi pazar", d(9, 26)),
+        Triple("tr", "Doğum günü 14 Mart", d(3, 14, 2027)),
+        Triple("id", "Makan malam hari Jumat", d(9, 25)),
+        Triple("id", "Ulang tahun 14 Maret", d(3, 14, 2027)),
+        Triple("ja", "金曜日に夕食", d(9, 25)),
+        Triple("ja", "誕生日 3月14日", d(3, 14, 2027)),
+        Triple("ja", "会議 10/2", d(10, 2)),
+        Triple("ja", "14日に払う", d(10, 14)),
+        Triple("ko", "금요일 저녁", d(9, 25)),
+        Triple("ko", "생일 3월 14일", d(3, 14, 2027)),
+        Triple("ko", "회의 10/2", d(10, 2)),
+        Triple("it", "Chiamare Ana domani", d(9, 24)),
+        Triple("nl", "Overmorgen tandarts", d(9, 25)),
+        Triple("pl", "Basen jutro", d(9, 24)),
+        Triple("ru", "Позвонить завтра", d(9, 24)),
+        Triple("ru", "послезавтра врач", d(9, 25)),
+        Triple("tr", "Yarın bankayı ara", d(9, 24)),
+        Triple("id", "Telepon Ana besok", d(9, 24)),
+        Triple("ja", "明日電話する", d(9, 24)),
+        Triple("ja", "明後日 歯医者", d(9, 25)),
+        Triple("ko", "내일 전화하기", d(9, 24)),
     )
 
     @Test
@@ -62,5 +95,7 @@ class DateHintTest {
         assertNull(dateHint("A las 14:30 el 14:30", "es", today))
         assertNull(dateHint("31 de febrero", "es", today))
         assertNull(dateHint("Buy milk", "en", today))
+        // "завтра" inside "завтрак" (breakfast) is no tomorrow: Cyrillic letters are word letters too.
+        assertNull(dateHint("Завтрак с Аней", "ru", today))
     }
 }

@@ -1,0 +1,9 @@
+/* docs/textos.md 21: la clave es el literal en ingles de BobbinWidget.swift. */
+"Today" = "今日";
+"Today's open, done and events, without any text" = "今日の未完了、完了、イベント。テキストは表示しません";
+"The month" = "月";
+"One dot for each day with entries" = "項目がある日に点がひとつ";
+"Open tasks" = "未完了のタスク";
+"Today's open tasks on the lock screen" = "今日の未完了のタスクをロック画面に表示";
+"Write in Bobbin" = "Bobbinに書く";
+"Opens Today with the keyboard up" = "キーボードを出した状態で「今日」を開きます";

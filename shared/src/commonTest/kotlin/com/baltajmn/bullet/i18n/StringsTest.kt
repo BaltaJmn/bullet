@@ -12,10 +12,10 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 
-/** Test 24 (docs/tecnico.md 10): the examples of docs/textos.md, in the five languages. */
+/** Test 24 (docs/tecnico.md 10): the examples of docs/textos.md, in the thirteen languages. */
 class StringsTest {
     private val saved = S.lang
-    private val LANGS = listOf("en", "es", "pt", "de", "fr")
+    private val LANGS = SUPPORTED
     private val sep23 = LocalDate(2026, 9, 23) // Wednesday
     private val jan1 = LocalDate(2027, 1, 1)
     private val sep2026 = YearMonth(2026, Month.SEPTEMBER)
@@ -36,8 +36,76 @@ class StringsTest {
     fun fallsBackToEnglish() {
         assertEquals("es", normalizeLanguage("es-ES"))
         assertEquals("pt", normalizeLanguage("pt_BR"))
-        assertEquals("en", normalizeLanguage("it"))
+        assertEquals("it", normalizeLanguage("it-IT"))
+        assertEquals("id", normalizeLanguage("in"))
+        assertEquals("ja", normalizeLanguage("ja-JP"))
+        assertEquals("en", normalizeLanguage("zh-Hant"))
         assertEquals("en", normalizeLanguage(""))
+    }
+
+    /** Dates in the eight languages that came after the first five: [langs] and [expected] go in step. */
+    private fun eachNew(check: () -> String, vararg expected: String) {
+        listOf("it", "nl", "pl", "ru", "tr", "id", "ja", "ko").zip(expected).forEach { (code, want) ->
+            S.lang = code
+            assertEquals(want, check(), code)
+        }
+    }
+
+    @Test
+    fun datesInTheNewLanguages() {
+        eachNew(
+            { S.dayTitle(sep23) },
+            "Mercoledì 23", "Woensdag 23", "Środa, 23", "Среда, 23", "23 Çarşamba", "Rabu, 23", "23日 水曜日", "23일 수요일",
+        )
+        eachNew(
+            { S.shortDate(sep23) },
+            "23 settembre", "23 september", "23 września", "23 сентября", "23 Eylül", "23 September", "9月23日", "9월 23일",
+        )
+        eachNew(
+            { S.longDateWithYear(LocalDate(2026, 9, 22)) },
+            "Martedì 22 settembre 2026", "Dinsdag 22 september 2026", "Wtorek, 22 września 2026", "Вторник, 22 сентября 2026",
+            "22 Eylül 2026 Salı", "Selasa, 22 September 2026", "2026年9月22日 火曜日", "2026년 9월 22일 화요일",
+        )
+        eachNew(
+            { S.monthYear(sep2026) },
+            "settembre 2026", "september 2026", "wrzesień 2026", "сентябрь 2026", "Eylül 2026", "September 2026", "2026年9月", "2026년 9월",
+        )
+        eachNew(
+            { S.monthTitle(sep2026) },
+            "Settembre 2026", "September 2026", "Wrzesień 2026", "Сентябрь 2026", "Eylül 2026", "September 2026", "2026年9月", "2026년 9월",
+        )
+        eachNew(
+            { S.abbrDateWithYear(LocalDate(2027, 10, 14)) },
+            "14 ott 2027", "14 okt 2027", "14 paź 2027", "14 окт. 2027", "14 Eki 2027", "14 Okt 2027", "2027年10月14日", "2027년 10월 14일",
+        )
+        eachNew(
+            { S.widgetDate(sep23) },
+            "MER 23 SET", "WO 23 SEP", "ŚR 23 WRZ", "СР 23 СЕНТ", "ÇAR 23 EYL", "RAB 23 SEP", "9月23日(水)", "9월 23일 (수)",
+        )
+    }
+
+    @Test
+    fun polishAndRussianHaveThreePluralForms() {
+        S.lang = "ru"
+        val ru = listOf(1, 2, 5, 11, 21, 22, 25).map { S.taskCount(it) }
+        S.lang = "pl"
+        val pl = listOf(1, 2, 5, 12, 21, 22, 25).map { S.taskCount(it) }
+        // One form for 1 (and 21 in Russian), another for 2 to 4, a third for the rest.
+        assertEquals(ru[0].substringAfter(" "), ru[4].substringAfter(" "))
+        assertEquals(ru[1].substringAfter(" "), ru[5].substringAfter(" "))
+        assertEquals(ru[2].substringAfter(" "), ru[3].substringAfter(" "))
+        assertTrue(setOf(ru[0], ru[1], ru[2]).map { it.substringAfter(" ") }.toSet().size == 3)
+        assertEquals(pl[2].substringAfter(" "), pl[4].substringAfter(" "))
+        assertEquals(pl[1].substringAfter(" "), pl[5].substringAfter(" "))
+        assertEquals(pl[2].substringAfter(" "), pl[3].substringAfter(" "))
+    }
+
+    @Test
+    fun turkishCapitalIHasItsDot() {
+        S.lang = "tr"
+        assertEquals("İKİ", S.caps("iki"))
+        S.lang = "en"
+        assertEquals("TWO", S.caps("two"))
     }
 
     @Test

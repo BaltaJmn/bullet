@@ -1,6 +1,7 @@
 package com.baltajmn.bullet.book
 
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.caps
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.CollectionKind
 import com.baltajmn.bullet.model.Entry
@@ -170,7 +171,7 @@ private class Pager(private val measure: (String, Float) -> Float) {
 
     fun label(text: String) {
         room(2)
-        page += Mark.Text(MARGIN, y, text.uppercase(), LABEL_SIZE, BOOK_MUTED)
+        page += Mark.Text(MARGIN, y, text.caps(), LABEL_SIZE, BOOK_MUTED)
         y += BOOK_UNIT
     }
 

@@ -2,6 +2,7 @@ package com.baltajmn.bullet
 
 import com.baltajmn.bullet.i18n.QUESTION_COUNT
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.SUPPORTED
 import com.baltajmn.bullet.model.nextQuestion
 import com.baltajmn.bullet.model.questionsAfter
 import kotlin.random.Random
@@ -33,7 +34,7 @@ class QuestionsTest {
 
     @Test
     fun everyQuestionExistsInTheFiveLanguages() {
-        for (lang in listOf("en", "es", "pt", "de", "fr")) {
+        for (lang in SUPPORTED) {
             S.lang = lang
             assertTrue((0 until QUESTION_COUNT).all { S.question(it).isNotBlank() }, lang)
         }

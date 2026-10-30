@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">Bugünün açık görevleri, yapılanlar ve etkinlikler, hiç metin olmadan</string>
+    <string name="widget_month_description">Kaydı olan her gün için bir nokta</string>
+    <string name="widget_preview_date">ÇAR 23 EYL</string>
+    <string name="widget_preview_open">açık</string>
+    <string name="widget_preview_done">yapıldı</string>
+    <string name="widget_preview_events">etkinlik</string>
+    <string name="widget_preview_month">EYLÜL</string>
+    <string name="tile_label">Bobbin\'e not al</string>
+    <string name="capture_widget_label">Bobbin: Yaz</string>
+    <string name="widget_capture_write">Yaz</string>
+    <string name="widget_capture_description">Bugüne bir satır yaz; ana ekranda günlüğünden tek bir sözcük görünmez</string>
+</resources>

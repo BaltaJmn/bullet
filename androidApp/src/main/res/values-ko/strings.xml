@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">오늘의 미완료, 완료, 일정을 글 없이 보여 줘요</string>
+    <string name="widget_month_description">항목이 있는 날마다 점 하나</string>
+    <string name="widget_preview_date">9월 23일 (수)</string>
+    <string name="widget_preview_open">미완료</string>
+    <string name="widget_preview_done">완료</string>
+    <string name="widget_preview_events">일정</string>
+    <string name="widget_preview_month">9월</string>
+    <string name="tile_label">Bobbin에 적기</string>
+    <string name="capture_widget_label">Bobbin: 쓰기</string>
+    <string name="widget_capture_write">쓰기</string>
+    <string name="widget_capture_description">오늘 페이지에 한 줄을 써요. 홈 화면에는 다이어리의 글이 한 글자도 보이지 않아요</string>
+</resources>

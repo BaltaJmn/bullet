@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">Открытые и выполненные задачи и события на сегодня, без текста</string>
+    <string name="widget_month_description">Одна точка на каждый день с записями</string>
+    <string name="widget_preview_date">СР 23 СЕНТ</string>
+    <string name="widget_preview_open">открыты</string>
+    <string name="widget_preview_done">выполнены</string>
+    <string name="widget_preview_events">события</string>
+    <string name="widget_preview_month">СЕНТЯБРЬ</string>
+    <string name="tile_label">Записать в Bobbin</string>
+    <string name="capture_widget_label">Bobbin: Записать</string>
+    <string name="widget_capture_write">Записать</string>
+    <string name="widget_capture_description">Запиши строку на сегодня, не показывая ни слова из дневника на главном экране</string>
+</resources>

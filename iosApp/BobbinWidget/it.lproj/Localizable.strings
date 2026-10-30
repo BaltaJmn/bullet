@@ -1,0 +1,9 @@
+/* docs/textos.md 21: la clave es el literal en ingles de BobbinWidget.swift. */
+"Today" = "Oggi";
+"Today's open, done and events, without any text" = "Aperte, fatte ed eventi di oggi, senza alcun testo";
+"The month" = "Il mese";
+"One dot for each day with entries" = "Un punto per ogni giorno con voci";
+"Open tasks" = "Attività aperte";
+"Today's open tasks on the lock screen" = "Le attività aperte di oggi sulla schermata di blocco";
+"Write in Bobbin" = "Scrivi in Bobbin";
+"Opens Today with the keyboard up" = "Apre Oggi con la tastiera già su";

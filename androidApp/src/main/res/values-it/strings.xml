@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">Aperte, fatte ed eventi di oggi, senza alcun testo</string>
+    <string name="widget_month_description">Un punto per ogni giorno con voci</string>
+    <string name="widget_preview_date">MER 23 SET</string>
+    <string name="widget_preview_open">aperte</string>
+    <string name="widget_preview_done">fatte</string>
+    <string name="widget_preview_events">eventi</string>
+    <string name="widget_preview_month">SETTEMBRE</string>
+    <string name="tile_label">Annota in Bobbin</string>
+    <string name="capture_widget_label">Bobbin: Scrivi</string>
+    <string name="widget_capture_write">Scrivi</string>
+    <string name="widget_capture_description">Scrivi una riga per oggi, senza una sola parola del diario nella schermata Home</string>
+</resources>

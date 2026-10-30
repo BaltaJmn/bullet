@@ -24,7 +24,7 @@ se reescribe. Los repos hermanos se leen y **no se tocan nunca** desde aquí.
 | `SPEC.md` | El porqué de cada decisión de producto y el método traducido regla a regla. Arbitra cuando una issue y el código no coinciden |
 | `docs/tecnico.md` | El contrato: identificadores, versiones, árbol de ficheros, formatos, algoritmos, puentes de plataforma, tests numerados (10) y qué secciones gobiernan cada issue (11) |
 | `docs/pantallas.md` | La interfaz: cada pantalla con su estado vacío, los cuatro gestos, navegación, widgets e icono |
-| `docs/textos.md` | Todos los textos en los cinco idiomas y el glosario fijo del método |
+| `docs/textos.md` | Todos los textos en los trece idiomas y el glosario fijo del método |
 
 Se trabaja por issues de GitHub (`gh issue list -R BaltaJmn/bullet`), en el orden de `SPEC.md` 11.
 Cada issue enlaza sus secciones. Lo marcado **[autor]** en una issue lo hace el humano, nunca el código.
@@ -77,8 +77,9 @@ día que se abre la siguiente sesión.
   bloqueo. Cambiar qué es Pro toca en el mismo commit `SPEC.md` 7, los textos `pro*`, las dos fichas
   y `store/revenuecat.md`. El estado de compra nunca bloquea contenido: se guarda el último derecho
   conocido.
-- `Strings.kt` obliga a los cinco idiomas (en, es, pt, de, fr) por firma de función, y se copia de
-  `docs/textos.md`. Los símbolos del método no se traducen. Los textos **no** salen de Compose
+- `Strings.kt` obliga a los trece idiomas (en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko) por
+  firma de función. Los cinco primeros se copian de `docs/textos.md`; los ocho de octubre de 2026
+  viven solo en `Strings.kt`, escritos con el glosario y las reglas de `docs/textos.md`. Los símbolos del método no se traducen. Los textos **no** salen de Compose
   Resources: parte se pinta fuera de un `@Composable` (receptor, Glance, `Canvas`, notificación).
 - **El `versionCode` no se reutiliza nunca**, ni entre canales de Play.
 - La descripción larga de Play **conserva los saltos de línea tal cual**: cada párrafo de

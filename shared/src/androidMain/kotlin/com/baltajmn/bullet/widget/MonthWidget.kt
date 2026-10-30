@@ -43,6 +43,7 @@ import com.baltajmn.bullet.data.shownMask
 import com.baltajmn.bullet.data.widgetToday
 import com.baltajmn.bullet.data.widgetView
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.caps
 import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.shared.R
@@ -92,7 +93,7 @@ private fun Month(state: WidgetState?, today: LocalDate) {
     ) {
         Row(GlanceModifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                S.widgetMonthName(month).uppercase(),
+                S.widgetMonthName(month).caps(),
                 maxLines = 1,
                 style = TextStyle(color = muted, fontSize = 12.sp, fontWeight = FontWeight.Medium),
             )

@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">Tugas terbuka, selesai, dan acara hari ini, tanpa teks apa pun</string>
+    <string name="widget_month_description">Satu titik untuk setiap hari yang punya entri</string>
+    <string name="widget_preview_date">RAB 23 SEP</string>
+    <string name="widget_preview_open">terbuka</string>
+    <string name="widget_preview_done">selesai</string>
+    <string name="widget_preview_events">acara</string>
+    <string name="widget_preview_month">SEPTEMBER</string>
+    <string name="tile_label">Catat di Bobbin</string>
+    <string name="capture_widget_label">Bobbin: Tulis</string>
+    <string name="widget_capture_write">Tulis</string>
+    <string name="widget_capture_description">Tulis satu baris untuk hari ini, tanpa satu kata pun dari jurnal di layar utama</string>
+</resources>
