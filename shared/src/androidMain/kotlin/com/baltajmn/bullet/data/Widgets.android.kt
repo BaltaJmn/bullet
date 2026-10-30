@@ -9,6 +9,7 @@ import androidx.glance.appwidget.updateAll
 import com.baltajmn.bullet.model.DAY_START_DEFAULT
 import com.baltajmn.bullet.model.logicalDate
 import com.baltajmn.bullet.model.nextDayStart
+import com.baltajmn.bullet.widget.CaptureWidget
 import com.baltajmn.bullet.widget.MonthWidget
 import com.baltajmn.bullet.widget.TodayWidget
 import java.io.File
@@ -45,6 +46,8 @@ actual fun refreshWidgets() {
     CoroutineScope(Dispatchers.Default).launch {
         TodayWidget().updateAll(context)
         MonthWidget().updateAll(context)
+        // No journal in it, but its colours and label follow the theme and the language.
+        CaptureWidget().updateAll(context)
     }
     // updatePeriodMillis is 0: the one repaint nobody asks for is the change of day, and this alarm
     // does not wake the phone for it.

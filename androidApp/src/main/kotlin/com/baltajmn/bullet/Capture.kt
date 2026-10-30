@@ -75,7 +75,7 @@ class CaptureActivity : ComponentActivity() {
             return
         }
         val shared = if (intent?.action == Intent.ACTION_SEND) {
-            intent.getStringExtra(Intent.EXTRA_TEXT)?.takeIf { it.isNotBlank() } ?: intent.getStringExtra(Intent.EXTRA_SUBJECT).orEmpty()
+            intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()?.takeIf { it.isNotBlank() } ?: intent.getStringExtra(Intent.EXTRA_SUBJECT).orEmpty()
         } else {
             ""
         }
