@@ -176,3 +176,20 @@ python3 tools/play-listing/subir.py                        # comprueba los topes
 gh workflow run listings.yml --ref main -f accion=estado   # lee en qué canal está cada versión
 gh workflow run listings.yml --ref main -f accion=subir    # escribe la ficha en Play
 ```
+
+## Ficha y capturas de tienda
+
+Un cambio contundente (una función nueva que se ve, una pantalla rehecha, algo que deje viejas las
+capturas o la descripción) rehace en la misma tarea la ficha y las capturas, para que salgan con esa
+versión. No hace falta que el usuario lo pida: se le recuerda y se hace. Un retoque pequeño no lo
+merece.
+
+- Crudas nuevas en `store/screenshots/raw/`: Android del emulador `Pixel_8_capturas` con
+  `tools/store/crudas.py` e iPhone del simulador "Capturas-Bobbin" (iPhone 17 Pro Max, iOS 26.5), las
+  dos con el diario de `tools/demo/generar.py` (`store/capturas.md`).
+- Capturas con la plantilla de `../gk/contenido/plantilla/tienda/` (su README): el frame en `apps.js`
+  (`bobbin`), los demás idiomas en `textos.js` con sonnet, `./todas.sh bobbin` y revisión de un agente
+  sonnet aparte con el listón en 9.
+- Ficha: los textos de tienda, con sonnet, nunca con haiku.
+- Commit antes de que salga la versión, para que la lleve. En App Store las capturas solo cambian con
+  una versión en preparación.

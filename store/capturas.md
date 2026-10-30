@@ -1,8 +1,7 @@
 # Capturas y gráficos de las fichas
 
 Seis escenas en los trece idiomas de la ficha (en-US, es-ES, pt-BR, de-DE, fr-FR, it-IT, nl-NL,
-pl-PL, ru-RU, tr-TR, id, ja-JP, ko-KR). Se sacan con un
-diario de demostración generado, nunca con uno real: un diario de verdad en una ficha pública es justo
+pl-PL, ru-RU, tr-TR, id, ja-JP, ko-KR). Se sacan con un diario de demostración generado, nunca con uno real: un diario de verdad en una ficha pública es justo
 lo que esta app promete no hacer. Todo lo que se ve existe en la app; la portada y el papel Pro de la
 escena 06 son la vista previa de Ajustes, no un montaje aparte.
 
@@ -10,14 +9,21 @@ Herramientas (`docs/tecnico.md` 3):
 
 - `tools/demo/generar.py`: escribe el diario de demostración.
 - `tools/store/crudas.py`: recorre las escenas en el emulador y deja las capturas crudas.
-- `tools/store/capturas.py`: el marco de MoodTraker y line, con las seis escenas de aquí.
+- `../gk/contenido/plantilla/tienda/`: la plantilla de capturas de la familia (su README). Monta las de
+  App Store y Play con el titular, el fondo y el recorte de cada escena; el frame `bobbin` de `apps.js`
+  y los textos de `textos.js`.
 - `tools/store/cabecera.py`: gráfico de cabecera de Play e icono de 512.
 
 ```bash
 python3 tools/demo/generar.py --idioma es-ES
-python3 tools/store/crudas.py es-ES
-python3 tools/store/capturas.py tools/demo/salida/es-ES/crudas es-ES play
+python3 tools/store/crudas.py es-ES      # y copiarlas a store/screenshots/raw/android/es-ES/
+../gk/contenido/plantilla/tienda/todas.sh bobbin
 ```
+
+Las crudas viven en `store/screenshots/raw/`: `android/<idioma>/` del emulador para Play e
+`iphone/<idioma>/` del simulador "Capturas-Bobbin" (iPhone 17 Pro Max, iOS 26.5) para la App Store,
+porque Apple no admite un teclado ni una pantalla de inicio de Android. `todas.sh` deja las finales en
+`store/screenshots/play/` e `iphone/`.
 
 ---
 
@@ -25,15 +31,12 @@ python3 tools/store/capturas.py tools/demo/salida/es-ES/crudas es-ES play
 
 | Destino | Dispositivo | Captura cruda | Imagen final |
 |---|---|---|---|
-| `play` | Emulador Pixel 8, API 35 | 1080x2400 | 1200x2100 PNG |
-| `iphone` | Simulador iPhone 17 Pro Max | 1320x2868 | 1320x2868 PNG (6,9") |
-| `ipad` | Simulador iPad Pro 13" | 2064x2752 | 2064x2752 PNG (13") |
+| `play` | Emulador `Pixel_8_capturas`, API 35 | 1080x2400 | 1080x2160 PNG |
+| `iphone` | Simulador "Capturas-Bobbin", iPhone 17 Pro Max | 1320x2868 | 1320x2868 PNG (6,9") |
 
-Play rechaza una captura cuyo lado largo pase del doble del corto, y por eso la de Play va en un marco
-de 1200x2100. Al recortar la cruda se quitan 90 px arriba (barra de estado) y 38 abajo (barra de
-gestos): las etiquetas de las pestañas acaban en la fila 2361. Las de Apple conservan el tamaño del
-dispositivo; el marco es el mismo, escalado. `crudas.py` solo sabe de Android: las de iOS se sacan a
-mano con las mismas escenas y el mismo diario (sección 5).
+Play rechaza una captura cuyo lado largo pase del doble del corto: 1080x2160 es el máximo. La plantilla
+quita la barra de estado (90 px en Android, 150 en iPhone) y recorta cada escena por su propio fin, con
+ajustes por idioma donde una traducción alarga la pantalla o Ajustes queda en otro punto del scroll.
 
 ## 2. Las seis escenas
 
@@ -55,9 +58,10 @@ sirve igual en todos los idiomas. Lo que no hace solo:
 
 - **Los widgets se colocan una vez a mano**: los dos de Bobbin, solos en la segunda página del
   lanzador. La escena 05 va a esa página y la fotografía.
-- **Pro para la escena 05**: el script escribe `pro` en las preferencias de la build de depuración con
-  `run-as`, abre la app para que reescriba `widget.json` y lo quita al terminar. La escena 06 se saca
-  antes, siempre sin Pro. Con la clave de RevenueCat a `null`, nada corrige esa caché.
+- **Pro para la escena 05**: con la clave de RevenueCat en la build, `Billing.refresh()` devuelve `pro`
+  a `false` en segundos y el widget del mes sale bloqueado. Se pone `isPro: true` en `widget.json` con
+  la app parada y se fuerza el redibujado del widget (en Android, cambiando la densidad y volviendo).
+  La escena 06 se saca siempre sin Pro.
 - **La guía y la pista de Hoy**: el script escribe `guideSeen` y `hintSeen` en las preferencias, como
   `pro`, porque el diario de demostración no es un primer arranque.
 - **en-US se saca con la app en en-GB**: el Gboard del emulador no levanta el teclado con el subtipo
@@ -73,20 +77,10 @@ sirve igual en todos los idiomas. Lo que no hace solo:
 
 ## 3. Titulares
 
-Dos líneas por escena, con las palabras del glosario de `docs/textos.md`. Es lo único que se lee en la
-tira de la ficha.
-
-| Escena | en-US | es-ES | pt-BR | de-DE | fr-FR |
-|---|---|---|---|---|---|
-| 01 | Rapid logging: / one line, one bullet | Rapid logging: / una línea, un bullet | Rapid logging: / uma linha, um bullet | Rapid logging: / eine Zeile, ein Bullet | Rapid logging : / une ligne, un bullet |
-| 02 | The month on one page: / calendar and tasks | El mes en una página: / calendario y tareas | O mês em uma página: / calendário e tarefas | Der Monat auf einer Seite: / Kalender und Aufgaben | Le mois sur une page : / calendrier et tâches |
-| 03 | You migrate by hand, / one task at a time | Migras a mano, / tarea por tarea | Você migra à mão, / tarefa por tarefa | Du migrierst von Hand, / Aufgabe für Aufgabe | Tu migres à la main, / tâche par tâche |
-| 04 | An Index, lists / and trackers | Índice, listas / y seguimientos | Índice, listas / e trackers | Index, Listen / und Tracker | Index, listes / et suivis |
-| 05 | On your home screen, / never your words | En tu pantalla de inicio, / sin tus palabras | Na sua tela inicial, / sem as suas palavras | Auf dem Startbildschirm, / ohne deine Worte | Sur l'écran d'accueil, / jamais tes mots |
-| 06 | Your notebook: / cover and paper | Tu cuaderno: / portada y papel | Seu caderno: / capa e papel | Dein Notizbuch: / Umschlag und Papier | Ton carnet : / couverture et papier |
-
-Fondos, uno por escena, los seis primeros pasteles de la paleta aclarados como en MoodTraker:
-`#F9ECEF`, `#FBF0E6`, `#F8F4E2`, `#E9F1E5`, `#E4F0EC`, `#E6EDF7`.
+Viven en la plantilla: es y en en el frame `bobbin` de `apps.js`, los demás idiomas en `textos.js`
+(con sonnet, nunca haiku), con las palabras del glosario de `docs/textos.md` y de `Strings.kt`. Seis
+palabras como mucho: es lo único que se lee en la tira de la ficha. Fondos a color entero: el verde de
+la app y los colores de las portadas.
 
 ## 4. El diario de demostración
 
