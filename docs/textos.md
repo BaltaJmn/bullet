@@ -994,3 +994,65 @@ y lo vivido; ninguna presupone algo triste, habla de salud mental ni pide un nú
   `money`, `health`, `food`, `music`, `idea`, `people`) y es la descripción de cada icono para el lector
   de pantalla.
 - `siblingFrom` es el nombre de la app y `dayMonthYear`; como `Eyebrow`, sale en mayúsculas.
+
+## 25. v1.3
+
+Las pantallas de estas claves están en `docs/pantallas.md` 23.11 a 23.16. Los textos de la página del
+enlace (#76) no están aquí: viven en `store/privacy/l/app.js`, en los cinco idiomas, a partir del
+español de `docs/pantallas.md` 23.12. El control de iOS (#79) lleva su texto literal en Swift y las
+traducciones en `<lang>.lproj/Localizable.strings` del objetivo del widget, como `AppIntents`.
+
+| Clave | Parámetros | en | es | pt | de | fr |
+|---|---|---|---|---|---|---|
+| `sendList` | | Send the list | Enviar la lista | Enviar a lista | Liste senden | Envoyer la liste |
+| `sendTitle` | título | Send Lisbon trip | Enviar Viaje a Lisboa | Enviar Viagem a Lisboa | Lissabon-Reise senden | Envoyer Voyage à Lisbonne |
+| `sendAsLink`* | | Send as a link | Enviar como enlace | Enviar como link | Als Link senden | Envoyer comme lien |
+| `sendAsLinkSub` | | Opens in any browser. Anyone with the link can read the list. | Se abre en cualquier navegador. Quien tenga el enlace puede leer la lista. | Abre em qualquer navegador. Quem tiver o link pode ler a lista. | Öffnet sich in jedem Browser. Wer den Link hat, kann die Liste lesen. | S'ouvre dans n'importe quel navigateur. Qui a le lien peut lire la liste. |
+| `sendAsFile`* | | Send as a file | Enviar como archivo | Enviar como arquivo | Als Datei senden | Envoyer comme fichier |
+| `sendAsFileSub` | | For AirDrop, Quick Share or email. With Bobbin, it opens and merges with theirs. | Para AirDrop, Quick Share o correo. Con Bobbin se abre y se junta con la suya. | Para AirDrop, Quick Share ou e-mail. Com o Bobbin, abre e se junta com a da outra pessoa. | Für AirDrop, Quick Share oder E-Mail. Mit Bobbin öffnet sie sich und wird mit der anderen zusammengeführt. | Pour AirDrop, Quick Share ou e-mail. Avec Bobbin, elle s'ouvre et se fusionne avec l'autre. |
+| `sendBlank` | | Blank | En blanco | Em branco | Leer | Vierge |
+| `sendBlankSub` | | Just the text, everything open, as a new list. | Solo los textos, todo abierto, como una lista nueva. | Só os textos, tudo aberto, como uma lista nova. | Nur die Texte, alles offen, als neue Liste. | Seulement les textes, tout ouvert, comme une nouvelle liste. |
+| `sendTrackerBlank` | | A tracker is sent with its rows and without marks. | Un seguimiento se envía con sus filas y sin marcas. | Um tracker é enviado com suas linhas e sem marcas. | Ein Tracker wird mit seinen Zeilen und ohne Markierungen gesendet. | Un suivi s'envoie avec ses lignes et sans marques. |
+| `linkTooLong` | | It's too long for a link. Send it as a file. | Es demasiado larga para un enlace. Envíala como archivo. | É longa demais para um link. Envie como arquivo. | Sie ist zu lang für einen Link. Sende sie als Datei. | Elle est trop longue pour un lien. Envoie-la comme fichier. |
+| `receivedEyebrow` | | List received | Lista recibida | Lista recebida | Empfangene Liste | Liste reçue |
+| `receivedCount` | n | 12 entries / 1 entry | 12 entradas / 1 entrada | 12 entradas / 1 entrada | 12 Einträge / 1 Eintrag | 12 entrées / 1 entrée |
+| `receivedRows` | n | 3 rows / 1 row | 3 filas / 1 fila | 3 linhas / 1 linha | 3 Zeilen / 1 Zeile | 3 lignes / 1 ligne |
+| `receivedMore` | n | and 9 more | y 9 más | e mais 9 | und 9 weitere | et 9 de plus |
+| `addToIndex`* | | Add to Index | Añadir al Índice | Adicionar ao Índice | Zum Index hinzufügen | Ajouter à l'Index |
+| `alreadyHave` | título | You already have Lisbon trip | Ya tienes Viaje a Lisboa | Você já tem Viagem a Lisboa | Du hast Lissabon-Reise schon | Tu as déjà Voyage à Lisbonne |
+| `receivedSummary` | nuevas, cambian | It brings 2 new entries and 1 newer than yours. Nothing gets deleted. | Trae 2 entradas nuevas y 1 más reciente que las tuyas. No se borra nada. | Traz 2 entradas novas e 1 mais recente que as suas. Nada é apagado. | Sie bringt 2 neue Einträge und 1, der neuer ist als deiner. Es wird nichts gelöscht. | Elle apporte 2 nouvelles entrées et 1 plus récente que les tiennes. Rien n'est supprimé. |
+| `mergeList`* | | Merge | Juntar | Juntar | Zusammenführen | Fusionner |
+| `mergeNothing` | | You already have this list exactly as it is. | Ya tienes esta lista igual. | Você já tem esta lista igual. | Du hast diese Liste schon genau so. | Tu as déjà cette liste à l'identique. |
+| `listAdded` | | List added to the Index | Lista añadida al Índice | Lista adicionada ao Índice | Liste zum Index hinzugefügt | Liste ajoutée à l'Index |
+| `openList`* | | Open | Abrir | Abrir | Öffnen | Ouvrir |
+| `listMerged` | | Lists merged | Listas juntadas | Listas juntadas | Listen zusammengeführt | Listes fusionnées |
+| `listDamaged` | | This list is incomplete or damaged. Your journal wasn't touched. | Esta lista está incompleta o dañada. Tu diario no se ha tocado. | Esta lista está incompleta ou danificada. Seu diário não foi alterado. | Diese Liste ist unvollständig oder beschädigt. Dein Journal wurde nicht verändert. | Cette liste est incomplète ou endommagée. Ton journal n'a pas été touché. |
+| `listEmpty` | | This list has nothing in it. | Esta lista no tiene nada. | Esta lista não tem nada. | Diese Liste ist leer. | Cette liste ne contient rien. |
+| `listTooNew` | | This list comes from a newer version of Bobbin. Update the app to open it. | Esta lista es de una versión más nueva de Bobbin. Actualiza la app para abrirla. | Esta lista é de uma versão mais nova do Bobbin. Atualize o app para abri-la. | Diese Liste stammt aus einer neueren Version von Bobbin. Aktualisiere die App, um sie zu öffnen. | Cette liste vient d'une version plus récente de Bobbin. Mets l'app à jour pour l'ouvrir. |
+| `shareTracker` | | Share this tracker | Compartir este seguimiento | Compartilhar este tracker | Diesen Tracker teilen | Partager ce suivi |
+| `formatPost`* | | Post | Publicación | Post | Beitrag | Publication |
+| `formatStory`* | | Story | Historia | Story | Story | Story |
+| `viewDay`* | | Day | Día | Dia | Tag | Jour |
+| `viewWeek`* | | Week | Semana | Semana | Woche | Semaine |
+| `weekTitle` | fecha | Week of 26 October | Semana del 26 de octubre | Semana de 26 de outubro | Woche vom 26. Oktober | Semaine du 26 octobre |
+| `weekRange` | desde, hasta | 26 October to 1 November | Del 26 de octubre al 1 de noviembre | De 26 de outubro a 1º de novembro | 26. Oktober bis 1. November | Du 26 octobre au 1er novembre |
+| `weekToday` | | Today | Hoy | Hoje | Heute | Aujourd'hui |
+| `backToThisWeek`* | | Back to this week | Volver a esta semana | Voltar a esta semana | Zurück zu dieser Woche | Retour à cette semaine |
+| `inCalendar` | | In the calendar | En el calendario | No calendário | Im Kalender | Dans le calendrier |
+| `inFuture` | | In Future | En Futuro | No Futuro | In Zukunft | Dans Futur |
+| `captureWidgetLabel` | | Write | Escribir | Escrever | Schreiben | Écrire |
+| `proWriteOutside` | | Write without opening the app | Escribir sin abrir la app | Escrever sem abrir o app | Schreiben, ohne die App zu öffnen | Écrire sans ouvrir l'app |
+| `keysTitle` | | With a keyboard | Con teclado | Com teclado | Mit Tastatur | Avec un clavier |
+| `keyNew` | | Write in today | Escribir en hoy | Escrever no dia de hoje | Für heute schreiben | Écrire pour aujourd'hui |
+| `keySearch` | | Search | Buscar | Buscar | Suchen | Rechercher |
+| `keyTabs` | | Go to Today, Month, Future or Index | Ir a Hoy, Mes, Futuro o Índice | Ir para Hoje, Mês, Futuro ou Índice | Zu Heute, Monat, Zukunft oder Index | Aller à Aujourd'hui, Mois, Futur ou Index |
+| `keyPrevNext` | | Previous and next | Anterior y siguiente | Anterior e próximo | Zurück und weiter | Précédent et suivant |
+| `keyBack` | | Back | Atrás | Voltar | Zurück | Retour |
+
+- `receivedEyebrow` y `weekToday`, como `Eyebrow`, salen en mayúsculas.
+- `receivedSummary` sigue las formas de `importSummary` (sección 15): con 0 nuevas dice solo las que
+  cambian, y con 0 en las dos no se usa, porque sale `mergeNothing`.
+- El texto del control de iOS: `Write in Bobbin`, `Escribir en Bobbin`, `Escrever no Bobbin`,
+  `In Bobbin schreiben`, `Écrire dans Bobbin`. La etiqueta del widget en el selector de Android,
+  `capture_widget_label` de `strings.xml`, es `captureWidgetLabel` con `Bobbin` delante: `Bobbin: Write`,
+  `Bobbin: Escribir`, y así en cada idioma.

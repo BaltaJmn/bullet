@@ -24,7 +24,7 @@ escrito aparte y aquí solo se resume lo imprescindible para entender cada decis
 | `docs/textos.md` | Todos los textos en los cinco idiomas y el glosario fijo del método |
 | `store/` | La tienda: fichas en cinco idiomas, novedades, capturas, formularios, política de privacidad, compras, CI y el checklist de lanzamiento |
 | `CLAUDE.md` | Las reglas de trabajo que cargan solas las sesiones de Claude Code |
-| Issues del repo | `gh issue list -R BaltaJmn/bullet`: #1 a #72, una por pieza, en v1.0, v1.1 y v1.2 (§3, §11) |
+| Issues del repo | `gh issue list -R BaltaJmn/bullet`: #1 a #81, una por pieza, de v1.0 a v1.4 (§3, §11) |
 
 Todo lo que dicen estos documentos está decidido. **Cuando una issue y el código no coinciden, manda
 este SPEC**; si un detalle de implementación de aquí no coincide con `docs/tecnico.md`, manda
@@ -36,10 +36,11 @@ este SPEC**; si un detalle de implementación de aquí no coincide con `docs/tec
 
 | App | Modelo | Lo que hace bien | Lo que le duele |
 |---|---|---|---|
-| **Bullet Journal Companion** (oficial, Ryder Carroll) | De pago | La marca del método y de su autor | Reseñas de 2026 la llaman *abandonware*: sin actualizar en años, se bloquea al elegir fechas y el recordatorio de reflexión desaparece si se abre el teléfono por otro motivo. No guarda texto ni fotos de página: es un folleto sobre el método, no el método. Está en Productividad y pierde puestos por ello (§8) |
-| **May: Beautiful Bullet Journal** (Play) | Freemium | Estética de cuaderno | Cierres y expulsiones frecuentes de la app |
-| **BujoFlow** | 1,99 $/mes, 14,99 $/año o 29,99 $ de compra única | Ofrece compra única | La compra única más cara del nicho |
-| **Bullet: Journal, Daily Planner** | De 3,99 $ a 99,99 $ según plan | Ocupa la keyword | Precios que no se entienden |
+| **Bullet Journal Companion** (oficial, Ryder Carroll) | 4,99 $ de compra única, solo iPhone | La marca del método y de su autor; la caducidad de 72 horas "obliga a migrar", según una reseña de 2025 | Sin actualizar desde la 2.5.0 (noviembre de 2023) y sin Android, que su propia ayuda da por retirado. Se bloquea al elegir fechas y el recordatorio de reflexión desaparece si se abre el teléfono por otro motivo. Sin índice ni guía de inicio, lo que más le reprochan las reseñas. No guarda texto ni fotos de página: es un folleto sobre el método, no el método. Está en Productividad y pierde puestos por ello (§8) |
+| **May: Beautiful Bullet Journal** (Play) | Gratis con anuncios | Estética de cuaderno; más de 3 millones de instalaciones | Cierres y expulsiones frecuentes; 14 SDK de anuncios, que son el 65 % de sus ingresos |
+| **BujoFlow** | 1,99 $/mes, 14,99 $/año o 29,99 $ de compra única | Ofrece compra única | La compra única más cara del nicho, y unas 14 valoraciones en 2026 |
+| **Bullet: Journal, Daily Planner** (Mui Studio) | De 3,99 $/mes a 35,99 $/año, o 79,99 $ de por vida | Ocupa la keyword; 4,7 en iOS | Migrar es cambiar la fecha de una entrada; bloqueo biométrico de pago; identificadores de rastreo declarados; la 1.78 (octubre de 2026) arregla "hábitos que desaparecen al actualizar" |
+| **COMO Bujo** | 3,99 $/mes o VIP de 14,99 a 29,99 $ | Estética con pegatinas, 4,6 en iOS, al día con iOS 27 | Solo iOS; quejas de fallos en iPad |
 | **Zinnia, DailyBean, Buju, Digital Planner** | Freemium | Dominan la búsqueda de "bullet journal" (§8) | Son planners y diarios con estética bujo, no el método: sin migración de verdad |
 | **Notion** | Suscripción | Flexible, sirve de bujo con plantillas | Bloquea el workspace al no renovar, "la peor experiencia de facturación", lenta en bases grandes y con onboarding eterno |
 | **TickTick** | Gratis limitado; 3,99 $/mes o 35,99 $/año | Captura rápida que reconoce fechas en el texto | Plan gratis "casi sin sentido"; fallos de sincronización sin indicación de qué pasó |
@@ -55,6 +56,38 @@ este SPEC**; si un detalle de implementación de aquí no coincide con `docs/tec
 | **Diaro** | Freemium | Diario sencillo | Sin texto enriquecido: el contenido no sale con su estructura |
 | **Grid Diary** | Gratis a 2,99 $/mes | Preguntas reflexivas opcionales que desbloquean la escritura | Suscripción |
 | **Reflectly** | Hasta 59,99 $/año | Interfaz cuidada | La más cara del grupo de diarios, sentida como restrictiva |
+| **Tiimo** | Freemium, Pro de 7 $/mes a 54 $/año | App del Año de iPhone 2025; widgets, Live Activities, Watch, Mac y web | Sin Android; la web no deja hacer nada sin pagar; emoji que una reseña llama infantiles |
+| **Apple Journal** | Gratis, de Apple | Desde iOS 26 en iPad y Mac, con varios diarios y Pencil | Solo Apple; entradas perdidas al restaurar desde iCloud (julio de 2025); sin compartir con nadie |
+| **NotePlan** | Hasta 119,99 $/año | Notas diarias en Markdown, lo más parecido a un bujo de escritorio | Sin Android; piden mejores widgets y calendario |
+| **Hejour, Jott, RocketLog** | Compra o 5 $/mes | Bujos digitales nuevos de 2026, de escritorio o web | Ninguno en Android; Hejour migra solo |
+| **Waffle** | Hasta 199,99 $ | Diario compartido de pareja o familia, 4,6 con 11.000 valoraciones | Todo pasa por su servidor; declara contenido vinculado a la persona e identificadores de rastreo |
+| **Day One, diarios compartidos** | Premium para crear; gratis para unirse con cuenta | Cifrado de extremo a extremo, hasta 30 miembros | Exige cuenta, y el precio de Day One es lo más criticado de su foro en 2025 ("feels extractive") |
+
+### El hueco, revisado en octubre de 2026
+
+La tabla se repasó entera el 30-10-2026, con la v1.2 ya escrita, para decidir la v1.3. Lo que dice:
+
+- **Nadie ocupa a la vez las cinco cosas**: fiel al método, Android, iOS, compra única y sin cuenta ni
+  anuncios. Las grandes de Android llevan anuncios o rastreo (May, Bullet); las fieles al método son
+  solo de iPhone o de escritorio (la oficial, Hejour, Jott, NotePlan). Ese es el sitio de Bobbin, y la
+  v1.3 no lo cambia: lo ensancha.
+- **La oficial no compite en lo digital.** Sin versión desde 2023 y sin Android. bulletjournal.com
+  republica ensayos contra los sistemas digitales de notas.
+- **La migración automática divide a los puristas.** Las comparativas de 2026 que defienden el método
+  repiten el argumento de §2.10 ("una lista que arrastra las tareas sola solo crece"), y las que
+  automatizan admiten que "una tarea que no vale reescribirse es una tarea que sobra". La regla de
+  Bobbin queda confirmada, no discutida.
+- **Lo que se pide de verdad**: apuntar desde la pantalla de inicio sin abrir la app, estar bien en
+  iPad, plegable y ordenador, y que los datos no se pierdan. Nadie pide Liquid Glass ni IA en un
+  diario: son señales que miran Apple y la prensa, no los usuarios.
+- **Lo social existe, pero con servidor.** Day One comparte diarios con cuenta y cifrado; Waffle vende
+  el diario de pareja con rastreo; las listas compartidas de Recordatorios o Todoist pasan por la nube
+  de la empresa. Ninguna app del nicho deja enviar una página a alguien sin cuenta. El bujo en redes es
+  enorme (r/bulletjournal ronda los 400.000 miembros; #bulletjournal, millones de publicaciones), pero
+  lo que se comparte es el pliego hecho a mano, y no hay ningún dato de que compartir imágenes traiga
+  descargas.
+- **El precio de 1,99 EUR quedaba por debajo de lo justo** (§7): los desbloqueos únicos comparables van
+  de 5,99 a 14,99 $, y el precio bajo no convierte mejor.
 
 ### El cuaderno de papel
 
@@ -86,6 +119,11 @@ decidir.** Copiar el texto al migrar es legítimo; migrar sin que el usuario dec
 - **Preguntas opcionales para el campo en blanco** (Grid Diary), en v1.1 y nunca obligatorias (#65).
 - **Fechas en lenguaje natural** (TickTick), en local y sin aplicarse solas (#66).
 - **Privacidad primero** (Hello Diary): nada sale del teléfono salvo la compra (§4).
+- **Compartir con una persona, no con un público** (los diarios compartidos de Day One), en v1.3 y sin
+  cuenta: una lista viaja como fichero o como enlace, y al volver se junta (#75, #76).
+- **Controles fuera de la app** (Things 3.22, Tiimo), en v1.3: un widget y un control de iOS para
+  escribir (#79).
+- **El Weekly Log de la comunidad**, en v1.3, como forma de mirar los días que ya existen (#78).
 
 ### Fallos del mercado y qué issue ataca cada uno
 
@@ -115,8 +153,12 @@ decidir.** Copiar el texto al migrar es legítimo; migrar sin que el usuario dec
 7. **Lentitud y onboarding eterno** (Notion). Campo enfocado al arrancar (#21); una guía de cuatro
    pasos que no pide nada y se salta con un toque, clave de símbolos opcional (#31); nada obligatorio
    en Ajustes (#32); rendimiento medido con miles de entradas (#55).
-8. **Publicidad en el plan gratis** (Daylio). Sin anuncios en ningún plan (#2), declarado en los
+8. **Publicidad en el plan gratis** (Daylio, May). Sin anuncios en ningún plan (#2), declarado en los
    formularios (#59).
+9. **Android y el ordenador, olvidados** (la oficial, NotePlan, Tiimo, Hejour, Jott). Android desde la
+   v1.0; doble página en tableta, plegable y Mac (#80); Windows y Linux en v1.4 (#81).
+10. **Lo social exige cuenta o rastreo** (Day One, Waffle, las listas compartidas). Enviar una lista
+    por el canal que el usuario elige, sin servidor nuestro (#75, #76).
 
 Y los dos fallos concretos de la app oficial: el **recordatorio que desaparece**, atacado por #36, #37
 y #38 (se reprograma al arrancar, al reiniciar y al cambiar de hora, y dice qué pasa si falta el
@@ -138,6 +180,9 @@ categoría) lo atacan #1 y #57 ("Bullet Journal" en el nombre de tienda y catego
 5. **Escribir cuesta cero toques extra**: la app abre en Hoy con el teclado arriba (la primera vez,
    tras una guía de cuatro pasos que se salta con un toque).
 6. **Tus datos salen cuando quieras**, en JSON y en Markdown con los símbolos del método, gratis.
+7. **Social sin servidor.** Una lista se envía a quien tú quieras y vuelve con sus cambios; nadie en
+   medio (v1.3).
+8. **Donde escribes**: teléfono, tableta, plegable y Mac en v1.3; Windows y Linux en v1.4.
 
 ---
 
@@ -318,10 +363,11 @@ arranque (§6), y las dos se pueden no abrir nunca.
 
 ---
 
-## 3. Funcionalidad por versión: v1.0, v1.1, v1.2 y lo descartado a propósito
+## 3. Funcionalidad por versión: de v1.0 a v1.4 y lo descartado a propósito
 
 El corte no es por pantalla sino por si su ausencia, o su automatización, deja de ser un Bullet
-Journal. **v1.0 son las issues #1 a #62, v1.1 de la #63 a la #68 y v1.2 de la #69 a la #72.**
+Journal. **v1.0 son las issues #1 a #62, v1.1 de la #63 a la #68, v1.2 de la #69 a la #72, v1.3 de
+la #74 a la #80 y v1.4 la #81.** La #73 es la revisión de diseño que cierra la v1.2.
 
 ### v1.0: issues #1 a #62
 
@@ -377,6 +423,48 @@ siguiendo al sistema; teléfono y tableta, vertical y horizontal; tema claro u o
 - **Importar de las apps hermanas** (#72): notas de Purl y MoodTraker y hábitos de Quilt, elegidas
   una a una. Gratis.
 
+### v1.3: issues #74 a #80, lo que distingue
+
+Escrita tras el repaso del mercado de octubre de 2026 (§1). Tres frentes: lo social sin servidor,
+estar donde se escribe, y un precio justo.
+
+- **Precio** (#74): Pro a 4,99 EUR desde esta versión y Compartir en familia en iOS (§7).
+- **Enviar una lista como fichero** (#75): una lista, o un seguimiento en blanco, viaja como `.bobbin`
+  por la hoja de compartir del sistema. Quien la recibe la añade a su Índice; si vuelve con cambios, se
+  juntan con las reglas de importar, con resumen antes. Gratis.
+- **Enviar una lista como enlace** (#76): la misma lista dentro del fragmento de un enlace de
+  `bullet.baltajmn.dev`, que abre Bobbin si está instalada y, si no, una página estática que la pinta
+  en el navegador. El contenido nunca llega a ningún servidor. Gratis.
+- **Compartir un seguimiento y el formato historia** (#77): la rejilla del seguimiento como imagen, y
+  9:16 además de 4:5. Gratis.
+- **Semana** (#78): Hoy gana un modo con los siete días de un vistazo; una forma de mirar, no un sitio
+  nuevo. Gratis.
+- **Escribir desde fuera, segunda parte** (#79): widget "Escribir" en Android, control de iOS para el
+  Centro de control, la pantalla de bloqueo y el botón de Acción, y compartir texto desde otra app en
+  Android. Abrir la app para escribir es gratis; escribir sin abrirla es Pro (§7).
+- **Doble página, plegables, Mac y teclado** (#80): Hoy y Mes a la vez desde 840 dp, el lomo sobre la
+  bisagra de un plegable, la app de iPad en Mac y atajos de teclado. Gratis.
+
+### v1.4: issue #81, escritorio
+
+- **Windows y Linux** (#81) con Compose Desktop: la misma interfaz, sin red, sin Pro, sincronizando con
+  el mismo `bobbin-sync.json` del teléfono. En Mac corre la app de iPad (#80). Se trabaja cuando la v1.3
+  esté en producción.
+
+### Para la revisión de diseño (#73)
+
+La #73 sigue mandando sobre la interfaz y decide sobre la app real. Del repaso de las capturas de la
+tienda salen dos observaciones que le tocan:
+
+1. **Con el teclado arriba, cada línea cuenta.** En la captura de Hoy, la tarjeta de aviso ocupa la
+   mitad de lo que se ve y deja cuatro líneas de diario. Con el teclado arriba, las tarjetas deberían
+   plegarse a una sola línea con su botón como enlace, y volver enteras al bajarlo.
+2. **La primera captura de la tienda es la que vende**, y hoy enseña media pantalla de teclado. Una
+   página llena, con los tres bullets, una hecha y una migrada, cuenta el método sin leer nada.
+
+Lo demás del diseño se mantiene: el papel es la identidad, y por eso no se persigue Liquid Glass ni
+Material 3 Expressive (ver abajo).
+
 ### Descartado a propósito
 
 | Qué | Por qué |
@@ -397,11 +485,23 @@ siguiendo al sistema; teléfono y tableta, vertical y horizontal; tema claro u o
 | Selector de idioma dentro de la app | Las hermanas no lo tienen, y Android 13+ e iOS ya dan idioma por app |
 | `FLAG_SECURE` en Android | Bloquea también las capturas que el propio usuario quiere hacer. `setRecentsScreenshotEnabled(false)` oculta la multitarea sin prohibir nada |
 | Seguimiento de hábitos con estadísticas y recordatorios | Es Quilt. Aquí, un seguimiento de papel, y la ficha remite a la hermana (#50) |
+| Perfiles, seguidores, feed, comentarios o retos | Piden servidor, cuenta y moderación de contenido de terceros, y cambian la clasificación por edad (§9). Lo social de un bujo es la lista que se comparte con alguien concreto (#75, #76) |
+| Listas compartidas en vivo, por una carpeta común en la nube | En Android, Drive no deja elegir carpetas con el selector del sistema, y leer una carpeta compartida exige permisos restringidos de la API de Drive con verificación de Google. El ida y vuelta de #75 con la fusión de #45 cubre la lista de la compra de una casa sin nada de eso. Se reabre solo si las reseñas lo piden |
+| Texto del diario en los widgets, aunque sea opcional | Se repasó en octubre de 2026: lo que más se pide es apuntar desde la pantalla de inicio, y eso lo da #79 sin sacar texto. Un bujo mezcla tareas y notas íntimas en una pantalla que ve cualquiera, y "tus palabras no salen ni a la pantalla de inicio" es parte de la promesa (§6) |
+| Extensión de compartir en iOS | El texto tendría que pasar por el App Group, donde el diario no entra nunca (§4). "Anotar en Bobbin" en Atajos ya recibe lo compartido (#67) |
+| App de Apple Watch o de Wear OS | Otra base de código (SwiftUI de watchOS, Wear Compose) para una petición que solo aparece suelta en los foros. Siri en el teléfono ya anota (#67) |
+| Versión web | El diario viviría en el almacenamiento del navegador, que el navegador puede borrar. La única web es la página que lee una lista enviada (#76) |
+| Código QR para enviar una lista | Pide un codificador propio, y en persona ya están AirDrop y Quick Share, que desde noviembre de 2025 se entienden entre sí en algunos teléfonos |
+| Calendario del sistema dentro del Daily Log | En el método, un evento se escribe a mano en su día. Leer el calendario pide un permiso más y mete en el diario líneas que nadie ha escrito |
+| Liquid Glass o Material 3 Expressive | El papel es la identidad de la app y de la familia. Se sigue al sistema en lo que es del sistema (teclado, hoja de compartir, widgets), no en el lienzo |
+| Propina o "paga lo que quieras" | No hay ningún dato publicado de que convierta, y añade un consumible, que §7 descarta |
 
 ### Explícitamente fuera de alcance
 
-Cuentas de usuario, nada social, IA generativa, audio o vídeo, anuncios, analítica e informes de
-fallos. Cada uno añade coste recurrente, permiso invasivo o red, y ninguno hace el método más fiel.
+Cuentas de usuario, redes sociales con servidor (perfiles, seguidores, feed), IA generativa, audio o
+vídeo, anuncios, analítica e informes de fallos. Cada uno añade coste recurrente, permiso invasivo o
+red, y ninguno hace el método más fiel. Lo social que sí entra es enviar: lo que el usuario elige, a
+quien elige y por el canal que elige, sin que pase por nosotros (§6, #75, #76).
 
 ---
 
@@ -421,7 +521,9 @@ forma de fallo tres meses después.
    escribir, nunca a abrir Ajustes (#21, #31, #32).
 3. **Nada sale del teléfono salvo lo de RevenueCat.** Sin cuenta, sin servidor, sin analítica, sin
    informes de fallos. La única conexión es la de la compra, y la sincronización de v1.2 va a la nube
-   del propio usuario (#59, #69).
+   del propio usuario (#59, #69). Lo que el usuario envía en v1.3 (una imagen, un texto, una lista como
+   fichero o como enlace) sale por la hoja de compartir del sistema, cuando él lo pide y por el canal
+   que él elige: la app no se conecta a nada para eso (#75, #76).
 
 Una issue que choque con cualquiera de las tres está mal escrita, y se corrige la issue.
 
@@ -454,6 +556,9 @@ Una issue que choque con cualquiera de las tres está mal escrita, y se corrige 
 | Seguimiento al cambiar de mes | Nace una página nueva del mismo seguimiento, enlazada a la anterior por id y vacía, nunca copiada con las marcas del mes pasado (#50, `docs/tecnico.md` 6.18) |
 | Copia automática del sistema | Android: `journal.json` entra, `widget.json` y la cuarentena no, y a la nube **solo si va cifrada de extremo a extremo**. iOS: Application Support entra en la copia de iCloud del dispositivo (#46, §9) |
 | Idioma | Sigue al sistema, sin selector. Los símbolos del método no se traducen |
+| Qué viaja al enviar una lista (v1.3) | El título, el tipo y las entradas de esa lista con su estado y sus signifiers, o solo los textos y todo abierto si se envía "en blanco". Nunca otra colección, ni ajustes, ni el enlace `from` a otra página del diario. Un seguimiento viaja siempre en blanco: las filas, sin marcas (#75) |
+| Recibir una lista (v1.3) | Es una importación de una sola colección: resumen antes de tocar nada, copia previa, y si la lista ya existe se junta con la fusión de #45. **Nunca borra** lo que el receptor tiene, aunque falte en lo que llega (#75) |
+| Dónde se escribe desde la Semana (v1.3) | Hasta mañana, en el Daily Log de ese día; después, en la línea del calendario de su mes, o en su día del Future Log si es un mes que viene. Es la misma regla que Hoy, Mes y Futuro ya siguen por separado (#78) |
 | Nombre, identificadores y App Group | Fijados antes de la primera línea de código (§8). Irreversibles tras publicar |
 
 ---
@@ -559,6 +664,10 @@ los lados; el Índice y el Future Log se abren en doble página, dos columnas co
 y Ajustes y el diálogo Pro van en un panel centrado del mismo ancho. Sin diseños propios de tableta
 más allá de eso.
 
+En v1.3 (#80), desde **840 dp** Hoy se abre también en doble página: el día a la izquierda y su mes a
+la derecha, con una sola barra de escribir. En un plegable abierto, el lomo cae sobre la bisagra. La
+app de iPad corre en Mac con Apple Silicon, y toda la app se maneja con teclado.
+
 ### Principios
 
 1. **Cero configuración antes de escribir.** La app abre sobre el teclado; la guía de la primera vez
@@ -641,6 +750,9 @@ reojo. **Los widgets enseñan números y glifos, nunca texto**, y no pueden hace
   rectangular, los eventos.
 - Sin Pro, los widgets de pago se pintan bloqueados con "Bobbin Pro" y tocarlos abre el paywall. Se
   actualizan cuando cambia `widget.json`, sin sondeo.
+- **Widget "Escribir"** (Android, v1.3, #79) y **control "Escribir en Bobbin"** (iOS 18 o superior,
+  v1.3): ni texto ni números, solo una puerta para apuntar. Para todo el mundo abren Hoy con el teclado
+  arriba; con Pro, el widget de Android escribe sin abrir la app. No leen `widget.json`.
 
 ### Compartir
 
@@ -650,6 +762,25 @@ símbolos en ASCII para donde no cabe una imagen. Una colección larga se repart
 cortar una línea. Cada imagen lleva una marca pequeña de "Bobbin" en la esquina: es el canal de
 crecimiento orgánico que el formato bujo ya tiene en redes. **La app nunca sugiere ni elige qué
 compartir**: el diario es privado por defecto.
+
+En v1.3 compartir pasa de enseñar a enviar, y sigue siendo gratis:
+
+- **Una lista viaja y vuelve** (#75). Como fichero `.bobbin` por la hoja de compartir, "tal cual" (con
+  lo hecho y lo pendiente) o "en blanco" (solo los textos, todo abierto, como plantilla). Quien la
+  recibe ve un resumen y la añade a su Índice; si se la devuelven con cambios, se juntan sin borrar
+  nada. Es la lista de la compra de una casa, el equipaje de un viaje o las lecturas que se
+  recomiendan, sin cuenta y sin servidor.
+- **Una lista como enlace** (#76). El mismo contenido, dentro del fragmento de un enlace de
+  `bullet.baltajmn.dev`: el navegador nunca envía el fragmento, así que la lista no llega a ningún
+  servidor. Con Bobbin instalado, el enlace abre la app; sin ella, una página estática la pinta con
+  los glifos y dice de dónde sale. Es el único canal de crecimiento que no rompe la promesa: quien
+  recibe ve el método funcionando. La hoja avisa de lo que es un enlace: quien lo tenga, puede leer la
+  lista.
+- **Un seguimiento como imagen y el formato historia** (#77): el pliego que más se comparte en redes, y
+  9:16 para historias además del 4:5 de las publicaciones.
+
+No hay perfiles, seguidores, feed ni "me gusta" (§3). No se mide si compartir trae descargas: no hay
+analítica, y no la habrá por esto.
 
 ### Valoración
 
@@ -697,22 +828,23 @@ Purl, traducida: el cuaderno entero es gratis; se paga por vestirlo (portadas y 
 fuera de la app (widgets de pago, libro en PDF, captura desde fuera) y por lo que tiene coste real de
 construir (sincronización).
 
-| Gratis para siempre | Pro en v1.0 | Pro en v1.1 | Pro en v1.2 |
-|---|---|---|---|
-| El método completo: rapid logging, tres bullets, cinco estados, tres signifiers | Siete de las ocho portadas (#49) | Libro del cuaderno en PDF (#68) | Sincronización por iCloud Drive o una carpeta de Drive (#69) |
-| Hoy, Mes, Future Log e Índice | Papeles rayado, cuadrícula y liso (#49) | Captura desde fuera: Ajustes rápidos y Atajos de iOS (#67) | Resumen del año en texto (#70) |
-| Colecciones ilimitadas | Colecciones de seguimiento desde la segunda (#50) | | |
-| Revisión y migración diaria y mensual, reflexión | Widget del mes, Android e iOS (#51) | | |
-| Clave de símbolos | Widget de pantalla de bloqueo, iOS (#52) | | |
-| Búsqueda con filtros | | | |
-| Recordatorio de reflexión y bloqueo con biometría | | | |
-| Widget de hoy | | | |
-| Compartir un día, un mes o una colección | | | |
-| Exportar e importar (JSON y Markdown) y copia del sistema | | | |
-| Una portada (salvia) y el papel punteado | | | |
-| Un seguimiento | | | |
-| v1.1: threading, nuevo cuaderno anual, preguntas de reflexión, fechas en lenguaje natural | | | |
-| v1.2: variaciones del índice, importar de las apps hermanas | | | |
+| Gratis para siempre | Pro en v1.0 | Pro en v1.1 | Pro en v1.2 | Pro en v1.3 |
+|---|---|---|---|---|
+| El método completo: rapid logging, tres bullets, cinco estados, tres signifiers | Siete de las ocho portadas (#49) | Libro del cuaderno en PDF (#68) | Sincronización por iCloud Drive o una carpeta de Drive (#69) | Escribir sin abrir la app: el widget "Escribir" de Android escribe encima de la pantalla (#79) |
+| Hoy, Mes, Future Log e Índice | Papeles rayado, cuadrícula y liso (#49) | Captura desde fuera: Ajustes rápidos y Atajos de iOS (#67) | Resumen del año en texto (#70) | Compartir texto desde otra app a Bobbin, en Android (#79) |
+| Colecciones ilimitadas | Colecciones de seguimiento desde la segunda (#50) | | | |
+| Revisión y migración diaria y mensual, reflexión | Widget del mes, Android e iOS (#51) | | | |
+| Clave de símbolos | Widget de pantalla de bloqueo, iOS (#52) | | | |
+| Búsqueda con filtros | | | | |
+| Recordatorio de reflexión y bloqueo con biometría | | | | |
+| Widget de hoy | | | | |
+| Compartir un día, un mes o una colección | | | | |
+| Exportar e importar (JSON y Markdown) y copia del sistema | | | | |
+| Una portada (salvia) y el papel punteado | | | | |
+| Un seguimiento | | | | |
+| v1.1: threading, nuevo cuaderno anual, preguntas de reflexión, fechas en lenguaje natural | | | | |
+| v1.2: variaciones del índice, importar de las apps hermanas | | | | |
+| v1.3: enviar una lista como fichero o como enlace, compartir un seguimiento, formato historia, Semana, doble página, plegables y Mac, atajos de teclado, el control de iOS y el widget "Escribir" como puerta a Hoy | | | | |
 
 La distinción que hay que escribir para que la regla no se coma a sí misma: **exportar tus datos no
 se cobra nunca; el libro en PDF maquetado no es una exportación de datos, es un producto**. Quien solo
@@ -727,6 +859,17 @@ cuenta los seguimientos que existen ahora: archivar uno no libera hueco, borrarl
 activos vuelven a los gratis sin tocar el diario (#49), los seguimientos que ya existen siguen
 legibles y editables y solo no se puede crear otro, y los widgets Pro pasan a su estado bloqueado.
 
+**La regla de las puertas (v1.3, #79): abrir la app para escribir es gratis en todas partes; escribir
+sin abrirla es Pro.** El widget de hoy, el widget "Escribir" de Android y el control de iOS abren Hoy
+con el teclado arriba para todo el mundo. La baldosa de Ajustes rápidos, Siri y Atajos, el widget
+"Escribir" con Pro y compartir texto desde otra app escriben encima de lo que se esté haciendo, y eso es
+Pro. Así nadie encuentra una puerta cerrada, y lo que se paga es el atajo, no el acceso.
+
+**El escritorio no tiene Pro (v1.4, #81).** Sin cuenta no hay forma honesta de llevar una compra del
+móvil al ordenador, y cobrar otra vez el mismo diario sería lo contrario de un precio justo. Windows y
+Linux se comportan como un teléfono sin Pro, salvo la sincronización, que es la otra punta de la del
+teléfono: quien la usa ya pagó Pro allí.
+
 ### Lo que no se cobra nunca
 
 1. **El método.** Migrar, programar, revisar, reflexionar, el Future Log y el Índice. Cobrar la
@@ -736,7 +879,8 @@ legibles y editables y solo no se puede crear otro, y los widgets Pro pasan a su
    aquí pesan más porque el diario es de uno.
 4. **El recordatorio y el bloqueo.** Cobrar por proteger un diario es la misma señal de desconfianza
    que cobrar por la copia.
-5. **Compartir.** Cada página compartida es marketing gratis.
+5. **Compartir y enviar.** Cada página compartida es marketing gratis, y cada lista enviada como enlace
+   enseña el método a quien no tiene la app (#75, #76, #77).
 
 ### Precio
 
@@ -791,8 +935,10 @@ Google.
 
 1. **El plan gratis es la prueba.** No existen pruebas gratuitas para compras únicas.
 2. **El paywall aparece al chocar con un límite real** (#48): elegir una portada o un papel Pro, crear
-   el segundo seguimiento, tocar un widget Pro colocado sin Pro, generar el PDF, usar la captura desde
-   fuera, activar la sincronización o abrir el resumen del año. La única entrada que no es un choque
+   el segundo seguimiento (también al recibirlo en una lista enviada, #75), tocar un widget Pro
+   colocado sin Pro, generar el PDF, usar la captura desde fuera (en v1.3, también compartir texto a
+   Bobbin desde otra app en Android, #79), activar la sincronización o abrir el resumen del año. La
+   única entrada que no es un choque
    es la fila "Bobbin Pro" de Ajustes, para quien quiere comprar a propósito. **Nunca al arrancar,
    nunca tras un número de usos.** Es el `ProDialog` de las hermanas: qué incluye, precio leído de la
    tienda (nunca un número fijo en el código), "compra única, sin suscripción" visible sin scroll,
@@ -1013,6 +1159,9 @@ ui/LockScreen.kt         overlay, se pinta antes que cualquier otra pantalla
 ui/Pro.kt                ProDialog, el paywall de las hermanas
 ui/ShareScreen.kt        vista previa de compartir
 ui/SharePage.kt          la página punteada como imagen
+model/Week.kt            v1.3: los siete días de una semana y dónde se escribe en cada uno
+data/ListPacket.kt       v1.3: una lista para enviar, como fichero .bobbin o como enlace
+ui/Keys.kt               v1.3: los atajos de teclado, una función pura
 ```
 
 Fuera de `commonMain`: los widgets de Android en `androidMain/.../widget/` (Glance), y los de iOS en
@@ -1221,7 +1370,12 @@ está en `docs/tecnico.md` 11.
 21. **v1.1**: threading, nuevo cuaderno, reflexión guiada, fechas en lenguaje natural, captura desde
     fuera y libro en PDF (#63 a #68).
 22. **v1.2**: sincronización, resumen del año, variaciones del índice e importar de las hermanas (#69
-    a #72).
+    a #72), y la revisión de diseño que la cierra (#73).
+23. **v1.3**, en este orden: enviar una lista como fichero (#75), y después como enlace con su página
+    (#76); Semana (#78), que la doble página necesita (#80); compartir un seguimiento y el formato
+    historia (#77); escribir desde fuera (#79). El precio (#74) cambia el día que la v1.3 sale a
+    producción, ni antes ni después.
+24. **v1.4**: escritorio para Windows y Linux (#81), con la v1.3 ya en producción.
 
 ### Estimación de v1.0
 
@@ -1291,6 +1445,21 @@ con el andamiaje (#10), el calendario se alarga aunque el código esté terminad
 10. **ASO sin datos en cuatro idiomas.** La competencia de la keyword solo está medida en inglés.
 11. **Tableta y horizontal** multiplican las pantallas que revisar y exigen capturas de iPad. Se
     contiene con una página de 576 dp y dos o tres reglas de reparto (§5).
+12. **La página del enlace es superficie de ataque** (v1.3, #76). Pinta texto que escribió otra
+    persona: se pinta siempre como texto (`textContent`), nunca como HTML, sin dependencias externas y
+    con una política de seguridad de contenido que no deja cargar nada de fuera. Un enlace con lo que
+    sea dentro solo puede enseñar letras.
+13. **Un enlace no se puede retirar.** Quien lo tenga lee la lista, y queda en el historial del chat.
+    La hoja de enviar lo dice antes de compartir, y "en blanco" sirve para mandar la estructura sin lo
+    hecho.
+14. **Los enlaces verificados pueden fallar** (App Links de Android, enlaces universales de iOS): sin
+    verificar, el enlace abre el navegador en vez de la app. La página tiene que ser útil sola (leer la
+    lista, copiarla, descargar Bobbin) y el fichero `.bobbin` sigue siendo el camino seguro entre dos
+    teléfonos con la app.
+15. **El escritorio dobla las plataformas que mantener** (v1.4, #81). Se contiene sin red, sin Pro, sin
+    widgets, sin recordatorio y sin bloqueo propio: solo el método, el almacén y la sincronización.
+16. **La Semana puede leerse como una página nueva** que no es del método. Se contiene como modo de Hoy,
+    sin sitio propio en el formato y sin copiar nada (#78).
 
 ### Correcciones de datos hechas durante la investigación
 
@@ -1308,6 +1477,21 @@ Van aquí para que nadie las vuelva a buscar:
 - `androidx.biometric` no tiene versión estable desde la 1.1.0 (2021).
 - `setRecentsScreenshotEnabled(false)` existe desde Android 13 y oculta la multitarea sin bloquear
   las capturas, que es lo que hace `FLAG_SECURE`.
+
+Del repaso de octubre de 2026:
+
+- **Bullet Journal Companion** es de compra única (4,99 $), no de suscripción, y solo de iPhone: su
+  última versión es la 2.5.0, del 1 de noviembre de 2023, y la ayuda oficial da Android por retirado.
+  Lo de "abandonware en reseñas de 2026" no se pudo comprobar en la ficha: se quita de la tabla y queda
+  el dato verificable, que dice lo mismo.
+- **BujoFlow** tiene unas 14 valoraciones: ofrece compra única, pero no es un competidor con tracción.
+- **Bullet: Journal, Daily Planner** es la app de Mui Studio, ahora de 3,99 $/mes a 35,99 $/año o
+  79,99 $ de por vida, no "de 3,99 a 99,99 $".
+- **Google Play no permite compartir en familia las compras dentro de la app**; Apple sí, en los no
+  consumibles, y una vez activado no se puede desactivar.
+- **El informe de RevenueCat de 2026** (datos de 2025, 115.000 apps) da una conversión a 35 días del
+  1,4 % en precio bajo frente al 2,8 % en precio alto: la hipótesis de que el precio bajo convierte más
+  no se sostiene, aunque el dato sea de suscripciones y no de compras únicas.
 
 ---
 
@@ -1340,3 +1524,34 @@ Van aquí para que nadie las vuelva a buscar:
 - [Búsqueda de marcas de USPTO](https://tmsearch.uspto.gov)
 - [TMview, marcas de la UE y nacionales](https://www.tmdn.org/tmview)
 - [Literata, Google Fonts](https://fonts.google.com/specimen/Literata)
+
+Repaso de octubre de 2026 (§1, §3 v1.3, §7):
+
+- [Bullet Journal Companion, App Store](https://apps.apple.com/us/app/id1201419241)
+- [Companion y Android, ayuda de bulletjournal.com](https://help.bulletjournal.com/en-US/articles/companion-app-17357)
+- [Top 5 bujo ideas (el Weekly Log), bulletjournal.com](https://bulletjournal.com/blogs/bulletjournalist/top-5-bujo-ideas-in-2016)
+- [I Deleted My Second Brain, bulletjournal.com](https://bulletjournal.com/blogs/bulletjournalist/i-deleted-my-second-brain)
+- [May: Beautiful Bullet Journal, AppGoblin](https://appgoblin.info/apps/com.azeravn.bulletjournal)
+- [Bullet, de Mui Studio, App Store](https://apps.apple.com/us/app/-/id1537777571)
+- [COMO Bujo, App Store](https://apps.apple.com/us/app/bujo-bullet-journal-planner/id1497246321)
+- [BujoFlow, App Store](https://apps.apple.com/us/app/id6499578629)
+- [Tiimo, App del Año 2025](https://www.tiimoapp.com/resource-hub/tiimo-winner-2025-app-store-awards)
+- [Apple Journal en iPad y Mac, 9to5Mac](https://9to5mac.com/2025/06/17/apples-journal-app-is-coming-to-ipad-and-mac-with-big-upgrades/)
+- [NotePlan, precios](https://noteplan.co/pricing)
+- [Hejour, bujo digital para Mac](https://hejour.com/blog/digital-bullet-journal-mac)
+- [La migración automática solo hace crecer la lista, FeelTracker](https://feeltracker.com/daily-journal/bullet-journal/)
+- [Diarios compartidos de Day One](https://dayoneapp.com/shared-journals/)
+- [Precio de Day One, foro de Day One](https://forums.dayoneapp.com/forums/topic/feedback-from-a-13-year-user-app-complexity-workflow-changes-and-pricing-conc/)
+- [Waffle, App Store](https://apps.apple.com/us/app/id1519726353)
+- [r/bulletjournal, GummySearch](https://gummysearch.com/r/bulletjournal/)
+- [Things para los sistemas 26, Cultured Code](https://culturedcode.com/things/blog/2025/09/things-for-os-26/)
+- [Quick Share y AirDrop, Engadget](https://www.engadget.com/mobile/android-quick-share-now-works-with-iphone-airdrop-on-some-phones-173646333.html)
+- [El fragmento de una URL no se envía al servidor, MDN](https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment)
+- [Permisos de la API de Drive](https://developers.google.com/workspace/drive/api/guides/api-specific-auth)
+- [Acceso a carpetas con el selector, Android Developers](https://developer.android.com/training/data-storage/shared/documents-files)
+- [State of Subscription Apps 2026, RevenueCat](https://www.revenuecat.com/state-of-subscription-apps)
+- [Conversión y precio por nivel, RevenueCat](https://www.revenuecat.com/sosa-26-insights/)
+- [Vitalicios, RevenueCat](https://www.revenuecat.com/blog/growth/lifetime-subscriptions/)
+- [Compartir en familia en compras dentro de la app, Apple](https://developer.apple.com/help/app-store-connect/configure-in-app-purchase-settings/turn-on-family-sharing-for-in-app-purchases)
+- [Biblioteca familiar y compras dentro de la app, Google Play](https://support.google.com/googleplay/answer/7007852)
+- [Streaks](https://apps.apple.com/us/app/streaks/id963034692), [Things 3](https://apps.apple.com/us/app/things-3/id904237743), [Diarium](https://apps.apple.com/us/app/id1436044299), [Daylio](https://apps.apple.com/us/app/daylio-journal-mood-tracker/id1194023242), [Structured](https://apps.apple.com/us/app/structured-daily-planner/id1499198946), App Store

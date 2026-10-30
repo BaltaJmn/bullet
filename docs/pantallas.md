@@ -1260,7 +1260,7 @@ iOS, el de la plantilla de las hermanas. Nada más: la primera imagen es Hoy.
 
 ---
 
-## 23. v1.1 y v1.2
+## 23. De v1.1 a v1.4
 
 ### 23.1 Threading (v1.1, #63)
 
@@ -1384,6 +1384,163 @@ DE 2025), la entrada en `Heading` con su glifo, como la tarea de 11.2, (evento; 
 entradas importadas.) y `close`. Un fichero que no es de ninguna: `importNotSibling` en el diálogo de
 error de 15.2.
 
+### 23.11 Enviar una lista como fichero (v1.3, #75)
+
+Los textos van aquí en español; cada issue los escribe en los cinco idiomas en `docs/textos.md` 25.
+
+- **Dónde.** Hoja `MORE` de una lista y de un seguimiento: `sendList` (Enviar la lista), con `SHARE`,
+  solo si tiene algo que enviar. Nunca en otro sitio: la app no sugiere qué enviar.
+- **La hoja de enviar**, inferior, con el título de la lista en `Heading` y tres filas (`ActionRow`):
+
+```
++------------------------------------------------+
+|  Enviar Viaje a Lisboa                         |  sendTitle(título)
+|  ^ Enviar como enlace                          |  sendAsLink
+|    Se abre en cualquier navegador. Quien       |  sendAsLinkSub
+|    tenga el enlace puede leer la lista.        |
+|  ^ Enviar como archivo                         |  sendAsFile
+|    Para AirDrop, Quick Share o correo. Con     |  sendAsFileSub
+|    Bobbin se abre y se junta con la suya.      |
+|  [ ] En blanco                                 |  sendBlank
+|      Solo los textos, todo abierto, como una   |  sendBlankSub
+|      lista nueva.                              |
++------------------------------------------------+
+```
+
+  - `sendBlank` es un interruptor apagado cada vez. En un seguimiento sale encendido y sin poder
+    tocarse, con `sendTrackerBlank` (Un seguimiento se envía con sus filas y sin marcas.).
+  - Si el enlace pasa de `LINK_MAX_CHARS`, `sendAsLink` sale atenuado con `linkTooLong` (Es demasiado
+    larga para un enlace. Envíala como archivo.) en vez de su subtítulo.
+  - Las dos filas abren la hoja de compartir del sistema y cierran esta.
+- **La hoja de recibir**, inferior, sobre la pantalla que haya (Hoy, si la app arranca con ella), tras
+  el bloqueo si está puesto:
+
+```
++------------------------------------------------+
+|  LISTA RECIBIDA                                |  receivedEyebrow
+|  Viaje a Lisboa                                |  Heading, con su icono si trae
+|  12 entradas                                   |  receivedCount(n), o receivedRows(n) en un seguimiento
+|    .  Pasaporte                                |  las cinco primeras, con sus glifos
+|    x  Reservar hotel                           |
+|    o  Vuelo, viernes 18:40                     |
+|    ...y 9 más                                  |  receivedMore(n)
+|  [Añadir al Índice]          Cancelar          |  addToIndex, cancel
++------------------------------------------------+
+```
+
+  - Si la lista ya existe: encima, `alreadyHave(título)` (Ya tienes Viaje a Lisboa) y
+    `receivedSummary(nuevas, cambian)` (Trae 2 entradas nuevas y 1 más reciente que las tuyas. No se
+    borra nada.); el botón es `mergeList` (Juntar). Si no cambia nada, `mergeNothing` (Ya tienes esta
+    lista igual.) y solo `close`.
+  - Al terminar, el aviso de abajo: `listAdded` (Lista añadida al Índice) con `openList` (Abrir), o
+    `listMerged` (Listas juntadas). Sin deshacer: como importar, deja la copia `pre-import`.
+  - Errores en el diálogo de 15.2: `listDamaged`, `listEmpty` y `listTooNew` (Esta lista es de una
+    versión más nueva de Bobbin. Actualiza la app para abrirla.).
+- Gratis. Recibir un seguimiento con el límite lleno y sin Pro abre el `ProDialog` (15.1).
+
+### 23.12 La lista como enlace y su página (v1.3, #76)
+
+En la app, el enlace es la fila `sendAsLink` de 23.11 y, al abrirlo, la misma hoja de recibir.
+
+La página (`store/privacy/l/`), en una columna de como mucho 576 px centrada sobre papel punteado, con
+la paleta clara de 1.2 (y la oscura con `prefers-color-scheme`):
+
+```
++------------------------------------------------+
+|  UNA LISTA DE BOBBIN                           |  eyebrow
+|  Viaje a Lisboa                                |  título, serif
+|  *  .  Pasaporte                               |  entradas con sus glifos
+|     x  Reservar hotel                          |
+|  [Copiar como texto]                           |
+|  La lista viaja dentro del enlace: no pasa por |
+|  ningún servidor.                              |
+|  Si tienes Bobbin, abre el enlace desde el     |
+|  chat y se añade a tu Índice.                  |
+|  Bobbin para Android  ·  Bobbin para iPhone    |  dos enlaces de texto
+|  Bobbin: Bullet Journal. Compra única, sin     |
+|  cuenta y sin anuncios.                        |
++------------------------------------------------+
+```
+
+Textos de la página, en español (los cinco idiomas viven en `l/app.js`, no en `Strings.kt`): "Una lista
+de Bobbin", "Lista en blanco", "Copiar como texto", "Copiado", "La lista viaja dentro del enlace: no
+pasa por ningún servidor.", "Si tienes Bobbin, abre el enlace desde el chat y se añade a tu Índice.",
+"Bobbin para Android", "Bobbin para iPhone y iPad", "Bobbin: Bullet Journal. Compra única, sin cuenta y
+sin anuncios.", y para un enlace roto "Este enlace está incompleto. Pide que te lo envíen otra vez." El
+punto medio entre los dos enlaces es el separador `·`, no un guion.
+
+### 23.13 Compartir un seguimiento y el formato historia (v1.3, #77)
+
+- Hoja `MORE` de un seguimiento: `shareTracker` (Compartir este seguimiento), con `SHARE`.
+- La hoja de 17.1 gana, encima de la vista previa, un selector de dos opciones con nombre:
+  `formatPost` (Publicación) y `formatStory` (Historia). Empieza siempre en Publicación. La vista
+  previa cambia de proporción al elegir; el número de imágenes (`sharePages(n)`) se recalcula.
+- La imagen de un seguimiento, en `docs/tecnico.md` 12.13. El texto, en la misma sección.
+
+### 23.14 Semana (v1.3, #78)
+
+Un modo de Hoy. Debajo del subtítulo de Hoy, un selector de dos opciones con nombre, `viewDay` (Día) y
+`viewWeek` (Semana), de 40 dp de alto, con la opción activa sobre el lavado de la portada.
+
+```
++------------------------------------------------+
+|                                  [SRCH] [SET]  |
+|    Semana del 26 de octubre           [<] [>]  |  weekTitle(fecha)
+|    Del 26 de octubre al 1 de noviembre         |  weekRange(desde, hasta)
+|    ( Día | Semana )                            |
+|  [tarjetas de Hoy (6.3)]                       |
+|    LUNES 26                                    |  Eyebrow, día de la semana y número
+|    .  Llamar al banco                          |
+|    MARTES 27                                   |
+|  o MIÉRCOLES 28 · HOY                          |  punto de portada y weekToday
+|    .  Enviar el presupuesto                    |
+|    o  Dentista, 17:30       En el calendario   |  inCalendar, en Secondary a la derecha
+|    JUEVES 29                                   |
+|    ...                                         |
+|    DOMINGO 1 DE NOVIEMBRE                      |  el primer día de otro mes lleva el mes
+|    o  Cumpleaños de Leo     En Futuro          |  inFuture
++------------------------------------------------+
+| (. Tarea) (o Evento) (- Nota)  En el jueves 29 |  barra de escribir
++------------------------------------------------+
+```
+
+- **Cabecera.** `weekTitle(lunes)` con `BACK` y `FORWARD`, que cambian de semana; el gesto 3 también.
+  Fuera de la semana de hoy, `backToThisWeek` (Volver a esta semana) en `primary`.
+- **Días.** Cada uno, su cabecera en `Eyebrow` y sus entradas: las del Daily Log, después las de la
+  línea del calendario con `inCalendar` (En el calendario) y las del Future Log con `inFuture` (En
+  Futuro), en `Secondary` al final de la fila. Un día sin nada es solo su cabecera.
+- **Escribir.** Tocar la cabecera de un día la marca en `surfaceVariant` y pone la barra en ese día,
+  con el lugar de `docs/tecnico.md` 12.14 escrito en "En <dónde>". Por defecto, hoy si está en la
+  semana; si no, el primer día. Tocarla otra vez la suelta.
+- **Foco.** Al pasar a Semana no sube el teclado: se lee antes de escribir, como Mes.
+- Todo lo demás de una entrada, como en Hoy. Compartir no tiene versión de semana.
+
+### 23.15 Escribir desde fuera (v1.3, #79)
+
+- **Widget "Escribir"** (Android): 1 x 1, el glifo de la tarea sobre el papel con `Bobbin` debajo en
+  sistema 12 sp; 2 x 1, el glifo y `captureWidgetLabel` (Escribir) en Literata. Fondo y radio de los
+  widgets de 18.1, sin portada. Nunca bloqueado.
+- **Control de iOS**: símbolo `square.and.pencil` y "Escribir en Bobbin". Lo pinta el sistema.
+- **Compartir a Bobbin** (Android): la captura superpuesta de 23.5 con el texto ya escrito y el cursor
+  al final; "En hoy" como siempre.
+- Las listas de qué incluye Pro (`proIncludes`, 15.1) y la ficha recogen "escribir sin abrir la app".
+
+### 23.16 Doble página, plegables, Mac y teclado (v1.3, #80)
+
+- **Desde `SPREAD_FROM` (840 dp).** Hoy: el día a la izquierda y su Mes a la derecha, con el lomo de
+  la sección 21 entre los dos. El Mes de la derecha lleva su título sin flechas y su calendario y
+  tareas; tocar un día lo elige para la barra de escribir, como en 7.1, y tocar la izquierda lo suelta.
+  En Semana, los tres primeros días a la izquierda y los cuatro siguientes a la derecha. Mes: el
+  calendario a la izquierda y las tareas del mes a la derecha.
+- **Plegable abierto.** El lomo cae sobre la bisagra; cada página llena su mitad hasta 576 dp.
+- **Puntero.** Al pasar por encima de una fila tocable, `surfaceVariant` al 50 %.
+- **Teclado.** La Clave (13) gana una última sección, `keysTitle` (CON TECLADO), con una fila por atajo
+  de `docs/tecnico.md` 12.16: el atajo en sistema Medium (`⌘N` en Apple, `Ctrl+N` en Android) y lo que
+  hace (`keyNew`: Escribir en hoy; `keySearch`: Buscar; `keyTabs`: Ir a Hoy, Mes, Futuro o Índice;
+  `keyPrevNext`: Anterior y siguiente; `keyBack`: Atrás). Solo se pinta en pantalla ancha o con un
+  teclado físico conectado.
+- **Mac.** La misma app de iPad: nada propio en pantalla.
+
 ---
 
 ## 24. Qué pantalla cubre cada issue
@@ -1415,6 +1572,13 @@ error de 15.2.
 | #52 Widget de bloqueo | 18.3 |
 | #53 Accesibilidad | 1.2, 22 |
 | #63 a #72 | 23.1 a 23.10 |
+| #74 Precio | 15.1 (el precio de ejemplo del `ProDialog`) |
+| #75 Enviar una lista como fichero | 23.11 |
+| #76 Enviar una lista como enlace | 23.11, 23.12 |
+| #77 Compartir un seguimiento y el formato historia | 17, 23.13 |
+| #78 Semana | 6, 23.14 |
+| #79 Escribir desde fuera | 18, 23.15 |
+| #80 Doble página, plegables, Mac y teclado | 13, 21, 23.16 |
 
 Y fuera de las pantallas: el icono (#18) en la sección 20, la notificación (#36, #38) en la 19, el
 bloqueo (#39) en la 16 y los widgets de hoy (#41, #42) en la 18.1.
