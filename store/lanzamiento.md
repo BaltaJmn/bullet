@@ -163,23 +163,22 @@ no trae Play Billing.
       Con ellos, la misma etiqueta `v*` archiva y sube a TestFlight con el workflow compartido. (#7)
 - [x] **App IDs** `com.baltajmn.bullet` (App Groups e iCloud) y `com.baltajmn.bullet.widget` (App
       Groups), registrados por la API el 30-10-2026. (#7)
-- [ ] **[autor] App Group y contenedor de iCloud, en el portal** (developer.apple.com, *Certificates,
-      Identifiers & Profiles*; la API no los crea ni los asigna, y el control de permisos de Claude
-      bloquea *Register*):
-      1. *Identifiers > App Groups > +*: `group.com.baltajmn.bullet`.
-      2. *Identifiers > iCloud Containers > +*: `iCloud.com.baltajmn.bullet`.
-      3. App ID `com.baltajmn.bullet`: en *App Groups*, *Configure*, marcar el grupo; en *iCloud*,
-         *Configure*, marcar el contenedor. *Save*.
-      4. App ID `com.baltajmn.bullet.widget`: en *App Groups*, *Configure*, marcar el grupo. *Save*.
-      Sin esto, el archivado falla al firmar. Se comprueba en TestFlight encendiendo *Sincronizar* en dos
-      dispositivos con la misma cuenta (#69).
-- [ ] **[autor] Crear la app en App Store Connect** (*Apps > + > Nueva app*): plataforma iOS, nombre
-      `Bobbin: Bullet Journal`, idioma principal **inglés (EE. UU.)**, bundle id `com.baltajmn.bullet`,
-      SKU `bobbin`, acceso completo. Si el nombre está cogido, la reserva de la fase 0.
+- [x] **App Group `group.com.baltajmn.bullet` y contenedor `iCloud.com.baltajmn.bullet`**, creados en el
+      portal el 30-10-2026 y marcados en los dos App IDs (el contenedor, solo en el de la app). Se
+      comprueba en TestFlight encendiendo *Sincronizar* en dos dispositivos con la misma cuenta (#69).
+- [x] **App en App Store Connect**, 30-10-2026: `Bobbin: Bullet Journal` (id `6828976187`), idioma
+      principal inglés (EE. UU.), SKU `bobbin`, gratis, 175 países sin China continental, categorías
+      Estilo de vida y Productividad, política y soporte en `https://bullet.baltajmn.dev/`, copyright,
+      publicación manual, notas para el revisor y la ficha de `app-store/` en los cinco idiomas. La
+      build 3 (1.0.0) subió a TestFlight por `release-ios.yml` y ya está puesta en la versión.
+- [ ] **[autor] Aceptar el contrato del Apple Developer Program actualizado** (aviso en App Store
+      Connect): sin él, Apple no deja enviar apps nuevas a revisión.
 - [x] **`TEAM_ID`** en `Config.xcconfig`: `BR5ZH8XYP6`, el de la cuenta de persona física. No es
       secreto. (#8)
-- [ ] **[autor] Producto `bullet_pro`** en App Store Connect (`revenuecat.md` §6) con su captura de
-      revisión. (#47)
+- [ ] **Producto `bullet_pro`** en App Store Connect: creado el 30-10-2026 (id `6828976599`), no
+      consumible, sin Compartir en familia, nombre y descripción en los cinco idiomas y la nota para la
+      revisión de `revenuecat.md` §6. Falta el **precio** (`tienda/compra.py`, con confirmación del
+      autor) y la **captura para la revisión** (`appstore.py captura-compra`). (#47)
 - [ ] **[autor] App Privacy, clasificación por edad, cumplimiento de exportación** y notas para el
       revisor: `store/formularios.md`. (#59)
 - [ ] **[autor] Ficha**: los cinco ficheros por idioma de `app-store/`, capturas de iPhone y de iPad
