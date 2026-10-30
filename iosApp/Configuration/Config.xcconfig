@@ -1,6 +1,5 @@
 // Team ID de la cuenta de Apple Developer (App Store Connect > Membership > Team ID).
-// Vacio hasta que exista la cuenta: sin el, Xcode no puede firmar ni archivar.
-TEAM_ID=
+TEAM_ID=BR5ZH8XYP6
 
 PRODUCT_NAME=Bobbin
 

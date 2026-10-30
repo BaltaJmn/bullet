@@ -164,7 +164,8 @@ no trae Play Billing.
       Documents*) con ese contenedor en el App ID de la app, no en el del widget. `iosApp.entitlements`
       ya lo declara para la sincronización (#69): sin esto, el archivado de la etiqueta falla al firmar.
       Se comprueba en TestFlight encendiendo *Sincronizar* en dos dispositivos con la misma cuenta.
-- [ ] **[autor] `TEAM_ID`** en `Config.xcconfig`. **[código]** lo commitea: no es secreto. (#8)
+- [x] **`TEAM_ID`** en `Config.xcconfig`: `BR5ZH8XYP6`, el de la cuenta de persona física. No es
+      secreto. (#8)
 - [ ] **[autor] Producto `bullet_pro`** en App Store Connect (`revenuecat.md` §6) con su captura de
       revisión. (#47)
 - [ ] **[autor] App Privacy, clasificación por edad, cumplimiento de exportación** y notas para el
@@ -181,7 +182,8 @@ no trae Play Billing.
 ## Fase 7. Salida (#62)
 
 - [ ] **[código] Rellenar `SIBLINGS`** en `data/AppInfo.kt` (`docs/tecnico.md` 6.16) con la URL de
-      tienda de Quilt, Purl y MoodTraker **solo donde estén en producción ese día**. Comprobarlo
+      tienda de Quilt, Purl y MoodTraker **solo donde estén en producción ese día**. El 30-10-2026
+      Quilt y MoodTraker lo estaban en las dos y ya van; Purl en ninguna. Repetir la comprobación
       abriendo la URL pública sin sesión iniciada:
       `https://play.google.com/store/apps/details?id=com.baltajmn.habit`,
       `https://play.google.com/store/apps/details?id=com.baltajmn.line`,

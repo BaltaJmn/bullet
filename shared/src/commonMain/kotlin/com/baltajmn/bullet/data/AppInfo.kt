@@ -31,7 +31,15 @@ expect val onIos: Boolean
  */
 val SIBLINGS: List<Sibling>
     get() = listOf(
-        Sibling("Quilt", S.siblingQuilt, androidUrl = null, iosUrl = null),
-        Sibling("MoodTraker", S.siblingMood, androidUrl = null, iosUrl = null),
+        Sibling(
+            "Quilt", S.siblingQuilt,
+            androidUrl = "https://play.google.com/store/apps/details?id=com.baltajmn.habit",
+            iosUrl = "https://apps.apple.com/app/id6819302953",
+        ),
+        Sibling(
+            "MoodTraker", S.siblingMood,
+            androidUrl = "https://play.google.com/store/apps/details?id=com.baltajmn.mood",
+            iosUrl = "https://apps.apple.com/app/id6819302341",
+        ),
         Sibling("Purl", S.siblingPurl, androidUrl = null, iosUrl = null),
     )
