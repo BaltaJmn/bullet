@@ -184,10 +184,9 @@ no trae Play Billing.
       revisor**, 30-10-2026: privacidad publicada (historial de compras e ID de usuario, no vinculados,
       sin rastreo), 4+, sin contenido de terceros, la build 3 sin cifrado propio, el contacto de las
       hermanas y las siete respuestas de `store/formularios.md` 6. (#59)
-- [ ] **[autor] Vídeo para la revisión**, grabado en un iPhone de verdad con la última versión de
-      iOS: desde que se abre la app, escribir, una revisión que migra una tarea, la compra en sandbox y
-      *Restore purchase*. Las notas lo dan por adjunto: `appstore.py adjunto com.baltajmn.bullet
-      <vídeo>`. (#59)
+- [x] **[autor] Vídeo para la revisión**, 30-10-2026: 2:24 en un iPhone de verdad desde TestFlight
+      (grupo interno "Equipo", build 3), de la guía a la compra en sandbox a 1,99 y el libro en PDF.
+      Adjunto con `appstore.py adjunto`; el punto 1 de las notas cuenta lo que sale. (#59)
 - [ ] **[autor] Ficha**: los cinco ficheros por idioma de `app-store/`, capturas de iPhone y de iPad
       (#58), URL de la política y de soporte. (#57)
 - [ ] **[código] Informe de privacidad de Xcode** sobre el primer archivo (*Product > Archive >

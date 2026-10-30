@@ -207,12 +207,13 @@ Notas para el revisor, en inglés. Llevan desde el primer envío las siete respu
 pidió a Chroma el 06-10-2026 con la 2.1 *Information Needed* (la que manda a las cuentas con poco
 historial) y que la familia pone siempre para no perder una vuelta (`PUBLICAR.md` 5 de `BaltaJmn/ci`).
 El punto 1 da por adjunto el vídeo: **no se envía sin él** (grabado en un iPhone de verdad con la
-última versión de iOS, desde que se abre la app hasta la compra en sandbox y *Restore purchase*;
-`appstore.py adjunto`). `appstore.py notas` sube este bloque, que Apple corta en 4000 caracteres.
+última versión de iOS, desde que se abre la app hasta la compra en sandbox; `appstore.py adjunto`), y
+cuenta lo que sale en él, ni más ni menos. El de la 1.0.0, del 30-10-2026, no lleva revisión porque
+una instalación nueva no tiene días anteriores. `appstore.py notas` sube este bloque, que Apple corta en 4000 caracteres.
 
 ```
 1. Screen recording
-The attached recording (physical iPhone, latest iOS) goes from launch through writing entries, a review that migrates a task, to a sandbox purchase of Bobbin Pro and Restore purchase.
+The attached recording (physical iPhone, latest iOS) goes from launch through the first-run guide, writing a task, an event and a note, the entry sheet, the Key and Settings, a sandbox purchase of Bobbin Pro and a Pro feature (the notebook as a PDF book), then Week, Month, Future and Index. A fresh install has no earlier days, so the review is not in it: point 3 says where it opens. Restore purchase: point 5.
 
 2. Purpose and audience
 Bobbin is a digital bullet journal that follows Ryder Carroll's paper method: rapid logging with three bullets (task, event, note), five task states, and open tasks migrated by hand, one at a time. It is for anyone who keeps, or wants to keep, a bullet journal. There is no account and no server of ours: the journal is stored only on the device.
