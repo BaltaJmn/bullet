@@ -178,7 +178,8 @@ fun TodayScreen(
                 journal = journal,
                 today = today,
                 onReview = onReview,
-                offerReminder = reminderOfferOn == today,
+                // Turned on from Ajustes meanwhile, the offer has nothing left to offer.
+                offerReminder = reminderOfferOn == today && !journal.settings.reminderOn,
                 onOfferAnswered = { yes ->
                     onReminderOffer(null)
                     if (yes) {
