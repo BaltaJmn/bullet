@@ -1,3 +1,4 @@
+import AppIntents
 import SwiftUI
 import WidgetKit
 
@@ -288,11 +289,40 @@ struct BobbinLockWidget: Widget {
     }
 }
 
+/// "Escribir en Bobbin" (docs/tecnico.md 12.14): a door to Hoy with the keyboard up, from the Control
+/// Center, the lock screen or the Action button. Free: it opens the app, it writes nothing by itself.
+/// The texts are literals, translated in <lang>.lproj, as AppIntents need.
+@available(iOS 18.0, *)
+struct OpenToWriteIntent: AppIntent {
+    static let title: LocalizedStringResource = "Write in Bobbin"
+    static let description = IntentDescription("Opens Today with the keyboard up")
+
+    func perform() async throws -> some IntentResult & OpensIntent {
+        .result(opensIntent: OpenURLIntent(URL(string: "bobbin://today?focus")!))
+    }
+}
+
+@available(iOS 18.0, *)
+struct BobbinWriteControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "com.baltajmn.bullet.write") {
+            ControlWidgetButton(action: OpenToWriteIntent()) {
+                Label("Write in Bobbin", systemImage: "square.and.pencil")
+            }
+        }
+        .displayName("Write in Bobbin")
+        .description("Opens Today with the keyboard up")
+    }
+}
+
 @main
 struct BobbinWidgetBundle: WidgetBundle {
     var body: some Widget {
         BobbinTodayWidget()
         BobbinMonthWidget()
         BobbinLockWidget()
+        if #available(iOS 18.0, *) {
+            BobbinWriteControl()
+        }
     }
 }

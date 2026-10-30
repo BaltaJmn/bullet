@@ -44,14 +44,21 @@
             </intent-filter>
         </activity>
 
-        <!-- La captura desde fuera (docs/tecnico.md 12.5): solo la barra de escribir sobre lo que haya. -->
+        <!-- La captura desde fuera (docs/tecnico.md 12.5, 12.14): solo la barra de escribir sobre lo que
+             haya. Exportada para recibir texto de otra app; sin Pro manda al paywall y no escribe nada. -->
         <activity
             android:name=".CaptureActivity"
-            android:exported="false"
+            android:exported="true"
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:theme="@style/Theme.Bobbin.Capture"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter android:label="@string/tile_label">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
 
         <service
             android:name=".CaptureTileService"
@@ -83,6 +90,14 @@
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/today_widget_info" />
+        </receiver>
+
+        <receiver android:name="com.baltajmn.bullet.widget.CaptureWidgetReceiver" android:exported="true"
+            android:label="@string/capture_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/capture_widget_info" />
         </receiver>
 
         <receiver android:name="com.baltajmn.bullet.widget.MonthWidgetReceiver" android:exported="true">

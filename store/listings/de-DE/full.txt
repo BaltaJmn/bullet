@@ -21,7 +21,7 @@ MEHR VON DER METHODE
 Sammlungen lassen sich in neuen fortsetzen, beide verknüpft. Ein neues Notizbuch geht mit dir Sammlungen und Aufgaben durch; der Index klappt das alte weg, ohne zu löschen. Die Reflexion kann eine Frage anbieten. Schreib "morgen" oder "14. März": Ein Vorschlag bietet das Einplanen an, nie von selbst; gelesen wird nur auf deinem Handy. Der Index trägt je Sammlung oder Monat Symbol und Thema, mit Themenfilter; vergangene, ganz migrierte Monate sind unterstrichen. Einträge aus Purl, MoodTraker und Quilt übernimmst du einzeln.
 
 DEIN JOURNAL BLEIBT AUF DEINEM HANDY
-Kein Konto, keine Cloud von uns, keine Analyse. Exportiere das ganze Journal als Zip mit lesbarem Markdown, importiere es auf einem anderen Handy, ohne etwas zu verlieren, und sperre es mit Fingerabdruck, Gesicht oder Bildschirmsperre. Teile einen Tag, einen Monat oder eine Sammlung als gepunktete Seite. Mit Pro optional Sync über deine eigene Cloud, etwa Google Drive, in einer Datei deiner Wahl; ändern sich beide Seiten, fragt die App zuerst.
+Kein Konto, keine Cloud von uns, keine Analyse. Exportiere das ganze Journal als Zip mit lesbarem Markdown, importiere es auf einem anderen Handy, ohne etwas zu verlieren, und sperre es mit Fingerabdruck, Gesicht oder Bildschirmsperre. Teile einen Tag, einen Monat oder eine Sammlung als gepunktete Seite. Mit Pro optional Sync über deine eigene Cloud, in einer Datei deiner Wahl; ändern sich beide Seiten, fragt die App zuerst.
 
 WIDGET UND TABLET
 Ein Heute-Widget mit offenen und erledigten Aufgaben und Ereignissen, nie mit deinem Text. Auf dem Tablet öffnen sich Index und Zukunft als Doppelseite.
@@ -30,7 +30,7 @@ KOSTENLOS, FÜR IMMER
 Die ganze Methode samt "Mehr von der Methode", die Suche, Export und Import, Teilen, die Erinnerung, die Sperre und das Heute-Widget: kostenlos und ohne Zeitlimit.
 
 BOBBIN PRO, EINE ZAHLUNG
-Sieben weitere Umschläge, liniertes, kariertes und blankes Papier, mehr als ein Tracker, das Monats-Widget, das Notizbuch als PDF-Buch, Notieren aus den Schnelleinstellungen, Sync über deine eigene Cloud und der Jahresrückblick. Einmal bezahlt, nie ein Abo.
+Sieben weitere Umschläge, liniertes, kariertes und blankes Papier, mehr als ein Tracker, das Monats-Widget, das Notizbuch als PDF-Buch, Notieren aus den Schnelleinstellungen, dem Widget oder einer anderen App, Sync über deine eigene Cloud und der Jahresrückblick. Einmal bezahlt, nie ein Abo.
 
 WAS DU HIER NICHT FINDEST
 Keine KI, die deine Tage zusammenfasst, keine Versprechen für die psychische Gesundheit, keine Serien, keine Werbung, keine Analyse. Wenn du eine Zeile am Tag willst, die du jedes Jahr wieder liest, probier Purl.

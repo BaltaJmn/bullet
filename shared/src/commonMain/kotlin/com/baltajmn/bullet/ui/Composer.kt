@@ -98,8 +98,14 @@ fun Composer(
     autoFocus: Boolean = false,
     focusSignal: Int = 0,
     onSaved: () -> Unit = {},
+    initial: String = "",
 ) {
-    var value by remember { mutableStateOf(TextFieldValue("")) }
+    // Text shared from another app arrives already typed, in one line and within the limit, and is
+    // never saved until Intro (docs/tecnico.md 12.14).
+    var value by remember {
+        val edit = limitEdit("", initial.oneLine(), initial.oneLine().length, TEXT_LIMIT)
+        mutableStateOf(TextFieldValue(edit.text, TextRange(edit.cursor)))
+    }
     var picked by remember(place, suggested) { mutableStateOf(suggested) }
     var dayText by remember(futureMonth) { mutableStateOf("") }
     val focus = remember { FocusRequester() }
@@ -239,7 +245,7 @@ fun Composer(
  * keyboard over whatever was on screen, writing in today. Touching outside it closes without saving.
  */
 @Composable
-fun CaptureSheet(onSaved: () -> Unit, onDismiss: () -> Unit) {
+fun CaptureSheet(onSaved: () -> Unit, onDismiss: () -> Unit, initial: String = "") {
     BobbinTheme {
         Box(
             Modifier.fillMaxSize().clickable(interactionSource = null, indication = null, onClick = onDismiss).imePadding(),
@@ -252,7 +258,7 @@ fun CaptureSheet(onSaved: () -> Unit, onDismiss: () -> Unit) {
                     .navigationBarsPadding(),
             ) {
                 val today = BobbinRepository.today()
-                Composer(place = Place.Daily(today), today = today, autoFocus = true, onSaved = onSaved)
+                Composer(place = Place.Daily(today), today = today, autoFocus = true, onSaved = onSaved, initial = initial)
             }
         }
     }

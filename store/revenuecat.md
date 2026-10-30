@@ -39,6 +39,9 @@ Qué abre el pago hoy (v1.0, v1.1 y v1.2, todo ya en `main`), y solo esto (SPEC 
   juntar tras un resumen), nunca fusiona en silencio.
 - **El resumen del año en texto** (v1.2, #70): inspiraciones, prioridades hechas y las tareas que más
   viajaron.
+- **Escribir sin abrir la app** (v1.3, #79), en Android: el widget "Escribir" con Pro abre la captura
+  encima de la pantalla, y compartir texto a Bobbin desde otra app lo deja escrito en la barra para
+  guardarlo con Intro. Abrir la app para escribir sigue siendo gratis en todas partes (SPEC §7).
 
 Qué no se cobra nunca, porque lo prometen la ficha y la política: el método entero (rapid logging, los
 cinco estados, la migración, la revisión y la reflexión), Hoy, Mes, Future Log e Índice, colecciones
@@ -47,7 +50,10 @@ compartir, exportar e importar, y una portada (salvia) y un papel (punteado). Y 
 en v1.1 y v1.2, que es método y por eso es gratis: continuar una colección en otra (threading), el
 nuevo cuaderno anual, las preguntas de la reflexión guiada, las fechas en lenguaje natural al escribir
 (se leen en el dispositivo), las variaciones del índice (icono y tema por colección o mes, filtro por
-tema, meses ya migrados subrayados) e importar de Purl, MoodTraker y Quilt, entrada por entrada.
+tema, meses ya migrados subrayados) e importar de Purl, MoodTraker y Quilt, entrada por entrada. Y lo
+de v1.3 que no es escribir sin abrir la app: enviar una lista, compartir un seguimiento y el formato
+historia, la Semana, la doble página y el teclado, y las puertas a Hoy (el widget "Escribir" sin Pro y el
+control de iOS).
 
 > Si cambia cualquiera de las dos listas, se tocan en el **mismo commit** las claves `pro*` de
 > `docs/textos.md`, la descripción larga de las dos fichas (`listings/`, `app-store/`) y las

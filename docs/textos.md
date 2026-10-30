@@ -1050,7 +1050,10 @@ del widget, como `AppIntents`.
 - `receivedSummary` usa las mismas frases de `importSummary` (sección 15) para las nuevas y las que
   cambian: con 0 nuevas dice solo las que cambian, y con 0 en las dos no se usa, porque sale
   `mergeNothing`.
+- `proWriteOutside` sale en el `ProDialog` solo en Android, detrás de `proCapture`.
 - El texto del control de iOS: `Write in Bobbin`, `Escribir en Bobbin`, `Escrever no Bobbin`,
   `In Bobbin schreiben`, `Écrire dans Bobbin`. La etiqueta del widget en el selector de Android,
   `capture_widget_label` de `strings.xml`, es `captureWidgetLabel` con `Bobbin` delante: `Bobbin: Write`,
-  `Bobbin: Escribir`, y así en cada idioma.
+  `Bobbin: Escribir`, y así en cada idioma (`Bobbin : Écrire` en francés, con su espacio). La descripción
+  del selector, `widget_capture_description`, dice que escribe en hoy sin una palabra del diario en la
+  pantalla de inicio.

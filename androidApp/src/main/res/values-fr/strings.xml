@@ -8,4 +8,7 @@
     <string name="widget_preview_events">événements</string>
     <string name="widget_preview_month">SEPTEMBRE</string>
     <string name="tile_label">Noter dans Bobbin</string>
+    <string name="capture_widget_label">Bobbin : Écrire</string>
+    <string name="widget_capture_write">Écrire</string>
+    <string name="widget_capture_description">Écris une ligne pour aujourd\'hui, sans un mot du journal sur l\'écran d\'accueil</string>
 </resources>

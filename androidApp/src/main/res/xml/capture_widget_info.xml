@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- El widget "Escribir" (docs/tecnico.md 12.14): sin estado, asi que sin sondeo ni widget.json. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="40dp" android:minHeight="40dp"
+    android:targetCellWidth="1" android:targetCellHeight="1"
+    android:resizeMode="horizontal"
+    android:updatePeriodMillis="0"
+    android:previewLayout="@layout/capture_widget_preview"
+    android:initialLayout="@layout/capture_widget_preview"
+    android:description="@string/widget_capture_description"
+    android:widgetCategory="home_screen" />

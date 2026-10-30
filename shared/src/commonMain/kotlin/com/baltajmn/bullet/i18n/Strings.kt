@@ -2333,4 +2333,8 @@ object S {
     val shareTracker = t("Share this tracker", "Compartir este seguimiento", "Compartilhar este tracker", "Diesen Tracker teilen", "Partager ce suivi")
     val formatPost = t("Post", "Publicación", "Post", "Beitrag", "Publication")
     val formatStory = t("Story", "Historia", "Story", "Story", "Story")
+
+    // Writing from outside, second part (docs/pantallas.md 23.14, #79).
+    val captureWidgetLabel = t("Write", "Escribir", "Escrever", "Schreiben", "Écrire")
+    val proWriteOutside = t("Write without opening the app", "Escribir sin abrir la app", "Escrever sem abrir o app", "Schreiben, ohne die App zu öffnen", "Écrire sans ouvrir l'app")
 }

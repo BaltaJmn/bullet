@@ -2637,19 +2637,24 @@ cuando el modo es Semana.
 
 v1.3. La regla de SPEC §7: abrir la app para escribir es gratis; escribir sin abrirla es Pro.
 
-- **Android, `widget/CaptureWidget.kt`** (Glance), 1 x 1 y 2 x 1, `capture_widget_info.xml` con
-  `updatePeriodMillis="0"` y su previsualización en XML a mano. Pinta el glifo de la tarea y
-  `S.captureWidgetLabel`: ni texto del diario, ni números, ni `widget.json`. Tocarlo abre
-  `CaptureActivity` con `from=widget`; `CaptureActivity` mira Pro: con Pro, la captura superpuesta de
-  12.5; sin Pro, `MainActivity` con `bobbin://today?focus` y se cierra. No se pinta bloqueado nunca.
+- **Android, `shared/src/androidMain/.../widget/CaptureWidget.kt`** (Glance, `CaptureWidgetReceiver`),
+  1 x 1 y 2 x 1, `capture_widget_info.xml` con `updatePeriodMillis="0"` y su previsualización en
+  `layout/capture_widget_preview.xml` a mano; en el selector se llama `capture_widget_label`. Pinta el
+  glifo de la tarea y `S.captureWidgetLabel` (o `Bobbin` en 1 x 1): ni texto del diario, ni números, ni
+  `widget.json`. Tocarlo abre `CaptureActivity` con `CAPTURE_FROM` = `CAPTURE_FROM_WIDGET`;
+  `CaptureActivity` mira Pro: con Pro, la captura superpuesta de 12.5; sin Pro, `MainActivity` con
+  `bobbin://today?focus` y se cierra. No se pinta bloqueado nunca.
 - **Android, compartir texto a Bobbin** (Pro): `intent-filter` de `ACTION_SEND` y `text/plain` en
-  `CaptureActivity`. El campo se rellena con `EXTRA_TEXT` (o `EXTRA_SUBJECT` si no hay texto), en una
-  línea, y **no se guarda solo**: hace falta Intro o "Añadir". El tope de 500 se aplica al capturar
-  (6.2). Sin Pro, `MainActivity` con `bobbin://pro`.
-- **iOS, control** (iOS 18 o superior, gratis): en `iosApp/BobbinWidget`, `struct WriteControl:
-  ControlWidget` con `StaticControlConfiguration(kind: "com.baltajmn.bullet.write")` y un
-  `ControlWidgetButton` con `OpenURLIntent(URL(string: "bobbin://today?focus")!)`, el símbolo del
-  sistema `square.and.pencil` y la etiqueta literal "Write in Bobbin", con su traducción en
+  `CaptureActivity`, que pasa a `exported="true"` con la etiqueta `tile_label`. El campo se rellena con
+  `EXTRA_TEXT` (o `EXTRA_SUBJECT` si no hay texto) por el parámetro `initial` de `Composer`, en una
+  línea y recortado al tope de 500 como al teclear (6.2), y **no se guarda solo**: hace falta Intro o
+  "Añadir". Sin Pro, `MainActivity` con `bobbin://pro`, y no se escribe nada.
+- El `ProDialog` gana `proWriteOutside` solo en Android, detrás de `proCapture`.
+- **iOS, control** (iOS 18 o superior, gratis): en `iosApp/BobbinWidget/BobbinWidget.swift`,
+  `struct BobbinWriteControl: ControlWidget` con `StaticControlConfiguration(kind:
+  "com.baltajmn.bullet.write")` y un `ControlWidgetButton` con `OpenToWriteIntent`, un `AppIntent` cuyo
+  `perform` devuelve `OpenURLIntent(URL(string: "bobbin://today?focus")!)`; el símbolo del sistema
+  `square.and.pencil` y la etiqueta literal "Write in Bobbin", con su traducción en
   `<lang>.lproj/Localizable.strings` del objetivo del widget. Entra en el `WidgetBundle` tras
   `if #available(iOS 18.0, *)`. El sistema pide desbloquear el teléfono; el bloqueo de Bobbin hace
   esperar al enlace, como siempre.

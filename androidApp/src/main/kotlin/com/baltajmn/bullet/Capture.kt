@@ -16,6 +16,8 @@ import com.baltajmn.bullet.data.AndroidContext
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.ui.CaptureSheet
+import com.baltajmn.bullet.widget.CAPTURE_FROM
+import com.baltajmn.bullet.widget.CAPTURE_FROM_WIDGET
 import kotlinx.coroutines.launch
 
 /**
@@ -53,7 +55,12 @@ class CaptureTileService : TileService() {
     }
 }
 
-/** Only the composer, writing in today; Intro saves, says so with the system's toast, and closes. */
+/**
+ * Only the composer, writing in today; Intro saves, says so with the system's toast, and closes. It opens
+ * from the tile, from the "Escribir" widget and from text another app shares (docs/tecnico.md 12.14).
+ * Writing without opening the app is Pro: without it, the widget still opens Hoy to write, and the
+ * tile and sharing open the paywall.
+ */
 class CaptureActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -62,12 +69,19 @@ class CaptureActivity : ComponentActivity() {
         BobbinRepository.ensureLoaded()
         // The tile checked, but Pro can have been refunded since it was placed.
         if (!BobbinRepository.isPro) {
-            startActivity(Intent(this, MainActivity::class.java).setData(Uri.parse("bobbin://pro")))
+            val link = if (intent?.getStringExtra(CAPTURE_FROM) == CAPTURE_FROM_WIDGET) "bobbin://today?focus" else "bobbin://pro"
+            startActivity(Intent(this, MainActivity::class.java).setData(Uri.parse(link)))
             finish()
             return
         }
+        val shared = if (intent?.action == Intent.ACTION_SEND) {
+            intent.getStringExtra(Intent.EXTRA_TEXT)?.takeIf { it.isNotBlank() } ?: intent.getStringExtra(Intent.EXTRA_SUBJECT).orEmpty()
+        } else {
+            ""
+        }
         setContent {
             CaptureSheet(
+                initial = shared,
                 onSaved = {
                     lifecycleScope.launch {
                         BobbinRepository.flush()

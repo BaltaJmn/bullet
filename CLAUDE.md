@@ -94,6 +94,10 @@ Todo lo que se ve fuera de la app lee y escribe por `BobbinRepository`, nunca po
 | Widget del mes | `widget/MonthWidget.kt`, `BobbinMonthWidget.swift` | Pro. Se pinta bloqueado sin Pro |
 | Widget de pantalla de bloqueo | `BobbinWidget.swift` | Pro. Solo iOS |
 | Recordatorio de reflexión | `Reminders.android.kt` + receptores, `Reminders.ios.kt` | Apagado por defecto. Texto fijo, nunca cita el diario. Android se reprograma al arrancar, al reiniciar y al cambiar de hora |
+| Widget "Escribir" | `widget/CaptureWidget.kt` (Glance) | Sin texto ni números. Gratis abre Hoy; con Pro escribe encima de la pantalla. Solo Android |
+| Control "Escribir en Bobbin" | `BobbinWidget.swift` (`BobbinWriteControl`) | Gratis. iOS 18. Abre `bobbin://today?focus` |
+| Compartir texto a Bobbin | `CaptureActivity` | Pro. Solo Android. Rellena la barra y nunca guarda solo |
+| Lista enviada `.bobbin` | `data/ListPacket.kt`, `MainActivity`, `BobbinBridge.open` | Gratis. Recibir es importar una colección: resumen antes y nunca borra |
 | Enlaces | `bobbin://today?focus`, `bobbin://review`, `bobbin://pro` | El esquema es `bobbin://` |
 
 Reglas que cuestan una tarde si se olvidan:
