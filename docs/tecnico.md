@@ -2607,11 +2607,15 @@ v1.3, gratis. `model/Week.kt`, puro. Un modo de Hoy, no un destino ni un sitio: 
 ```kotlin
 data class WeekDay(val date: LocalDate, val daily: List<Entry>, val calendar: List<Entry>, val future: List<Entry>)
 
-fun weekStart(day: LocalDate, firstDayOfWeek: Int): LocalDate
-fun Journal.weekOf(day: LocalDate, firstDayOfWeek: Int): List<WeekDay>    // siempre 7
+fun weekStart(day: LocalDate, first: DayOfWeek): LocalDate
+fun Journal.weekOf(day: LocalDate, first: DayOfWeek): List<WeekDay>    // siempre 7
 fun writeTarget(day: LocalDate, today: LocalDate): Place
-fun lastWeekAllowed(today: LocalDate, firstDayOfWeek: Int): LocalDate      // el weekStart más lejano
+fun lastWeekAllowed(today: LocalDate, first: DayOfWeek): LocalDate     // el weekStart más lejano
 ```
+
+`first` es `firstDayOfWeek(settings, systemFirstDayOfWeek())`, el mismo que usa Mes. La pantalla es
+`ui/WeekScreen.kt` (`WeekPage`, `WeekDayBlock` y `ViewSwitch`), y `TodayScreen` la pinta en vez del día
+cuando el modo es Semana.
 
 - `weekOf`: para cada día, `entriesAt(Daily(d))`, `entriesAt(Monthly(monthOf(d), d.day))` y
   `entriesAt(Future(monthOf(d), d.day))`, sin esqueletos y en su `order`. Cada día lee su propio mes:

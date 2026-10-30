@@ -2293,4 +2293,31 @@ object S {
         "Cette liste vient d'une version plus récente de Bobbin. Mets l'app à jour pour l'ouvrir.",
     )
 
+    // The week (docs/pantallas.md 23.13, #78).
+    val viewDay = t("Day", "Día", "Dia", "Tag", "Jour")
+    val viewWeek = t("Week", "Semana", "Semana", "Woche", "Semaine")
+    fun weekTitle(start: LocalDate): String {
+        val d = shortDate(start)
+        return t("Week of ${dayFirst(start)}", "Semana del $d", "Semana de $d", "Woche vom $d", "Semaine du $d")
+    }
+    fun weekRange(from: LocalDate, to: LocalDate): String {
+        val a = shortDate(from)
+        val b = shortDate(to)
+        return t("${dayFirst(from)} to ${dayFirst(to)}", "Del $a al $b", "De $a a $b", "$a bis $b", "Du $a au $b")
+    }
+
+    /** "26 October": the English title of a week reads day first, like the other four. */
+    private fun dayFirst(d: LocalDate) = "${d.day} ${monthNames("en")[d.month.ordinal]}"
+
+    /** Written in normal case here; the Eyebrow style uppercases it when painting. */
+    val weekToday = t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui")
+    fun weekDayLabel(d: LocalDate, withMonth: Boolean): String {
+        val w = weekdayNames()[d.dayOfWeek.ordinal]
+        return if (withMonth) "$w ${shortDate(d)}" else t("$w ${d.day}", "$w ${d.day}", "$w, ${d.day}", "$w, ${d.day}.", "$w ${d.day}")
+    }
+    val backToThisWeek = t("Back to this week", "Volver a esta semana", "Voltar a esta semana", "Zurück zu dieser Woche", "Retour à cette semaine")
+    val inCalendar = t("In the calendar", "En el calendario", "No calendário", "Im Kalender", "Dans le calendrier")
+    val inFuture = t("In Future", "En Futuro", "No Futuro", "In Zukunft", "Dans Futur")
+    val a11yPreviousWeek = t("Previous week", "Semana anterior", "Semana anterior", "Vorherige Woche", "Semaine précédente")
+    val a11yNextWeek = t("Next week", "Semana siguiente", "Próxima semana", "Nächste Woche", "Semaine suivante")
 }

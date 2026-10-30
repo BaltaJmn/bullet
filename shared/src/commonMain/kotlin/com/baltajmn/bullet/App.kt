@@ -140,6 +140,9 @@ fun App() {
 
     var today by remember { mutableStateOf(BobbinRepository.today()) }
     var viewedDay by remember { mutableStateOf(today) }
+    // Hoy as a week (docs/pantallas.md 23.13): kept for the session, Día at every start.
+    var weekMode by remember { mutableStateOf(false) }
+    var viewedWeek by remember { mutableStateOf(today) }
     var viewedMonth by remember { mutableStateOf(monthOf(today)) }
     var futureShown by remember { mutableStateOf(FUTURE_MONTHS) }
     // The place a link just pointed at, until the page that owns it has scrolled to it (docs/pantallas.md 5.5).
@@ -163,9 +166,11 @@ fun App() {
         if (relocks(BobbinRepository.journal.settings.lockOn, backgroundAt?.elapsedNow())) locked = true
         backgroundAt = null
         val wasToday = viewedDay == today
+        val wasThisWeek = viewedWeek == today
         val wasThisMonth = viewedMonth == monthOf(today)
         today = BobbinRepository.today()
         if (wasToday) viewedDay = today
+        if (wasThisWeek) viewedWeek = today
         if (wasThisMonth) viewedMonth = monthOf(today)
         // A change of clock, of zone or of permission is only seen from here (docs/tecnico.md 6.12).
         Reminders.sync()
@@ -233,6 +238,7 @@ fun App() {
             "today" -> {
                 overlay = null
                 tab = Screen.TODAY
+                weekMode = false
                 viewedDay = now
                 if (link.focus) focusToday++
             }
@@ -255,8 +261,12 @@ fun App() {
     // Nothing left to pop once the overlay is closed: Mes, Futuro e Índice fall back to Hoy, and
     // Hoy looking at another day falls back to today. On today, in Hoy, this lets the system close
     // the app (docs/pantallas.md 3: "Atrás").
-    BackHandler(!locked && overlay == null && (tab != Screen.TODAY || viewedDay != today)) {
-        if (tab != Screen.TODAY) tab = Screen.TODAY else viewedDay = today
+    BackHandler(!locked && overlay == null && (tab != Screen.TODAY || viewedDay != today || weekMode)) {
+        when {
+            tab != Screen.TODAY -> tab = Screen.TODAY
+            weekMode -> weekMode = false
+            else -> viewedDay = today
+        }
     }
 
     BobbinTheme {
@@ -277,6 +287,10 @@ fun App() {
                             focusSignal = focusToday,
                             // Under the guide the keyboard would come up behind it.
                             autoFocus = overlay != Screen.GUIDE,
+                            weekMode = weekMode,
+                            onWeekModeChange = { weekMode = it },
+                            viewedWeek = viewedWeek,
+                            onViewedWeekChange = { viewedWeek = it },
                         )
                         Screen.INDEX -> IndexScreen(
                             today = today,

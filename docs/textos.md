@@ -1029,8 +1029,11 @@ del widget, como `AppIntents`.
 | `viewDay`* | | Day | Día | Dia | Tag | Jour |
 | `viewWeek`* | | Week | Semana | Semana | Woche | Semaine |
 | `weekTitle` | fecha | Week of 26 October | Semana del 26 de octubre | Semana de 26 de outubro | Woche vom 26. Oktober | Semaine du 26 octobre |
-| `weekRange` | desde, hasta | 26 October to 1 November | Del 26 de octubre al 1 de noviembre | De 26 de outubro a 1º de novembro | 26. Oktober bis 1. November | Du 26 octobre au 1er novembre |
+| `weekRange` | desde, hasta | 26 October to 1 November | Del 26 de octubre al 1 de noviembre | De 26 de outubro a 1 de novembro | 26. Oktober bis 1. November | Du 26 octobre au 1er novembre |
 | `weekToday` | | Today | Hoy | Hoje | Heute | Aujourd'hui |
+| `weekDayLabel` | fecha, con mes | Thursday 29 / Sunday November 1 | jueves 29 / domingo 1 de noviembre | quinta-feira, 29 / domingo 1 de novembro | Donnerstag, 29. / Sonntag 1. November | jeudi 29 / dimanche 1er novembre |
+| `a11yPreviousWeek` | | Previous week | Semana anterior | Semana anterior | Vorherige Woche | Semaine précédente |
+| `a11yNextWeek` | | Next week | Semana siguiente | Próxima semana | Nächste Woche | Semaine suivante |
 | `backToThisWeek`* | | Back to this week | Volver a esta semana | Voltar a esta semana | Zurück zu dieser Woche | Retour à cette semaine |
 | `inCalendar` | | In the calendar | En el calendario | No calendário | Im Kalender | Dans le calendrier |
 | `inFuture` | | In Future | En Futuro | No Futuro | In Zukunft | Dans Futur |
@@ -1043,7 +1046,7 @@ del widget, como `AppIntents`.
 | `keyPrevNext` | | Previous and next | Anterior y siguiente | Anterior e próximo | Zurück und weiter | Précédent et suivant |
 | `keyBack` | | Back | Atrás | Voltar | Zurück | Retour |
 
-- `receivedEyebrow` y `weekToday`, como `Eyebrow`, salen en mayúsculas.
+- `receivedEyebrow`, `weekToday` y `weekDayLabel`, como `Eyebrow`, salen en mayúsculas.
 - `receivedSummary` usa las mismas frases de `importSummary` (sección 15) para las nuevas y las que
   cambian: con 0 nuevas dice solo las que cambian, y con 0 en las dos no se usa, porque sale
   `mergeNothing`.

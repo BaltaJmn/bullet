@@ -1461,25 +1461,30 @@ Un modo de Hoy. Debajo del subtítulo de Hoy, un selector de dos opciones con no
 |    MARTES 27                                   |
 |  o MIÉRCOLES 28 · HOY                          |  punto de portada y weekToday
 |    .  Enviar el presupuesto                    |
-|    o  Dentista, 17:30       En el calendario   |  inCalendar, en Secondary a la derecha
+|    En el calendario                            |  inCalendar, en Secondary 12 sp
+|    o  Dentista, 17:30                          |
 |    JUEVES 29                                   |
 |    ...                                         |
 |    DOMINGO 1 DE NOVIEMBRE                      |  el primer día de otro mes lleva el mes
-|    o  Cumpleaños de Leo     En Futuro          |  inFuture
+|    En Futuro                                   |  inFuture
+|    o  Cumpleaños de Leo                        |
 +------------------------------------------------+
 | (. Tarea) (o Evento) (- Nota)  En el jueves 29 |  barra de escribir
 +------------------------------------------------+
 ```
 
-- **Cabecera.** `weekTitle(lunes)` con `BACK` y `FORWARD`, que cambian de semana; el gesto 3 también.
-  Fuera de la semana de hoy, `backToThisWeek` (Volver a esta semana) en `primary`.
-- **Días.** Cada uno, su cabecera en `Eyebrow` y sus entradas: las del Daily Log, después las de la
-  línea del calendario con `inCalendar` (En el calendario) y las del Future Log con `inFuture` (En
-  Futuro), en `Secondary` al final de la fila. Un día sin nada es solo su cabecera.
+- **Cabecera.** `weekTitle(lunes)` con `BACK` y `FORWARD` (`a11yPreviousWeek`, `a11yNextWeek`), que
+  cambian de semana; el gesto 3 también. Fuera de la semana de hoy, `backToThisWeek` (Volver a esta
+  semana) en `primary`. Las tarjetas de aviso de Hoy, solo en la semana de hoy.
+- **Días.** Cada uno, su cabecera en `Eyebrow` (`weekDayLabel`, con el mes en el primer día de la
+  semana y en el día 1) y sus entradas: las del Daily Log, después las de la línea del calendario bajo
+  una línea `inCalendar` (En el calendario) y las del Future Log bajo `inFuture` (En Futuro), las dos
+  en `Secondary` de 12 sp. Un día sin nada es solo su cabecera.
 - **Escribir.** Tocar la cabecera de un día la marca en `surfaceVariant` y pone la barra en ese día,
   con el lugar de `docs/tecnico.md` 12.13 escrito en "En <dónde>". Por defecto, hoy si está en la
   semana; si no, el primer día. Tocarla otra vez la suelta.
-- **Foco.** Al pasar a Semana no sube el teclado: se lee antes de escribir, como Mes.
+- **Foco.** Al pasar a Semana no sube el teclado: se lee antes de escribir, como Mes. Se abre en la
+  semana del día que se estaba viendo. Atrás vuelve a Día.
 - Todo lo demás de una entrada, como en Hoy. Compartir no tiene versión de semana.
 
 ### 23.14 Escribir desde fuera (v1.3, #79)

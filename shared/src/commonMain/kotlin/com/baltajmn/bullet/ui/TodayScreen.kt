@@ -83,9 +83,26 @@ fun TodayScreen(
     onReminderOffer: (LocalDate?) -> Unit,
     focusSignal: Int,
     autoFocus: Boolean,
+    weekMode: Boolean = false,
+    onWeekModeChange: (Boolean) -> Unit = {},
+    viewedWeek: LocalDate = today,
+    onViewedWeekChange: (LocalDate) -> Unit = {},
 ) {
     val journal = BobbinRepository.journal
     val isToday = viewedDay == today
+    if (weekMode) {
+        WeekPage(
+            today = today,
+            anchor = viewedWeek,
+            onAnchorChange = onViewedWeekChange,
+            onDayMode = { onWeekModeChange(false) },
+            onSearch = onSearch,
+            onSettings = onSettings,
+            onReview = onReview,
+            onNavigateTo = onNavigateTo,
+        )
+        return
+    }
 
     // Once, after the first bullet is saved (docs/pantallas.md 6.3). Marked as offered the moment it
     // shows: closing the app without answering is also an answer, and it does not come back.
@@ -138,6 +155,7 @@ fun TodayScreen(
                 Spacer(Modifier.width(48.dp))
             }
         }
+        ViewSwitch(week = false) { onViewedWeekChange(viewedDay); onWeekModeChange(true) }
 
         if (isToday) {
             Notices(
@@ -180,7 +198,7 @@ fun TodayScreen(
 
 /** Every notice that applies shows, in order (docs/pantallas.md 6.3). */
 @Composable
-private fun Notices(
+internal fun Notices(
     journal: Journal,
     today: LocalDate,
     onReview: (ReviewScope) -> Unit,
