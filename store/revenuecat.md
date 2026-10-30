@@ -16,7 +16,7 @@ MoodTraker o Purl y sirven tal cual: `../line/store/revenuecat.md`.
 | Producto | Uno solo, compra única, **no consumible**. Nunca suscripción |
 | Identificador | `bullet_pro` en las dos tiendas. **Irreversible**: un id borrado no se reutiliza |
 | Nombre visible | Bobbin Pro |
-| Precio | **4,99 EUR desde la v1.3** de base en España, conversión automática al resto **con redondeo**. Hasta la v1.2, 1,99 EUR (SPEC §7, #74). El cambio, en el §8 |
+| Precio | **1,99 EUR de salida** de base en España, puesto el 30-10-2026 en las dos tiendas con `tienda/compra.py` (127 regiones de Play con el precio de Apple). La subida a 4,99, abierta (SPEC §7, #74); el cómo, en el §8 |
 | Compartir en familia | Activado en iOS desde la v1.3. **Irreversible.** Google Play no lo tiene para compras dentro de la app |
 | Descuento de lanzamiento | No |
 | Países | Todos |

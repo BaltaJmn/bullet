@@ -42,7 +42,8 @@ Todas tomadas. El porqué de cada una, en `SPEC.md`.
       del xcconfig, los ficheros de `listings/` y `app-store/`, y la política. Los identificadores de
       la tabla de arriba no cambian: el nombre solo vive en textos, ficha, icono, esquema `bobbin://`
       y nombres de fichero de copia.
-- [x] Precio: **1,99 EUR** en v1.0, v1.1 y v1.2, y **4,99 EUR desde la v1.3** con Compartir en
+- [x] Precio: **1,99 EUR de salida**, con la v1.3 entera dentro (autor, 30-10-2026). La subida a
+      4,99 EUR con Compartir en familia queda abierta (#74). Antes decía 4,99 EUR desde la v1.3, con Compartir en
       familia en iOS (#74), sin descuento de lanzamiento, precios regionales activados (SPEC §7,
       `revenuecat.md` §8).
 - [x] Qué es Pro en v1.0: siete portadas, tres papeles, seguimientos a partir del segundo, widget del
@@ -122,8 +123,8 @@ subido a mano, así que `release.yml` y `listings.yml` fallan si se ejecutan ant
    Textos en `listings/`, con los topes comprobados. (#57)
 5. **[autor] Imágenes**: icono de 512, gráfico de 1024x500 y capturas. La API de listings solo escribe
    texto. (#58)
-6. **[autor] Producto `bullet_pro`** a 1,99 EUR, el precio de v1.0 a v1.2 (`revenuecat.md` §1; sube a
-   4,99 EUR con la v1.3, §8). (#47)
+6. **Producto `bullet_pro`** a 1,99 EUR, el precio de salida (`revenuecat.md` §0; la subida a 4,99,
+   abierta en #74). Igualado con el de Apple por `tienda/compra.py` el 30-10-2026. (#47)
 7. **[autor] Abrir la prueba cerrada** (canal `alpha`) con la lista de probadores como Grupo de
    Google, y **[código]** etiquetar: `git tag v1.0.0 && git push origin v1.0.0`, que publica en
    `alpha`. (#10)
@@ -177,8 +178,8 @@ no trae Play Billing.
       secreto. (#8)
 - [ ] **Producto `bullet_pro`** en App Store Connect: creado el 30-10-2026 (id `6828976599`), no
       consumible, sin Compartir en familia, nombre y descripción en los cinco idiomas y la nota para la
-      revisión de `revenuecat.md` §6. Falta el **precio** (`tienda/compra.py`, con confirmación del
-      autor) y la **captura para la revisión** (`appstore.py captura-compra`). (#47)
+      revisión de `revenuecat.md` §6. Precio **1,99 EUR**, puesto el 30-10-2026 con `tienda/compra.py`
+      en las dos tiendas. Falta la **captura para la revisión** (`appstore.py captura-compra`). (#47)
 - [ ] **[autor] App Privacy, clasificación por edad, cumplimiento de exportación** y notas para el
       revisor: `store/formularios.md`. (#59)
 - [ ] **[autor] Ficha**: los cinco ficheros por idioma de `app-store/`, capturas de iPhone y de iPad
@@ -215,7 +216,7 @@ no trae Play Billing.
   las descripciones del producto de `revenuecat.md` ya llevan la lista completa de Pro, y quien ya
   compró lo recibe sin pagar de nuevo. Las notas de versión de cada una (`whatsnew/`) dicen qué trae,
   en el mismo commit que la etiqueta.
-- **v1.3 sube el precio a 4,99 EUR** el día que sale a producción, en las dos consolas a la vez, y
+- **La subida a 4,99 EUR**, si se decide en #74, va el día que salga a producción la versión que la lleve, en las dos consolas a la vez, y
   activa Compartir en familia en iOS (`revenuecat.md` §8, #74). Quien ya compró conserva Pro. Las notas
   de versión no hablan del precio: hablan de lo que trae.
 - **Actualizar la política y los formularios** en el mismo commit que añada cualquier cosa que salga

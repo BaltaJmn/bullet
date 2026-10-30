@@ -878,11 +878,16 @@ La escalera real de la familia, leída de sus repositorios:
 | Quilt | 4,99 EUR |
 | Purl | 5,99 EUR en v1.0, 8,99 EUR desde v1.1 |
 | MoodTraker | 7,99 EUR |
-| **Bobbin** | 1,99 EUR hasta v1.2; **4,99 EUR desde v1.3** |
+| **Bobbin** | **1,99 EUR de salida**, ya con la v1.3 entera; la subida a 4,99, abierta (#74) |
 
 **Decisión: 4,99 EUR desde la v1.3** (del autor, 30-10-2026, #74). La historia, para que no se
 repita la discusión: el plan de salida era 7,99 EUR y 9,99 desde v1.1; el 29-09-2026 el autor lo bajó a
 1,99 EUR para que la compra fuera de impulso, y así salen v1.0, v1.1 y v1.2.
+
+**Corrección del mismo 30-10-2026** (del autor): nada había salido aún y la primera versión pública
+lleva ya la v1.3 entera, así que sale a **1,99 EUR** en las dos tiendas, sin Compartir en familia. El
+razonamiento de abajo para los 4,99 sigue en pie; cuándo se aplica, y con él Compartir en familia,
+queda abierto en #74.
 
 Por qué sube, con los datos del repaso de octubre de 2026 (§1):
 
