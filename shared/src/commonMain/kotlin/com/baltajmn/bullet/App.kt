@@ -219,9 +219,33 @@ fun App() {
         overlay = Screen.COLLECTION
     }
 
-    fun openReview(scope: ReviewScope) {
-        reviewScope = scope
+    /**
+     * Closes what is on top and forgets what it was showing, whether by touch, Esc, a shortcut or a link:
+     * a review flag left behind would open the wrong screen the next time REVIEW opens.
+     */
+    fun closeOverlay() {
+        // The guide counts as seen however it is closed, not only from its own button.
+        if (overlay == Screen.GUIDE) runCatching { Prefs.setBool(PREF_GUIDE_SEEN, true) }
+        overlay = null
         reviewFutureLog = false
+        reviewNotebook = false
+        reviewYear = false
+        reviewSibling = null
+        reviewScope = null
+        openCollection = null
+    }
+
+    /** Hoy on today, as a day: where a shortcut, a link, the guide or a review sends someone to write. */
+    fun showToday() {
+        closeOverlay()
+        tab = Screen.TODAY
+        weekMode = false
+        viewedDay = today
+    }
+
+    fun openReview(scope: ReviewScope) {
+        closeOverlay()
+        reviewScope = scope
         overlay = Screen.REVIEW
     }
 
@@ -229,7 +253,7 @@ fun App() {
     fun goTo(place: Place) {
         linkTo = place
         when (place) {
-            is Place.Daily -> { tab = Screen.TODAY; viewedDay = place.date }
+            is Place.Daily -> { tab = Screen.TODAY; weekMode = false; viewedDay = place.date }
             is Place.Monthly -> { tab = Screen.MONTH; viewedMonth = place.month }
             is Place.Future -> {
                 tab = Screen.FUTURE
@@ -252,15 +276,13 @@ fun App() {
         val now = BobbinRepository.today()
         when (link.screen) {
             "today" -> {
-                overlay = null
-                tab = Screen.TODAY
-                weekMode = false
+                showToday()
                 viewedDay = now
                 if (link.focus) focusToday++
             }
             "review" -> openReview(ReviewScope.Day(now))
             "pro" -> {
-                overlay = null
+                closeOverlay()
                 tab = Screen.TODAY
                 viewedDay = now
                 Paywall.show()
@@ -293,12 +315,12 @@ fun App() {
         val first = firstDayOfWeek(BobbinRepository.journal.settings, systemFirstDayOfWeek())
         val thisMonth = monthOf(today)
         when (action) {
-            KeyAction.WRITE -> { overlay = null; tab = Screen.TODAY; weekMode = false; viewedDay = today; focusToday++ }
+            KeyAction.WRITE -> { showToday(); focusToday++ }
             KeyAction.SEARCH -> overlay = Screen.SEARCH
-            KeyAction.TODAY -> { overlay = null; tab = Screen.TODAY }
-            KeyAction.MONTH -> { overlay = null; tab = Screen.MONTH }
-            KeyAction.FUTURE -> { overlay = null; tab = Screen.FUTURE }
-            KeyAction.INDEX -> { overlay = null; tab = Screen.INDEX }
+            KeyAction.TODAY -> { closeOverlay(); tab = Screen.TODAY }
+            KeyAction.MONTH -> { closeOverlay(); tab = Screen.MONTH }
+            KeyAction.FUTURE -> { closeOverlay(); tab = Screen.FUTURE }
+            KeyAction.INDEX -> { closeOverlay(); tab = Screen.INDEX }
             KeyAction.PREVIOUS, KeyAction.NEXT -> {
                 if (overlay != null) return false
                 val step = if (action == KeyAction.NEXT) 1 else -1
@@ -320,7 +342,7 @@ fun App() {
                 }
             }
             KeyAction.BACK -> when {
-                overlay != null -> { overlay = null; reviewFutureLog = false; reviewNotebook = false; reviewYear = false; reviewSibling = null; reviewScope = null; openCollection = null }
+                overlay != null -> closeOverlay()
                 tab != Screen.TODAY -> tab = Screen.TODAY
                 weekMode -> weekMode = false
                 viewedDay != today -> viewedDay = today
@@ -395,7 +417,7 @@ fun App() {
                 if (WindowInsets.ime.getBottom(LocalDensity.current) == 0) TabBar(active = tab, onSelect = { tab = it })
             }
 
-            val dismiss = { overlay = null; reviewFutureLog = false; reviewNotebook = false; reviewYear = false; reviewSibling = null; reviewScope = null; openCollection = null }
+            val dismiss = { closeOverlay() }
             overlay?.let { screen ->
                 val scope = reviewScope
                 val collection = openCollection
@@ -416,7 +438,7 @@ fun App() {
                         scope = scope,
                         today = today,
                         onClose = dismiss,
-                        onToToday = { dismiss(); tab = Screen.TODAY; viewedDay = today },
+                        onToToday = { showToday() },
                     )
                     screen == Screen.KEY -> KeyScreen(onBack = { overlay = Screen.SETTINGS })
                     screen == Screen.SETTINGS -> SettingsScreen(
@@ -429,10 +451,7 @@ fun App() {
                         onList = { receiving = it },
                     )
                     screen == Screen.GUIDE -> GuideScreen(today) {
-                        runCatching { Prefs.setBool(PREF_GUIDE_SEEN, true) }
-                        dismiss()
-                        tab = Screen.TODAY
-                        viewedDay = today
+                        showToday()
                         focusToday++
                     }
                     screen == Screen.SEARCH -> SearchScreen(

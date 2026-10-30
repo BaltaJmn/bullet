@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -72,7 +74,8 @@ fun KeyScreen(onBack: () -> Unit) {
 @Composable
 private fun KeyRow(glyph: @Composable () -> Unit, name: String, means: String?) {
     Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)) {
-        Box(Modifier.width(40.dp).height(22.dp), contentAlignment = Alignment.Center) { glyph() }
+        // A shortcut ("Ctrl+1-4", or any at a large font scale) is wider than a glyph: it widens its row.
+        Box(Modifier.widthIn(min = 40.dp).heightIn(min = 22.dp), contentAlignment = Alignment.Center) { glyph() }
         Spacer(Modifier.width(6.dp))
         Column(Modifier.weight(1f)) {
             Text(name, style = Type.Body.copy(fontWeight = FontWeight.Medium, lineHeight = 20.sp))

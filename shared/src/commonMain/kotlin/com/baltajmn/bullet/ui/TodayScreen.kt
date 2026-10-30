@@ -284,7 +284,9 @@ fun ShareRow(label: String, onClick: () -> Unit) {
 }
 
 /** Sees every press inside, before the children, and consumes none: they still get their own tap. */
-internal fun Modifier.onAnyPress(onPress: () -> Unit): Modifier = this.pointerInput(Unit) {
+// Keyed on [onPress]: a caller's state can be replaced (remember with keys), and a stale lambda would
+// keep writing to the old one.
+internal fun Modifier.onAnyPress(onPress: () -> Unit): Modifier = this.pointerInput(onPress) {
     awaitPointerEventScope {
         while (true) {
             val event = awaitPointerEvent(PointerEventPass.Initial)

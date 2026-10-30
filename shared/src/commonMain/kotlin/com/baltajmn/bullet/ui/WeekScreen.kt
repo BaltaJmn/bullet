@@ -115,7 +115,8 @@ fun WeekPage(
     val last = lastWeekAllowed(today, first)
     val days = journal.weekOf(start, first)
     val spread = isSpread()
-    var chosen by remember(start) { mutableStateOf(if (today in start..end) today else start) }
+    // Keyed on today too: overnight in Semana, the composer moves to the new day as Día does.
+    var chosen by remember(start, today) { mutableStateOf(if (today in start..end) today else start) }
     val scroll = rememberScrollState()
 
     fun previous() = onAnchorChange(start.minus(7, DateTimeUnit.DAY))

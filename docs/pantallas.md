@@ -1506,7 +1506,9 @@ Un modo de Hoy. Debajo del subtítulo de Hoy, un selector de dos opciones con no
   En Semana, los tres primeros días a la izquierda y los cuatro siguientes a la derecha. Mes: el
   calendario a la izquierda y las tareas del mes a la derecha.
 - **Plegable abierto.** La doble página se centra en la ventana, y en un plegable de libro eso pone el
-  lomo sobre la bisagra; cada página llena su mitad hasta 576 dp.
+  lomo sobre la bisagra; cada página llena su mitad hasta 576 dp. Girar, abrir o cerrar el plegable y
+  conectar un teclado no recrean la actividad en Android (`configChanges` de `MainActivity`): la
+  pestaña, Día o Semana, lo que haya encima y lo escrito en la barra siguen igual al cambiar de ancho.
 - **Puntero.** Al pasar por encima de una fila tocable, `surfaceVariant` al 50 %.
 - **Teclado.** La Clave (13) gana una última sección, `keysTitle` (CON TECLADO), con una fila por atajo
   de `docs/tecnico.md` 12.15: el atajo en sistema Medium (`⌘N` en iOS, `Ctrl+N` en Android) y lo que
