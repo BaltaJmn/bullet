@@ -112,21 +112,22 @@ Kotlin, corre `tools/check-bobbinstore.swift` (test 36):
 swiftc tools/check-bobbinstore.swift iosApp/BobbinWidget/BobbinStore.swift -o /tmp/check && /tmp/check
 ```
 
-`release-ios.yml` archiva `Bobbin.xcarchive` con el esquema `iosApp`, exporta y sube a TestFlight en
-un solo `xcodebuild` (`destination: upload` en el `ExportOptions.plist`). El número de build lo pone
-el workflow desde `github.run_number`. **Mientras no exista `APPSTORE_KEY_ID`, el trabajo se salta
-solo con un `::notice::` y no se pone en rojo.**
+`release-ios.yml` llama a `ios-testflight-release.yml` de `BaltaJmn/ci`, el mismo que las hermanas:
+archiva, firma con las identidades Apple Development y Distribution propias y sube a TestFlight. La
+versión y el número de build salen de `versionName` y `versionCode` de Android (`version-file`), un
+solo número para las dos tiendas. La firma en la nube, que era lo que hacía este fichero antes, falla en
+esta cuenta con ITMS-90035 por la "é" del nombre del equipo (`PUBLICAR.md` 5 de `BaltaJmn/ci`).
 
 ### Secretos de Apple
 
+Ocho, todos de cuenta y no de app: los copia `~/keys/credenciales.sh`, que tiene `bullet` en
+`IOS_REPOS` desde el 30-10-2026, y se rotan solo desde ahí (`~/keys/LEEME.md`).
+
 | Secreto | Qué es |
 |---|---|
-| `APPSTORE_KEY_ID` | El Key ID de la clave de la App Store Connect API |
+| `APPSTORE_KEY_ID` | El Key ID de la clave de equipo de la App Store Connect API |
 | `APPSTORE_ISSUER_ID` | El Issuer ID, el mismo para todas las claves de la cuenta |
 | `APPSTORE_PRIVATE_KEY` | El contenido del `.p8`, entero, con sus líneas `BEGIN`/`END` |
 | `APPLE_TEAM_ID` | El Team ID de la cuenta de desarrollador |
-
-La clave `.p8` se descarga **una sola vez**. Rol *App Manager* o superior, para que
-`-allowProvisioningUpdates` cree el certificado y los perfiles por su cuenta, incluidos los del widget
-y el App Group, sin meter un `.p12` en un secreto. Si ya existe una para las hermanas, sirve la misma:
-es de cuenta, no de app.
+| `APPLE_DEVELOPMENT_P12`, `APPLE_DEVELOPMENT_P12_PASSWORD` | Certificado Apple Development con su clave, en base64 |
+| `APPLE_DISTRIBUTION_P12`, `APPLE_DISTRIBUTION_P12_PASSWORD` | Certificado Apple Distribution con su clave, en base64 |
