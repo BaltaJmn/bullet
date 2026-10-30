@@ -203,19 +203,46 @@ URL de la política: `https://bullet.baltajmn.dev/`.
 El usuario escribe lo que quiere, pero nadie más lo ve ni la app lo publica: no es contenido generado
 por usuarios a efectos de moderación, y por eso la respuesta es no.
 
-Notas para el revisor, en inglés:
+Notas para el revisor, en inglés. Llevan desde el primer envío las siete respuestas numeradas que Apple
+pidió a Chroma el 06-10-2026 con la 2.1 *Information Needed* (la que manda a las cuentas con poco
+historial) y que la familia pone siempre para no perder una vuelta (`PUBLICAR.md` 5 de `BaltaJmn/ci`).
+El punto 1 da por adjunto el vídeo: **no se envía sin él** (grabado en un iPhone de verdad con la
+última versión de iOS, desde que se abre la app hasta la compra en sandbox y *Restore purchase*;
+`appstore.py adjunto`). `appstore.py notas` sube este bloque, que Apple corta en 4000 caracteres.
 
 ```
-Bobbin has no account and no server. Everything is stored on the device, so no demo account is needed.
+1. Screen recording
+The attached recording (physical iPhone, latest iOS) goes from launch through writing entries, a review that migrates a task, to a sandbox purchase of Bobbin Pro and Restore purchase.
 
-Bobbin is a bullet journal: the app opens on Today with the keyboard up. Type a line and press return. Long press an entry for its states; Review (from the line "N still open from earlier days" on Today, or "September not closed" on Month) migrates open tasks one at a time.
+2. Purpose and audience
+Bobbin is a digital bullet journal that follows Ryder Carroll's paper method: rapid logging with three bullets (task, event, note), five task states, and open tasks migrated by hand, one at a time. It is for anyone who keeps, or wants to keep, a bullet journal. There is no account and no server of ours: the journal is stored only on the device.
 
-The optional lock (Settings) uses Face ID or the device passcode through LocalAuthentication. It is off by default.
+3. How to use it
+- The app opens on Today with the keyboard up. Type a line and press Return. The Task, Event and Note chips above the field choose the bullet; a line can also start with "- " (note), "* " (priority), "! " (inspiration) or "? " (explore).
+- Tap a task's dot to mark it done. Long press any entry for its sheet: states, edit, delete.
+- The Day and Week switch on Today shows one day or seven. Month, Future and Index are the other tabs; the Index holds lists and trackers.
+- Review opens from the line "N tasks still open from earlier days" on Today, or "September still has N open tasks" on Month. It shows the period again, then one open task at a time: migrate, schedule, move to a list or discard.
+- Settings: an optional lock with Face ID or the passcode (LocalAuthentication, off by default), an optional daily reminder with a fixed text (local notification, off by default), export and import of the whole journal as a zip, and the Key with every symbol.
+- A list can be sent as a .bobbin file through the share sheet. Opening it in Bobbin shows a summary first and merges it, never deleting anything.
+- Widgets: Today (free), Month and lock screen (Pro). On iOS 18 the Control Center control "Write in Bobbin" opens Today with the keyboard. On iPad, a wide window shows two pages.
 
-Bobbin Pro is a one-time non-consumable purchase (bullet_pro). It opens from Settings > Bobbin Pro, from choosing a non-default cover or paper, from creating a second tracker, or from a Pro widget. Restore Purchase is in Settings and in the purchase dialog.
+4. Demo account
+Not needed: Bobbin has no accounts and no sign-in.
+
+5. External services
+- Apple In-App Purchase and RevenueCat (revenuecat.com), to validate the purchase. RevenueCat receives the purchase and an anonymous app user ID.
+- Optional sync (Pro) writes one file to the user's own iCloud Drive container; we have no access to it.
+No analytics, no ads, no AI services, no server of ours. The journal leaves the device only in that iCloud Drive file and in exports the user makes.
+
+6. Regions and other
+Same everywhere; all countries but mainland China; 13 languages. No regulated industry, no third-party content, and nothing a user writes is shown to anyone else.
+
+7. In-App Purchase
+Bobbin Pro is a one-time non-consumable purchase (bullet_pro, 1.99 EUR); there is no subscription. It unlocks seven more covers, three papers, trackers past the first, the month widget and the lock screen widget, the notebook as a PDF book, "Note in Bobbin" in Siri and Shortcuts, iCloud Drive sync and the year summary. The whole method, export and import, sharing, the reminder, the lock and the Today widget are free. Pro opens from Settings > Bobbin Pro, from choosing a Pro cover or paper, from creating a second tracker, from a Pro widget and from the Pro rows in Settings. Restore purchase is in Settings and in the purchase dialog.
 ```
 
-Datos de contacto de la revisión: nombre, teléfono y correo, **a mano**.
+Datos de contacto de la revisión: los mismos de las hermanas, copiados de su ficha en App Store
+Connect.
 
 ## 7. Play: solicitud de acceso a producción
 
