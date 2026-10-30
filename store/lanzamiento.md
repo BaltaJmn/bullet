@@ -137,7 +137,9 @@ y no revienta. (#47)
 
 Android, hecho el 29-09-2026: proyecto `Bobbin` con la app de Play, `bullet_pro`, derecho `pro` y
 oferta `default` como *Current* con `$rc_lifetime`; la `goog_` va en el `versionCode` 2, ya en la
-prueba interna. iOS espera a la app de App Store Connect.
+prueba interna. iOS, hecho el 30-10-2026 por la API: app `Bobbin (App Store)` con el bundle id, la
+clave de compras integradas, `bullet_pro` de App Store en el mismo derecho y el mismo paquete, y la
+`appl_` en `Billing.ios.kt`. Falta el producto en App Store Connect, que necesita la app creada.
 
 **[autor] Probar una compra real** en un móvil con la app instalada desde la prueba interna y la
 cuenta en *Licencia para testing*, y *Restaurar compra* tras desinstalar. En el emulador no se puede:
@@ -157,13 +159,23 @@ no trae Play Billing.
 
 ## Fase 6. Apple
 
-- [ ] **[autor] Clave de la App Store Connect API** (rol *App Manager*) y los cuatro secretos de
-      Apple (`ci.md`). Con ellos, la misma etiqueta `v*` archiva y sube a TestFlight. (#7)
-- [ ] **[autor] iCloud en el App ID** `com.baltajmn.bullet`: en *Certificates, Identifiers &
-      Profiles*, crear el contenedor `iCloud.com.baltajmn.bullet` y activar *iCloud* (*iCloud
-      Documents*) con ese contenedor en el App ID de la app, no en el del widget. `iosApp.entitlements`
-      ya lo declara para la sincronización (#69): sin esto, el archivado de la etiqueta falla al firmar.
-      Se comprueba en TestFlight encendiendo *Sincronizar* en dos dispositivos con la misma cuenta.
+- [x] **Los ocho secretos de Apple** (`ci.md`), copiados por `~/keys/credenciales.sh` el 30-10-2026.
+      Con ellos, la misma etiqueta `v*` archiva y sube a TestFlight con el workflow compartido. (#7)
+- [x] **App IDs** `com.baltajmn.bullet` (App Groups e iCloud) y `com.baltajmn.bullet.widget` (App
+      Groups), registrados por la API el 30-10-2026. (#7)
+- [ ] **[autor] App Group y contenedor de iCloud, en el portal** (developer.apple.com, *Certificates,
+      Identifiers & Profiles*; la API no los crea ni los asigna, y el control de permisos de Claude
+      bloquea *Register*):
+      1. *Identifiers > App Groups > +*: `group.com.baltajmn.bullet`.
+      2. *Identifiers > iCloud Containers > +*: `iCloud.com.baltajmn.bullet`.
+      3. App ID `com.baltajmn.bullet`: en *App Groups*, *Configure*, marcar el grupo; en *iCloud*,
+         *Configure*, marcar el contenedor. *Save*.
+      4. App ID `com.baltajmn.bullet.widget`: en *App Groups*, *Configure*, marcar el grupo. *Save*.
+      Sin esto, el archivado falla al firmar. Se comprueba en TestFlight encendiendo *Sincronizar* en dos
+      dispositivos con la misma cuenta (#69).
+- [ ] **[autor] Crear la app en App Store Connect** (*Apps > + > Nueva app*): plataforma iOS, nombre
+      `Bobbin: Bullet Journal`, idioma principal **inglés (EE. UU.)**, bundle id `com.baltajmn.bullet`,
+      SKU `bobbin`, acceso completo. Si el nombre está cogido, la reserva de la fase 0.
 - [x] **`TEAM_ID`** en `Config.xcconfig`: `BR5ZH8XYP6`, el de la cuenta de persona física. No es
       secreto. (#8)
 - [ ] **[autor] Producto `bullet_pro`** en App Store Connect (`revenuecat.md` §6) con su captura de
