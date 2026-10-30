@@ -3,6 +3,7 @@ package com.baltajmn.bullet.data
 import androidx.compose.ui.graphics.ImageBitmap
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
+import com.baltajmn.bullet.model.BulletCollection
 import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.Place
@@ -45,6 +46,34 @@ fun monthShare(j: Journal, m: YearMonth): ShareContent {
     val tasks = j.entriesAt(Place.Monthly(m))
     val tasksRows = if (tasks.isEmpty()) emptyList() else listOf(ShareRow.Heading(S.monthTasks)) + tasks.map { ShareRow.Line(it) }
     return ShareContent(S.monthTitle(m), calendar + tasksRows)
+}
+
+/** The two shapes a shared page comes in (docs/tecnico.md 12.12): a post, 4:5, and a story, 9:16. */
+enum class ShareFormat(val height: Int) { POST(1350), STORY(1920) }
+
+/** A tracker's month as it is shared (docs/tecnico.md 12.12): its title, the month and each row's marks. */
+data class TrackerShare(val title: String, val month: YearMonth, val rows: List<Pair<String, Set<Int>>>)
+
+fun trackerShare(page: BulletCollection, month: YearMonth): TrackerShare =
+    TrackerShare(page.title, page.month ?: month, page.rows.map { it.title to it.days })
+
+/** Where a tracker's rows start on the image: under the title, the month and the line of day numbers. */
+const val TRACKER_TOP = 324
+
+/** The rows of a tracker on each image of [format]: one 54 px row each, never split. */
+fun trackerPages(rows: Int, format: ShareFormat): List<IntRange> {
+    val perPage = (format.height - 162 - TRACKER_TOP) / 54
+    return (0 until rows).chunked(perPage).map { it.first()..it.last() }
+}
+
+/** `Agua, octubre de 2026` and a line per row with the days it has, then the name (12.12). */
+fun trackerShareText(t: TrackerShare): String = buildString {
+    appendLine("${t.title}, ${S.monthYear(t.month)}")
+    t.rows.forEach { (title, days) ->
+        appendLine(if (days.isEmpty()) title else "$title: " + days.sorted().joinToString(", "))
+    }
+    appendLine()
+    append(S.appName)
 }
 
 fun collectionShare(j: Journal, id: String) = ShareContent(

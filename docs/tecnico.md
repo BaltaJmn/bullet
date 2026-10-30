@@ -2112,9 +2112,9 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
     mes lee el calendario y el Future Log de cada día en su mes; `writeTarget` para ayer, hoy, mañana,
     pasado mañana en el mes actual, un día del mes siguiente y mañana cuando mañana ya es otro mes;
     `lastWeekAllowed` es la semana del último día del mes siguiente.
-53. **Seguimiento compartido** (v1.3, #77): 30 filas se reparten en 2 imágenes en Publicación (17 por
-    página) y en 2 en Historia (27 por página), sin partir una fila; los cuadros marcados son los días
-    de `days`; `shareText` de un seguimiento da una línea por fila con sus días.
+53. **Seguimiento compartido** (v1.3, #77): 30 filas se reparten en 2 imágenes en Publicación (16 por
+    página) y en 2 en Historia (26 por página), sin partir una fila; los cuadros marcados son los días
+    de `days`; `trackerShareText` da una línea por fila con sus días.
 54. **Teclado** (v1.3, #80): `keyAction` da cada acción de 12.15 con Cmd en Apple y con Ctrl en
     Android; Ctrl en Apple y Cmd en Android no dan nada; Esc sin modificador es atrás.
 
@@ -2584,19 +2584,23 @@ está en `INDEX_ICONS` se lee como sin icono. En un `TRACKER` se ignoran las ent
 
 v1.3, gratis. Amplía 6.10 y `docs/pantallas.md` 17.
 
-- `trackerShare(j, id)`: el título, el mes y cada fila con sus `days`. Imagen con la rejilla de 17.2:
-  títulos de fila en Literata 30 px de x 54 a 270, con elipsis si no caben; los días de x 270 a 1026,
-  con un paso de `floor(756 / monthDays)` px y un cuadro de ese paso menos 4, radio 4, borde de 2 px
-  `E3DCD1` y relleno del color de la portada si está marcado. Encima, los números 1, 5, 10, 15, 20, 25
-  y 30 en sistema 18 px `736D63`. Una fila por cada 54 px.
+- `trackerShare(page, month)` (`data/Sharing.kt`) da `TrackerShare`: el título, el mes y cada fila con
+  sus `days`, de la página del mes que se está viendo. `renderTrackerPages` (`ui/SharePage.kt`) la
+  pinta con la rejilla de 17.2: el título en (162, 108) y debajo el mes (`monthYear`) en sistema 30 px
+  `736D63`; las filas empiezan en `TRACKER_TOP` (y 324), o más abajo si el título ocupa dos líneas,
+  una cada 54 px, con el nombre en Literata 30 px desde x 54 y elipsis antes de la rejilla; los días,
+  desde x 270 hasta x 1026, con un paso de `floor(756 / monthDays)` px y un cuadro de ese paso menos
+  4, radio 4, borde de 2 px `E3DCD1` y relleno del color de la portada activa si está marcado. Encima
+  de la primera fila, los números 1, 5, 10, 15, 20, 25 y 30 en sistema 18 px `736D63`.
 - **Formato**: `ShareFormat.POST` (1080 x 1350, el de siempre y por defecto) y `ShareFormat.STORY`
-  (1080 x `SHARE_STORY_H`). En historia, el área de contenido va de y 270 a 1758 y la marca y el número
-  de página bajan a la línea base y 1866; nada cambia de tamaño. Un seguimiento cabe a 17 filas por
-  imagen en publicación y a 27 en historia; las listas, con `paginate(alturas, 918)` o
-  `paginate(alturas, 1488)`.
-- El formato se elige en la hoja cada vez, no se guarda.
-- `shareText` de un seguimiento: el título, una línea por fila con `Título: 1, 2, 5` (solo el título si
-  no tiene marcas), y `Bobbin` al final tras una línea en blanco.
+  (1080 x `SHARE_STORY_H`). El contenido acaba a 162 px del pie y la marca y el número de página van en
+  la línea base de 54 px del pie (1296 o 1866); nada cambia de tamaño. Un seguimiento cabe a 16 filas
+  por imagen en publicación y a 26 en historia (`trackerPages`); las listas, con
+  `paginate(alturas, 1188 - arriba)` o `paginate(alturas, 1758 - arriba)`.
+- El formato se elige en la hoja cada vez, no se guarda. La hoja es la misma para días, meses, listas y
+  seguimientos (`ShareSheet` y `TrackerShareSheet` sobre `PagesSheet`).
+- `trackerShareText`: `Agua, octubre de 2026`, una línea por fila con `Título: 1, 2, 5` (solo el título
+  si no tiene marcas), y `Bobbin` al final tras una línea en blanco.
 
 ### 12.13 Semana
 

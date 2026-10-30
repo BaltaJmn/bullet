@@ -55,19 +55,27 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 
 /**
- * Día or Semana under Hoy's subtitle (docs/pantallas.md 23.13): two options with their names, the
- * active one on the cover's wash, like the tab bar. Remembered for the session, Día at every start.
+ * Día or Semana under Hoy's subtitle (docs/pantallas.md 23.13). Remembered for the session, Día at every
+ * start.
  */
 @Composable
-fun ViewSwitch(week: Boolean, onChange: (Boolean) -> Unit) {
+fun ViewSwitch(week: Boolean, onChange: (Boolean) -> Unit) =
+    TwoChoice(S.viewDay, S.viewWeek, second = week, onChange = onChange, modifier = Modifier.padding(start = HEAD_START, top = 6.dp))
+
+/**
+ * Two options with their names, the chosen one on the cover's wash like the tab bar: Día or Semana, and
+ * Publicación or Historia when sharing. [second] says which one is chosen.
+ */
+@Composable
+fun TwoChoice(first: String, secondLabel: String, second: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
     val wash = coverSoft(activeCover(BobbinRepository.journal.settings, BobbinRepository.isPro))
-    Row(Modifier.padding(start = HEAD_START, top = 6.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        listOf(false to S.viewDay, true to S.viewWeek).forEach { (isWeek, label) ->
-            val active = isWeek == week
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        listOf(false to first, true to secondLabel).forEach { (isSecond, label) ->
+            val active = isSecond == second
             Box(
                 Modifier.heightIn(min = 40.dp).clip(RoundedCornerShape(18.dp)).background(if (active) wash else Color.Transparent)
                     .semantics { selected = active }
-                    .clickable(role = Role.Tab) { if (!active) onChange(isWeek) }
+                    .clickable(role = Role.Tab) { if (!active) onChange(isSecond) }
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.Center,
             ) {

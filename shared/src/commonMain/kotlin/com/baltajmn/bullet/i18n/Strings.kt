@@ -2328,4 +2328,9 @@ object S {
     val keyTabs = t("Go to Today, Month, Future or Index", "Ir a Hoy, Mes, Futuro o Índice", "Ir para Hoje, Mês, Futuro ou Índice", "Zu Heute, Monat, Zukunft oder Index", "Aller à Aujourd'hui, Mois, Futur ou Index")
     val keyPrevNext = t("Previous and next", "Anterior y siguiente", "Anterior e próximo", "Zurück und weiter", "Précédent et suivant")
     val keyBack = t("Back", "Atrás", "Voltar", "Zurück", "Retour")
+
+    // Sharing a tracker and the story shape (docs/pantallas.md 23.12, #77).
+    val shareTracker = t("Share this tracker", "Compartir este seguimiento", "Compartilhar este tracker", "Diesen Tracker teilen", "Partager ce suivi")
+    val formatPost = t("Post", "Publicación", "Post", "Beitrag", "Publication")
+    val formatStory = t("Story", "Historia", "Story", "Story", "Story")
 }

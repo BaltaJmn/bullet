@@ -1439,9 +1439,10 @@ Los textos van aquí en español; cada issue los escribe en los cinco idiomas en
 ### 23.12 Compartir un seguimiento y el formato historia (v1.3, #77)
 
 - Hoja `MORE` de un seguimiento: `shareTracker` (Compartir este seguimiento), con `SHARE`.
-- La hoja de 17.1 gana, encima de la vista previa, un selector de dos opciones con nombre:
-  `formatPost` (Publicación) y `formatStory` (Historia). Empieza siempre en Publicación. La vista
-  previa cambia de proporción al elegir; el número de imágenes (`sharePages(n)`) se recalcula.
+- La hoja de 17.1 gana, encima de la vista previa, un selector de dos opciones con nombre (el mismo de
+  Día y Semana): `formatPost` (Publicación) y `formatStory` (Historia). Empieza siempre en Publicación.
+  La vista previa cambia de proporción al elegir; el número de imágenes (`sharePages(n)`) se recalcula.
+  La hoja se desplaza si una historia no cabe en la pantalla.
 - La imagen de un seguimiento, en `docs/tecnico.md` 12.12. El texto, en la misma sección.
 
 ### 23.13 Semana (v1.3, #78)

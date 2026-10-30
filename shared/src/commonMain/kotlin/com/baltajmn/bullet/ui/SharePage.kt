@@ -1,5 +1,6 @@
 package com.baltajmn.bullet.ui
 
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
@@ -21,13 +22,18 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.ShareContent
+import com.baltajmn.bullet.data.ShareFormat
 import com.baltajmn.bullet.data.ShareRow
+import com.baltajmn.bullet.data.TRACKER_TOP
+import com.baltajmn.bullet.data.TrackerShare
+import com.baltajmn.bullet.data.trackerPages
 import com.baltajmn.bullet.data.paginate
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
@@ -37,10 +43,12 @@ import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.copyOf
+import com.baltajmn.bullet.model.monthDays
 import com.baltajmn.bullet.ui.theme.Paper
 
 const val SHARE_W = 1080
 const val SHARE_H = 1350
+const val SHARE_STORY_H = 1920
 
 // Always in light, like the sisters' cards: a page is read in someone else's feed, not in this app.
 private val Cream = Color(0xFFFBF8F3)
@@ -54,14 +62,25 @@ private const val SCALE = 2.25f
 private const val TEXT_X = 216f
 private const val RIGHT = 1026f
 private const val ENTRIES_TOP = 270f
-private const val ENTRIES_BOTTOM = 1188f
+
+/** The content ends three rows above the foot of the image, whatever its [ShareFormat]. */
+private fun entriesBottom(format: ShareFormat) = format.height - 162f
+private val BoxLine = Color(0xFFE3DCD1)
 
 /**
  * The shared page as images (docs/pantallas.md 17.2). Every size is a pixel of the image, so [measurer]
  * has to measure at density 1: one from `rememberTextMeasurer()` brings the screen's and paints at two
  * or three times the size.
  */
-fun renderSharePages(content: ShareContent, journal: Journal, paper: Paper, literata: FontFamily, measurer: TextMeasurer): List<ImageBitmap> {
+fun renderSharePages(
+    content: ShareContent,
+    journal: Journal,
+    paper: Paper,
+    literata: FontFamily,
+    measurer: TextMeasurer,
+    format: ShareFormat = ShareFormat.POST,
+): List<ImageBitmap> {
+    val bottom = entriesBottom(format)
     val entryStyle = TextStyle(fontFamily = literata, fontSize = 38.sp, lineHeight = 54.sp, color = Ink)
     val titleStyle = TextStyle(fontFamily = literata, fontSize = 54.sp, lineHeight = 108.sp, color = Ink)
     val headingStyle = TextStyle(fontSize = 25.sp, fontWeight = FontWeight.Medium, letterSpacing = 3.sp, color = Muted)
@@ -78,13 +97,13 @@ fun renderSharePages(content: ShareContent, journal: Journal, paper: Paper, lite
     }
     // Each entry, its lines and one blank one; a heading, one row.
     val heights = content.rows.mapIndexed { i, row -> if (row is ShareRow.Heading) U.toInt() else laid[i].size.height + U.toInt() }
-    val pages = paginate(heights, (ENTRIES_BOTTOM - top).toInt())
+    val pages = paginate(heights, (bottom - top).toInt())
 
     return pages.mapIndexed { index, range ->
-        page { scope ->
-            scope.paper(paper, baseline)
+        page(format.height) { scope ->
+            scope.paper(paper, baseline, format.height)
             scope.drawText(title, topLeft = Offset(162f, 108f))
-            scope.clipRect(top = top, bottom = ENTRIES_BOTTOM) {
+            scope.clipRect(top = top, bottom = bottom) {
                 var y = top
                 for (i in range) {
                     when (val row = content.rows[i]) {
@@ -104,7 +123,67 @@ fun renderSharePages(content: ShareContent, journal: Journal, paper: Paper, lite
                     y += heights[i]
                 }
             }
-            scope.footer(measurer, literata, index + 1, pages.size)
+            scope.footer(measurer, literata, index + 1, pages.size, format.height)
+        }
+    }
+}
+
+/**
+ * A tracker's month as images (docs/tecnico.md 12.12): the title and the month, a line of day numbers,
+ * and then a 54 px row per habit, its name on the left and a box per day, filled in [mark] where it was
+ * done. Rows are never split between two images ([trackerPages]).
+ */
+fun renderTrackerPages(
+    t: TrackerShare,
+    paper: Paper,
+    mark: Color,
+    literata: FontFamily,
+    measurer: TextMeasurer,
+    format: ShareFormat = ShareFormat.POST,
+): List<ImageBitmap> {
+    val titleStyle = TextStyle(fontFamily = literata, fontSize = 54.sp, lineHeight = 108.sp, color = Ink)
+    val rowStyle = TextStyle(fontFamily = literata, fontSize = 30.sp, color = Ink)
+    val smallStyle = TextStyle(fontSize = 18.sp, color = Muted)
+    val baseline = measurer.measure("I", TextStyle(fontFamily = literata, fontSize = 38.sp, lineHeight = 54.sp)).firstBaseline
+    val title = measurer.measure(t.title, titleStyle, constraints = Constraints(maxWidth = (RIGHT - 162f).toInt()))
+    val month = measurer.measure(S.monthYear(t.month), TextStyle(fontSize = 30.sp, color = Muted))
+    val days = monthDays(t.month)
+    val pitch = ((RIGHT - TEXT_X - U) / days).toInt().toFloat()
+    val box = pitch - 4f
+    val gridLeft = TEXT_X + U
+    // A title that wraps pushes everything down a row per line, as on a page of entries.
+    val top = maxOf(TRACKER_TOP.toFloat(), 108f + title.size.height + 2 * U)
+    val pages = trackerPages(t.rows.size, format).ifEmpty { listOf(IntRange.EMPTY) }
+
+    return pages.mapIndexed { index, range ->
+        page(format.height) { scope ->
+            scope.paper(paper, baseline, format.height)
+            scope.drawText(title, topLeft = Offset(162f, 108f))
+            scope.drawText(month, topLeft = Offset(162f, 108f + title.size.height))
+            listOf(1, 5, 10, 15, 20, 25, 30).filter { it <= days }.forEach { d ->
+                val n = measurer.measure("$d", smallStyle)
+                scope.drawText(n, topLeft = Offset(gridLeft + (d - 1) * pitch + (pitch - n.size.width) / 2, top - n.size.height - 8f))
+            }
+            for ((k, i) in range.withIndex()) {
+                val (name, marked) = t.rows[i]
+                val y = top + k * U
+                val label = measurer.measure(
+                    name,
+                    rowStyle,
+                    constraints = Constraints(maxWidth = (gridLeft - U - 12f).toInt()),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                scope.drawText(label, topLeft = Offset(U, y + (U - label.size.height) / 2))
+                for (d in 1..days) {
+                    val corner = Offset(gridLeft + (d - 1) * pitch + 2f, y + (U - box) / 2)
+                    val size = Size(box, box)
+                    val r = CornerRadius(4f, 4f)
+                    scope.drawRoundRect(if (d in marked) mark else Cream, corner, size, r)
+                    scope.drawRoundRect(BoxLine, corner, size, r, style = Stroke(width = 2f))
+                }
+            }
+            scope.footer(measurer, literata, index + 1, pages.size, format.height)
         }
     }
 }
@@ -124,9 +203,9 @@ private fun entryText(e: Entry, journal: Journal) = buildAnnotatedString {
 }
 
 /** Density 1: a size in sp is a size in px, which is what the fixed layout of the page is written in. */
-private fun page(draw: (DrawScope) -> Unit): ImageBitmap {
-    val bitmap = ImageBitmap(SHARE_W, SHARE_H)
-    CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(bitmap), Size(SHARE_W.toFloat(), SHARE_H.toFloat())) {
+private fun page(height: Int, draw: (DrawScope) -> Unit): ImageBitmap {
+    val bitmap = ImageBitmap(SHARE_W, height)
+    CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(bitmap), Size(SHARE_W.toFloat(), height.toFloat())) {
         drawRect(Cream)
         draw(this)
     }
@@ -134,9 +213,9 @@ private fun page(draw: (DrawScope) -> Unit): ImageBitmap {
 }
 
 /** The paper chosen, on the baseline of every row, like the screen (docs/pantallas.md 17.2). */
-private fun DrawScope.paper(paper: Paper, baseline: Float) {
+private fun DrawScope.paper(paper: Paper, baseline: Float, height: Int) {
     var y = baseline
-    while (y < SHARE_H) {
+    while (y < height) {
         when (paper) {
             Paper.Dotted -> {
                 var x = U / 2
@@ -153,18 +232,19 @@ private fun DrawScope.paper(paper: Paper, baseline: Float) {
     if (paper == Paper.Grid) {
         var x = U / 2
         while (x < SHARE_W) {
-            drawLine(Dots, Offset(x, 0f), Offset(x, SHARE_H.toFloat()), strokeWidth = 2f)
+            drawLine(Dots, Offset(x, 0f), Offset(x, height.toFloat()), strokeWidth = 2f)
             x += U
         }
     }
 }
 
-private fun DrawScope.footer(measurer: TextMeasurer, literata: FontFamily, index: Int, count: Int) {
+private fun DrawScope.footer(measurer: TextMeasurer, literata: FontFamily, index: Int, count: Int, height: Int) {
+    val line = height - U
     val brand = measurer.measure(S.appName, TextStyle(fontFamily = literata, fontSize = 30.sp, color = Muted, textAlign = TextAlign.End))
-    drawText(brand, topLeft = Offset(RIGHT - brand.size.width, 1296f - brand.firstBaseline))
+    drawText(brand, topLeft = Offset(RIGHT - brand.size.width, line - brand.firstBaseline))
     if (count > 1) {
         val page = measurer.measure(S.pageOf(index, count), TextStyle(fontSize = 30.sp, color = Muted))
-        drawText(page, topLeft = Offset(162f, 1296f - page.firstBaseline))
+        drawText(page, topLeft = Offset(162f, line - page.firstBaseline))
     }
 }
 

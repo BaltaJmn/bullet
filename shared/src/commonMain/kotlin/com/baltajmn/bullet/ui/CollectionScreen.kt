@@ -58,6 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.ShareContent
+import com.baltajmn.bullet.data.TrackerShare
+import com.baltajmn.bullet.data.trackerShare
 import com.baltajmn.bullet.data.collectionShare
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.BulletCollection
@@ -235,6 +237,7 @@ private fun MoreSheet(
     archived: Boolean,
     onClose: () -> Unit,
     onShare: (() -> Unit)?,
+    onShareLabel: String = S.shareList,
     onSend: (() -> Unit)?,
     onRename: () -> Unit,
     onContinue: (() -> Unit)? = null,
@@ -252,7 +255,7 @@ private fun MoreSheet(
     ) {
         SheetHeader(kind, title, onClose)
         Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp).padding(bottom = 18.dp)) {
-            onShare?.let { ActionRow(S.shareList, icon = { GlyphIcon(Glyph.SHARE) }, onClick = it) }
+            onShare?.let { ActionRow(onShareLabel, icon = { GlyphIcon(Glyph.SHARE) }, onClick = it) }
             onSend?.let { ActionRow(S.sendList, icon = { GlyphIcon(Glyph.FORWARD) }, onClick = it) }
             ActionRow(S.rename, icon = { GlyphIcon(Glyph.EDIT) }, onClick = onRename)
             onContinue?.let { ActionRow(S.continueCollection, icon = { GlyphIcon(Glyph.FORWARD) }, onClick = it) }
@@ -266,8 +269,8 @@ private fun MoreSheet(
 /**
  * A tracker (docs/pantallas.md 10.2, docs/tecnico.md 6.18): one page per month of the same thread, a row
  * per habit and a box per day, the whole month in sight and scrolled to today. It opens on this month's
- * page, which is the blank of [trackerPage] until something is marked or a row changes. No share here: a
- * shared page is made of entries (17), and the tracker's table goes out with the export (16.2).
+ * page, which is the blank of [trackerPage] until something is marked or a row changes. Its month is shared
+ * as its grid (docs/pantallas.md 23.12), and its table also goes out with the export (16.2).
  */
 @Composable
 private fun TrackerScreen(id: String, today: LocalDate, justCreated: Boolean, onBack: () -> Unit) {
@@ -286,6 +289,7 @@ private fun TrackerScreen(id: String, today: LocalDate, justCreated: Boolean, on
     var moreOpen by remember { mutableStateOf(false) }
     var marking by remember(id) { mutableStateOf(false) }
     var sending by remember(id) { mutableStateOf(false) }
+    var sharing by remember(id) { mutableStateOf<TrackerShare?>(null) }
     var sheetRowId by remember { mutableStateOf<String?>(null) }
     var renamingRowId by remember { mutableStateOf<String?>(null) }
 
@@ -330,7 +334,8 @@ private fun TrackerScreen(id: String, today: LocalDate, justCreated: Boolean, on
             title = page.title,
             archived = tail.archived,
             onClose = { moreOpen = false },
-            onShare = null,
+            onShare = if (page.rows.isNotEmpty()) ({ moreOpen = false; sharing = trackerShare(page, month) }) else null,
+            onShareLabel = S.shareTracker,
             onSend = if (page.rows.isNotEmpty()) ({ moreOpen = false; sending = true }) else null,
             onRename = { moreOpen = false; renaming = true },
             onMark = { moreOpen = false; marking = true },
@@ -340,6 +345,7 @@ private fun TrackerScreen(id: String, today: LocalDate, justCreated: Boolean, on
     }
     if (marking) MarkSheet(tail) { marking = false }
     if (sending) SendSheet(tail, onClose = { sending = false })
+    sharing?.let { TrackerShareSheet(it, onClose = { sharing = null }) }
     sheetRowId?.let { rowId ->
         val index = page.rows.indexOfFirst { it.id == rowId }
         val row = page.rows.getOrNull(index)
