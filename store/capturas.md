@@ -1,6 +1,7 @@
 # Capturas y gráficos de las fichas
 
-Seis escenas en los cinco idiomas de la ficha (en-US, es-ES, pt-BR, de-DE, fr-FR). Se sacan con un
+Seis escenas en los trece idiomas de la ficha (en-US, es-ES, pt-BR, de-DE, fr-FR, it-IT, nl-NL,
+pl-PL, ru-RU, tr-TR, id, ja-JP, ko-KR). Se sacan con un
 diario de demostración generado, nunca con uno real: un diario de verdad en una ficha pública es justo
 lo que esta app promete no hacer. Todo lo que se ve existe en la app; la portada y el papel Pro de la
 escena 06 son la vista previa de Ajustes, no un montaje aparte.
@@ -46,7 +47,11 @@ mano con las mismas escenas y el mismo diario (sección 5).
 | `06_cuaderno` | Ajustes, sección Cuaderno | La vista previa con una portada (lila) y un papel (cuadrícula) Pro mirados sin comprar, y la línea de qué es gratis |
 
 `crudas.py` busca cada botón por su texto en el árbol de accesibilidad, no por coordenadas, así que
-sirve igual en los cinco idiomas. Lo que no hace solo:
+sirve igual en todos los idiomas. Lo que no hace solo:
+
+- **Ruso, japonés y coreano no teclean** en la escena 01: `adb shell input text` solo escribe ASCII.
+  Hoy sale con el campo enfocado, el teclado arriba y la pista vacía. Los demás teclean una tarea
+  escrita sin letras propias del idioma (`escribir` en `IDIOMAS`).
 
 - **Los widgets se colocan una vez a mano**: los dos de Bobbin, solos en la segunda página del
   lanzador. La escena 05 va a esa página y la fotografía.
@@ -144,10 +149,11 @@ Modo claro en todas.
 
 ## 6. Gráfico de cabecera de Play e icono de la ficha
 
-`tools/store/cabecera.py` deja `store/play/icon-512.png` y `store/play/feature-1024x500.png` (en-US,
-el idioma por defecto de la ficha), que es donde los busca `~/keys/play.sh ficha`, y
-`store/feature/<idioma>.png` para los otros cuatro (1024x500): "Bobbin" en Literata, la línea de
-abajo y una página de Hoy con cuatro entradas y sus bullets.
+`tools/store/cabecera.py` deja `store/play/icon-512.png` y `store/play/feature/<idioma>.png` (1024x500)
+para cada idioma de la ficha, que es donde los busca `tienda/play.py` de `BaltaJmn/ci`: "Bobbin" en
+Literata, la línea de abajo y una página de Hoy con cuatro entradas y sus bullets. Japonés y coreano
+escriben con la serif y la sans del sistema (Hiragino, AppleMyungjo y Apple SD Gothic Neo), porque
+Literata no tiene kana ni hangul.
 
 | Idioma | Línea |
 |---|---|
