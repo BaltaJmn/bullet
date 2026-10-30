@@ -48,6 +48,9 @@ Todas tomadas. El porqué de cada una, en `SPEC.md`.
 - [x] Qué es Pro en v1.0: siete portadas, tres papeles, seguimientos a partir del segundo, widget del
       mes y widget de pantalla de bloqueo de iOS (SPEC §7).
 - [x] iPad: sí, universal como las hermanas (SPEC §8). Obliga a capturas de iPad (#58).
+- [ ] Plataformas: **solo Android e iOS** (SPEC §3). **[autor]** En App Store Connect, *Precios y
+      disponibilidad*: desmarcar las apps de iPad en Mac con Apple Silicon y en Apple Vision Pro,
+      que vienen marcadas por defecto (#80).
 - [x] Política de privacidad en `https://bullet.baltajmn.dev/`.
 
 ## Fase 1. El primer día: lo que tiene latencia

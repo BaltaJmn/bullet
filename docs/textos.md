@@ -997,23 +997,19 @@ y lo vivido; ninguna presupone algo triste, habla de salud mental ni pide un nú
 
 ## 25. v1.3
 
-Las pantallas de estas claves están en `docs/pantallas.md` 23.11 a 23.16. Los textos de la página del
-enlace (#76) no están aquí: viven en `store/privacy/l/app.js`, en los cinco idiomas, a partir del
-español de `docs/pantallas.md` 23.12. El control de iOS (#79) lleva su texto literal en Swift y las
-traducciones en `<lang>.lproj/Localizable.strings` del objetivo del widget, como `AppIntents`.
+Las pantallas de estas claves están en `docs/pantallas.md` 23.11 a 23.15. El control de iOS (#79)
+lleva su texto literal en Swift y las traducciones en `<lang>.lproj/Localizable.strings` del objetivo
+del widget, como `AppIntents`.
 
 | Clave | Parámetros | en | es | pt | de | fr |
 |---|---|---|---|---|---|---|
 | `sendList` | | Send the list | Enviar la lista | Enviar a lista | Liste senden | Envoyer la liste |
 | `sendTitle` | título | Send Lisbon trip | Enviar Viaje a Lisboa | Enviar Viagem a Lisboa | Lissabon-Reise senden | Envoyer Voyage à Lisbonne |
-| `sendAsLink`* | | Send as a link | Enviar como enlace | Enviar como link | Als Link senden | Envoyer comme lien |
-| `sendAsLinkSub` | | Opens in any browser. Anyone with the link can read the list. | Se abre en cualquier navegador. Quien tenga el enlace puede leer la lista. | Abre em qualquer navegador. Quem tiver o link pode ler a lista. | Öffnet sich in jedem Browser. Wer den Link hat, kann die Liste lesen. | S'ouvre dans n'importe quel navigateur. Qui a le lien peut lire la liste. |
 | `sendAsFile`* | | Send as a file | Enviar como archivo | Enviar como arquivo | Als Datei senden | Envoyer comme fichier |
 | `sendAsFileSub` | | For AirDrop, Quick Share or email. With Bobbin, it opens and merges with theirs. | Para AirDrop, Quick Share o correo. Con Bobbin se abre y se junta con la suya. | Para AirDrop, Quick Share ou e-mail. Com o Bobbin, abre e se junta com a da outra pessoa. | Für AirDrop, Quick Share oder E-Mail. Mit Bobbin öffnet sie sich und wird mit der anderen zusammengeführt. | Pour AirDrop, Quick Share ou e-mail. Avec Bobbin, elle s'ouvre et se fusionne avec l'autre. |
 | `sendBlank` | | Blank | En blanco | Em branco | Leer | Vierge |
 | `sendBlankSub` | | Just the text, everything open, as a new list. | Solo los textos, todo abierto, como una lista nueva. | Só os textos, tudo aberto, como uma lista nova. | Nur die Texte, alles offen, als neue Liste. | Seulement les textes, tout ouvert, comme une nouvelle liste. |
 | `sendTrackerBlank` | | A tracker is sent with its rows and without marks. | Un seguimiento se envía con sus filas y sin marcas. | Um tracker é enviado com suas linhas e sem marcas. | Ein Tracker wird mit seinen Zeilen und ohne Markierungen gesendet. | Un suivi s'envoie avec ses lignes et sans marques. |
-| `linkTooLong` | | It's too long for a link. Send it as a file. | Es demasiado larga para un enlace. Envíala como archivo. | É longa demais para um link. Envie como arquivo. | Sie ist zu lang für einen Link. Sende sie als Datei. | Elle est trop longue pour un lien. Envoie-la comme fichier. |
 | `receivedEyebrow` | | List received | Lista recibida | Lista recebida | Empfangene Liste | Liste reçue |
 | `receivedCount` | n | 12 entries / 1 entry | 12 entradas / 1 entrada | 12 entradas / 1 entrada | 12 Einträge / 1 Eintrag | 12 entrées / 1 entrée |
 | `receivedRows` | n | 3 rows / 1 row | 3 filas / 1 fila | 3 linhas / 1 linha | 3 Zeilen / 1 Zeile | 3 lignes / 1 ligne |

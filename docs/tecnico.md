@@ -186,9 +186,9 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `ui/Pro.kt` | `Paywall`, `ProDialog` | A `line/.../ui/Pro.kt` |
 | `ui/ShareScreen.kt` | la hoja de compartir: vista previa y dos acciones; no es un destino | A `line/.../ui/ShareScreen.kt` |
 | `ui/SharePage.kt` | `renderSharePages`: la página punteada como imagen | A `line/.../share/ShareCard.kt` |
-| `model/Week.kt` | v1.3: `WeekDay`, `weekStart`, `weekOf`, `writeTarget`, `lastWeekAllowed` (12.14) | N |
-| `data/ListPacket.kt` | v1.3: `ListPacket`, `PacketEntry`, `packList`, `readPacket`, `receivePreview`, `receive`, `encodeLink`, `decodeLink` (12.11, 12.12) | N |
-| `ui/Keys.kt` | v1.3: `KeyAction` y `keyAction`, los atajos de teclado (12.16) | N |
+| `model/Week.kt` | v1.3: `WeekDay`, `weekStart`, `weekOf`, `writeTarget`, `lastWeekAllowed` (12.13) | N |
+| `data/ListPacket.kt` | v1.3: `ListPacket`, `PacketEntry`, `packList`, `readPacket`, `receivePreview`, `receive` (12.11) | N |
+| `ui/Keys.kt` | v1.3: `KeyAction` y `keyAction`, los atajos de teclado (12.15) | N |
 
 `shared/src/commonMain/composeResources/font/literata_regular.ttf` y su licencia en
 `composeResources/files/OFL.txt`: C line (Literata Regular, SIL Open Font License 1.1). La licencia va
@@ -659,16 +659,14 @@ texto de más de 500 se acepta tal cual.
 | `EXPORT_PREFIX` | `"bobbin"` | `data/Export.kt` |
 | `JOURNAL_NAME` | `"journal.json"` | `data/Export.kt`, `data/Storage.*.kt` |
 | `SHARE_W` / `SHARE_H` | `1080` / `1350` px | `ui/SharePage.kt` |
-| `SHARE_STORY_H` | `1920` px (v1.3): el formato historia, 9:16 (12.13) | `ui/SharePage.kt` |
+| `SHARE_STORY_H` | `1920` px (v1.3): el formato historia, 9:16 (12.12) | `ui/SharePage.kt` |
 | `PACKET_VERSION` | `1` (v1.3): versión del formato de una lista enviada (12.11) | `data/ListPacket.kt` |
 | `LIST_EXTENSION` / `LIST_MIME` | `"bobbin"` / `"application/vnd.baltajmn.bobbin+json"` (v1.3) | `data/ListPacket.kt` |
-| `LINK_BASE` | `"https://bullet.baltajmn.dev/l/"` (v1.3, 12.12) | `data/ListPacket.kt` |
-| `LINK_MAX_CHARS` | `8000` (v1.3): por encima, una lista solo se envía como fichero | `data/ListPacket.kt` |
 | `GRID_UNIT` | `24.dp`, por `max(1, fontScale)` | `ui/theme/Grid.kt` |
 | `WIDE_SCREEN_FROM` | `600.dp` | `ui/theme/Theme.kt` |
 | `MAX_CONTENT_WIDTH` | `576.dp`: 24 columnas de puntos (`docs/pantallas.md` 1.1 y 21) | `ui/theme/Theme.kt` |
-| `SPREAD_FROM` | `840.dp` (v1.3): Hoy y Mes en doble página (12.16) | `ui/theme/Theme.kt` |
-| `SPINE_WIDTH` | `48.dp`: el lomo de la doble página, o la bisagra si es más ancha (12.16) | `ui/theme/Paper.kt` |
+| `SPREAD_FROM` | `840.dp` (v1.3): Hoy y Mes en doble página (12.15) | `ui/theme/Theme.kt` |
+| `SPINE_WIDTH` | `48.dp`: el lomo de la doble página, o la bisagra si es más ancha (12.15) | `ui/theme/Paper.kt` |
 | `PARSE_BUDGET_MS` / `SEARCH_BUDGET_MS` | `1000` / `200` (test 26) | `PerfTest.kt` |
 | `QUESTION_COUNT` | `60` (v1.1) | `i18n/Strings.kt` |
 | `INDEX_ICONS` | los 12 de 12.9 (v1.2) | `model/Collections.kt` |
@@ -1638,10 +1636,9 @@ propia, sin depender del locale de la plataforma.
 adivinarse. `App.kt` lo recoge cuando la app ya está en marcha o en cuanto arranca. `focus` pone el
 foco en el campo de Hoy y abre el teclado.
 
-En v1.3, `Link` gana `payload: String? = null` y la pantalla `receive`: `parseLink` acepta también
-`LINK_BASE` con su fragmento (12.12), y `BobbinBridge.open` y el `intent` de `MainActivity` aceptan un
-fichero `.bobbin` (12.11). Las dos cosas acaban en la misma hoja de recibir. El resto de URLs se
-sigue ignorando.
+En v1.3, `Link` gana `payload: String? = null` y la pantalla `receive`: `BobbinBridge.open` y el
+`intent` de `MainActivity` aceptan un fichero `.bobbin` (12.11), que acaba en la hoja de recibir. El
+resto de URLs se sigue ignorando.
 
 ### Kotlin que llama Swift (`iosMain/.../data/BobbinBridge.kt`)
 
@@ -2112,18 +2109,14 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
     "1 nueva, 1 cambia"; lo que solo tiene el receptor sigue igual; una tarea hecha en el receptor que
     llega abierta sigue hecha; los ajustes y `months` no cambian nunca; un seguimiento con
     `FREE_TRACKER_LIMIT` lleno y sin Pro no crea nada.
-52. **Enlace de una lista** (v1.3, #76): `decodeLink(encodeLink(p))` da `p` con textos en los cinco
-    idiomas y un emoji escrito con su escape (`\uD83D\uDE42`); por encima de `LINK_MAX_CHARS`,
-    `encodeLink` da `null`; el prefijo `2.` da `TooNew`; un base64 roto da `Damaged`; otro host u otra
-    ruta no son un enlace de lista para `parseLink`.
-53. **Semana** (v1.3, #78): `weekStart` con lunes y con domingo de primer día; una semana que cruza de
+52. **Semana** (v1.3, #78): `weekStart` con lunes y con domingo de primer día; una semana que cruza de
     mes lee el calendario y el Future Log de cada día en su mes; `writeTarget` para ayer, hoy, mañana,
     pasado mañana en el mes actual, un día del mes siguiente y mañana cuando mañana ya es otro mes;
     `lastWeekAllowed` es la semana del último día del mes siguiente.
-54. **Seguimiento compartido** (v1.3, #77): 30 filas se reparten en 2 imágenes en Publicación (17 por
+53. **Seguimiento compartido** (v1.3, #77): 30 filas se reparten en 2 imágenes en Publicación (17 por
     página) y en 2 en Historia (27 por página), sin partir una fila; los cuadros marcados son los días
     de `days`; `shareText` de un seguimiento da una línea por fila con sus días.
-55. **Teclado** (v1.3, #80): `keyAction` da cada acción de 12.16 con Cmd en Apple y con Ctrl en
+54. **Teclado** (v1.3, #80): `keyAction` da cada acción de 12.15 con Cmd en Apple y con Ctrl en
     Android; Ctrl en Apple y Cmd en Android no dan nada; Esc sin modificador es atrás.
 
 ### A mano, en emulador y Simulador
@@ -2158,24 +2151,14 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
     dispositivo más pequeño de la lista de pruebas.
 49. **Sincronización** (v1.2, #69): editar sin conexión en dos dispositivos y reconectar pregunta en vez
     de duplicar.
-56. **Enviar y recibir** (v1.3, #75, #76): una lista de un Android a un iPhone y de vuelta, como fichero
-    (Quick Share o AirDrop, WhatsApp y correo) y como enlace, con y sin Bobbin instalada en el otro
-    lado; devolverla con un cambio la junta sin duplicar nada; un canal que cambia el tipo del fichero
-    se abre desde Ajustes, Importar.
-57. **La página del enlace** (v1.3, #76): Safari, Chrome y Firefox, en teléfono y en ordenador; las
-    herramientas de red del navegador solo enseñan peticiones a `bullet.baltajmn.dev`; un título con
-    `<script>` se pinta como texto; `assetlinks.json` y `apple-app-site-association` responden con
-    `curl`, el validador de enlaces de Google y `swcutil` de Apple los aceptan, y tocar el enlace en un
-    chat abre la app en los dos sistemas.
-58. **Escribir desde fuera** (v1.3, #79): el widget "Escribir" con y sin Pro; compartir un texto desde
+55. **Enviar y recibir** (v1.3, #75): una lista de un Android a un iPhone y de vuelta, como fichero,
+    por Quick Share o AirDrop, por WhatsApp y por correo; devolverla con un cambio la junta sin
+    duplicar nada; un canal que cambia el tipo del fichero se abre desde Ajustes, Importar.
+56. **Escribir desde fuera** (v1.3, #79): el widget "Escribir" con y sin Pro; compartir un texto desde
     el navegador de Android con y sin Pro; el control en el Centro de control, en la pantalla de
     bloqueo y en el botón de Acción, con el bloqueo de Bobbin puesto y sin él.
-59. **Doble página y teclado** (v1.3, #80): iPad en horizontal, emulador de plegable abierto en vertical
-    y en horizontal, Mac con Apple Silicon con la ventana estrecha y ancha; cada atajo con teclado
-    físico en iPad, en Android y en Mac.
-60. **Escritorio** (v1.4, #81): Windows 11 y una distribución Linux con Flatpak: escribir, sincronizar
-    con un teléfono por una carpeta de Google Drive para escritorio, cerrar a medio guardar y comprobar
-    que el diario sigue entero; una segunda instancia trae la primera al frente y no escribe.
+57. **Doble página y teclado** (v1.3, #80): iPad en horizontal y emulador de plegable abierto en
+    vertical y en horizontal; cada atajo con teclado físico en iPad y en una tableta Android.
 
 ---
 
@@ -2260,17 +2243,15 @@ resueltas están en la columna de notas.
 | #71 Variaciones del índice (v1.2) | 6.7, 10, 12.9 | test 34 | |
 | #72 Importar de las hermanas (v1.2) | 4.5, 4.6, 10, 12.10 | test 35 | Un hábito hecho de Quilt es una tarea hecha (12.10) |
 | #74 Precio (v1.3) | 6.16 | SPEC §7, `store/revenuecat.md`, `store/lanzamiento.md` | El precio nunca está en el código: cambia en las consolas |
-| #75 Enviar una lista como fichero (v1.3) | 4.6, 6.9, 7, 8, 10, 12.11 | tests 50, 51, 56 | Recibir es importar una sola colección |
-| #76 Enviar una lista como enlace (v1.3) | 5, 7, 8, 9, 10, 12.12 | tests 52, 56, 57, `store/privacy/` | La app no hace ninguna conexión nueva |
-| #77 Compartir un seguimiento y el formato historia (v1.3) | 5, 6.10, 10, 12.13 | test 54 | |
-| #78 Semana (v1.3) | 6.1, 6.5, 10, 12.14 | test 53 | Un modo de Hoy, no un destino |
-| #79 Escribir desde fuera (v1.3) | 6.13, 7, 8.1, 8.3, 10, 12.5, 12.15 | test 58 | No lee `widget.json` |
-| #80 Doble página, plegables, Mac y teclado (v1.3) | 5, 7, 10, 12.16 | tests 55, 59 | |
-| #81 Escritorio (v1.4) | 2, 3, 6.14, 7, 9, 10, 12.17 | test 60 | Sin Pro ni red en escritorio |
+| #75 Enviar una lista como fichero (v1.3) | 4.6, 6.9, 7, 8, 10, 12.11 | tests 50, 51, 55 | Recibir es importar una sola colección |
+| #77 Compartir un seguimiento y el formato historia (v1.3) | 5, 6.10, 10, 12.12 | test 53 | |
+| #78 Semana (v1.3) | 6.1, 6.5, 10, 12.13 | test 52 | Un modo de Hoy, no un destino |
+| #79 Escribir desde fuera (v1.3) | 6.13, 7, 8.1, 8.3, 10, 12.5, 12.14 | test 56 | No lee `widget.json` |
+| #80 Doble página, plegables y teclado (v1.3) | 5, 7, 10, 12.15 | tests 54, 57 | La app de iPad no se ofrece en Mac |
 
 ---
 
-## 12. De v1.1 a v1.4
+## 12. De v1.1 a v1.3
 
 ### 12.1 Threading
 
@@ -2489,8 +2470,7 @@ mismo traspaso masivo que la migración evita.
 ### 12.11 Enviar una lista: el paquete y el fichero
 
 v1.3, gratis. `data/ListPacket.kt`, puro. Una lista enviada no es un `Journal`: es una colección y sus
-entradas en un formato corto y propio, para que quepa en un enlace (12.12) y para que nunca viaje nada
-más.
+entradas en un formato corto y propio, para que nunca viaje nada más.
 
 ```kotlin
 const val PACKET_VERSION = 1
@@ -2589,55 +2569,7 @@ está en `INDEX_ICONS` se lee como sin icono. En un `TRACKER` se ignoran las ent
 - `readBackup` (6.9) reconoce un paquete por `bobbin` y lo manda a la misma hoja de recibir en vez de
   fusionar el diario.
 
-### 12.12 La lista como enlace y su página
-
-v1.3, gratis. El mismo `ListPacket`, en el fragmento de un enlace:
-
-```
-https://bullet.baltajmn.dev/l/#1.<base64url sin relleno del JSON del paquete en UTF-8>
-```
-
-```kotlin
-fun encodeLink(p: ListPacket): String?     // null si pasa de LINK_MAX_CHARS
-fun decodeLink(url: String): PacketRead?   // null si no es LINK_BASE; TooNew si el prefijo es mayor que 1
-```
-
-- **Sin compresión.** El formato corto de 12.11 cabe en `LINK_MAX_CHARS` con unas cien entradas, y así
-  la página lo lee con `atob` y `TextDecoder`, sin librerías y sin `DecompressionStream`.
-- `LINK_MAX_CHARS = 8000`: los chats y los navegadores de las dos plataformas lo llevan sin cortar. Por
-  encima, "Enviar como enlace" sale desactivado con su explicación y el fichero sigue disponible.
-- **La app no se conecta a nada.** Comparte el enlace como texto por la hoja del sistema. El navegador
-  nunca envía el fragmento al servidor: ni GitHub Pages ni nadie ve la lista.
-- **Abrir la app**: Android, `intent-filter` con `android:autoVerify="true"`, `https`, host
-  `bullet.baltajmn.dev` y `pathPrefix` `/l/` en `MainActivity`; el `data` del intent conserva el
-  fragmento. iOS, entitlement `com.apple.developer.associated-domains` con
-  `applinks:bullet.baltajmn.dev`; el enlace llega por `onOpenURL`. Los dos acaban en `parseLink`, que da
-  `Link("receive", payload)`.
-- **La página**, `store/privacy/l/index.html`, `l/app.js` y `l/style.css`, sin ninguna otra petición:
-  - `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self';
-    style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">`.
-  - Lee `location.hash`, lo decodifica y pinta el título y cada entrada con su glifo en SVG creado con
-    `createElementNS` y el texto con `textContent`, **nunca con `innerHTML`**: el contenido lo escribió
-    otra persona. Papel punteado con un `radial-gradient` de CSS; tinta en serif del sistema
-    (`Georgia, serif`), sin descargar fuentes.
-  - Los mismos glifos y estados que la app (`docs/pantallas.md` 1.5), los signifiers en el margen y la
-    descartada tachada. "En blanco" si `w`.
-  - "Copiar como texto" (`navigator.clipboard.writeText` con el texto de 6.10) y dos enlaces de texto a
-    las tiendas, sin insignias de imagen ajenas. Una línea dice que con Bobbin instalada el enlace se
-    abre en la app desde el chat, y otra que la lista viaja dentro del enlace y no pasa por ningún
-    servidor.
-  - Textos en los cinco idiomas en `app.js`, elegidos por `navigator.language`, con inglés de reserva.
-  - Fragmento vacío, roto o de versión mayor: una frase que lo dice y los enlaces a las tiendas.
-- **Verificación de dominio**: `store/privacy/.well-known/assetlinks.json` (la huella SHA-256 de la clave
-  de firma de apps de Play, **[autor]**) y `store/privacy/.well-known/apple-app-site-association`
-  (`{"applinks":{"details":[{"appIDs":["<TEAM_ID>.com.baltajmn.bullet"],"components":[{"/":"/l/*"}]}]}}`,
-  con el Team ID de `Config.xcconfig`). `pages.yml` copia la política, `l/` y `.well-known/` a `_site`,
-  se dispara con cambios en cualquiera de ellos, y se comprueba con `curl` que `.well-known` sale
-  publicado (test 57).
-- La política de privacidad explica el enlace en los cinco idiomas. `store/formularios.md` y
-  `PrivacyInfo.xcprivacy` no cambian: la app no recoge ni envía nada nuevo.
-
-### 12.13 Compartir un seguimiento y el formato historia
+### 12.12 Compartir un seguimiento y el formato historia
 
 v1.3, gratis. Amplía 6.10 y `docs/pantallas.md` 17.
 
@@ -2655,7 +2587,7 @@ v1.3, gratis. Amplía 6.10 y `docs/pantallas.md` 17.
 - `shareText` de un seguimiento: el título, una línea por fila con `Título: 1, 2, 5` (solo el título si
   no tiene marcas), y `Bobbin` al final tras una línea en blanco.
 
-### 12.14 Semana
+### 12.13 Semana
 
 v1.3, gratis. `model/Week.kt`, puro. Un modo de Hoy, no un destino ni un sitio: no hay
 `Place.Weekly` y nada se copia.
@@ -2678,11 +2610,11 @@ fun lastWeekAllowed(today: LocalDate, firstDayOfWeek: Int): LocalDate      // el
 - Hacia atrás, sin límite; hacia delante, hasta `lastWeekAllowed`: la semana que contiene el último
   día del mes siguiente a `monthOf(today)`.
 - El modo vive en memoria (`rememberSaveable`) y al arrancar siempre es Día. Ningún ajuste nuevo.
-- Desde `SPREAD_FROM`, la semana ocupa las dos páginas (12.16).
+- Desde `SPREAD_FROM`, la semana ocupa las dos páginas (12.15).
 - Reordenar mueve dentro de la misma lista de un mismo día; nunca de un día a otro ni del Daily Log al
   calendario.
 
-### 12.15 Escribir desde fuera, segunda parte
+### 12.14 Escribir desde fuera, segunda parte
 
 v1.3. La regla de SPEC §7: abrir la app para escribir es gratis; escribir sin abrirla es Pro.
 
@@ -2704,7 +2636,7 @@ v1.3. La regla de SPEC §7: abrir la app para escribir es gratis; escribir sin a
   esperar al enlace, como siempre.
 - `refreshWidgets` no cambia: el widget "Escribir" no tiene estado.
 
-### 12.16 Doble página, plegables, Mac y teclado
+### 12.15 Doble página, plegables y teclado
 
 v1.3, gratis.
 
@@ -2726,8 +2658,7 @@ v1.3, gratis.
   (`androidx.window`), y entra con la versión que ya usen las hermanas, o con la estable de ese
   momento si ninguna la usa.
 - **Teclado**, `ui/Keys.kt`: `fun keyAction(key: Key, meta: Boolean, ctrl: Boolean, apple: Boolean):
-  KeyAction?`, pura, con `apple` verdadero en iOS (también la app de iPad en Mac). El modificador es
-  Cmd en Apple y Ctrl en Android:
+  KeyAction?`, pura, con `apple` verdadero en iOS. El modificador es Cmd en iOS y Ctrl en Android:
 
   | Tecla | Acción |
   |---|---|
@@ -2740,29 +2671,6 @@ v1.3, gratis.
   `App.kt` lo escucha con `onPreviewKeyEvent` en la raíz, y solo con `KeyEventType.KeyDown`.
 - **Puntero**: las filas tocables llevan `hoverable` y, al pasar por encima, `surfaceVariant` al 50 %.
   Nada cambia de tamaño.
-- **Mac**: no hay objetivo nuevo. La app de iPad corre en Mac con Apple Silicon si App Store Connect la
-  deja disponible (**[autor]**). Todo lo que usa ya existe allí: Application Support, iCloud Drive,
-  `LAContext` con Touch ID, RevenueCat y los widgets de iPad en el escritorio de macOS.
-
-### 12.17 Escritorio
-
-v1.4, sin Pro y sin red. Compose Desktop para Windows y Linux.
-
-- `jvm("desktop")` en `shared/build.gradle.kts`, `shared/src/desktopMain` con los `actual`, y el
-  módulo `desktopApp` (`Main.kt` con `application { Window(...) }`, ventana mínima de 360 x 600) que
-  solo hospeda. Las versiones de Compose y Kotlin, las de la familia.
-- **`Storage`**: `%APPDATA%\Bobbin\` en Windows, `$XDG_DATA_HOME/bobbin/` (o `~/.local/share/bobbin/`)
-  en Linux. El contrato de 6.14 entero: `.tmp`, `force(true)`, `Files.move` con `ATOMIC_MOVE`, `.bak`,
-  cuarentena y migración de esquema.
-- **Un solo escritor entre procesos**: `journal.lock` con `FileChannel.tryLock` al arrancar. Si ya está
-  cogido, la segunda instancia avisa a la primera por un fichero `focus` que esta vigila, y se cierra.
-- **`Prefs`**: `bobbin.properties` junto al diario. `pro` vale siempre falso.
-- **`FilePicker`**: `java.awt.FileDialog`. **`Sharing`**: "Guardar como imagen" (diálogo de guardar,
-  PNG) y "Copiar como texto" (portapapeles del sistema), sin hoja de compartir.
-- **`SyncFile`**: un `bobbin-sync.json` elegido con el diálogo, en la carpeta que el usuario ya
-  sincroniza, vigilado con `WatchService` sobre su directorio. Las reglas de 12.7 sin cambios.
-- `Lock`, `Reminders`, `StoreReview`, widgets y `Billing`: `actual` vacíos, y sus filas de Ajustes no se
-  pintan. Sin RevenueCat: la app de escritorio no hace ninguna conexión.
-- **Paquetes**: `desktop.yml` con la etiqueta, como `release.yml`. Windows, MSIX montado con `makeappx`
-  sobre la app-image de `jpackage`, para Microsoft Store, que lo firma. Linux, Flatpak con id
-  `com.baltajmn.bullet` en Flathub. **[autor]** las dos altas.
+- **Ni Mac ni Apple Vision Pro**: App Store Connect ofrece por defecto las apps de iPad en los Mac con
+  Apple Silicon y en Vision Pro. **[autor]** lo desmarca en *Precios y disponibilidad*: Bobbin es
+  Android e iOS y nada más.

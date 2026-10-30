@@ -24,7 +24,7 @@ escrito aparte y aquí solo se resume lo imprescindible para entender cada decis
 | `docs/textos.md` | Todos los textos en los cinco idiomas y el glosario fijo del método |
 | `store/` | La tienda: fichas en cinco idiomas, novedades, capturas, formularios, política de privacidad, compras, CI y el checklist de lanzamiento |
 | `CLAUDE.md` | Las reglas de trabajo que cargan solas las sesiones de Claude Code |
-| Issues del repo | `gh issue list -R BaltaJmn/bullet`: #1 a #81, una por pieza, de v1.0 a v1.4 (§3, §11) |
+| Issues del repo | `gh issue list -R BaltaJmn/bullet`: #1 a #80, una por pieza, de v1.0 a v1.3 (§3, §11) |
 
 Todo lo que dicen estos documentos está decidido. **Cuando una issue y el código no coinciden, manda
 este SPEC**; si un detalle de implementación de aquí no coincide con `docs/tecnico.md`, manda
@@ -70,7 +70,8 @@ La tabla se repasó entera el 30-10-2026, con la v1.2 ya escrita, para decidir l
 - **Nadie ocupa a la vez las cinco cosas**: fiel al método, Android, iOS, compra única y sin cuenta ni
   anuncios. Las grandes de Android llevan anuncios o rastreo (May, Bullet); las fieles al método son
   solo de iPhone o de escritorio (la oficial, Hejour, Jott, NotePlan). Ese es el sitio de Bobbin, y la
-  v1.3 no lo cambia: lo ensancha.
+  v1.3 no lo cambia: lo ensancha. **Bobbin es Android e iOS y nada más** (decisión del autor del
+  30-10-2026): ni escritorio, ni Mac, ni web.
 - **La oficial no compite en lo digital.** Sin versión desde 2023 y sin Android. bulletjournal.com
   republica ensayos contra los sistemas digitales de notas.
 - **La migración automática divide a los puristas.** Las comparativas de 2026 que defienden el método
@@ -78,7 +79,8 @@ La tabla se repasó entera el 30-10-2026, con la v1.2 ya escrita, para decidir l
   automatizan admiten que "una tarea que no vale reescribirse es una tarea que sobra". La regla de
   Bobbin queda confirmada, no discutida.
 - **Lo que se pide de verdad**: apuntar desde la pantalla de inicio sin abrir la app, estar bien en
-  iPad, plegable y ordenador, y que los datos no se pierdan. Nadie pide Liquid Glass ni IA en un
+  iPad, plegable y ordenador, y que los datos no se pierdan. Del ordenador, Bobbin se queda fuera a
+  propósito; tableta y plegable sí entran (#80). Nadie pide Liquid Glass ni IA en un
   diario: son señales que miran Apple y la prensa, no los usuarios.
 - **Lo social existe, pero con servidor.** Day One comparte diarios con cuenta y cifrado; Waffle vende
   el diario de pareja con rastreo; las listas compartidas de Recordatorios o Todoist pasan por la nube
@@ -120,7 +122,7 @@ decidir.** Copiar el texto al migrar es legítimo; migrar sin que el usuario dec
 - **Fechas en lenguaje natural** (TickTick), en local y sin aplicarse solas (#66).
 - **Privacidad primero** (Hello Diary): nada sale del teléfono salvo la compra (§4).
 - **Compartir con una persona, no con un público** (los diarios compartidos de Day One), en v1.3 y sin
-  cuenta: una lista viaja como fichero o como enlace, y al volver se junta (#75, #76).
+  cuenta: una lista viaja como fichero y, al volver, se junta (#75).
 - **Controles fuera de la app** (Things 3.22, Tiimo), en v1.3: un widget y un control de iOS para
   escribir (#79).
 - **El Weekly Log de la comunidad**, en v1.3, como forma de mirar los días que ya existen (#78).
@@ -155,10 +157,10 @@ decidir.** Copiar el texto al migrar es legítimo; migrar sin que el usuario dec
    en Ajustes (#32); rendimiento medido con miles de entradas (#55).
 8. **Publicidad en el plan gratis** (Daylio, May). Sin anuncios en ningún plan (#2), declarado en los
    formularios (#59).
-9. **Android y el ordenador, olvidados** (la oficial, NotePlan, Tiimo, Hejour, Jott). Android desde la
-   v1.0; doble página en tableta, plegable y Mac (#80); Windows y Linux en v1.4 (#81).
+9. **Android olvidado** (la oficial, NotePlan, Tiimo, Hejour, Jott). Android desde la v1.0, con el
+   mismo cuidado que iOS, y doble página en tableta y plegable (#80).
 10. **Lo social exige cuenta o rastreo** (Day One, Waffle, las listas compartidas). Enviar una lista
-    por el canal que el usuario elige, sin servidor nuestro (#75, #76).
+    por el canal que el usuario elige, sin servidor nuestro (#75).
 
 Y los dos fallos concretos de la app oficial: el **recordatorio que desaparece**, atacado por #36, #37
 y #38 (se reprograma al arrancar, al reiniciar y al cambiar de hora, y dice qué pasa si falta el
@@ -182,7 +184,7 @@ categoría) lo atacan #1 y #57 ("Bullet Journal" en el nombre de tienda y catego
 6. **Tus datos salen cuando quieras**, en JSON y en Markdown con los símbolos del método, gratis.
 7. **Social sin servidor.** Una lista se envía a quien tú quieras y vuelve con sus cambios; nadie en
    medio (v1.3).
-8. **Donde escribes**: teléfono, tableta, plegable y Mac en v1.3; Windows y Linux en v1.4.
+8. **Donde escribes**, siempre en Android e iOS: teléfono, tableta y plegable, con teclado si lo hay.
 
 ---
 
@@ -363,11 +365,13 @@ arranque (§6), y las dos se pueden no abrir nunca.
 
 ---
 
-## 3. Funcionalidad por versión: de v1.0 a v1.4 y lo descartado a propósito
+## 3. Funcionalidad por versión: de v1.0 a v1.3 y lo descartado a propósito
 
 El corte no es por pantalla sino por si su ausencia, o su automatización, deja de ser un Bullet
 Journal. **v1.0 son las issues #1 a #62, v1.1 de la #63 a la #68, v1.2 de la #69 a la #72, v1.3 de
-la #74 a la #80 y v1.4 la #81.** La #73 es la revisión de diseño que cierra la v1.2.
+la #74 a la #80, sin la #76.** La #73 es la revisión de diseño que cierra la v1.2. La #76 (enviar una
+lista como enlace con una página web) y la #81 (escritorio) se cerraron sin hacer: Bobbin es Android e
+iOS y nada más.
 
 ### v1.0: issues #1 a #62
 
@@ -426,15 +430,12 @@ siguiendo al sistema; teléfono y tableta, vertical y horizontal; tema claro u o
 ### v1.3: issues #74 a #80, lo que distingue
 
 Escrita tras el repaso del mercado de octubre de 2026 (§1). Tres frentes: lo social sin servidor,
-estar donde se escribe, y un precio justo.
+estar donde se escribe dentro de Android e iOS, y un precio justo.
 
 - **Precio** (#74): Pro a 4,99 EUR desde esta versión y Compartir en familia en iOS (§7).
 - **Enviar una lista como fichero** (#75): una lista, o un seguimiento en blanco, viaja como `.bobbin`
   por la hoja de compartir del sistema. Quien la recibe la añade a su Índice; si vuelve con cambios, se
   juntan con las reglas de importar, con resumen antes. Gratis.
-- **Enviar una lista como enlace** (#76): la misma lista dentro del fragmento de un enlace de
-  `bullet.baltajmn.dev`, que abre Bobbin si está instalada y, si no, una página estática que la pinta
-  en el navegador. El contenido nunca llega a ningún servidor. Gratis.
 - **Compartir un seguimiento y el formato historia** (#77): la rejilla del seguimiento como imagen, y
   9:16 además de 4:5. Gratis.
 - **Semana** (#78): Hoy gana un modo con los siete días de un vistazo; una forma de mirar, no un sitio
@@ -442,14 +443,9 @@ estar donde se escribe, y un precio justo.
 - **Escribir desde fuera, segunda parte** (#79): widget "Escribir" en Android, control de iOS para el
   Centro de control, la pantalla de bloqueo y el botón de Acción, y compartir texto desde otra app en
   Android. Abrir la app para escribir es gratis; escribir sin abrirla es Pro (§7).
-- **Doble página, plegables, Mac y teclado** (#80): Hoy y Mes a la vez desde 840 dp, el lomo sobre la
-  bisagra de un plegable, la app de iPad en Mac y atajos de teclado. Gratis.
-
-### v1.4: issue #81, escritorio
-
-- **Windows y Linux** (#81) con Compose Desktop: la misma interfaz, sin red, sin Pro, sincronizando con
-  el mismo `bobbin-sync.json` del teléfono. En Mac corre la app de iPad (#80). Se trabaja cuando la v1.3
-  esté en producción.
+- **Doble página, plegables y teclado** (#80): Hoy y Mes a la vez desde 840 dp, el lomo sobre la
+  bisagra de un plegable y atajos de teclado para tableta. Gratis. La app de iPad **no** se ofrece en
+  Mac ni en Apple Vision Pro.
 
 ### Para la revisión de diseño (#73)
 
@@ -485,12 +481,13 @@ Material 3 Expressive (ver abajo).
 | Selector de idioma dentro de la app | Las hermanas no lo tienen, y Android 13+ e iOS ya dan idioma por app |
 | `FLAG_SECURE` en Android | Bloquea también las capturas que el propio usuario quiere hacer. `setRecentsScreenshotEnabled(false)` oculta la multitarea sin prohibir nada |
 | Seguimiento de hábitos con estadísticas y recordatorios | Es Quilt. Aquí, un seguimiento de papel, y la ficha remite a la hermana (#50) |
-| Perfiles, seguidores, feed, comentarios o retos | Piden servidor, cuenta y moderación de contenido de terceros, y cambian la clasificación por edad (§9). Lo social de un bujo es la lista que se comparte con alguien concreto (#75, #76) |
+| Perfiles, seguidores, feed, comentarios o retos | Piden servidor, cuenta y moderación de contenido de terceros, y cambian la clasificación por edad (§9). Lo social de un bujo es la lista que se comparte con alguien concreto (#75) |
 | Listas compartidas en vivo, por una carpeta común en la nube | En Android, Drive no deja elegir carpetas con el selector del sistema, y leer una carpeta compartida exige permisos restringidos de la API de Drive con verificación de Google. El ida y vuelta de #75 con la fusión de #45 cubre la lista de la compra de una casa sin nada de eso. Se reabre solo si las reseñas lo piden |
 | Texto del diario en los widgets, aunque sea opcional | Se repasó en octubre de 2026: lo que más se pide es apuntar desde la pantalla de inicio, y eso lo da #79 sin sacar texto. Un bujo mezcla tareas y notas íntimas en una pantalla que ve cualquiera, y "tus palabras no salen ni a la pantalla de inicio" es parte de la promesa (§6) |
 | Extensión de compartir en iOS | El texto tendría que pasar por el App Group, donde el diario no entra nunca (§4). "Anotar en Bobbin" en Atajos ya recibe lo compartido (#67) |
 | App de Apple Watch o de Wear OS | Otra base de código (SwiftUI de watchOS, Wear Compose) para una petición que solo aparece suelta en los foros. Siri en el teléfono ya anota (#67) |
-| Versión web | El diario viviría en el almacenamiento del navegador, que el navegador puede borrar. La única web es la página que lee una lista enviada (#76) |
+| Escritorio (Windows, Linux), Mac o web | Bobbin es Android e iOS y nada más (decisión del autor del 30-10-2026). La app de iPad no se ofrece en Mac ni en Apple Vision Pro. Una web, además, guardaría el diario en el almacenamiento del navegador, que el navegador puede borrar. Se llegaron a abrir como #81 y se cerraron sin hacer |
+| Enviar una lista como enlace que se lee en el navegador | Pide una página web y verificar el dominio en las dos tiendas: es web, y queda fuera por la misma decisión. Una lista viaja como fichero (#75). Se llegó a abrir como #76 y se cerró sin hacer |
 | Código QR para enviar una lista | Pide un codificador propio, y en persona ya están AirDrop y Quick Share, que desde noviembre de 2025 se entienden entre sí en algunos teléfonos |
 | Calendario del sistema dentro del Daily Log | En el método, un evento se escribe a mano en su día. Leer el calendario pide un permiso más y mete en el diario líneas que nadie ha escrito |
 | Liquid Glass o Material 3 Expressive | El papel es la identidad de la app y de la familia. Se sigue al sistema en lo que es del sistema (teclado, hoja de compartir, widgets), no en el lienzo |
@@ -500,8 +497,9 @@ Material 3 Expressive (ver abajo).
 
 Cuentas de usuario, redes sociales con servidor (perfiles, seguidores, feed), IA generativa, audio o
 vídeo, anuncios, analítica e informes de fallos. Cada uno añade coste recurrente, permiso invasivo o
-red, y ninguno hace el método más fiel. Lo social que sí entra es enviar: lo que el usuario elige, a
-quien elige y por el canal que elige, sin que pase por nosotros (§6, #75, #76).
+red, y ninguno hace el método más fiel. Y cualquier plataforma que no sea Android o iOS. Lo social que
+sí entra es enviar: lo que el usuario elige, a quien elige y por el canal que elige, sin que pase por
+nosotros (§6, #75).
 
 ---
 
@@ -522,8 +520,8 @@ forma de fallo tres meses después.
 3. **Nada sale del teléfono salvo lo de RevenueCat.** Sin cuenta, sin servidor, sin analítica, sin
    informes de fallos. La única conexión es la de la compra, y la sincronización de v1.2 va a la nube
    del propio usuario (#59, #69). Lo que el usuario envía en v1.3 (una imagen, un texto, una lista como
-   fichero o como enlace) sale por la hoja de compartir del sistema, cuando él lo pide y por el canal
-   que él elige: la app no se conecta a nada para eso (#75, #76).
+   fichero) sale por la hoja de compartir del sistema, cuando él lo pide y por el canal que él elige: la
+   app no se conecta a nada para eso (#75).
 
 Una issue que choque con cualquiera de las tres está mal escrita, y se corrige la issue.
 
@@ -665,8 +663,9 @@ y Ajustes y el diálogo Pro van en un panel centrado del mismo ancho. Sin diseñ
 más allá de eso.
 
 En v1.3 (#80), desde **840 dp** Hoy se abre también en doble página: el día a la izquierda y su mes a
-la derecha, con una sola barra de escribir. En un plegable abierto, el lomo cae sobre la bisagra. La
-app de iPad corre en Mac con Apple Silicon, y toda la app se maneja con teclado.
+la derecha, con una sola barra de escribir. En un plegable abierto, el lomo cae sobre la bisagra, y
+con un teclado conectado toda la app se maneja con atajos. Siempre en Android e iOS: la app de iPad no
+se ofrece en Mac.
 
 ### Principios
 
@@ -770,12 +769,6 @@ En v1.3 compartir pasa de enseñar a enviar, y sigue siendo gratis:
   recibe ve un resumen y la añade a su Índice; si se la devuelven con cambios, se juntan sin borrar
   nada. Es la lista de la compra de una casa, el equipaje de un viaje o las lecturas que se
   recomiendan, sin cuenta y sin servidor.
-- **Una lista como enlace** (#76). El mismo contenido, dentro del fragmento de un enlace de
-  `bullet.baltajmn.dev`: el navegador nunca envía el fragmento, así que la lista no llega a ningún
-  servidor. Con Bobbin instalado, el enlace abre la app; sin ella, una página estática la pinta con
-  los glifos y dice de dónde sale. Es el único canal de crecimiento que no rompe la promesa: quien
-  recibe ve el método funcionando. La hoja avisa de lo que es un enlace: quien lo tenga, puede leer la
-  lista.
 - **Un seguimiento como imagen y el formato historia** (#77): el pliego que más se comparte en redes, y
   9:16 para historias además del 4:5 de las publicaciones.
 
@@ -844,7 +837,7 @@ construir (sincronización).
 | Un seguimiento | | | | |
 | v1.1: threading, nuevo cuaderno anual, preguntas de reflexión, fechas en lenguaje natural | | | | |
 | v1.2: variaciones del índice, importar de las apps hermanas | | | | |
-| v1.3: enviar una lista como fichero o como enlace, compartir un seguimiento, formato historia, Semana, doble página, plegables y Mac, atajos de teclado, el control de iOS y el widget "Escribir" como puerta a Hoy | | | | |
+| v1.3: enviar una lista, compartir un seguimiento, formato historia, Semana, doble página, plegables, atajos de teclado, el control de iOS y el widget "Escribir" como puerta a Hoy | | | | |
 
 La distinción que hay que escribir para que la regla no se coma a sí misma: **exportar tus datos no
 se cobra nunca; el libro en PDF maquetado no es una exportación de datos, es un producto**. Quien solo
@@ -865,11 +858,6 @@ con el teclado arriba para todo el mundo. La baldosa de Ajustes rápidos, Siri y
 "Escribir" con Pro y compartir texto desde otra app escriben encima de lo que se esté haciendo, y eso es
 Pro. Así nadie encuentra una puerta cerrada, y lo que se paga es el atajo, no el acceso.
 
-**El escritorio no tiene Pro (v1.4, #81).** Sin cuenta no hay forma honesta de llevar una compra del
-móvil al ordenador, y cobrar otra vez el mismo diario sería lo contrario de un precio justo. Windows y
-Linux se comportan como un teléfono sin Pro, salvo la sincronización, que es la otra punta de la del
-teléfono: quien la usa ya pagó Pro allí.
-
 ### Lo que no se cobra nunca
 
 1. **El método.** Migrar, programar, revisar, reflexionar, el Future Log y el Índice. Cobrar la
@@ -879,8 +867,7 @@ teléfono: quien la usa ya pagó Pro allí.
    aquí pesan más porque el diario es de uno.
 4. **El recordatorio y el bloqueo.** Cobrar por proteger un diario es la misma señal de desconfianza
    que cobrar por la copia.
-5. **Compartir y enviar.** Cada página compartida es marketing gratis, y cada lista enviada como enlace
-   enseña el método a quien no tiene la app (#75, #76, #77).
+5. **Compartir y enviar.** Cada página compartida y cada lista enviada es marketing gratis (#75, #77).
 
 ### Precio
 
@@ -1175,7 +1162,7 @@ ui/Pro.kt                ProDialog, el paywall de las hermanas
 ui/ShareScreen.kt        vista previa de compartir
 ui/SharePage.kt          la página punteada como imagen
 model/Week.kt            v1.3: los siete días de una semana y dónde se escribe en cada uno
-data/ListPacket.kt       v1.3: una lista para enviar, como fichero .bobbin o como enlace
+data/ListPacket.kt       v1.3: una lista para enviar como fichero .bobbin, y recibirla
 ui/Keys.kt               v1.3: los atajos de teclado, una función pura
 ```
 
@@ -1386,11 +1373,9 @@ está en `docs/tecnico.md` 11.
     fuera y libro en PDF (#63 a #68).
 22. **v1.2**: sincronización, resumen del año, variaciones del índice e importar de las hermanas (#69
     a #72), y la revisión de diseño que la cierra (#73).
-23. **v1.3**, en este orden: enviar una lista como fichero (#75), y después como enlace con su página
-    (#76); Semana (#78), que la doble página necesita (#80); compartir un seguimiento y el formato
-    historia (#77); escribir desde fuera (#79). El precio (#74) cambia el día que la v1.3 sale a
-    producción, ni antes ni después.
-24. **v1.4**: escritorio para Windows y Linux (#81), con la v1.3 ya en producción.
+23. **v1.3**, en este orden: enviar una lista como fichero (#75); Semana (#78), que la doble página
+    necesita (#80); compartir un seguimiento y el formato historia (#77); escribir desde fuera (#79).
+    El precio (#74) cambia el día que la v1.3 sale a producción, ni antes ni después.
 
 ### Estimación de v1.0
 
@@ -1462,20 +1447,11 @@ con el andamiaje (#10), el calendario se alarga aunque el código esté terminad
 10. **ASO sin datos en cuatro idiomas.** La competencia de la keyword solo está medida en inglés.
 11. **Tableta y horizontal** multiplican las pantallas que revisar y exigen capturas de iPad. Se
     contiene con una página de 576 dp y dos o tres reglas de reparto (§5).
-12. **La página del enlace es superficie de ataque** (v1.3, #76). Pinta texto que escribió otra
-    persona: se pinta siempre como texto (`textContent`), nunca como HTML, sin dependencias externas y
-    con una política de seguridad de contenido que no deja cargar nada de fuera. Un enlace con lo que
-    sea dentro solo puede enseñar letras.
-13. **Un enlace no se puede retirar.** Quien lo tenga lee la lista, y queda en el historial del chat.
-    La hoja de enviar lo dice antes de compartir, y "en blanco" sirve para mandar la estructura sin lo
-    hecho.
-14. **Los enlaces verificados pueden fallar** (App Links de Android, enlaces universales de iOS): sin
-    verificar, el enlace abre el navegador en vez de la app. La página tiene que ser útil sola (leer la
-    lista, copiarla, descargar Bobbin) y el fichero `.bobbin` sigue siendo el camino seguro entre dos
-    teléfonos con la app.
-15. **El escritorio dobla las plataformas que mantener** (v1.4, #81). Se contiene sin red, sin Pro, sin
-    widgets, sin recordatorio y sin bloqueo propio: solo el método, el almacén y la sincronización.
-16. **La Semana puede leerse como una página nueva** que no es del método. Se contiene como modo de Hoy,
+12. **Un fichero enviado no se puede retirar.** Quien lo reciba tiene la lista, y queda en el chat o
+    en el correo. "En blanco" sirve para mandar la estructura sin lo hecho.
+13. **Un canal puede cambiar el tipo del fichero** y entonces Bobbin no sale al tocarlo. Se abre desde
+    Ajustes, Importar, que reconoce un `.bobbin` igual (#75).
+14. **La Semana puede leerse como una página nueva** que no es del método. Se contiene como modo de Hoy,
     sin sitio propio en el formato y sin copiar nada (#78).
 
 ### Correcciones de datos hechas durante la investigación
