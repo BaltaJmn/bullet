@@ -1504,13 +1504,14 @@ Un modo de Hoy. Debajo del subtítulo de Hoy, un selector de dos opciones con no
   tareas; tocar un día lo elige para la barra de escribir, como en 7.1, y tocar la izquierda lo suelta.
   En Semana, los tres primeros días a la izquierda y los cuatro siguientes a la derecha. Mes: el
   calendario a la izquierda y las tareas del mes a la derecha.
-- **Plegable abierto.** El lomo cae sobre la bisagra; cada página llena su mitad hasta 576 dp.
+- **Plegable abierto.** La doble página se centra en la ventana, y en un plegable de libro eso pone el
+  lomo sobre la bisagra; cada página llena su mitad hasta 576 dp.
 - **Puntero.** Al pasar por encima de una fila tocable, `surfaceVariant` al 50 %.
 - **Teclado.** La Clave (13) gana una última sección, `keysTitle` (CON TECLADO), con una fila por atajo
   de `docs/tecnico.md` 12.15: el atajo en sistema Medium (`⌘N` en iOS, `Ctrl+N` en Android) y lo que
   hace (`keyNew`: Escribir en hoy; `keySearch`: Buscar; `keyTabs`: Ir a Hoy, Mes, Futuro o Índice;
-  `keyPrevNext`: Anterior y siguiente; `keyBack`: Atrás). Solo se pinta en pantalla ancha o con un
-  teclado físico conectado.
+  `keyPrevNext`: Anterior y siguiente; `keyBack`: Atrás). Solo se pinta en pantalla ancha, que es donde
+  hay teclado.
 
 ---
 

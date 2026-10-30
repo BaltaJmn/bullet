@@ -44,7 +44,9 @@ import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.model.weekOf
 import com.baltajmn.bullet.model.weekStart
 import com.baltajmn.bullet.model.writeTarget
+import com.baltajmn.bullet.ui.theme.Spread
 import com.baltajmn.bullet.ui.theme.Type
+import com.baltajmn.bullet.ui.theme.isSpread
 import com.baltajmn.bullet.ui.theme.activeCover
 import com.baltajmn.bullet.ui.theme.coverSoft
 import kotlinx.datetime.DateTimeUnit
@@ -104,6 +106,7 @@ fun WeekPage(
     val thisWeek = weekStart(today, first)
     val last = lastWeekAllowed(today, first)
     val days = journal.weekOf(start, first)
+    val spread = isSpread()
     var chosen by remember(start) { mutableStateOf(if (today in start..end) today else start) }
     val scroll = rememberScrollState()
 
@@ -113,6 +116,7 @@ fun WeekPage(
     Page(
         tab = true,
         scroll = scroll,
+        spread = spread,
         bottom = {
             Composer(place = writeTarget(chosen, today), today = today)
         },
@@ -130,7 +134,7 @@ fun WeekPage(
         ViewSwitch(week = true) { onDayMode() }
         if (start == thisWeek) Notices(journal, today, onReview, offerReminder = false, onOfferAnswered = {})
         Spacer(Modifier.heightIn(min = 4.dp))
-        days.forEach { day ->
+        val block: @Composable (WeekDay) -> Unit = { day ->
             WeekDayBlock(
                 day = day,
                 showMonth = day.date == start || day.date.day == 1,
@@ -140,6 +144,12 @@ fun WeekPage(
                 onChoose = { chosen = if (chosen == day.date && today in start..end) today else day.date },
                 onNavigateTo = onNavigateTo,
             )
+        }
+        // A weekly spread of paper: the first three days on the left, the other four on the right (12.15).
+        if (spread) {
+            Spread(left = { days.take(3).forEach { block(it) } }, right = { days.drop(3).forEach { block(it) } })
+        } else {
+            days.forEach { block(it) }
         }
     }
 }

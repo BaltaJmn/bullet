@@ -1,5 +1,8 @@
 package com.baltajmn.bullet.ui
 
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -125,12 +128,16 @@ fun EntryRow(
     }
 
     val dragSlopPx = with(LocalDensity.current) { DRAG_SLOP.toPx() }
-    val base = Modifier.fillMaxWidth().padding(start = 6.dp, end = 12.dp)
+    // A pointer over a row marks it at half the wash of a selected one, without moving a thing (12.15).
+    val hover = remember { MutableInteractionSource() }
+    val hovered by hover.collectIsHoveredAsState()
+    val base = Modifier.fillMaxWidth().padding(start = 6.dp, end = 12.dp).hoverable(hover)
     val rowModifier = when {
         isDragged -> base.zIndex(1f).graphicsLayer { translationY = dragOffsetPx }
             .clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surface)
             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
         selected -> base.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant)
+        hovered && !still -> base.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
         else -> base
     }
 

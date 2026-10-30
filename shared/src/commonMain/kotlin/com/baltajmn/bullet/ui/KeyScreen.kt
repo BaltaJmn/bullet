@@ -1,5 +1,7 @@
 package com.baltajmn.bullet.ui
 
+import com.baltajmn.bullet.ui.theme.isWideScreen
+import com.baltajmn.bullet.data.onIos
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,19 +54,33 @@ fun KeyScreen(onBack: () -> Unit) {
         KeyRow({ SignifierGlyph(Signifier.EXPLORE) }, S.signifierExplore, S.keyExplore)
 
         Text(boldMarked(S.keyPrefixes), style = Type.Secondary.copy(lineHeight = 19.sp), modifier = Modifier.padding(start = HEAD_START, end = 20.dp, top = 16.dp))
+
+        // Shortcuts are for a keyboard, which a wide screen is the one to have (docs/pantallas.md 23.15).
+        if (isWideScreen()) {
+            Eyebrow(S.keysTitle)
+            KeyRow({ ShortcutText("N") }, S.keyNew, null)
+            KeyRow({ ShortcutText("F") }, S.keySearch, null)
+            KeyRow({ ShortcutText("1-4") }, S.keyTabs, null)
+            KeyRow({ ShortcutText("[ ]") }, S.keyPrevNext, null)
+            KeyRow({ Text("Esc", style = Type.Label.copy(fontSize = 12.sp)) }, S.keyBack, null)
+        }
         Spacer(Modifier.height(8.dp))
     }
 }
 
 /** One row of the key: the symbol in its own column, the name, and what it means under it. */
 @Composable
-private fun KeyRow(glyph: @Composable () -> Unit, name: String, means: String) {
+private fun KeyRow(glyph: @Composable () -> Unit, name: String, means: String?) {
     Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)) {
         Box(Modifier.width(40.dp).height(22.dp), contentAlignment = Alignment.Center) { glyph() }
         Spacer(Modifier.width(6.dp))
         Column(Modifier.weight(1f)) {
             Text(name, style = Type.Body.copy(fontWeight = FontWeight.Medium, lineHeight = 20.sp))
-            Text(means, style = Type.Secondary.copy(lineHeight = 18.sp))
+            if (means != null) Text(means, style = Type.Secondary.copy(lineHeight = 18.sp))
         }
     }
 }
+
+/** A shortcut as each platform writes it, in the glyph column. */
+@Composable
+private fun ShortcutText(key: String) = Text(shortcutLabel(key, onIos), style = Type.Label.copy(fontSize = 12.sp), maxLines = 1)

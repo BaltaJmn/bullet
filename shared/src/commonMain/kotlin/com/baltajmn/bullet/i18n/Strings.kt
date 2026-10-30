@@ -2320,4 +2320,12 @@ object S {
     val inFuture = t("In Future", "En Futuro", "No Futuro", "In Zukunft", "Dans Futur")
     val a11yPreviousWeek = t("Previous week", "Semana anterior", "Semana anterior", "Vorherige Woche", "Semaine précédente")
     val a11yNextWeek = t("Next week", "Semana siguiente", "Próxima semana", "Nächste Woche", "Semaine suivante")
+
+    // A hardware keyboard (docs/pantallas.md 23.15, #80).
+    val keysTitle = t("With a keyboard", "Con teclado", "Com teclado", "Mit Tastatur", "Avec un clavier")
+    val keyNew = t("Write in today", "Escribir en hoy", "Escrever no dia de hoje", "Für heute schreiben", "Écrire pour aujourd'hui")
+    val keySearch = t("Search", "Buscar", "Buscar", "Suchen", "Rechercher")
+    val keyTabs = t("Go to Today, Month, Future or Index", "Ir a Hoy, Mes, Futuro o Índice", "Ir para Hoje, Mês, Futuro ou Índice", "Zu Heute, Monat, Zukunft oder Index", "Aller à Aujourd'hui, Mois, Futur ou Index")
+    val keyPrevNext = t("Previous and next", "Anterior y siguiente", "Anterior e próximo", "Zurück und weiter", "Précédent et suivant")
+    val keyBack = t("Back", "Atrás", "Voltar", "Zurück", "Retour")
 }

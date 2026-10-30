@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.layout.ColumnScope
+import com.baltajmn.bullet.ui.theme.Spread
+import com.baltajmn.bullet.ui.theme.isSpread
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -105,8 +108,10 @@ fun MonthScreen(
     LaunchedEffect(viewedMonth) { if (viewedMonth == currentMonth) todayRow.bringIntoView(Rect(0f, 0f, 1f, below)) }
 
     val pickedPlace = picked?.let { Place.Monthly(viewedMonth, it) }
+    val spread = isSpread()
     Page(
         tab = true,
+        spread = spread,
         bottom = {
             Composer(
                 place = pickedPlace ?: Place.Monthly(viewedMonth),
@@ -152,58 +157,103 @@ fun MonthScreen(
             }
         }
 
-        Eyebrow(S.calendarTitle, S.calendarHint)
-        val weekLine = MaterialTheme.colorScheme.outline
-        Column(Modifier.padding(start = 6.dp, end = 4.dp)) {
-            for (day in 1..monthDays(viewedMonth)) {
-                val date = LocalDate(viewedMonth.year, viewedMonth.month, day)
-                val place = Place.Monthly(viewedMonth, day)
-                val entries = journal.entriesAt(place)
-                val isPicked = picked == day
-                val pick = {
-                    picked = if (isPicked) null else day
-                    if (!isPicked) pickSignal++
-                }
-                if (day != 1 && day in weekStartDays) {
-                    Box(Modifier.fillMaxWidth().padding(vertical = 4.dp).height(1.dp).drawBehind { drawLine(weekLine, Offset(0f, 0f), Offset(size.width, 0f), 1.dp.toPx()) })
-                }
-                Row(
-                    Modifier.fillMaxWidth()
-                        .then(if (date == today) Modifier.bringIntoViewRequester(todayRow) else Modifier)
-                        .then(scrollHereWhen(linkTo == place, onLinkHandled))
-                        .clip(RoundedCornerShape(12.dp))
-                        .then(if (isPicked) Modifier.background(MaterialTheme.colorScheme.surfaceVariant) else Modifier),
-                ) {
-                    DayCell(date, today, isPicked, entries.size, pick)
-                    Column(Modifier.weight(1f)) {
-                        if (entries.isEmpty()) {
-                            Box(
-                                Modifier.fillMaxWidth().height(40.dp).semantics { hideFromAccessibility() }
-                                    .clickable(role = Role.Button, onClick = pick).padding(start = 8.dp),
-                                contentAlignment = Alignment.CenterStart,
-                            ) {
-                                if (isPicked) Text(S.writingHere, style = Type.Secondary)
-                            }
-                        } else {
-                            EntryListSection(entries, place, journal, today, onNavigateTo, margin = false)
+        val pick: (Int) -> Unit = { day ->
+            val was = picked == day
+            picked = if (was) null else day
+            if (!was) pickSignal++
+        }
+        val calendar: @Composable ColumnScope.() -> Unit = {
+            MonthCalendar(viewedMonth, today, picked, pick, weekStartDays, onNavigateTo, todayRow, linkTo, onLinkHandled)
+        }
+        val tasks: @Composable ColumnScope.() -> Unit = {
+            MonthTasks(viewedMonth, today, onNavigateTo, linkTo, onLinkHandled)
+            val monthPage = monthShare(journal, viewedMonth)
+            if (monthPage.rows.isNotEmpty()) ShareRow(S.shareMonth) { sharing = monthPage }
+        }
+        // From SPREAD_FROM the calendar and the month's tasks are the two pages of the spread (12.15).
+        if (spread) {
+            Spread(left = calendar, right = tasks)
+        } else {
+            calendar()
+            tasks()
+        }
+    }
+
+    sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
+}
+
+/**
+ * The calendar of [month] as a list (docs/pantallas.md 7.1): a row per day, with what is on it, and a line
+ * before each start of the week. Touching a day picks it for the composer. Shared by Mes and by Hoy's
+ * right page in a spread (docs/tecnico.md 12.15).
+ */
+@Composable
+internal fun MonthCalendar(
+    month: YearMonth,
+    today: LocalDate,
+    picked: Int?,
+    onPick: (Int) -> Unit,
+    weekStartDays: Set<Int>,
+    onNavigateTo: (Place) -> Unit,
+    todayRow: BringIntoViewRequester? = null,
+    linkTo: Place? = null,
+    onLinkHandled: () -> Unit = {},
+) {
+    val journal = BobbinRepository.journal
+    Eyebrow(S.calendarTitle, S.calendarHint)
+    val weekLine = MaterialTheme.colorScheme.outline
+    Column(Modifier.padding(start = 6.dp, end = 4.dp)) {
+        for (day in 1..monthDays(month)) {
+            val date = LocalDate(month.year, month.month, day)
+            val place = Place.Monthly(month, day)
+            val entries = journal.entriesAt(place)
+            val isPicked = picked == day
+            val pick = { onPick(day) }
+            if (day != 1 && day in weekStartDays) {
+                Box(Modifier.fillMaxWidth().padding(vertical = 4.dp).height(1.dp).drawBehind { drawLine(weekLine, Offset(0f, 0f), Offset(size.width, 0f), 1.dp.toPx()) })
+            }
+            Row(
+                Modifier.fillMaxWidth()
+                    .then(if (date == today && todayRow != null) Modifier.bringIntoViewRequester(todayRow) else Modifier)
+                    .then(scrollHereWhen(linkTo == place, onLinkHandled))
+                    .clip(RoundedCornerShape(12.dp))
+                    .then(if (isPicked) Modifier.background(MaterialTheme.colorScheme.surfaceVariant) else Modifier),
+            ) {
+                DayCell(date, today, isPicked, entries.size, pick)
+                Column(Modifier.weight(1f)) {
+                    if (entries.isEmpty()) {
+                        Box(
+                            Modifier.fillMaxWidth().height(40.dp).semantics { hideFromAccessibility() }
+                                .clickable(role = Role.Button, onClick = pick).padding(start = 8.dp),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            if (isPicked) Text(S.writingHere, style = Type.Secondary)
                         }
+                    } else {
+                        EntryListSection(entries, place, journal, today, onNavigateTo, margin = false)
                     }
                 }
             }
         }
-
-        Eyebrow(S.monthTasks)
-        val tasksPlace = Place.Monthly(viewedMonth)
-        val tasks = journal.entriesAt(tasksPlace)
-        Box(scrollHereWhen(linkTo == tasksPlace, onLinkHandled)) {
-            if (tasks.isEmpty()) EmptyText(S.monthTasksEmpty) else EntryListSection(tasks, tasksPlace, journal, today, onNavigateTo)
-        }
-
-        val monthPage = monthShare(journal, viewedMonth)
-        if (monthPage.rows.isNotEmpty()) ShareRow(S.shareMonth) { sharing = monthPage }
     }
+}
 
-    sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
+/** The tasks of [month] without a day (docs/pantallas.md 7.1). */
+@Composable
+internal fun MonthTasks(
+    month: YearMonth,
+    today: LocalDate,
+    onNavigateTo: (Place) -> Unit,
+    linkTo: Place? = null,
+    onLinkHandled: () -> Unit = {},
+) {
+    val journal = BobbinRepository.journal
+    Eyebrow(S.monthTasks)
+    val tasksPlace = Place.Monthly(month)
+    val tasks = journal.entriesAt(tasksPlace)
+    Box(scrollHereWhen(linkTo == tasksPlace, onLinkHandled)) {
+        if (tasks.isEmpty()) EmptyText(S.monthTasksEmpty) else EntryListSection(tasks, tasksPlace, journal, today, onNavigateTo)
+    }
 }
 
 /**

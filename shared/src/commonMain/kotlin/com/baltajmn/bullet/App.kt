@@ -81,6 +81,22 @@ import com.baltajmn.bullet.data.readPacket
 import com.baltajmn.bullet.ui.MessageDialog
 import com.baltajmn.bullet.ui.ReceiveSheet
 import com.baltajmn.bullet.ui.importProblemText
+import com.baltajmn.bullet.ui.KeyAction
+import com.baltajmn.bullet.ui.keyAction
+import com.baltajmn.bullet.data.onIos
+import com.baltajmn.bullet.i18n.systemFirstDayOfWeek
+import com.baltajmn.bullet.model.firstDayOfWeek
+import com.baltajmn.bullet.model.lastWeekAllowed
+import com.baltajmn.bullet.model.monthsWithContent
+import com.baltajmn.bullet.model.weekStart
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
 import com.baltajmn.bullet.ui.LinkText
 import com.baltajmn.bullet.ui.proOr
 import com.baltajmn.bullet.ui.Paywall
@@ -269,8 +285,58 @@ fun App() {
         }
     }
 
+    /**
+     * A hardware keyboard (docs/tecnico.md 12.15): the same moves as a finger, from the root so a focused
+     * composer does not swallow them. Esc closes what is on top, and otherwise does what back does.
+     */
+    fun onKey(action: KeyAction): Boolean {
+        val first = firstDayOfWeek(BobbinRepository.journal.settings, systemFirstDayOfWeek())
+        val thisMonth = monthOf(today)
+        when (action) {
+            KeyAction.WRITE -> { overlay = null; tab = Screen.TODAY; weekMode = false; viewedDay = today; focusToday++ }
+            KeyAction.SEARCH -> overlay = Screen.SEARCH
+            KeyAction.TODAY -> { overlay = null; tab = Screen.TODAY }
+            KeyAction.MONTH -> { overlay = null; tab = Screen.MONTH }
+            KeyAction.FUTURE -> { overlay = null; tab = Screen.FUTURE }
+            KeyAction.INDEX -> { overlay = null; tab = Screen.INDEX }
+            KeyAction.PREVIOUS, KeyAction.NEXT -> {
+                if (overlay != null) return false
+                val step = if (action == KeyAction.NEXT) 1 else -1
+                when {
+                    tab == Screen.TODAY && weekMode -> {
+                        val next = weekStart(viewedWeek, first).plus(7 * step, DateTimeUnit.DAY)
+                        if (next <= lastWeekAllowed(today, first)) viewedWeek = next
+                    }
+                    tab == Screen.TODAY -> {
+                        val next = viewedDay.plus(step, DateTimeUnit.DAY)
+                        if (next <= today.plus(1, DateTimeUnit.DAY)) viewedDay = next
+                    }
+                    tab == Screen.MONTH -> {
+                        val next = viewedMonth.plus(step, DateTimeUnit.MONTH)
+                        val oldest = (BobbinRepository.journal.monthsWithContent() + thisMonth).min()
+                        if (next in oldest..thisMonth) viewedMonth = next
+                    }
+                    else -> return false
+                }
+            }
+            KeyAction.BACK -> when {
+                overlay != null -> { overlay = null; reviewFutureLog = false; reviewNotebook = false; reviewYear = false; reviewSibling = null; reviewScope = null; openCollection = null }
+                tab != Screen.TODAY -> tab = Screen.TODAY
+                weekMode -> weekMode = false
+                viewedDay != today -> viewedDay = today
+                else -> return false
+            }
+        }
+        return true
+    }
+
     BobbinTheme {
-        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Box(
+            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).onPreviewKeyEvent { e ->
+                e.type == KeyEventType.KeyDown && !locked &&
+                    keyAction(e.key, e.isMetaPressed, e.isCtrlPressed, onIos)?.let(::onKey) == true
+            },
+        ) {
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     when (tab) {

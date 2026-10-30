@@ -666,7 +666,6 @@ texto de más de 500 se acepta tal cual.
 | `WIDE_SCREEN_FROM` | `600.dp` | `ui/theme/Theme.kt` |
 | `MAX_CONTENT_WIDTH` | `576.dp`: 24 columnas de puntos (`docs/pantallas.md` 1.1 y 21) | `ui/theme/Theme.kt` |
 | `SPREAD_FROM` | `840.dp` (v1.3): Hoy y Mes en doble página (12.15) | `ui/theme/Theme.kt` |
-| `SPINE_WIDTH` | `48.dp`: el lomo de la doble página, o la bisagra si es más ancha (12.15) | `ui/theme/Paper.kt` |
 | `PARSE_BUDGET_MS` / `SEARCH_BUDGET_MS` | `1000` / `200` (test 26) | `PerfTest.kt` |
 | `QUESTION_COUNT` | `60` (v1.1) | `i18n/Strings.kt` |
 | `INDEX_ICONS` | los 12 de 12.9 (v1.2) | `model/Collections.kt` |
@@ -2666,13 +2665,10 @@ v1.3, gratis.
   primeros a la izquierda y los cuatro siguientes a la derecha, empezando donde diga
   `firstDayOfWeek`. Sin Mes al lado.
 - **Mes en doble página**: el calendario a la izquierda; las tareas del mes y compartir, a la derecha.
-- **Plegables**: `@Composable expect fun rememberHinge(): Hinge?` con
-  `data class Hinge(val start: Dp, val width: Dp)` en coordenadas de la ventana. Android lo saca de
-  `WindowInfoTracker` cuando hay un `FoldingFeature` vertical con `isSeparating`; iOS devuelve `null`.
-  Con bisagra, el lomo se pone sobre ella y mide `max(width, SPINE_WIDTH)`, y cada página llena su
-  lado hasta `MAX_CONTENT_WIDTH`. Una bisagra horizontal se ignora. Es la única dependencia nueva
-  (`androidx.window`), y entra con la versión que ya usen las hermanas, o con la estable de ese
-  momento si ninguna la usa.
+- **Plegables**: no se lee la bisagra. En los plegables de libro la bisagra cae en el centro de la
+  ventana, y `page(spread = true)` ya centra la doble página, así que el lomo de 48 dp queda encima. Leerla
+  pedía `androidx.window` y un `expect` más para un caso que el centrado ya resuelve; si un plegable
+  pone la bisagra fuera del centro, se reabre.
 - **Teclado**, `ui/Keys.kt`: `fun keyAction(key: Key, meta: Boolean, ctrl: Boolean, apple: Boolean):
   KeyAction?`, pura, con `apple` verdadero en iOS. El modificador es Cmd en iOS y Ctrl en Android:
 
@@ -2684,9 +2680,17 @@ v1.3, gratis.
   | Modificador + `[` y `]` | día, semana o mes anterior y siguiente, según la página |
   | Esc, sin modificador | atrás, en el orden de `docs/pantallas.md` 3 |
 
-  `App.kt` lo escucha con `onPreviewKeyEvent` en la raíz, y solo con `KeyEventType.KeyDown`.
-- **Puntero**: las filas tocables llevan `hoverable` y, al pasar por encima, `surfaceVariant` al 50 %.
+  `App.kt` lo escucha con `onPreviewKeyEvent` en la raíz, solo con `KeyEventType.KeyDown` y nunca con
+  el bloqueo puesto. Esc cierra la pantalla de encima; si no hay ninguna, hace lo que atrás en la barra
+  (de otra pestaña a Hoy, de Semana a Día, de otro día a hoy). Las hojas inferiores son ventanas propias
+  y se cierran con su propio atrás. Anterior y siguiente no salen de los límites de cada página: hasta
+  mañana en Hoy, hasta `lastWeekAllowed` en Semana, del mes más antiguo con contenido al actual en Mes.
+- **La Clave** gana la sección `keysTitle` en pantalla ancha (`isWideScreen`), con `shortcutLabel`.
+- **Puntero**: las filas de entrada llevan `hoverable` y, al pasar por encima, `surfaceVariant` al 50 %.
   Nada cambia de tamaño.
+- **Hoy en doble página** suelta el día elegido a la derecha con `onAnyPress` en la página izquierda,
+  que ve cada toque antes que sus hijos sin consumirlo. `MonthCalendar` y `MonthTasks`
+  (`ui/MonthScreen.kt`) son el mismo calendario y las mismas tareas en Mes y en la página derecha.
 - **Ni Mac ni Apple Vision Pro**: App Store Connect ofrece por defecto las apps de iPad en los Mac con
   Apple Silicon y en Vision Pro. **[autor]** lo desmarca en *Precios y disponibilidad*: Bobbin es
   Android e iOS y nada más.

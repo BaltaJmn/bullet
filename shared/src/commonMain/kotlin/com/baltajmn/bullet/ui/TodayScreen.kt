@@ -2,6 +2,8 @@ package com.baltajmn.bullet.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
@@ -21,6 +23,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
@@ -33,7 +37,10 @@ import com.baltajmn.bullet.data.Reminders
 import com.baltajmn.bullet.data.ShareContent
 import com.baltajmn.bullet.data.dayShare
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.systemFirstDayOfWeek
 import com.baltajmn.bullet.model.Journal
+import com.baltajmn.bullet.model.firstDayOfWeek
+import com.baltajmn.bullet.model.weekStarts
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.monthOf
@@ -41,7 +48,9 @@ import com.baltajmn.bullet.model.ofDay
 import com.baltajmn.bullet.model.openTasksBefore
 import com.baltajmn.bullet.model.openTasksOfMonth
 import com.baltajmn.bullet.model.unclosedMonth
+import com.baltajmn.bullet.ui.theme.Spread
 import com.baltajmn.bullet.ui.theme.Type
+import com.baltajmn.bullet.ui.theme.isSpread
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
@@ -119,16 +128,23 @@ fun TodayScreen(
     var sharing by remember { mutableStateOf<ShareContent?>(null) }
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
+    // From SPREAD_FROM the day's month is the right page (docs/tecnico.md 12.15). A day picked there
+    // takes the composer, as in Mes; touching the left page gives it back to the day.
+    val spread = isSpread()
+    val month = monthOf(viewedDay)
+    var rightPick by remember(viewedDay, spread) { mutableStateOf<Int?>(null) }
+    var rightPickSignal by remember { mutableStateOf(0) }
 
     Page(
         tab = true,
         scroll = scroll,
+        spread = spread,
         bottom = {
             Composer(
-                place = Place.Daily(viewedDay),
+                place = rightPick?.let { Place.Monthly(month, it) } ?: Place.Daily(viewedDay),
                 today = today,
                 autoFocus = autoFocus && isToday,
-                focusSignal = focusSignal,
+                focusSignal = focusSignal + rightPickSignal,
                 // The new line is the last one: bring it into sight above the composer.
                 onSaved = { scope.launch { delay(60); scroll.animateScrollTo(scroll.maxValue) } },
             )
@@ -178,19 +194,45 @@ fun TodayScreen(
             )
         }
 
-        Spacer(Modifier.heightIn(min = 10.dp))
-        if (daily.isEmpty()) {
-            EmptyText("${S.dayEmpty(viewedDay, today)} ${S.writeBelow}")
-        } else {
-            EntryListSection(daily, Place.Daily(viewedDay), journal, today, onNavigateTo)
-        }
-        if (isToday && daily.isNotEmpty() && !TapHint.seen) HintCard(S.hintTap, TapHint::dismiss)
+        val dayPage: @Composable ColumnScope.() -> Unit = {
+            Spacer(Modifier.heightIn(min = 10.dp))
+            if (daily.isEmpty()) {
+                EmptyText("${S.dayEmpty(viewedDay, today)} ${S.writeBelow}")
+            } else {
+                EntryListSection(daily, Place.Daily(viewedDay), journal, today, onNavigateTo)
+            }
+            if (isToday && daily.isNotEmpty() && !TapHint.seen) HintCard(S.hintTap, TapHint::dismiss)
 
-        if (calendarLine.isNotEmpty()) {
-            Eyebrow(S.calendarToday)
-            EntryListSection(calendarLine, Place.Monthly(monthOf(viewedDay), viewedDay.day), journal, today, onNavigateTo)
+            if (calendarLine.isNotEmpty()) {
+                Eyebrow(S.calendarToday)
+                EntryListSection(calendarLine, Place.Monthly(monthOf(viewedDay), viewedDay.day), journal, today, onNavigateTo)
+            }
+            if (daily.isNotEmpty() || calendarLine.isNotEmpty()) ShareRow(S.shareDay) { sharing = dayShare(journal, viewedDay) }
         }
-        if (daily.isNotEmpty() || calendarLine.isNotEmpty()) ShareRow(S.shareDay) { sharing = dayShare(journal, viewedDay) }
+        if (spread) {
+            Spread(
+                left = { Column(Modifier.onAnyPress { rightPick = null }) { dayPage() } },
+                right = {
+                    Text(S.monthTitle(month), style = Type.Heading, modifier = Modifier.padding(start = HEAD_START, top = 14.dp))
+                    val first = firstDayOfWeek(journal.settings, systemFirstDayOfWeek())
+                    MonthCalendar(
+                        month,
+                        today,
+                        rightPick,
+                        onPick = { day ->
+                            val was = rightPick == day
+                            rightPick = if (was) null else day
+                            if (!was) rightPickSignal++
+                        },
+                        weekStarts(month, first),
+                        onNavigateTo,
+                    )
+                    MonthTasks(month, today, onNavigateTo)
+                },
+            )
+        } else {
+            dayPage()
+        }
     }
 
     sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
@@ -238,6 +280,16 @@ fun ShareRow(label: String, onClick: () -> Unit) {
         GlyphIcon(Glyph.SHARE, tint = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.width(8.dp))
         Text(label, style = Type.Label.copy(color = MaterialTheme.colorScheme.primary, fontSize = 14.sp))
+    }
+}
+
+/** Sees every press inside, before the children, and consumes none: they still get their own tap. */
+internal fun Modifier.onAnyPress(onPress: () -> Unit): Modifier = this.pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            if (event.type == PointerEventType.Press) onPress()
+        }
     }
 }
 

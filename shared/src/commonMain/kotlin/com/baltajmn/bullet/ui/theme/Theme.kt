@@ -95,6 +95,17 @@ fun isWideScreen(windowWidth: Dp): Boolean = windowWidth >= WIDE_SCREEN_FROM
 fun isWideScreen(): Boolean = with(LocalDensity.current) { isWideScreen(LocalWindowInfo.current.containerSize.width.toDp()) }
 
 /**
+ * docs/tecnico.md 12.15: from here Hoy and Mes open as two pages, the day beside its month. A book-style
+ * foldable has its hinge down the middle of the window, which is where the centred spine already falls.
+ */
+val SPREAD_FROM = 840.dp
+
+fun isSpread(windowWidth: Dp): Boolean = windowWidth >= SPREAD_FROM
+
+@Composable
+fun isSpread(): Boolean = with(LocalDensity.current) { isSpread(LocalWindowInfo.current.containerSize.width.toDp()) }
+
+/**
  * The family's eight pastels (docs/tecnico.md 5), in its order. A cover only tints today's dot and
  * number, the widgets and, washed out by [coverSoft], the active tab and the notice cards
  * (docs/pantallas.md 1.2): never the text or the paper.
