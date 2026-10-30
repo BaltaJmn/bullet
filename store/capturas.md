@@ -33,6 +33,15 @@ porque Apple no admite un teclado ni una pantalla de inicio de Android. `todas.s
 |---|---|---|---|
 | `play` | Emulador `Pixel_8_capturas`, API 35 | 1080x2400 | 1080x2160 PNG |
 | `iphone` | Simulador "Capturas-Bobbin", iPhone 17 Pro Max | 1320x2868 | 1320x2868 PNG (6,9") |
+| `ipad` | Simulador iPad Pro 13-inch (M5) | 2064x2752 | La misma, sin plantilla (13") |
+
+La app es universal y App Store Connect no envía sin capturas de iPad de 13". Van solo en en-US, que
+la tienda enseña en los idiomas que no tienen las suyas, y crudas: la plantilla recorta para el ancho
+del iPhone. Son cinco, las escenas de iPhone en su orden menos los widgets, que no tienen cruda de
+iPad. Las crudas salen como las de iPhone (sección 5) en `tools/demo/salida/en-US/crudas-ipad/`; al
+pasarlas a `store/screenshots/ipad/en-US/` se tapan con el color del papel las filas 0 a 70, la
+barra de estado, que el simulador pinta con la fecha en su propio idioma. Se suben con
+`APP_IPAD_PRO_3GEN_129`: `appstore.py capturas` solo sabe de iPhone.
 
 Play rechaza una captura cuyo lado largo pase del doble del corto: 1080x2160 es el máximo. La plantilla
 quita la barra de estado (90 px en Android, 150 en iPhone) y recorta cada escena por su propio fin, con

@@ -176,10 +176,11 @@ no trae Play Billing.
       Connect): sin él, Apple no deja enviar apps nuevas a revisión.
 - [x] **`TEAM_ID`** en `Config.xcconfig`: `BR5ZH8XYP6`, el de la cuenta de persona física. No es
       secreto. (#8)
-- [ ] **Producto `bullet_pro`** en App Store Connect: creado el 30-10-2026 (id `6828976599`), no
+- [x] **Producto `bullet_pro`** en App Store Connect: creado el 30-10-2026 (id `6828976599`), no
       consumible, sin Compartir en familia, nombre y descripción en los cinco idiomas y la nota para la
       revisión de `revenuecat.md` §6. Precio **1,99 EUR**, puesto el 30-10-2026 con `tienda/compra.py`
-      en las dos tiendas. Falta la **captura para la revisión** (`appstore.py captura-compra`). (#47)
+      en las dos tiendas. Captura para la revisión sacada del vídeo (la hoja de Bobbin Pro) y
+      disponible en los mismos 174 países que la app: *Ready to Submit*. (#47)
 - [x] **Privacidad de la app, edad, derechos de contenido, cifrado, contacto y notas para el
       revisor**, 30-10-2026: privacidad publicada (historial de compras e ID de usuario, no vinculados,
       sin rastreo), 4+, sin contenido de terceros, la build 3 sin cifrado propio, el contacto de las
@@ -187,12 +188,14 @@ no trae Play Billing.
 - [x] **[autor] Vídeo para la revisión**, 30-10-2026: 2:24 en un iPhone de verdad desde TestFlight
       (grupo interno "Equipo", build 3), de la guía a la compra en sandbox a 1,99 y el libro en PDF.
       Adjunto con `appstore.py adjunto`; el punto 1 de las notas cuenta lo que sale. (#59)
-- [ ] **[autor] Ficha**: los cinco ficheros por idioma de `app-store/`, capturas de iPhone y de iPad
-      (#58), URL de la política y de soporte. (#57)
+- [x] **[autor] Ficha**, 30-10-2026: los ficheros de `app-store/` en los trece idiomas, URL de la
+      política y de soporte (#57), y las capturas (#58): las seis de iPhone de 6,9" en los trece y cinco
+      de iPad de 13" solo en en-US, que App Store Connect usa para los demás idiomas.
 - [ ] **[código] Informe de privacidad de Xcode** sobre el primer archivo (*Product > Archive >
       Generate Privacy Report*), contrastado con `PrivacyInfo.xcprivacy`. Lo que salga de más se añade
       al manifiesto y a `store/formularios.md` en el mismo commit. (#59)
 - [ ] **[autor] Probar la compra en el sandbox** de Apple y *Restaurar compra*, que el revisor mira.
+      La compra, probada en el vídeo del 30-10-2026; falta *Restaurar compra*.
 - [ ] **[autor] Enviar a revisión** con la compra adjunta a la versión: la primera compra de una app
       solo se revisa junto a una versión.
 
