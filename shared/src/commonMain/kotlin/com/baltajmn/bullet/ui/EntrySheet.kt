@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -137,6 +138,8 @@ fun EntrySheetHost(today: LocalDate, onNavigateTo: (Place) -> Unit) {
 
     ModalBottomSheet(
         onDismissRequest = close,
+        // Half open, Editar and Borrar fell below the fold of a phone and looked missing.
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         sheetMaxWidth = MAX_CONTENT_WIDTH,
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
@@ -372,7 +375,7 @@ private fun MarkChoices(entry: Entry, close: () -> Unit, onBack: () -> Unit) {
 /** docs/pantallas.md 5.4: the same tope as writing, no prefixes; an empty text leaves the entry as it was. */
 @Composable
 private fun EditText(entry: Entry, close: () -> Unit, onBack: () -> Unit) {
-    var value by remember(entry.id) { mutableStateOf(TextFieldValue(entry.text, TextRange(0, entry.text.length))) }
+    var value by remember(entry.id) { mutableStateOf(TextFieldValue(entry.text, TextRange(entry.text.length))) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
     fun save() {
