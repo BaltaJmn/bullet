@@ -1,0 +1,7 @@
+첫 버전이에요.
+
+- Rapid logging: bullet 세 가지, 할 일 상태 다섯 가지, signifier 세 가지.
+- 오늘, 월간, 미래, 목차: Daily Log, Monthly Log, Future Log.
+- 할 일을 하나씩 손으로 옮기고, 먼저 그 기간을 다시 읽는 살펴보기.
+- 목록과 트래커.
+- 잠금, 알림, 오늘 위젯, 다이어리 전체를 zip으로 내보내고 가져오기.

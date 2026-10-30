@@ -1,0 +1,7 @@
+Pierwsza wersja.
+
+- Rapid logging z trzema bulletami, pięcioma stanami zadania i trzema signifierami.
+- Dziś, Miesiąc, Przyszłość i Indeks: Daily, Monthly i Future Log.
+- Ręczna migracja, jedno zadanie naraz, oraz przegląd, który najpierw czyta okres jeszcze raz.
+- Kolekcje i trackery.
+- Blokada, przypomnienie, widżet Dziś i cały dziennik w zipie do eksportu lub importu.

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.caps
 import com.baltajmn.bullet.i18n.systemFirstDayOfWeek
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.ReviewScope
@@ -177,7 +178,7 @@ internal fun WeekDayBlock(
     val journal = BobbinRepository.journal
     val d = day.date
     val m = monthOf(d)
-    val label = S.weekDayLabel(d, withMonth = showMonth).uppercase() + if (isToday) " · " + S.weekToday.uppercase() else ""
+    val label = S.weekDayLabel(d, withMonth = showMonth).caps() + if (isToday) " · " + S.weekToday.caps() else ""
     Row(
         Modifier.padding(start = HEAD_START, end = 12.dp, top = 14.dp).fillMaxWidth().heightIn(min = 40.dp)
             .clip(RoundedCornerShape(12.dp))

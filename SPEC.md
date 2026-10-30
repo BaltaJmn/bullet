@@ -21,8 +21,8 @@ escrito aparte y aquí solo se resume lo imprescindible para entender cada decis
 |---|---|
 | `docs/tecnico.md` | El contrato de implementación: identificadores, versiones, árbol de código, formatos de `journal.json` y `widget.json`, algoritmos, puentes de plataforma, CI, tests numerados y qué secciones gobiernan cada issue |
 | `docs/pantallas.md` | La interfaz pantalla a pantalla, con sus estados vacíos y los cuatro gestos de la app |
-| `docs/textos.md` | Todos los textos en los cinco idiomas y el glosario fijo del método |
-| `store/` | La tienda: fichas en cinco idiomas, novedades, capturas, formularios, política de privacidad, compras, CI y el checklist de lanzamiento |
+| `docs/textos.md` | Todos los textos en los trece idiomas y el glosario fijo del método |
+| `store/` | La tienda: fichas en trece idiomas, novedades, capturas, formularios, política de privacidad, compras, CI y el checklist de lanzamiento |
 | `CLAUDE.md` | Las reglas de trabajo que cargan solas las sesiones de Claude Code |
 | Issues del repo | `gh issue list -R BaltaJmn/bullet`: #1 a #80, una por pieza, de v1.0 a v1.3 (§3, §11) |
 
@@ -169,7 +169,7 @@ lista, nunca de un selector de calendario).
 
 El hueco de ASO (Zinnia gana por valoraciones, Buju por llevar la keyword, la oficial pierde por
 categoría) lo atacan #1 y #57 ("Bullet Journal" en el nombre de tienda y categoría Estilo de vida),
-#56 (pedir valoración una sola vez, tras cerrar el primer mes) y #58 (capturas en cinco idiomas).
+#56 (pedir valoración una sola vez, tras cerrar el primer mes) y #58 (capturas en los idiomas de la ficha).
 
 ### Nuestro ataque, en una línea cada uno
 
@@ -401,15 +401,17 @@ iOS y nada más.
 - **Tienda y salida** (#57 a #62): ficha, capturas, privacidad y formularios, beta, prueba en
   dispositivo físico y lanzamiento.
 
-Y lo que atraviesa todo: cinco idiomas (inglés, español, portugués, alemán y francés) sin selector,
-siguiendo al sistema; teléfono y tableta, vertical y horizontal; tema claro u oscuro según el sistema.
+Y lo que atraviesa todo: trece idiomas sin selector, siguiendo al sistema: inglés, español,
+portugués, alemán y francés desde la v1.0, y desde el 30-10-2026 italiano, neerlandés, polaco, ruso,
+turco, indonesio, japonés y coreano, los mismos que el resto de la familia, para que las fichas y las
+capturas de las cinco apps salgan en los mismos idiomas; teléfono y tableta, vertical y horizontal; tema claro u oscuro según el sistema.
 
 ### v1.1: issues #63 a #68, lo que se pedirá en las reseñas
 
 - **Threading** (#63): enlazar una colección con su continuación. Gratis.
 - **Nuevo cuaderno** (#64): la migración anual, colección a colección y tarea a tarea. Gratis.
-- **Reflexión guiada** (#65): un banco de preguntas opcionales en los cinco idiomas. Gratis.
-- **Fechas en lenguaje natural** (#66): "mañana", "el viernes", "14 de marzo" en los cinco idiomas, en
+- **Reflexión guiada** (#65): un banco de preguntas opcionales en todos los idiomas. Gratis.
+- **Fechas en lenguaje natural** (#66): "mañana", "el viernes", "14 de marzo" en todos los idiomas, en
   local, como una pastilla que nunca se aplica sola. Gratis.
 - **Captura desde fuera** (#67, Pro): baldosa de Ajustes rápidos en Android y App Intent de iOS para
   Siri y Atajos, pasando por el mismo `RapidParse`.
@@ -1073,7 +1075,7 @@ Palabras clave:
 - Portugués, alemán y francés: sin datos; se escriben en #57 a partir del glosario de
   `docs/textos.md`, con "bullet journal" y "bujo" sin traducir, que es como se busca el método.
 
-Los textos definitivos de las dos fichas, en los cinco idiomas, van en `store/listings/` (Play) y
+Los textos definitivos de las dos fichas, en los trece idiomas, van en `store/listings/` (Play) y
 `store/app-store/` (App Store), con sus topes comprobados (#57). Las reglas que no cambian por idioma:
 
 - La **primera frase** de la descripción dice compra única, sin cuenta y sin anuncios.
@@ -1083,7 +1085,7 @@ Los textos definitivos de las dos fichas, en los cinco idiomas, van en `store/li
 - Quilt y Purl solo se nombran dentro de la descripción larga, nunca en el título ni en el
   subtítulo. Quien busca seguimiento serio de hábitos, con recordatorios y estadísticas, se remite a
   Quilt (#50).
-- Las capturas enseñan contenido que existe en la app, en los cinco idiomas (#58).
+- Las capturas enseñan contenido que existe en la app, en los trece idiomas (#58).
 
 ---
 
@@ -1144,7 +1146,7 @@ data/Reminders.kt        expect: el recordatorio de reflexión
 data/Sharing.kt          expect: imagen de página punteada o texto, y hoja de compartir
 data/AppInfo.kt          URL de la política, SIBLINGS, versión
 billing/Billing.kt       expect: RevenueCat, comprar / restaurar / refrescar, último derecho conocido
-i18n/Strings.kt          los cinco idiomas en una tabla, obligados por firma
+i18n/Strings.kt          los trece idiomas en una tabla, obligados por firma
 ui/theme/Theme.kt        papel y tinta, portadas, papeles, Literata, corte de pantalla ancha
 ui/BulletGlyph.kt        los glifos del método, en Canvas
 ui/Icons.kt              los iconos de las pestañas, la cabecera y las hojas, en Canvas
@@ -1258,7 +1260,7 @@ bobbin-2026-09-23.zip
 - **STORED, sin compresión**, y CRC32 escrito a mano: `data/Zip.kt` se copia de line, unas 150 líneas
   con sus tests. Okio no sirve (solo lee, y solo en JVM).
 - Se escribe **entrada a entrada** al destino, sin montar el archivo en memoria.
-- Los nombres de dentro son fijos y en inglés en los cinco idiomas.
+- Los nombres de dentro son fijos y en inglés en todos los idiomas.
 - iOS (Archivos), los gestores de Android y cualquier escritorio abren un zip con doble toque: el
   usuario comprueba por sí mismo que sus datos son suyos.
 - La importación acepta el zip y, por compatibilidad, un `journal.json` suelto.

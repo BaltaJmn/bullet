@@ -1,0 +1,36 @@
+Tek seferlik satın alım, hesap yok, reklam yok. Bobbin, kağıt yöntemini olduğu gibi koruyan dijital bir bullet journal: rapid logging, üç bullet, beş görev durumu ve elle aktarma, kayıt kayıt.
+
+Bugün sayfasında klavye açık olarak açılır. Bir satır yaz, Enter'a bas, bir sonrakini yaz. Önce ayar yok, şablon yok, çıkartma yok: defterine benzeyen bir bujo uygulaması ve günlük planlayıcı.
+
+GERÇEK RAPID LOGGING
+Görev için nokta, etkinlik için daire, not için tire. Satırın başına o, - ya da bir signifier yaz; bullet sen yazarken değişir. Bir görev açık, yapıldı, aktarıldı, planlandı ya da bırakıldı olur; öncelik, ilham ve keşfet önemli olanı işaretler. Anahtar her sembolü açıklar.
+
+DAILY LOG, MONTHLY LOG, FUTURE LOG VE DİZİN
+Bugün, Daily Log demek. Ay, Monthly Log demek: günlerin listesi olarak takvim ve ayın görevleri. Gelecek, ay bloklarıyla Future Log demek. Dizin, yazdığın her ayı ve her koleksiyonu başladığın sırayla listeler.
+
+ELLE AKTARMA
+Hiçbir şey kendiliğinden taşınmaz. Dünün açık görevleri bugün görünmez, yeni ay öncekini kopyalamaz, Future Log seni bekler. Ay bitince Gözden geçir, her seferinde tek açık görev gösterir: aktarırsın, planlarsın, bir koleksiyona taşırsın ya da bırakırsın. Üç kez aktarılmış görev bunu söyler; Bobbin'in uyguladığı tek baskı budur.
+
+KARAR VERMEDEN ÖNCE TEKRAR OKU
+Her gözden geçirme, dönemi tekrar okumakla ve kısa bir düşünceye yer ayırmakla başlar. İsteğe bağlı günlük hatırlatıcı varsayılan olarak kapalıdır; metni sabittir, günlüğünden asla alıntı yapmaz.
+
+KOLEKSİYONLAR VE ÇİZELGELER
+Kitaplar, geziler ya da adı olan her şey için koleksiyonlar. Çizelgede tanımladığın satırlar için günde bir dokunuş yeter, ay başına bir sayfa. Bobbin alışkanlık istatistiği tutmaz, seri saymaz: bunun için kardeş uygulama Quilt var; hatırlatıcıları ve istatistikleri olan bir alışkanlık takip uygulaması.
+
+YÖNTEMDEN DAHA FAZLASI
+Bir koleksiyon, iki yönde bağlı olarak yenisinde devam edebilir. Yeni defter, koleksiyonları ve görevleri seninle tek tek gözden geçirir; Dizin eskisini hiçbir şeyi silmeden bir kenara alır. Düşünce notu bir soru önerebilir. "Yarın", "cuma" ya da "14 Mart" yaz, bir öneri planlamayı teklif eder; tarih telefonunda okunur, asla kendiliğinden uygulanmaz. Dizin her koleksiyon ya da ay için simge ve tema alır, temaya göre filtre de vardır; tamamen aktarılmış geçmiş aylar kağıttaki gibi altı çizilir. Purl, MoodTraker ve Quilt'ten kayıtları tek tek getirebilirsin.
+
+GÜNLÜĞÜN TELEFONUNDA KALIR
+Hesap yok, bize ait bulut yok, analitik yok. Tüm günlüğü okunabilir Markdown'lı bir zip olarak dışa aktar, hiçbir şey kaybetmeden başka telefona içe aktar, parmak izin, yüzün ya da ekran kilidinle kilitle. Bir günü, ayı ya da koleksiyonu noktalı sayfa olarak paylaş. Pro ile isteğe bağlı eşitleme, kendi bulutunda, seçtiğin bir dosyada, örneğin Google Drive'da: hesap yok, bize ait sunucu yok, iki taraf da değiştiyse önce sorar.
+
+WIDGET VE TABLET
+Açık görevleri, yapılanları ve etkinlikleri gösteren, metnini asla göstermeyen bir Bugün widget'ı. Tablette Dizin ve Gelecek, açık duran dijital bir planlayıcı gibi çift sayfa olarak açılır.
+
+SONSUZA DEK ÜCRETSİZ
+Yöntemin tamamı ve "Yöntemden daha fazlası" altındaki her şey, arama, dışa ve içe aktarma, paylaşma, hatırlatıcı, kilit ve Bugün widget'ı: ücretsiz, süre sınırı yok.
+
+BOBBIN PRO, TEK ÖDEME
+Yedi kapak daha, çizgili, kareli ve düz kağıt, birden fazla çizelge, ay widget'ı, PDF kitap olarak defter, Hızlı Ayarlar'dan, Yaz widget'ından ya da başka uygulamadan not alma, kendi bulutunla eşitleme ve metin olarak yıl özeti. Bir kez ödenir, asla abonelik değil.
+
+BULAMAYACAKLARIN
+Günlerini özetleyen yapay zekâ yok, ruh sağlığı vaadi yok, seri yok, reklam yok, analitik yok. Yazmak ve karar vermek için bir günlük uygulaması; seni notlandıran bir verimlilik günlüğü değil. Günde bir satır yazıp her yıl tekrar okumak istiyorsan Purl'u dene.

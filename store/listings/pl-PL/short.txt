@@ -1,0 +1,1 @@
+Bujo i planer dnia z rapid logging i ręczną migracją zadań. Bez konta.

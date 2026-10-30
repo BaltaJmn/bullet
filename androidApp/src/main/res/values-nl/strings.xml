@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">Open en voltooide taken en gebeurtenissen van vandaag, zonder tekst</string>
+    <string name="widget_month_description">Een stip voor elke dag met items</string>
+    <string name="widget_preview_date">WO 23 SEP</string>
+    <string name="widget_preview_open">open</string>
+    <string name="widget_preview_done">voltooid</string>
+    <string name="widget_preview_events">gebeurtenissen</string>
+    <string name="widget_preview_month">SEPTEMBER</string>
+    <string name="tile_label">Noteren in Bobbin</string>
+    <string name="capture_widget_label">Bobbin: Schrijven</string>
+    <string name="widget_capture_write">Schrijven</string>
+    <string name="widget_capture_description">Schrijf een regel in vandaag, zonder een woord van het dagboek op het startscherm</string>
+</resources>

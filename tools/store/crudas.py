@@ -7,7 +7,8 @@
 Carga el diario de demostracion con run-as (solo funciona con la build de depuracion), pone el idioma
 de la app con las preferencias por app de Android 13+, limpia la barra de estado con el modo demo del
 sistema y recorre las escenas buscando cada boton por su texto en el arbol de accesibilidad, no por
-coordenadas: asi sirve igual en los cinco idiomas. Deja tools/demo/salida/<idioma>/crudas/*.png.
+coordenadas: asi sirve igual en todos los idiomas. Deja tools/demo/salida/<idioma>/crudas/*.png.
+Ruso, japones y coreano no teclean en la escena 01 (escribir=None): adb input text solo escribe ASCII.
 """
 import os
 import pathlib
@@ -39,6 +40,14 @@ IDIOMAS = {
     "fr-FR": dict(escribir="Appeler%sLeo", mes="Mois", indice="Index", ajustes="Réglages", cuaderno="CARNET",
                   portada="Lilas", papel="quadrillé",
                   repasar=r"^Revoir (?!ces jours|la journée|Futur)", decidir=r"^Décider les \d+ tâches$"),
+    "it-IT": dict(escribir="Chiamare%sLeo", mes="Mese", indice="Indice", ajustes="Impostazioni", cuaderno="QUADERNO", portada="Lilla", papel="a quadretti", repasar=r'^(?!(?:Rivedi\ quei\ giorni|Rivedi\ la\ giornata|Rivedi\ Futuro)$)Rivedi\ .+$', decidir=r'^Decidi\ le\ \d+\ attività$', fila=r'^\d+,\ '),
+    "nl-NL": dict(escribir="Leo%sbellen", mes="Maand", indice="Index", ajustes="Instellingen", cuaderno="NOTITIEBOEK", portada="Lila", papel="geruit", repasar=r'^(?!(?:Die\ dagen\ doornemen|De\ dag\ doornemen|Toekomst\ doornemen)$)\S+\ doornemen$', decidir=r'^Beslis\ over\ \d+\ taken$', fila=r'^\d+,\ '),
+    "pl-PL": dict(escribir="Napisz%sdo%sLeo", mes="Miesiąc", indice="Indeks", ajustes="Ustawienia", cuaderno="NOTATNIK", portada="Lila", papel="w kratkę", repasar=r'^(?!(?:Przejrzyj\ te\ dni|Przejrzyj\ dzień|Przejrzyj\ Przyszłość)$)Przejrzyj\ .+$', decidir=r'^Zdecyduj:\ \d+\ \S+$', fila=r'^\d+,\ '),
+    "ru-RU": dict(escribir=None, mes="Месяц", indice="Индекс", ajustes="Настройки", cuaderno="БЛОКНОТ", portada="Сирень", papel="в клетку", repasar=r'^(?!(?:Просмотреть\ эти\ дни|Просмотреть\ день|Просмотреть\ Будущее)$)Просмотреть\ .+$', decidir=r'^Решить\ по\ \d+\ \S+$', fila=r'^\d+,\ '),
+    "tr-TR": dict(escribir="Anneyi%sara", mes="Ay", indice="Dizin", ajustes="Ayarlar", cuaderno="DEFTER", portada="Leylak", papel="kareli", repasar=r'^(?!(?:Günleri\ gözden\ geçir|Günü\ gözden\ geçir|Gözden\ geçir:\ Gelecek)$)Gözden\ geçir:\ .+$', decidir=r'^Karar\ ver:\ \d+\ görev$', fila=r'^\d+,\ '),
+    "id": dict(escribir="Telepon%sLeo", mes="Bulan", indice="Indeks", ajustes="Pengaturan", cuaderno="BUKU CATATAN", portada="Lilac", papel="kotak-kotak", repasar=r'^(?!(?:Tinjau\ hari\-hari\ itu|Tinjau\ hari|Tinjau\ Mendatang)$)Tinjau\ .+$', decidir=r'^Putuskan\ \d+\ tugas$', fila=r'^\d+,\ '),
+    "ja-JP": dict(escribir=None, mes="月", indice="目次", ajustes="設定", cuaderno="ノート", portada="ライラック", papel="方眼", repasar=r'^(?!(?:それらの日を見直す|この日を見直す|未来を見直す)$).+を見直す$', decidir=r'^\d+件のタスクを決める$', fila=r'^\d+日、'),
+    "ko-KR": dict(escribir=None, mes="월간", indice="목차", ajustes="설정", cuaderno="노트", portada="라일락", papel="모눈", repasar=r'^(?!(?:지난\ 날들\ 살펴보기|하루\ 살펴보기|미래\ 살펴보기)$).+\ 살펴보기$', decidir=r'^할\ 일\ \d+개\ 정하기$', fila=r'^\d+일,\ '),
 }
 
 
@@ -137,8 +146,9 @@ def main():
     else:
         sys.exit("El teclado no sube")
     time.sleep(1)
-    adb("shell", "input", "text", t["escribir"])
-    time.sleep(1)
+    if t["escribir"]:
+        adb("shell", "input", "text", t["escribir"])
+        time.sleep(1)
     captura(salida / "01_hoy.png")
 
     # 03 Reviewing last month, from Today's notice: past rereading, the first task is the one moved
@@ -154,7 +164,7 @@ def main():
     adb("shell", "input", "keyevent", "KEYCODE_BACK")
     time.sleep(0.8)
     tocar(buscar(t["mes"]))
-    buscar(re.compile(r"^\d+\.?, "))
+    buscar(re.compile(t.get("fila", r"^\d+\.?, ")))
     for _ in range(3):
         adb("shell", "input", "swipe", "540", "700", "540", "2000", "250")
     time.sleep(1.2)

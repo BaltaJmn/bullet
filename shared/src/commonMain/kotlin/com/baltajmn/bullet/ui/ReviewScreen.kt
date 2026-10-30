@@ -45,6 +45,7 @@ import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.ReadBackup
 import com.baltajmn.bullet.data.askReviewAfter
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.caps
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.CollectionKind
 import com.baltajmn.bullet.model.Journal
@@ -128,7 +129,7 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit, onTo
             ) {
                 ReviewTop(onClose)
                 Column(Modifier.padding(horizontal = 24.dp)) {
-                    Text(label.uppercase(), style = Type.Eyebrow)
+                    Text(label.caps(), style = Type.Eyebrow)
                     Text(S.rereadTitle(month), style = Type.Heading, modifier = Modifier.padding(top = 10.dp, bottom = 8.dp).semantics { heading() })
                     Text(S.rereadLead(total), style = Type.Secondary.copy(fontSize = 15.sp, lineHeight = 22.sp))
                 }
@@ -178,7 +179,7 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit, onTo
             Page(tab = false, bottom = { Footer { PrimaryButton(S.backToToday, onToToday, block = true) } }) {
                 ReviewTop(onClose)
                 Column(Modifier.padding(horizontal = 24.dp)) {
-                    Text(S.reviewFinished.uppercase(), style = Type.Eyebrow)
+                    Text(S.reviewFinished.caps(), style = Type.Eyebrow)
                     Text(S.reviewEndTitle(month, left), style = Type.Heading, modifier = Modifier.padding(top = 10.dp, bottom = 8.dp).semantics { heading() })
                     Text(S.reviewEndLead(left), style = Type.Secondary.copy(fontSize = 15.sp, lineHeight = 22.sp))
                 }
@@ -249,7 +250,7 @@ fun NotebookScreen(today: LocalDate, onClose: () -> Unit, endExtra: @Composable 
             Page(tab = false) {
                 ReviewTop(onClose, S.collectionOf(position, collectionIds.size), position, collectionIds.size)
                 Column(Modifier.padding(horizontal = 24.dp)) {
-                    Text(S.newNotebookRow.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(top = 14.dp))
+                    Text(S.newNotebookRow.caps(), style = Type.Eyebrow, modifier = Modifier.padding(top = 14.dp))
                     Text(current.title, style = Type.Heading, modifier = Modifier.padding(top = 10.dp).semantics { heading() })
                     Text(if (isList) S.listSubtitle else S.indexTrackers, style = Type.Secondary, modifier = Modifier.padding(top = 4.dp))
                 }
@@ -289,7 +290,7 @@ fun NotebookScreen(today: LocalDate, onClose: () -> Unit, endExtra: @Composable 
             Page(tab = false, bottom = { Footer { PrimaryButton(S.close, onClose, block = true) } }) {
                 ReviewTop(onClose)
                 Column(Modifier.padding(horizontal = 24.dp)) {
-                    Text(S.newNotebookRow.uppercase(), style = Type.Eyebrow)
+                    Text(S.newNotebookRow.caps(), style = Type.Eyebrow)
                     Text(S.notebookDone(today), style = Type.Heading, modifier = Modifier.padding(top = 10.dp, bottom = 8.dp).semantics { heading() })
                     endExtra()
                 }
@@ -366,7 +367,7 @@ fun SiblingReviewScreen(sibling: ReadBackup.Sibling, today: LocalDate, onClose: 
         Page(tab = false, bottom = { Footer { PrimaryButton(S.close, onClose, block = true) } }) {
             ReviewTop(onClose)
             Column(Modifier.padding(horizontal = 24.dp)) {
-                Text(sibling.app.uppercase(), style = Type.Eyebrow)
+                Text(sibling.app.caps(), style = Type.Eyebrow)
                 Text(S.importSiblingDone(imported), style = Type.Heading, modifier = Modifier.padding(top = 10.dp, bottom = 8.dp).semantics { heading() })
             }
         }
@@ -383,7 +384,7 @@ fun SiblingReviewScreen(sibling: ReadBackup.Sibling, today: LocalDate, onClose: 
     Page(tab = false) {
         ReviewTop(onClose, S.entryOf(at + 1, total), at + 1, total)
         Column(Modifier.padding(horizontal = 24.dp)) {
-            Text(S.siblingFrom(sibling.app, c.date).uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(top = 14.dp))
+            Text(S.siblingFrom(sibling.app, c.date).caps(), style = Type.Eyebrow, modifier = Modifier.padding(top = 14.dp))
             Row(Modifier.padding(top = 8.dp)) {
                 BulletGlyph(c.bullet, c.status, Modifier.padding(top = 4.dp, end = 10.dp))
                 Text(c.text, style = Type.Heading, modifier = Modifier.weight(1f))

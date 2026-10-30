@@ -1,5 +1,5 @@
 <resources>
-    <!-- Bobbin no se traduce: se lee igual en los cinco idiomas (SPEC.md 8). -->
+    <!-- Bobbin no se traduce: se lee igual en todos los idiomas (SPEC.md 8). -->
     <string name="app_name">Bobbin</string>
     <!-- docs/textos.md 22. -->
     <string name="widget_today_description">Today\'s open, done and events, without any text</string>

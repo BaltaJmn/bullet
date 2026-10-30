@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Grafico de cabecera de Play (1024x500) en cinco idiomas y el icono de 512 de la ficha (#58).
+"""Grafico de cabecera de Play (1024x500) en cada idioma de la ficha y el icono de 512 (#58).
 
     python3 tools/store/cabecera.py
 
@@ -34,6 +34,22 @@ TEXTOS = {
               [("task", "Tinte kaufen"), ("event", "Abendessen mit Ana"), ("done", "Pflanzen gießen"), ("migrated", "Bank anrufen")]),
     "fr-FR": ("Rapid logging. Migration à la main.", "Mercredi 23",
               [("task", "Acheter de l'encre"), ("event", "Dîner avec Ana"), ("done", "Arroser les plantes"), ("migrated", "Appeler la banque")]),
+    "it-IT": ("Rapid logging. Migrazione a mano.", "Mercoledì 23",
+              [("task", "Comprare inchiostro"), ("event", "Cena con Ana"), ("done", "Annaffiare le piante"), ("migrated", "Chiamare la banca")]),
+    "nl-NL": ("Rapid logging. Migratie met de hand.", "Woensdag 23",
+              [("task", "Inkt kopen"), ("event", "Diner met Ana"), ("done", "De planten water geven"), ("migrated", "Bank bellen")]),
+    "pl-PL": ("Rapid logging. Ręczna migracja.", "Środa, 23",
+              [("task", "Kupić atrament"), ("event", "Kolacja z Aną"), ("done", "Podlać rośliny"), ("migrated", "Zadzwonić do banku")]),
+    "ru-RU": ("Rapid logging. Перенос вручную.", "Среда, 23",
+              [("task", "Купить чернила"), ("event", "Ужин с Аной"), ("done", "Полить цветы"), ("migrated", "Позвонить в банк")]),
+    "tr-TR": ("Rapid logging. Elle aktarma.", "23 Çarşamba",
+              [("task", "Mürekkep al"), ("event", "Ana ile akşam yemeği"), ("done", "Çiçekleri sula"), ("migrated", "Bankayı ara")]),
+    "id": ("Rapid logging. Migrasi manual.", "Rabu, 23",
+              [("task", "Beli tinta"), ("event", "Makan malam dengan Ana"), ("done", "Siram tanaman"), ("migrated", "Telepon bank")]),
+    "ja-JP": ("Rapid logging。手作業の移行。", "23日 水曜日",
+              [("task", "インクを買う"), ("event", "アナと夕食"), ("done", "植物に水をやる"), ("migrated", "銀行に電話する")]),
+    "ko-KR": ("Rapid logging. 손으로 옮기기.", "23일 수요일",
+              [("task", "잉크 사기"), ("event", "아나와 저녁 식사"), ("done", "화분에 물 주기"), ("migrated", "은행에 전화하기")]),
 }
 
 
@@ -92,14 +108,26 @@ FUENTES = {
     "ink": str(RAIZ / "shared/src/commonMain/composeResources/font/literata_regular.ttf"),
     "sans": "/System/Library/Fonts/HelveticaNeue.ttc",
 }
+# Literata and Helvetica have no kana nor hangul: Japanese and Korean take the system's own serif and
+# sans, as the phone does. The name "Bobbin" stays in Literata.
+CJK = {
+    "ja-JP": {"ink": "/System/Library/Fonts/ヒラギノ明朝 ProN.ttc", "sans": "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"},
+    "ko-KR": {"ink": "/System/Library/Fonts/Supplemental/AppleMyungjo.ttf", "sans": "/System/Library/Fonts/AppleSDGothicNeo.ttc"},
+}
 
 
-def escribir(png, textos):
+def escribir(png, textos, idioma):
     imagen = Image.open(png).convert("RGBA")
     dibujo = ImageDraw.Draw(imagen)
     for x, y, tam, color, fuente, texto in textos:
-        ruta = FUENTES[fuente] if os.path.exists(FUENTES[fuente]) else FUENTES["ink"]
-        dibujo.text((x, y), texto, font=ImageFont.truetype(ruta, tam), fill=color, anchor="ls")
+        fuentes = FUENTES if texto == "Bobbin" else {**FUENTES, **CJK.get(idioma, {})}
+        ruta = fuentes[fuente] if os.path.exists(fuentes[fuente]) else FUENTES["ink"]
+        letra = ImageFont.truetype(ruta, tam)
+        # Inside the page (x past 560) a long entry shrinks until it clears the page's right edge.
+        while x > 560 and dibujo.textlength(texto, font=letra) > 976 - x and tam > 18:
+            tam -= 1
+            letra = ImageFont.truetype(ruta, tam)
+        dibujo.text((x, y), texto, font=letra, fill=color, anchor="ls")
     imagen.convert("RGB").save(png)
 
 
@@ -112,15 +140,14 @@ def render(svg, salida, w, h):
 
 
 def main():
+    # Where the shared Play script reads them (BaltaJmn/ci, tienda/play.py): store/play/feature/<idioma>.png.
     play = RAIZ / "store" / "play"
-    otros = RAIZ / "store" / "feature"
-    play.mkdir(parents=True, exist_ok=True)
-    otros.mkdir(parents=True, exist_ok=True)
+    (play / "feature").mkdir(parents=True, exist_ok=True)
     for idioma, (linea, dia, entradas) in TEXTOS.items():
-        destino = play / "feature-1024x500.png" if idioma == "en-US" else otros / (idioma + ".png")
+        destino = play / "feature" / (idioma + ".png")
         svg, textos = cabecera(linea, dia, entradas)
         render(svg, destino, 1024, 500)
-        escribir(destino, textos)
+        escribir(destino, textos, idioma)
     # Play masks the icon itself: it goes square, full bleed, like the launcher's master.
     render((RAIZ / "tools" / "icon-master.svg").read_text(), play / "icon-512.png", 512, 512)
 

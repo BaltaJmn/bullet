@@ -200,6 +200,14 @@
 				pt,
 				de,
 				fr,
+				it,
+				nl,
+				pl,
+				ru,
+				tr,
+				id,
+				ja,
+				ko,
 				Base,
 			);
 			mainGroup = DE754F57C7DC31D371EA3928;

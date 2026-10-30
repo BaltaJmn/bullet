@@ -5,7 +5,7 @@ en Purl (`line/docs/pantallas.md`, `line/.../ui/`). El porqué de cada decisión
 §5; los algoritmos que alimentan cada pantalla, en `docs/tecnico.md` 6.
 
 Los textos se citan por su clave (`captureHint`) y su versión en español. `docs/textos.md` (#6) los
-escribe en los cinco idiomas a partir de estas claves; si allí cambia una frase, manda `docs/textos.md`
+escribe en todos los idiomas a partir de estas claves; si allí cambia una frase, manda `docs/textos.md`
 y aquí se corrige la cita. Las medidas son `dp` en la app, `sp` en el texto, `px` en las imágenes de
 compartir y `pt` en el libro. `u` es `gridUnit` (1.1).
 
@@ -269,7 +269,7 @@ pastilla de 52 x 30 y debajo el nombre en 12 sp, `tabToday` (Hoy), `tabMonth` (M
 (Futuro), `tabIndex` (Índice). La activa: pastilla con el lavado de la portada, icono y nombre en
 `onBackground`, nombre en SemiBold. Las demás: sin pastilla, en `onSurfaceVariant`. Toda la celda
 responde. Las etiquetas limitan su escala a 1,5 y nunca se cortan: `docs/textos.md` las mantiene de
-una palabra en los cinco idiomas.
+una palabra en todos los idiomas.
 
 ### 3.2 Cabecera de página
 
@@ -1386,7 +1386,7 @@ error de 15.2.
 
 ### 23.11 Enviar una lista como fichero (v1.3, #75)
 
-Los textos van aquí en español; cada issue los escribe en los cinco idiomas en `docs/textos.md` 25.
+Los textos van aquí en español; cada issue los escribe en todos los idiomas (`docs/textos.md` 25 y `Strings.kt`).
 
 - **Dónde.** Hoja `MORE` de una lista y de un seguimiento: `sendList` (Enviar la lista), con `SHARE`,
   solo si tiene algo que enviar. Nunca en otro sitio: la app no sugiere qué enviar.

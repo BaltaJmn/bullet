@@ -11,7 +11,7 @@ private struct MonthView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 4) {
-                Text(L.monthNames[L.monthIndex(entry.day)].uppercased())
+                Text(L.caps(L.monthNames[L.monthIndex(entry.day)]))
                     .font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary).lineLimit(1)
                 Spacer(minLength: 0)
                 Glyph.task.view(.primary)

@@ -1,9 +1,17 @@
 # Textos de Bobbin
 
-Todos los textos de la app en los cinco idiomas y el glosario fijo del método. De aquí salen
-`i18n/Strings.kt` (tabla `S`, con `t(en, es, pt, de, fr)` como en las hermanas), el espejo `L` de los
+Todos los textos de la app y el glosario fijo del método. Bobbin habla trece idiomas: en, es, pt (de
+Brasil), de y fr desde la v1.0, e it, nl, pl, ru, tr, id, ja y ko desde el 30-10-2026, los mismos que
+el resto de la familia. Cualquier otro idioma cae a inglés. De aquí salen `i18n/Strings.kt` (tabla `S`,
+con `t(en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko)` como en las hermanas), el espejo `L` de los
 widgets de iOS, los `InfoPlist.strings`, los `Localizable.strings` de la extensión de widgets y del App
-Intent (v1.1) y los `strings.xml` de Android. Las claves son las que citan `docs/pantallas.md` y
+Intent (v1.1) y los `strings.xml` de Android.
+
+Las tablas de las secciones 1 a 25 dan los cinco primeros idiomas. Los otros ocho viven solo en
+`Strings.kt`, como en Chroma: copiarlos aquí sería una segunda copia de 600 textos que acaba
+divergiendo. Se escribieron y revisaron con las reglas, el glosario y las tablas de plurales y glifos
+de este documento, que sí están en los trece; un texto nuevo se escribe en los trece en `Strings.kt`
+con esas mismas reglas. Las claves son las que citan `docs/pantallas.md` y
 `docs/tecnico.md`; si aquí cambia una frase, manda este documento y allí se corrige la cita. Las
 secciones siguen el orden en que `Strings.kt` las lee, una sección del fichero por cada una de aquí.
 
@@ -12,7 +20,9 @@ para lo mismo.
 
 ## Reglas de tono
 
-- Tuteo en español, `du` en alemán, `tu` en francés, `você` en portugués de Brasil.
+- Tuteo en español, `du` en alemán, `tu` en francés, `você` en portugués de Brasil, `tu` en italiano,
+  `je` en neerlandés, `ty` en polaco, `ты` en ruso, `sen` en turco y `kamu` en indonesio. Japonés en
+  です・ます y coreano en 해요체, sin honoríficos, como en Chroma.
 - Frases cortas, en presente y sin exclamaciones. La app constata; no anima, no celebra, no reprocha.
   Prohibido cualquier equivalente de "nunca has...", "vas a perder..." o "llevas N días sin...".
 - Ninguna promesa de salud mental, de bienestar ni de productividad milagrosa.
@@ -21,14 +31,18 @@ para lo mismo.
   "migrada 3 veces").
 - Nada en rojo ni en tono de error. Un fallo dice lo que ha pasado y qué pasa después.
 - Botones (claves marcadas con `*`): 22 caracteres como máximo en cualquier idioma. Etiquetas `Eyebrow`
-  fijas: 24 como máximo; las que llevan una fecha pueden partir línea. Pestañas: una sola palabra en los
-  cinco idiomas (`docs/pantallas.md` 3.1).
+  fijas: 24 como máximo; las que llevan una fecha pueden partir línea. Pestañas: una sola palabra en
+  todos los idiomas (`docs/pantallas.md` 3.1).
 - Francés: espacio normal antes de `?`, `!`, `:` y `;`, nunca espacio duro; apóstrofo y comillas
   rectos.
 - Alemán: sustantivos en mayúscula.
 - Puntuación ASCII salvo la propia de cada idioma (`¿` y `¡` en español).
 - `Bobbin`, `Bobbin Pro`, `Purl`, `Quilt` y `MoodTraker` no se traducen ni se declinan.
-- Horas en formato de 24 horas en los cinco idiomas (`clock(h, m)`: `21:00`).
+- Horas en formato de 24 horas en todos los idiomas (`clock(h, m)`: `21:00`).
+- Una variable insertada (un mes, un lugar, el nombre de una lista) llega con su forma fija: en ruso y
+  polaco no se declina, en turco y coreano no lleva sufijo ni partícula pegada. La frase se construye
+  para que esa forma fija sea correcta: con dos puntos ("Перенесено: $label"), en aposición o detrás
+  de un sustantivo, como hace el alemán ("Verschoben: $label").
 
 ## Reglas del método
 
@@ -36,7 +50,7 @@ Fijadas aquí para la app, la ficha y las capturas, sin excepción por idioma.
 
 1. **Los símbolos del método no se traducen nunca.** El punto de la tarea, el círculo del evento, el
    guion de la nota, el aspa de la hecha, `>` de la migrada, `<` de la programada, el tachado de la
-   descartada, y los signifiers `*`, `!` y el ojo de explorar se dibujan igual en los cinco idiomas.
+   descartada, y los signifiers `*`, `!` y el ojo de explorar se dibujan igual en todos los idiomas.
    Los prefijos de captura (`o `, `- `, `* `, `! `, `? `, `docs/tecnico.md` 6.2) son los mismos
    caracteres en todos: `o` es la letra latina minúscula, también en portugués aunque "o" sea un
    artículo. Los textos que los nombran (`keyPrefixes`) los escriben tal cual, sin
@@ -52,9 +66,16 @@ Fijadas aquí para la app, la ficha y las capturas, sin excepción por idioma.
 
    | Idioma | Forma singular | Forma plural |
    |---|---|---|
-   | en, es, de | `n == 1` | cualquier otro `n`, también 0 |
+   | en, es, de, it, nl | `n == 1` | cualquier otro `n`, también 0 |
    | pt | `n == 1` | cualquier otro `n`, también 0 ("0 tarefas") |
    | fr | `n == 0` o `n == 1` ("0 tâche", "1 tâche") | `n >= 2` |
+   | pl | `n == 1` | dos formas: 2 a 4 salvo 12 a 14 ("2 zadania"); el resto, también 0 ("5 zadań") |
+   | ru | acaba en 1 salvo 11 ("1 задача", "21 задача") | dos formas: acaba en 2 a 4 salvo 12 a 14 ("2 задачи"); el resto ("5 задач") |
+   | tr, id, ja, ko | una sola forma: tras un número no hay plural ("3 görev", "3 tugas", "3件", "3개") | |
+
+   En el código, `word(n, "one|other")` o `word(n, "one|few|many")` elige la forma; una sola forma
+   va sin `|`. Las ramas `isSingular(n)` de las frases enteras siguen la columna de la izquierda, y
+   dentro de una rama de plural el polaco y el ruso concuerdan con `word(n, ...)`.
 
    Las palabras que cambian con el número:
 
@@ -68,6 +89,17 @@ Fijadas aquí para la app, la ficha y las capturas, sin excepción por idioma.
    | cambio | change / changes | cambio / cambios | alteração / alterações | Änderung / Änderungen | modification / modifications |
    | imagen | image / images | imagen / imágenes | imagem / imagens | Bild / Bilder | image / images |
    | vez | once / times | vez / veces | vez / vezes | einmal / -mal | fois / fois |
+
+   | Palabra | it | nl | pl | ru | tr | id | ja | ko |
+   |---|---|---|---|---|---|---|---|---|
+   | entrada | voce / voci | item / items | wpis / wpisy / wpisów | запись / записи / записей | kayıt | entri | 項目 | 항목 (contador 개; sin plural) |
+   | tarea | attività / attività | taak / taken | zadanie / zadania / zadań | задача / задачи / задач | görev | tugas | タスク | 할 일 (contador 개; sin plural) |
+   | abierta | aperta / aperte | open / open | otwarte / otwarte / otwartych | открыта / открыты / открыто | açık | terbuka | 未完了 | 미완료 (sin plural) |
+   | hecha | fatta / fatte | voltooid / voltooid | zrobione / zrobione / zrobionych | выполнена / выполнены / выполнено | yapıldı | selesai | 完了 | 완료 (sin plural) |
+   | evento | evento / eventi | gebeurtenis / gebeurtenissen | wydarzenie / wydarzenia / wydarzeń | событие / события / событий | etkinlik | acara | イベント | 일정 (contador 개; sin plural) |
+   | cambio | modifica / modifiche | wijziging / wijzigingen | zmiana / zmiany / zmian | изменение / изменения / изменений | değişiklik | perubahan | 変更 | 변경 (contador 건; sin plural) |
+   | imagen | immagine / immagini | afbeelding / afbeeldingen | obraz / obrazy / obrazów | изображение / изображения / изображений | görsel | gambar | 画像 | 이미지 (contador 장; sin plural) |
+   | vez | una volta / volte | keer / keer | raz / razy / razy | раз / раза / раз | kez | sekali / kali | 回 | 한 번 / N번 |
 
    Donde un 0 sonaría a fallo ("0 cambios", "0 entradas importadas") la clave tiene su propia frase
    para 0, escrita en su fila.
@@ -105,6 +137,34 @@ capturas. Si una pantalla necesita el concepto, usa esta palabra y no un sinóni
 | Portada / Papel | Cover / Paper | Portada / Papel | Capa / Papel | Umschlag / Papier | Couverture / Papier |
 | Símbolo (un glifo del método) | symbol | símbolo | símbolo | Symbol | symbole |
 
+| Concepto | it | nl | pl | ru | tr | id | ja | ko |
+|---|---|---|---|---|---|---|---|---|
+| Hoy (pestaña, Daily Log) | Oggi | Vandaag | Dziś | Сегодня | Bugün | Hari | 今日 | 오늘 |
+| Mes (pestaña, Monthly Log) | Mese | Maand | Miesiąc | Месяц | Ay | Bulan | 月 | 월간 |
+| Futuro (pestaña del Future Log) | Futuro | Toekomst | Przyszłość | Будущее | Gelecek | Mendatang | 未来 | 미래 |
+| Índice | Indice | Index | Indeks | Индекс | Dizin | Indeks | 目次 | 목차 |
+| Lista / Listas (colección de notas) | Lista / Liste | Lijst / Lijsten | Lista / Listy | Список / Списки | Liste / Listeler | Daftar / Daftar | リスト | 목록 / 목록 |
+| Seguimiento (colección `TRACKER`) | Tracker | Tracker | Tracker / Trackery | Трекер / Трекеры | Çizelge | Pelacak | トラッカー | 트래커 |
+| Pasar (migrar: a hoy, a mañana, a otro día o a una lista) | Sposta | Verplaatsen | Przenieś | Перенести | Taşı | Pindahkan | 移す | 옮기기 |
+| Llevar a otro mes (programar en Futuro) | Sposta in un altro mese | Naar een andere maand verplaatsen | Przenieś na inny miesiąc | Отложить на другой месяц | Başka aya taşı | Pindahkan ke bulan lain | 別の月に移す | 다른 달로 옮기기 |
+| Descartar | Scarta | Schrappen | Odrzuć | Вычеркнуть | Bırak | Buang | 破棄 | 버리기 |
+| Revisar | Rivedi | Doornemen | Przejrzyj | Просмотреть | Gözden geçir | Tinjau | 見直す | 살펴보기 |
+| Reabrir | Riapri | Heropenen | Otwórz ponownie | Открыть снова | Yeniden aç | Buka lagi | 未完了に戻す | 다시 열기 |
+| Releer (paso de reflexión) | Rileggi | Teruglezen | Przeczytaj ponownie | Перечитать | Tekrar oku | Baca ulang | 読み返す | 다시 읽기 |
+| Entrada | Voce | Item | Wpis | Запись | Kayıt | Entri | 項目 | 항목 |
+| Tarea / Evento / Nota | Attività / Evento / Nota | Taak / Gebeurtenis / Notitie | Zadanie / Wydarzenie / Notatka | Задача / Событие / Заметка | Görev / Etkinlik / Not | Tugas / Acara / Catatan | タスク / イベント / メモ | 할 일 / 일정 / 메모 |
+| Abierta / Hecha | Aperta / Fatta | Open / Voltooid | Otwarte / Zrobione | Открыта / Выполнена | Açık / Yapıldı | Terbuka / Selesai | 未完了 / 完了 | 미완료 / 완료 |
+| Pasada / Llevada a otro mes / Descartada | Spostata / Spostata in un altro mese / Scartata | Verplaatst / Naar een andere maand verplaatst / Geschrapt | Przeniesione / Przeniesione na inny miesiąc / Odrzucone | Перенесена / Отложена на другой месяц / Вычеркнута | Taşındı / Başka aya taşındı / Bırakıldı | Dipindahkan / Dipindahkan ke bulan lain / Dibuang | 移動済み / 別の月へ移動済み / 破棄済み | 옮김 / 다른 달로 옮김 / 버림 |
+| Migrada / Programada (solo en la Clave, como nombre del método) | Migrata / Programmata | Gemigreerd / Ingepland | Zmigrowane / Zaplanowane | Мигрирована / Запланирована | Aktarıldı / Planlandı | Dimigrasikan / Dijadwalkan | 移行済み / スケジュール済み | 이월 / 예정 |
+| Prioridad / Inspiración / Explorar | Priorità / Ispirazione / Esplora | Prioriteit / Inspiratie / Verkennen | Priorytet / Inspiracja / Do zbadania | Приоритет / Вдохновение / Исследование | Öncelik / İlham / Keşfet | Prioritas / Inspirasi / Jelajahi | 優先 / ひらめき / 調べもの | 우선순위 / 영감 / 알아보기 |
+| Clave (la *key page*) | Legenda | Legenda | Legenda | Легенда | Anahtar | Keterangan | 凡例 | 범례 |
+| Calendario (del mes) | Calendario | Kalender | Kalendarz | Календарь | Takvim | Kalender | カレンダー | 캘린더 |
+| Tareas del mes | Attività del mese | Taken van de maand | Zadania miesiąca | Задачи месяца | Ayın görevleri | Tugas bulan ini | 月のタスク | 이달의 할 일 |
+| Diario (todo lo escrito) | diario | dagboek | dziennik | дневник | günlük | jurnal | ジャーナル | 다이어리 |
+| Cuaderno | Quaderno | Notitieboek | Notatnik | Блокнот | Defter | Buku catatan | ノート | 노트 |
+| Portada / Papel | Copertina / Carta | Omslag / Papier | Okładka / Papier | Обложка / Бумага | Kapak / Kağıt | Sampul / Kertas | カバー / 用紙 | 표지 / 속지 |
+| Símbolo (un glifo del método) | simbolo | symbool | symbol | символ | sembol | simbol | 記号 | 기호 |
+
 Sin traducir en ningún idioma, como se busca el método: `bullet journal`, `bujo`, `bullet`,
 `signifier`, `rapid logging`, `Daily Log`, `Monthly Log` y `Future Log`. En la app no aparece ninguno:
 las pestañas dicen Hoy, Mes y Futuro, la Clave agrupa por lo que apuntas, lo que pasó con una tarea y
@@ -128,10 +188,15 @@ que dice Daily Log.
   "Mercredi 1er"); y `de` delante de un mes que empieza por vocal se apostrofa ("Tâches d'août",
   "d'avril", "d'octobre").
 - Las listas se juntan con `joinAnd(items)`: comas y la conjunción del idioma antes del último
-  (`and`, `y`, `e`, `und`, `et`): "1, 2, 5 y 9".
+  (`and`, `y`, `e`, `und`, `et`...): "1, 2, 5 y 9".
+- Japonés y coreano ponen el año delante y el día de la semana detrás ("2026年9月22日 火曜日"), el
+  turco el día de la semana detrás, y polaco y ruso declinan el mes dentro de una fecha
+  (`monthNamesInDate`: "22 września", "22 сентября"). Las mismas tablas de meses y días que Chroma.
+- Las mayúsculas de las etiquetas pasan por `caps()` (`S.caps`), no por `uppercase()`: la i del turco
+  lleva punto ("İ").
 - Las etiquetas `Eyebrow` se escriben aquí en caja normal y el estilo las pasa a mayúsculas con
   `uppercase()` al pintar (`docs/pantallas.md` 1.3). En alemán `ß` pasa a `SS`, que es correcto.
-- Los tests cambian `S.lang` para recorrer los cinco idiomas (test 24); los textos sin parámetros se
+- Los tests cambian `S.lang` para recorrer los trece idiomas (test 24); los textos sin parámetros se
   fijan una vez al arrancar, como en line.
 - Una clave que otra ya dice igual no se duplica en el código: la columna Parámetros lo indica con
   "= clave".
@@ -341,6 +406,19 @@ hoy (hoy, ayer, mañana) antes del mes; `monthSubtitle` avisa de que un mes ya p
 | Inspiración | Inspiration | Inspiración | Inspiração | Inspiration | Inspiration |
 | Explorar | Explore | Explorar | Explorar | Erkunden | Explorer |
 
+| Glifo | it | nl | pl | ru | tr | id | ja | ko |
+|---|---|---|---|---|---|---|---|---|
+| Tarea abierta | Attività | Taak | Zadanie | Задача | Görev | Tugas | タスク | 할 일 |
+| Tarea hecha | Attività fatta | Voltooide taak | Zadanie zrobione | Выполненная задача | Yapılmış görev | Tugas selesai | 完了したタスク | 완료한 할 일 |
+| Tarea migrada | Attività migrata | Gemigreerde taak | Zadanie zmigrowane | Мигрированная задача | Aktarılmış görev | Tugas dimigrasikan | 移行済みのタスク | 이월한 할 일 |
+| Tarea programada | Attività programmata | Ingeplande taak | Zadanie zaplanowane | Запланированная задача | Planlanmış görev | Tugas dijadwalkan | スケジュール済みのタスク | 예정한 할 일 |
+| Tarea descartada | Attività scartata | Geschrapte taak | Zadanie odrzucone | Вычеркнутая задача | Bırakılmış görev | Tugas dibuang | 破棄したタスク | 버린 할 일 |
+| Evento | Evento | Gebeurtenis | Wydarzenie | Событие | Etkinlik | Acara | イベント | 일정 |
+| Nota | Nota | Notitie | Notatka | Заметка | Not | Catatan | メモ | 메모 |
+| Prioridad | Priorità | Prioriteit | Priorytet | Приоритет | Öncelik | Prioritas | 優先 | 우선순위 |
+| Inspiración | Ispirazione | Inspiratie | Inspiracja | Вдохновение | İlham | Inspirasi | ひらめき | 영감 |
+| Explorar | Esplora | Verkennen | Do zbadania | Исследование | Keşfet | Jelajahi | 調べもの | 알아보기 |
+
 ## 5. Hoy
 
 | Clave | Parámetros | en | es | pt | de | fr |
@@ -504,7 +582,7 @@ Los otros tres filtros son los nombres de los signifiers (sección 4); el grupo 
 El nombre de cada fila es `bulletTask`, `bulletEvent`, `bulletNote`, `stateDone`, `movedName`,
 `otherMonthName`, `stateDiscarded` y los tres `signifier*` (sección 4); `keyMoved` y `keyOtherMonth`
 dicen además su nombre en el método. Los símbolos que citan las filas (`o`, `-`, `*`, `!`, `?`, `>`,
-`<`) son los del método, iguales en los cinco idiomas. Los `^` de `keyPrefixes` marcan lo que va en
+`<`) son los del método, iguales en todos los idiomas. Los `^` de `keyPrefixes` marcan lo que va en
 negrita.
 
 **Guía del primer arranque** (`docs/pantallas.md` 13.1). Las líneas de ejemplo de los dibujos

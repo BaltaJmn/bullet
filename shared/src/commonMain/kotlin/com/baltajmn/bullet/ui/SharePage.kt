@@ -36,6 +36,7 @@ import com.baltajmn.bullet.data.TrackerShare
 import com.baltajmn.bullet.data.trackerPages
 import com.baltajmn.bullet.data.paginate
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.caps
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.Journal
@@ -91,7 +92,7 @@ fun renderSharePages(
     val top = maxOf(ENTRIES_TOP, 108f + title.size.height + U)
     val laid = content.rows.map { row ->
         when (row) {
-            is ShareRow.Heading -> measurer.measure(row.text.uppercase(), headingStyle)
+            is ShareRow.Heading -> measurer.measure(row.text.caps(), headingStyle)
             is ShareRow.Line -> measurer.measure(entryText(row.entry, journal), entryStyle, constraints = Constraints(maxWidth = (RIGHT - TEXT_X).toInt()))
         }
     }

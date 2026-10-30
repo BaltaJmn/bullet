@@ -65,6 +65,7 @@ import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.UNDO_MS
 import com.baltajmn.bullet.data.UndoKind
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.caps
 import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.activeCover
 import com.baltajmn.bullet.ui.theme.coverSoft
@@ -193,7 +194,7 @@ fun Eyebrow(text: String, note: String? = null, modifier: Modifier = Modifier) {
         modifier.fillMaxWidth().padding(start = HEAD_START + 6.dp, end = 16.dp, top = 22.dp, bottom = 4.dp),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text.uppercase(), style = Type.Eyebrow, modifier = Modifier.padding(end = 8.dp).semantics { heading() })
+        Text(text.caps(), style = Type.Eyebrow, modifier = Modifier.padding(end = 8.dp).semantics { heading() })
         if (note != null) Text(note, style = Type.Secondary.copy(fontSize = 12.sp))
     }
 }

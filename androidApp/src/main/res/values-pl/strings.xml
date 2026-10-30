@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">Dzisiejsze otwarte i zrobione zadania oraz wydarzenia, bez tekstu</string>
+    <string name="widget_month_description">Jedna kropka na każdy dzień z wpisami</string>
+    <string name="widget_preview_date">ŚR 23 WRZ</string>
+    <string name="widget_preview_open">otwarte</string>
+    <string name="widget_preview_done">zrobione</string>
+    <string name="widget_preview_events">wydarzenia</string>
+    <string name="widget_preview_month">WRZESIEŃ</string>
+    <string name="tile_label">Zapisz w Bobbin</string>
+    <string name="capture_widget_label">Bobbin: Napisz</string>
+    <string name="widget_capture_write">Napisz</string>
+    <string name="widget_capture_description">Napisz linijkę na dziś, bez ani jednego słowa z dziennika na ekranie głównym</string>
+</resources>

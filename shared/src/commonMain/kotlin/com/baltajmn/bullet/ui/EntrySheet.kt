@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.caps
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.CollectionKind
 import com.baltajmn.bullet.model.Entry
@@ -184,7 +185,7 @@ fun SheetHeader(kind: String, text: String, onClose: () -> Unit) {
             .padding(start = 20.dp, end = 8.dp, top = 4.dp, bottom = 12.dp),
     ) {
         Column(Modifier.weight(1f).padding(top = 4.dp)) {
-            Text(kind.uppercase(), style = Type.Eyebrow.copy(lineHeight = 16.sp))
+            Text(kind.caps(), style = Type.Eyebrow.copy(lineHeight = 16.sp))
             Text(text, style = Type.Ink.copy(fontSize = 18.sp), modifier = Modifier.padding(top = 3.dp))
         }
         GlyphButton(Glyph.CLOSE, S.close, onClose)

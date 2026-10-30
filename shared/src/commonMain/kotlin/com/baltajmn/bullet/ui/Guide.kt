@@ -56,6 +56,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.i18n.S
+import com.baltajmn.bullet.i18n.caps
 import com.baltajmn.bullet.model.Bullet
 import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.monthOf
@@ -135,7 +136,7 @@ private fun Picture(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 private fun PictureLabel(text: String) =
-    Text(text.uppercase(), style = Type.Eyebrow.copy(lineHeight = 16.sp), modifier = Modifier.padding(start = 8.dp, bottom = 4.dp))
+    Text(text.caps(), style = Type.Eyebrow.copy(lineHeight = 16.sp), modifier = Modifier.padding(start = 8.dp, bottom = 4.dp))
 
 /** A line of the picture: the glyph in its column, the text in ink, and a small tag at the end. */
 @Composable

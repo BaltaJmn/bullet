@@ -33,7 +33,7 @@ object Type {
     val Body: TextStyle @Composable get() = system(15.sp, 24.sp, FontWeight.Normal, colors.onBackground)
     val Secondary: TextStyle @Composable get() = system(13.sp, 24.sp, FontWeight.Normal, colors.onSurfaceVariant)
 
-    /** Block and section labels. The caller passes the text through uppercase(). */
+    /** Block and section labels. The caller passes the text through caps(). */
     val Eyebrow: TextStyle @Composable get() =
         system(11.sp, 24.sp, FontWeight.Medium, colors.onSurfaceVariant).copy(letterSpacing = 1.4.sp)
 

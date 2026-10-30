@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sube las fichas de tienda de los cinco idiomas de una vez.
+"""Sube las fichas de tienda de todos los idiomas de una vez.
 
 Play Console no tiene importacion masiva: cada idioma se pega a mano en tres campos, y son cinco
 idiomas por quince campos. La API de Android Publisher si acepta los cinco en una sola edicion, y

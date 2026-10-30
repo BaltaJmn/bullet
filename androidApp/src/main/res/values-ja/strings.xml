@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_today_description">今日の未完了、完了、イベント。テキストは表示しません</string>
+    <string name="widget_month_description">項目がある日に点がひとつ</string>
+    <string name="widget_preview_date">9月23日(水)</string>
+    <string name="widget_preview_open">未完了</string>
+    <string name="widget_preview_done">完了</string>
+    <string name="widget_preview_events">イベント</string>
+    <string name="widget_preview_month">9月</string>
+    <string name="tile_label">Bobbinにメモ</string>
+    <string name="capture_widget_label">Bobbin: 書く</string>
+    <string name="widget_capture_write">書く</string>
+    <string name="widget_capture_description">今日に1行書けます。ホーム画面にジャーナルの文字は表示されません</string>
+</resources>
