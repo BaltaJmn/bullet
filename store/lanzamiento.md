@@ -196,8 +196,11 @@ no trae Play Billing.
       al manifiesto y a `store/formularios.md` en el mismo commit. (#59)
 - [ ] **[autor] Probar la compra en el sandbox** de Apple y *Restaurar compra*, que el revisor mira.
       La compra, probada en el vídeo del 30-10-2026; falta *Restaurar compra*.
-- [ ] **[autor] Enviar a revisión** con la compra adjunta a la versión: la primera compra de una app
-      solo se revisa junto a una versión.
+- [x] **[autor] Enviar a revisión** con la compra adjunta a la versión: la primera compra de una app
+      solo se revisa junto a una versión. Enviadas el 30-10-2026 a las 21:34 en el mismo envío, la
+      1.0.0 (build 3) y `bullet_pro`: la compra entra con *Añadir a revisión* en su propia página web,
+      que abre el borrador, y `appstore.py enviar` le suma la versión y lo envía. Publicación manual,
+      para que salga el mismo día que Play.
 
 ## Fase 7. Salida (#62)
 
