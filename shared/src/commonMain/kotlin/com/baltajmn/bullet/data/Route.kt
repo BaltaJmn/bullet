@@ -6,8 +6,17 @@ import androidx.compose.runtime.setValue
 
 const val URL_SCHEME = "bobbin"
 
-/** Where a link asked to land (docs/tecnico.md 7). [focus] puts the keyboard up on Hoy's field. */
-data class Link(val screen: String, val focus: Boolean = false)
+/**
+ * Where a link asked to land (docs/tecnico.md 7). [focus] puts the keyboard up on Hoy's field. A sent
+ * list opened from outside is `receive`, with the text of its file in [payload] (12.11).
+ */
+data class Link(val screen: String, val focus: Boolean = false, val payload: String? = null)
+
+/** A `.bobbin` file is a few kilobytes; anything far larger is not one, and is not read whole. */
+const val RECEIVE_MAX_BYTES = 4 * 1024 * 1024
+
+/** The text of a file opened with Bobbin, on its way to the receive sheet. */
+fun receiveLink(text: String): Link = Link("receive", payload = text)
 
 /**
  * Where something outside the app asked to land: a widget, the notification or a link. It is left here

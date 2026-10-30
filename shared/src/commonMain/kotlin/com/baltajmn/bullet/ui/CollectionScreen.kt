@@ -113,6 +113,7 @@ fun CollectionScreen(
     val place = Place.InCollection(id)
     val entries = journal.entriesAt(place)
     var sharing by remember { mutableStateOf<ShareContent?>(null) }
+    var sending by remember(id) { mutableStateOf(false) }
     var renaming by remember(id) { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
     var continuing by remember(id) { mutableStateOf(false) }
@@ -168,6 +169,7 @@ fun CollectionScreen(
             archived = collection.archived,
             onClose = { moreOpen = false },
             onShare = if (entries.isNotEmpty()) ({ moreOpen = false; sharing = collectionShare(journal, id) }) else null,
+            onSend = if (entries.isNotEmpty()) ({ moreOpen = false; sending = true }) else null,
             onRename = { moreOpen = false; renaming = true },
             onContinue = if (next == null) ({ moreOpen = false; continuing = true }) else null,
             onMark = { moreOpen = false; marking = true },
@@ -182,6 +184,7 @@ fun CollectionScreen(
         }
     }
     sharing?.let { ShareSheet(it, onClose = { sharing = null }) }
+    if (sending) SendSheet(collection, onClose = { sending = false })
 }
 
 /** "Icono y tema" of a list or a tracker (docs/pantallas.md 23.9). */
@@ -232,6 +235,7 @@ private fun MoreSheet(
     archived: Boolean,
     onClose: () -> Unit,
     onShare: (() -> Unit)?,
+    onSend: (() -> Unit)?,
     onRename: () -> Unit,
     onContinue: (() -> Unit)? = null,
     onMark: () -> Unit,
@@ -249,6 +253,7 @@ private fun MoreSheet(
         SheetHeader(kind, title, onClose)
         Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp).padding(bottom = 18.dp)) {
             onShare?.let { ActionRow(S.shareList, icon = { GlyphIcon(Glyph.SHARE) }, onClick = it) }
+            onSend?.let { ActionRow(S.sendList, icon = { GlyphIcon(Glyph.FORWARD) }, onClick = it) }
             ActionRow(S.rename, icon = { GlyphIcon(Glyph.EDIT) }, onClick = onRename)
             onContinue?.let { ActionRow(S.continueCollection, icon = { GlyphIcon(Glyph.FORWARD) }, onClick = it) }
             ActionRow(S.iconAndTheme, icon = { IndexIcon("star") }, onClick = onMark)
@@ -280,6 +285,7 @@ private fun TrackerScreen(id: String, today: LocalDate, justCreated: Boolean, on
     var renaming by remember(id) { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
     var marking by remember(id) { mutableStateOf(false) }
+    var sending by remember(id) { mutableStateOf(false) }
     var sheetRowId by remember { mutableStateOf<String?>(null) }
     var renamingRowId by remember { mutableStateOf<String?>(null) }
 
@@ -325,6 +331,7 @@ private fun TrackerScreen(id: String, today: LocalDate, justCreated: Boolean, on
             archived = tail.archived,
             onClose = { moreOpen = false },
             onShare = null,
+            onSend = if (page.rows.isNotEmpty()) ({ moreOpen = false; sending = true }) else null,
             onRename = { moreOpen = false; renaming = true },
             onMark = { moreOpen = false; marking = true },
             onArchive = { BobbinRepository.archiveCollection(tail.id, !tail.archived); moreOpen = false; onBack() },
@@ -332,6 +339,7 @@ private fun TrackerScreen(id: String, today: LocalDate, justCreated: Boolean, on
         )
     }
     if (marking) MarkSheet(tail) { marking = false }
+    if (sending) SendSheet(tail, onClose = { sending = false })
     sheetRowId?.let { rowId ->
         val index = page.rows.indexOfFirst { it.id == rowId }
         val row = page.rows.getOrNull(index)

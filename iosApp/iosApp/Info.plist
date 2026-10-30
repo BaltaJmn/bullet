@@ -27,6 +27,50 @@
 			</array>
 		</dict>
 	</array>
+	<!-- Una lista enviada, .bobbin (docs/tecnico.md 12.11). Sin abrir en sitio: el sistema deja una
+	     copia en Inbox, que BobbinBridge.open lee y borra. -->
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.baltajmn.bullet.list</string>
+			<key>UTTypeDescription</key>
+			<string>Bobbin list</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.json</string>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>bobbin</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.baltajmn.bobbin+json</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Bobbin list</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.baltajmn.bullet.list</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<false/>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>

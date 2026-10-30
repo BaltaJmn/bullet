@@ -1390,12 +1390,13 @@ Los textos van aquí en español; cada issue los escribe en los cinco idiomas en
 
 - **Dónde.** Hoja `MORE` de una lista y de un seguimiento: `sendList` (Enviar la lista), con `SHARE`,
   solo si tiene algo que enviar. Nunca en otro sitio: la app no sugiere qué enviar.
-- **La hoja de enviar**, inferior, con el título de la lista en `Heading`, el interruptor y una fila
-  (`ActionRow`):
+- **La hoja de enviar**, inferior, con la cabecera de las hojas (5.6: `sendList` en `Eyebrow` y el
+  título de la lista), el interruptor y una fila (`ActionRow`):
 
 ```
 +------------------------------------------------+
-|  Enviar Viaje a Lisboa                         |  sendTitle(título)
+|  ENVIAR LA LISTA                               |  sendList
+|  Viaje a Lisboa                                |  el título
 |  [ ] En blanco                                 |  sendBlank
 |      Solo los textos, todo abierto, como una   |  sendBlankSub
 |      lista nueva.                              |
@@ -1428,10 +1429,11 @@ Los textos van aquí en español; cada issue los escribe en los cinco idiomas en
     `receivedSummary(nuevas, cambian)` (Trae 2 entradas nuevas y 1 más reciente que las tuyas. No se
     borra nada.); el botón es `mergeList` (Juntar). Si no cambia nada, `mergeNothing` (Ya tienes esta
     lista igual.) y solo `close`.
-  - Al terminar, el aviso de abajo: `listAdded` (Lista añadida al Índice) con `openList` (Abrir), o
+  - Al terminar se abre la lista, y el aviso de abajo dice `listAdded` (Lista añadida al Índice) o
     `listMerged` (Listas juntadas). Sin deshacer: como importar, deja la copia `pre-import`.
-  - Errores en el diálogo de 15.2: `listDamaged`, `listEmpty` y `listTooNew` (Esta lista es de una
-    versión más nueva de Bobbin. Actualiza la app para abrirla.).
+  - Errores en el diálogo de 15.2, con `importFailedTitle`: `listDamaged`, `sentListEmpty` y `listTooNew`
+    (Esta lista es de una versión más nueva de Bobbin. Actualiza la app para abrirla.).
+  - La cabecera es la de las hojas: `receivedEyebrow` y el título de la lista.
 - Gratis. Recibir un seguimiento con el límite lleno y sin Pro abre el `ProDialog` (15.1).
 
 ### 23.12 Compartir un seguimiento y el formato historia (v1.3, #77)

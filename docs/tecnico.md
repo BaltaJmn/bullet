@@ -2513,11 +2513,17 @@ sealed interface Received {
     data class Merge(val added: Int, val updated: Int, val same: Int) : Received
 }
 
-fun packList(j: Journal, collectionId: String, blank: Boolean, now: Long, newId: () -> String): ListPacket?
+fun packList(j: Journal, collectionId: String, blank: Boolean, now: Long, newId: (prefix: String) -> String): ListPacket?
+fun encodePacket(p: ListPacket): String
 fun readPacket(text: String): PacketRead
+fun packetFileName(title: String): String
 fun receivePreview(j: Journal, p: ListPacket): Received
-fun Journal.receive(p: ListPacket, now: Long, month: YearMonth, newId: () -> String): Journal
+fun Journal.receive(p: ListPacket, now: Long, month: YearMonth, newId: (prefix: String) -> String): Journal
 ```
+
+`newId` recibe el prefijo (`c`, `e` o `r`) y nunca repite uno que ya exista ni uno que ya haya dado:
+`BobbinRepository.packForSending` y `BobbinRepository.receiveList` lo montan sobre el diario de ese
+momento.
 
 Se codifica con `JournalJson`. `bobbin` se escribe siempre: es la marca que distingue un paquete de una
 copia (`readBackup` lo mira antes que `schemaVersion`).
@@ -2566,8 +2572,14 @@ está en `INDEX_ICONS` se lee como sin icono. En un `TRACKER` se ignoran las ent
   extensión `bobbin`, MIME `LIST_MIME`), `CFBundleDocumentTypes` con rango `Owner` y
   `LSSupportsOpeningDocumentsInPlace` a `NO`: el sistema entrega una copia por `onOpenURL`, que
   `BobbinBridge.open` lee y borra.
-- `readBackup` (6.9) reconoce un paquete por `bobbin` y lo manda a la misma hoja de recibir en vez de
-  fusionar el diario.
+- `readBackup` (6.9) reconoce un paquete por `bobbin` y da `ReadBackup.SentList`, que Ajustes manda a la
+  misma hoja de recibir en vez de fusionar el diario. Sus errores son `ImportProblem.LIST_DAMAGED`,
+  `LIST_TOO_NEW` y `LIST_EMPTY`, con los textos `listDamaged`, `listTooNew` y `sentListEmpty`.
+- Lo que llega de fuera se lee entero solo hasta `RECEIVE_MAX_BYTES` (4 MB, `data/Route.kt`): un
+  `.bobbin` pesa unos kilobytes, y algo mucho mayor no lo es. Viaja a `App.kt` como
+  `Link("receive", payload = texto)`.
+- **Al recibir**, `BobbinRepository.receiveList` da `ReceiveOutcome.Landed(id)` o `NeedsPro`. Con
+  `Landed`, el aviso de abajo dice `listAdded` o `listMerged` y se abre la lista.
 
 ### 12.12 Compartir un seguimiento y el formato historia
 

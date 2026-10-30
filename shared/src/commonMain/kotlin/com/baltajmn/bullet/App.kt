@@ -74,6 +74,13 @@ import com.baltajmn.bullet.ui.NotebookScreen
 import com.baltajmn.bullet.ui.YearSummaryScreen
 import com.baltajmn.bullet.ui.SiblingReviewScreen
 import com.baltajmn.bullet.data.ReadBackup
+import com.baltajmn.bullet.data.ImportProblem
+import com.baltajmn.bullet.data.ListPacket
+import com.baltajmn.bullet.data.PacketRead
+import com.baltajmn.bullet.data.readPacket
+import com.baltajmn.bullet.ui.MessageDialog
+import com.baltajmn.bullet.ui.ReceiveSheet
+import com.baltajmn.bullet.ui.importProblemText
 import com.baltajmn.bullet.ui.LinkText
 import com.baltajmn.bullet.ui.proOr
 import com.baltajmn.bullet.ui.Paywall
@@ -144,6 +151,9 @@ fun App() {
     var reviewNotebook by remember { mutableStateOf(false) }
     var reviewYear by remember { mutableStateOf(false) }
     var reviewSibling by remember { mutableStateOf<ReadBackup.Sibling?>(null) }
+    // A list someone sent, waiting on its sheet, or why it could not be read (docs/pantallas.md 23.11).
+    var receiving by remember { mutableStateOf<ListPacket?>(null) }
+    var receiveProblem by remember { mutableStateOf<ImportProblem?>(null) }
     var openCollection by remember { mutableStateOf<String?>(null) }
     var collectionJustCreated by remember { mutableStateOf(false) }
     // Coming back to the foreground is the only guaranteed moment a backgrounded app can catch a
@@ -232,6 +242,12 @@ fun App() {
                 tab = Screen.TODAY
                 viewedDay = now
                 Paywall.show()
+            }
+            "receive" -> when (val read = readPacket(link.payload.orEmpty())) {
+                is PacketRead.Ok -> receiving = read.packet
+                PacketRead.TooNew -> receiveProblem = ImportProblem.LIST_TOO_NEW
+                PacketRead.Damaged -> receiveProblem = ImportProblem.LIST_DAMAGED
+                PacketRead.Empty -> receiveProblem = ImportProblem.LIST_EMPTY
             }
         }
     }
@@ -330,6 +346,7 @@ fun App() {
                         onNotebook = { reviewNotebook = true; overlay = Screen.REVIEW },
                         onYearSummary = { proOr { reviewYear = true; overlay = Screen.REVIEW } },
                         onSibling = { reviewSibling = it; overlay = Screen.REVIEW },
+                        onList = { receiving = it },
                     )
                     screen == Screen.GUIDE -> GuideScreen(today) {
                         runCatching { Prefs.setBool(PREF_GUIDE_SEEN, true) }
@@ -358,6 +375,13 @@ fun App() {
 
             // One sheet for every row of every page, so it survives the page it was opened from.
             EntrySheetHost(today, onNavigateTo = { place -> dismiss(); goTo(place) })
+
+            if (!locked) {
+                receiving?.let { packet ->
+                    ReceiveSheet(packet, onDone = { id -> receiving = null; goToCollection(id, created = false) }, onClose = { receiving = null })
+                }
+                receiveProblem?.let { MessageDialog(title = S.importFailedTitle, text = importProblemText(it), onDismiss = { receiveProblem = null }) }
+            }
 
             // A dialog is a window of its own and would float over the lock screen, so it waits for the unlock.
             if (Paywall.open && !locked) ProDialog()

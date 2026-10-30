@@ -27,6 +27,21 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Una lista enviada (docs/tecnico.md 12.11). Nunca application/octet-stream: Bobbin
+                 saldria para cualquier fichero. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/vnd.baltajmn.bobbin+json" />
+                <data android:mimeType="application/json" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.baltajmn.bobbin+json" />
+                <data android:mimeType="application/json" />
+            </intent-filter>
         </activity>
 
         <!-- La captura desde fuera (docs/tecnico.md 12.5): solo la barra de escribir sobre lo que haya. -->

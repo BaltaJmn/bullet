@@ -5,6 +5,10 @@ import androidx.compose.ui.graphics.asSkiaBitmap
 import kotlinx.cinterop.ExperimentalForeignApi
 import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSTemporaryDirectory
+import platform.Foundation.NSURL
+import platform.Foundation.writeToFile
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIImage
@@ -22,6 +26,14 @@ actual object Sharing {
     }
 
     actual fun shareText(text: String) = present(listOf(text))
+
+    /** The file goes as a URL, so AirDrop and Files keep its name and its `.bobbin`. */
+    actual fun shareFile(name: String, mime: String, bytes: ByteArray) {
+        val path = NSTemporaryDirectory() + name
+        NSFileManager.defaultManager.removeItemAtPath(path, null)
+        if (!bytes.toNSData().writeToFile(path, atomically = true)) return
+        present(listOf(NSURL.fileURLWithPath(path)))
+    }
 
     private fun present(items: List<Any>) {
         if (items.isEmpty()) return

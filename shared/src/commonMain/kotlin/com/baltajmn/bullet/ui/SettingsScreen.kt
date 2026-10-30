@@ -59,6 +59,7 @@ import com.baltajmn.bullet.data.ReadBackup
 import com.baltajmn.bullet.data.PickResult
 import com.baltajmn.bullet.data.MergeResult
 import com.baltajmn.bullet.data.ImportProblem
+import com.baltajmn.bullet.data.ListPacket
 import com.baltajmn.bullet.data.FilePicker
 import com.baltajmn.bullet.data.SYNC_NAME
 import com.baltajmn.bullet.data.Sync
@@ -140,6 +141,7 @@ fun SettingsScreen(
     onNotebook: () -> Unit,
     onYearSummary: () -> Unit,
     onSibling: (ReadBackup.Sibling) -> Unit,
+    onList: (ListPacket) -> Unit,
 ) {
     BackHandler(true, onBack)
     val settings = BobbinRepository.journal.settings
@@ -296,6 +298,8 @@ fun SettingsScreen(
                                 is ReadBackup.Failed -> importProblem = r.problem
                                 // A sister app's file is reviewed one by one, never merged (docs/pantallas.md 23.10).
                                 is ReadBackup.Sibling -> onSibling(r)
+                                // A sent list has its own sheet, never the backup's merge (docs/tecnico.md 12.11).
+                                is ReadBackup.SentList -> onList(r.packet)
                                 // Nothing is applied yet: this is the merge done dry, for the summary.
                                 is ReadBackup.Ok -> importPreview = r.journal to merge(BobbinRepository.journal, r.journal)
                             }
@@ -497,7 +501,7 @@ internal fun SyncConflictDialog() {
  * paper, 4.8:1, where Material's own `outline` would leave the thumb barely visible on this palette.
  */
 @Composable
-private fun switchColors() = SwitchDefaults.colors(
+internal fun switchColors() = SwitchDefaults.colors(
     checkedTrackColor = MaterialTheme.colorScheme.primary,
     uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
     uncheckedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -740,11 +744,14 @@ private fun ReminderTimeDialog(hour: Int, minute: Int, onClose: () -> Unit, onPi
     )
 }
 
-private fun importProblemText(problem: ImportProblem): String = when (problem) {
+internal fun importProblemText(problem: ImportProblem): String = when (problem) {
     ImportProblem.NOT_BACKUP -> S.importNotSibling
     ImportProblem.DAMAGED -> S.importDamaged
     ImportProblem.TOO_NEW -> S.importTooNew
     ImportProblem.EMPTY -> S.importEmpty
+    ImportProblem.LIST_DAMAGED -> S.listDamaged
+    ImportProblem.LIST_TOO_NEW -> S.listTooNew
+    ImportProblem.LIST_EMPTY -> S.sentListEmpty
 }
 
 /**

@@ -23,6 +23,7 @@ import com.baltajmn.bullet.model.SCHEMA_VERSION
 import com.baltajmn.bullet.model.Settings
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.archiveCollection
+import com.baltajmn.bullet.model.canCreateTracker
 import com.baltajmn.bullet.model.capture
 import com.baltajmn.bullet.model.continueCollection
 import com.baltajmn.bullet.model.markCollection
@@ -69,6 +70,11 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /** How long Deshacer stays offered after a delete (docs/pantallas.md 5.8, docs/tecnico.md 6.4). */
 const val UNDO_MS = 5_000L
+
+sealed interface ReceiveOutcome {
+    data class Landed(val collectionId: String) : ReceiveOutcome
+    data object NeedsPro : ReceiveOutcome
+}
 
 /** What a capture from outside the app came to (docs/tecnico.md 12.5). */
 enum class OutsideCapture { Saved, NeedsPro, Empty }
@@ -555,6 +561,34 @@ object BobbinRepository {
         journal = result.journal
         flush()
         return result.added + result.updated
+    }
+
+    /** A list as it would go out right now (docs/tecnico.md 12.11), or null with nothing to send. */
+    fun packForSending(collectionId: String, blank: Boolean): ListPacket? = packList(journal, collectionId, blank, now(), freshIds(journal))
+
+    /**
+     * Receives a list already read and shown in summary (docs/tecnico.md 12.11): the same steps as
+     * [applyImport], with the diary as it is right now kept as `pre-import` first. A tracker over the free
+     * limit writes nothing and asks for Pro. Returns the id of the list it landed in.
+     */
+    suspend fun receiveList(p: ListPacket): ReceiveOutcome {
+        flush()
+        val before = journal
+        if (p.kind == CollectionKind.TRACKER && !canCreateTracker(before, isPro)) return ReceiveOutcome.NeedsPro
+        withContext(Dispatchers.IO) { files.keepCopy("pre-import", encode(before)) }
+        pendingUndo = null
+        undoToken++
+        val after = before.receive(p, now(), monthOf(today()), freshIds(before))
+        journal = after
+        flush()
+        val landed = after.collections.firstOrNull { it.id !in before.collections.map { c -> c.id }.toSet() } ?: after.collections.first { it.id == p.collectionId }
+        return ReceiveOutcome.Landed(landed.id)
+    }
+
+    /** Ids no page or entry of [j] has, nor any given out by this same call. */
+    private fun freshIds(j: Journal): (String) -> String {
+        val taken = (j.entries.map { it.id } + j.collections.map { it.id }).toMutableSet()
+        return { prefix -> newId(prefix, taken).also { taken += it } }
     }
 
     /**

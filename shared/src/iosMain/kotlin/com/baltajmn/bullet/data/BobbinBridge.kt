@@ -1,6 +1,10 @@
 package com.baltajmn.bullet.data
 
 import kotlinx.coroutines.runBlocking
+import platform.Foundation.NSData
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSURL
+import platform.Foundation.dataWithContentsOfURL
 
 /**
  * The little that Swift needs to ask Kotlin (docs/tecnico.md 7). Swift owns the window and the
@@ -13,8 +17,19 @@ object BobbinBridge {
     /** Assigned by iOSApp.swift: WidgetCenter belongs to Swift, and Kotlin only asks. */
     var reloadWidgets: (() -> Unit)? = null
 
-    /** onOpenURL, and the reminder's tap as `bobbin://review`. Anything else is left alone. */
+    /**
+     * onOpenURL, and the reminder's tap as `bobbin://review`. A `.bobbin` arrives as a copy in the app's
+     * Inbox (`LSSupportsOpeningDocumentsInPlace` is off, docs/tecnico.md 12.11): it is read and deleted.
+     * Anything else is left alone.
+     */
     fun open(url: String) {
+        if (url.startsWith("file://")) {
+            val file = NSURL.URLWithString(url) ?: return
+            val bytes = NSData.dataWithContentsOfURL(file)?.toByteArray()
+            NSFileManager.defaultManager.removeItemAtURL(file, null)
+            if (bytes != null && bytes.size <= RECEIVE_MAX_BYTES) Route.pending = receiveLink(bytes.decodeToString())
+            return
+        }
         parseLink(url)?.let { Route.pending = it }
     }
 

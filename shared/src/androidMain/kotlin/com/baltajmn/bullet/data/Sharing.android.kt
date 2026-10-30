@@ -39,6 +39,19 @@ actual object Sharing {
         context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
+    actual fun shareFile(name: String, mime: String, bytes: ByteArray) {
+        val context = AndroidContext.value
+        val dir = File(context.cacheDir, "share").apply {
+            deleteRecursively()
+            mkdirs()
+        }
+        val file = File(dir, name).apply { writeBytes(bytes) }
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        val send = Intent(Intent.ACTION_SEND).setType(mime).putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
     actual fun shareText(text: String) {
         val context = AndroidContext.value
         val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)

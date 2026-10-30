@@ -21,6 +21,9 @@ expect fun ImageBitmap.encodeToPng(): ByteArray
 expect object Sharing {
     fun sharePngs(pngs: List<ByteArray>)
     fun shareText(text: String)
+
+    /** A sent list as a file named [name] (docs/tecnico.md 12.11), for AirDrop, Quick Share or a chat. */
+    fun shareFile(name: String, mime: String, bytes: ByteArray)
 }
 
 /** A row of a shared page: an entry (with its day, on a month's calendar) or the month's task heading. */

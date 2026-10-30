@@ -25,7 +25,7 @@ const val QUESTION_COUNT = 60
 
 /**
  * Every user-facing string, in one table, copied from docs/textos.md. The section comments below
- * match that document's numbering (1 to 24) one for one.
+ * match that document's numbering (1 to 25) one for one.
  *
  * Not Compose Resources on purpose: part of these strings are drawn outside a @Composable (a
  * BroadcastReceiver, a Glance widget, a Canvas, a notification builder).
@@ -2215,4 +2215,82 @@ object S {
         "Diese Datei ist keine Sicherung von Bobbin, Purl, MoodTraker oder Quilt.",
         "Ce fichier n'est pas une copie de Bobbin, Purl, MoodTraker ou Quilt.",
     )
+
+    // --- 25. v1.3 -----------------------------------------------------------------------------
+
+    // Sending a list (docs/pantallas.md 23.11, #75).
+    val sendList = t("Send the list", "Enviar la lista", "Enviar a lista", "Liste senden", "Envoyer la liste")
+    fun sendTitle(title: String) = t("Send $title", "Enviar $title", "Enviar $title", "$title senden", "Envoyer $title")
+    val sendAsFile = t("Send as a file", "Enviar como archivo", "Enviar como arquivo", "Als Datei senden", "Envoyer comme fichier")
+    val sendAsFileSub = t(
+        "For AirDrop, Quick Share or email. With Bobbin, it opens and merges with theirs.",
+        "Para AirDrop, Quick Share o correo. Con Bobbin se abre y se junta con la suya.",
+        "Para AirDrop, Quick Share ou e-mail. Com o Bobbin, abre e se junta com a da outra pessoa.",
+        "Für AirDrop, Quick Share oder E-Mail. Mit Bobbin öffnet sie sich und wird mit der anderen zusammengeführt.",
+        "Pour AirDrop, Quick Share ou e-mail. Avec Bobbin, elle s'ouvre et se fusionne avec l'autre.",
+    )
+    val sendBlank = t("Blank", "En blanco", "Em branco", "Leer", "Vierge")
+    val sendBlankSub = t(
+        "Just the text, everything open, as a new list.",
+        "Solo los textos, todo abierto, como una lista nueva.",
+        "Só os textos, tudo aberto, como uma lista nova.",
+        "Nur die Texte, alles offen, als neue Liste.",
+        "Seulement les textes, tout ouvert, comme une nouvelle liste.",
+    )
+    val sendTrackerBlank = t(
+        "A tracker is sent with its rows and without marks.",
+        "Un seguimiento se envía con sus filas y sin marcas.",
+        "Um tracker é enviado com suas linhas e sem marcas.",
+        "Ein Tracker wird mit seinen Zeilen und ohne Markierungen gesendet.",
+        "Un suivi s'envoie avec ses lignes et sans marques.",
+    )
+
+    /** Written in normal case here; the Eyebrow style uppercases it when painting. */
+    val receivedEyebrow = t("List received", "Lista recibida", "Lista recebida", "Empfangene Liste", "Liste reçue")
+    fun receivedCount(n: Int): String = "$n " + wordEntry(n)
+    fun receivedRows(n: Int): String = "$n " + word(n, "row" to "rows", "fila" to "filas", "linha" to "linhas", "Zeile" to "Zeilen", "ligne" to "lignes")
+    fun receivedMore(n: Int) = t("and $n more", "y $n más", "e mais $n", "und $n weitere", "et $n de plus")
+    val addToIndex = t("Add to Index", "Añadir al Índice", "Adicionar ao Índice", "Zum Index hinzufügen", "Ajouter à l'Index")
+    fun alreadyHave(title: String) = t("You already have $title", "Ya tienes $title", "Você já tem $title", "Du hast $title schon", "Tu as déjà $title")
+
+    /** [added] or [updated] is dropped when it is 0; both at 0 never gets here, that is [mergeNothing]. */
+    fun receivedSummary(added: Int, updated: Int): String {
+        val parts = listOfNotNull(
+            added.takeIf { it > 0 }?.let { importAddedPhrase(it) },
+            updated.takeIf { it > 0 }?.let { importUpdatedPhrase(it) },
+        ).joinToString(t(" and ", " y ", " e ", " und ", " et "))
+        return t(
+            "It brings $parts. Nothing gets deleted.",
+            "Trae $parts. No se borra nada.",
+            "Traz $parts. Nada é apagado.",
+            "Sie bringt $parts. Es wird nichts gelöscht.",
+            "Elle apporte $parts. Rien n'est supprimé.",
+        )
+    }
+    val mergeList = t("Merge", "Juntar", "Juntar", "Zusammenführen", "Fusionner")
+    val mergeNothing = t(
+        "You already have this list exactly as it is.",
+        "Ya tienes esta lista igual.",
+        "Você já tem esta lista igual.",
+        "Du hast diese Liste schon genau so.",
+        "Tu as déjà cette liste à l'identique.",
+    )
+    val listAdded = t("List added to the Index", "Lista añadida al Índice", "Lista adicionada ao Índice", "Liste zum Index hinzugefügt", "Liste ajoutée à l'Index")
+    val listMerged = t("Lists merged", "Listas juntadas", "Listas juntadas", "Listen zusammengeführt", "Listes fusionnées")
+    val listDamaged = t(
+        "This list is incomplete or damaged. Your journal wasn't touched.",
+        "Esta lista está incompleta o dañada. Tu diario no se ha tocado.",
+        "Esta lista está incompleta ou danificada. Seu diário não foi alterado.",
+        "Diese Liste ist unvollständig oder beschädigt. Dein Journal wurde nicht verändert.",
+        "Cette liste est incomplète ou endommagée. Ton journal n'a pas été touché.",
+    )
+    val sentListEmpty = t("This list has nothing in it.", "Esta lista no tiene nada.", "Esta lista não tem nada.", "Diese Liste ist leer.", "Cette liste ne contient rien.")
+    val listTooNew = t(
+        "This list comes from a newer version of Bobbin. Update the app to open it.",
+        "Esta lista es de una versión más nueva de Bobbin. Actualiza la app para abrirla.",
+        "Esta lista é de uma versão mais nova do Bobbin. Atualize o app para abri-la.",
+        "Diese Liste stammt aus einer neueren Version von Bobbin. Aktualisiere die App, um sie zu öffnen.",
+        "Cette liste vient d'une version plus récente de Bobbin. Mets l'app à jour pour l'ouvrir.",
+    )
+
 }

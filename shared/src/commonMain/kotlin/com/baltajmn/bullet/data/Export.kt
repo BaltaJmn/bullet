@@ -119,7 +119,7 @@ fun exportZip(journal: Journal, sink: (ByteArray) -> Unit) {
 }
 
 /** Why a file could not be imported (docs/tecnico.md 4.6). Each one has its own text. */
-enum class ImportProblem { NOT_BACKUP, DAMAGED, TOO_NEW, EMPTY }
+enum class ImportProblem { NOT_BACKUP, DAMAGED, TOO_NEW, EMPTY, LIST_DAMAGED, LIST_TOO_NEW, LIST_EMPTY }
 
 /** One entry a sister app's file offers (docs/tecnico.md 4.5), still only a proposal. */
 data class SiblingCandidate(val date: LocalDate, val bullet: Bullet, val status: TaskStatus, val text: String)
@@ -130,6 +130,9 @@ sealed interface ReadBackup {
 
     /** A sister app's file, by date; [skipped] counts the lines whose date was not ISO (4.5). */
     data class Sibling(val app: String, val candidates: List<SiblingCandidate>, val skipped: Int) : ReadBackup
+
+    /** A list someone sent (12.11): received on its own sheet, never merged as a backup. */
+    data class SentList(val packet: ListPacket) : ReadBackup
 }
 
 /**
@@ -177,6 +180,14 @@ fun readBackup(source: (Int) -> ByteArray?, steps: List<(JsonObject) -> JsonObje
 fun parseBackup(text: String, steps: List<(JsonObject) -> JsonObject> = SCHEMA_STEPS, allowEmpty: Boolean = false): ReadBackup {
     val root = runCatching { Json.parseToJsonElement(text).jsonObject }.getOrNull()
         ?: return ReadBackup.Failed(ImportProblem.NOT_BACKUP)
+    if (isPacket(root)) {
+        return when (val read = readPacket(root)) {
+            is PacketRead.Ok -> ReadBackup.SentList(read.packet)
+            PacketRead.TooNew -> ReadBackup.Failed(ImportProblem.LIST_TOO_NEW)
+            PacketRead.Damaged -> ReadBackup.Failed(ImportProblem.LIST_DAMAGED)
+            PacketRead.Empty -> ReadBackup.Failed(ImportProblem.LIST_EMPTY)
+        }
+    }
     readSibling(root)?.let { return it }
     val version = (root["schemaVersion"] as? JsonPrimitive)?.intOrNull
     if (version == null || root["entries"] !is JsonArray) return ReadBackup.Failed(ImportProblem.NOT_BACKUP)

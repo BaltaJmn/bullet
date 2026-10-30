@@ -1004,7 +1004,6 @@ del widget, como `AppIntents`.
 | Clave | Parámetros | en | es | pt | de | fr |
 |---|---|---|---|---|---|---|
 | `sendList` | | Send the list | Enviar la lista | Enviar a lista | Liste senden | Envoyer la liste |
-| `sendTitle` | título | Send Lisbon trip | Enviar Viaje a Lisboa | Enviar Viagem a Lisboa | Lissabon-Reise senden | Envoyer Voyage à Lisbonne |
 | `sendAsFile`* | | Send as a file | Enviar como archivo | Enviar como arquivo | Als Datei senden | Envoyer comme fichier |
 | `sendAsFileSub` | | For AirDrop, Quick Share or email. With Bobbin, it opens and merges with theirs. | Para AirDrop, Quick Share o correo. Con Bobbin se abre y se junta con la suya. | Para AirDrop, Quick Share ou e-mail. Com o Bobbin, abre e se junta com a da outra pessoa. | Für AirDrop, Quick Share oder E-Mail. Mit Bobbin öffnet sie sich und wird mit der anderen zusammengeführt. | Pour AirDrop, Quick Share ou e-mail. Avec Bobbin, elle s'ouvre et se fusionne avec l'autre. |
 | `sendBlank` | | Blank | En blanco | Em branco | Leer | Vierge |
@@ -1016,14 +1015,13 @@ del widget, como `AppIntents`.
 | `receivedMore` | n | and 9 more | y 9 más | e mais 9 | und 9 weitere | et 9 de plus |
 | `addToIndex`* | | Add to Index | Añadir al Índice | Adicionar ao Índice | Zum Index hinzufügen | Ajouter à l'Index |
 | `alreadyHave` | título | You already have Lisbon trip | Ya tienes Viaje a Lisboa | Você já tem Viagem a Lisboa | Du hast Lissabon-Reise schon | Tu as déjà Voyage à Lisbonne |
-| `receivedSummary` | nuevas, cambian | It brings 2 new entries and 1 newer than yours. Nothing gets deleted. | Trae 2 entradas nuevas y 1 más reciente que las tuyas. No se borra nada. | Traz 2 entradas novas e 1 mais recente que as suas. Nada é apagado. | Sie bringt 2 neue Einträge und 1, der neuer ist als deiner. Es wird nichts gelöscht. | Elle apporte 2 nouvelles entrées et 1 plus récente que les tiennes. Rien n'est supprimé. |
+| `receivedSummary` | nuevas, cambian | It brings 2 new entries and 1 newer than yours. Nothing gets deleted. | Trae 2 entradas nuevas y 1 más reciente que las tuyas. No se borra nada. | Traz 2 entradas novas e 1 mais recente que as suas. Nada é apagado. | Sie bringt 2 neue Einträge und 1, der neuer ist als deine. Es wird nichts gelöscht. | Elle apporte 2 nouvelles entrées et 1 plus récente que les tiennes. Rien n'est supprimé. |
 | `mergeList`* | | Merge | Juntar | Juntar | Zusammenführen | Fusionner |
 | `mergeNothing` | | You already have this list exactly as it is. | Ya tienes esta lista igual. | Você já tem esta lista igual. | Du hast diese Liste schon genau so. | Tu as déjà cette liste à l'identique. |
 | `listAdded` | | List added to the Index | Lista añadida al Índice | Lista adicionada ao Índice | Liste zum Index hinzugefügt | Liste ajoutée à l'Index |
-| `openList`* | | Open | Abrir | Abrir | Öffnen | Ouvrir |
 | `listMerged` | | Lists merged | Listas juntadas | Listas juntadas | Listen zusammengeführt | Listes fusionnées |
 | `listDamaged` | | This list is incomplete or damaged. Your journal wasn't touched. | Esta lista está incompleta o dañada. Tu diario no se ha tocado. | Esta lista está incompleta ou danificada. Seu diário não foi alterado. | Diese Liste ist unvollständig oder beschädigt. Dein Journal wurde nicht verändert. | Cette liste est incomplète ou endommagée. Ton journal n'a pas été touché. |
-| `listEmpty` | | This list has nothing in it. | Esta lista no tiene nada. | Esta lista não tem nada. | Diese Liste ist leer. | Cette liste ne contient rien. |
+| `sentListEmpty` | | This list has nothing in it. | Esta lista no tiene nada. | Esta lista não tem nada. | Diese Liste ist leer. | Cette liste ne contient rien. |
 | `listTooNew` | | This list comes from a newer version of Bobbin. Update the app to open it. | Esta lista es de una versión más nueva de Bobbin. Actualiza la app para abrirla. | Esta lista é de uma versão mais nova do Bobbin. Atualize o app para abri-la. | Diese Liste stammt aus einer neueren Version von Bobbin. Aktualisiere die App, um sie zu öffnen. | Cette liste vient d'une version plus récente de Bobbin. Mets l'app à jour pour l'ouvrir. |
 | `shareTracker` | | Share this tracker | Compartir este seguimiento | Compartilhar este tracker | Diesen Tracker teilen | Partager ce suivi |
 | `formatPost`* | | Post | Publicación | Post | Beitrag | Publication |
@@ -1046,8 +1044,9 @@ del widget, como `AppIntents`.
 | `keyBack` | | Back | Atrás | Voltar | Zurück | Retour |
 
 - `receivedEyebrow` y `weekToday`, como `Eyebrow`, salen en mayúsculas.
-- `receivedSummary` sigue las formas de `importSummary` (sección 15): con 0 nuevas dice solo las que
-  cambian, y con 0 en las dos no se usa, porque sale `mergeNothing`.
+- `receivedSummary` usa las mismas frases de `importSummary` (sección 15) para las nuevas y las que
+  cambian: con 0 nuevas dice solo las que cambian, y con 0 en las dos no se usa, porque sale
+  `mergeNothing`.
 - El texto del control de iOS: `Write in Bobbin`, `Escribir en Bobbin`, `Escrever no Bobbin`,
   `In Bobbin schreiben`, `Écrire dans Bobbin`. La etiqueta del widget en el selector de Android,
   `capture_widget_label` de `strings.xml`, es `captureWidgetLabel` con `Bobbin` delante: `Bobbin: Write`,
