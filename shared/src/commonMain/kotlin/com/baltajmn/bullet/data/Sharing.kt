@@ -60,9 +60,9 @@ fun trackerShare(page: BulletCollection, month: YearMonth): TrackerShare =
 /** Where a tracker's rows start on the image: under the title, the month and the line of day numbers. */
 const val TRACKER_TOP = 324
 
-/** The rows of a tracker on each image of [format]: one 54 px row each, never split. */
-fun trackerPages(rows: Int, format: ShareFormat): List<IntRange> {
-    val perPage = (format.height - 162 - TRACKER_TOP) / 54
+/** The rows of a tracker on each image of [format], from [top] down: one 54 px row each, never split. */
+fun trackerPages(rows: Int, format: ShareFormat, top: Int = TRACKER_TOP): List<IntRange> {
+    val perPage = (format.height - 162 - top) / 54
     return (0 until rows).chunked(perPage).map { it.first()..it.last() }
 }
 

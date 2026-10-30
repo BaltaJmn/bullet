@@ -153,7 +153,7 @@ fun renderTrackerPages(
     val gridLeft = TEXT_X + U
     // A title that wraps pushes everything down a row per line, as on a page of entries.
     val top = maxOf(TRACKER_TOP.toFloat(), 108f + title.size.height + 2 * U)
-    val pages = trackerPages(t.rows.size, format).ifEmpty { listOf(IntRange.EMPTY) }
+    val pages = trackerPages(t.rows.size, format, top.toInt()).ifEmpty { listOf(IntRange.EMPTY) }
 
     return pages.mapIndexed { index, range ->
         page(format.height) { scope ->

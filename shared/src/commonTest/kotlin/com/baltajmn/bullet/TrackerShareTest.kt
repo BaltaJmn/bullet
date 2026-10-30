@@ -31,6 +31,8 @@ class TrackerShareTest {
         assertEquals(listOf(0..25, 26..29), trackerPages(30, ShareFormat.STORY))
         assertEquals(listOf(0..2), trackerPages(3, ShareFormat.POST))
         assertEquals(emptyList(), trackerPages(0, ShareFormat.POST))
+        // A title on two lines starts the rows a row lower, so a page holds two fewer.
+        assertEquals(listOf(0..13, 14..27, 28..29), trackerPages(30, ShareFormat.POST, top = 432))
     }
 
     @Test
