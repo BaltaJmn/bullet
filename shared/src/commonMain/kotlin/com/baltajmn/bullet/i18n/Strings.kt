@@ -2220,7 +2220,6 @@ object S {
 
     // Sending a list (docs/pantallas.md 23.11, #75).
     val sendList = t("Send the list", "Enviar la lista", "Enviar a lista", "Liste senden", "Envoyer la liste")
-    fun sendTitle(title: String) = t("Send $title", "Enviar $title", "Enviar $title", "$title senden", "Envoyer $title")
     val sendAsFile = t("Send as a file", "Enviar como archivo", "Enviar como arquivo", "Als Datei senden", "Envoyer comme fichier")
     val sendAsFileSub = t(
         "For AirDrop, Quick Share or email. With Bobbin, it opens and merges with theirs.",

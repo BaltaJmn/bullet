@@ -86,7 +86,9 @@ class MainActivity : FragmentActivity() {
             }
             else -> null
         }
-        if (uri == null || intent.type !in setOf(LIST_MIME, "application/json")) return parseLink(intent.dataString)
+        // A file manager that opens with only the uri leaves the type out of the intent it delivers.
+        val type = intent.type ?: uri?.let { runCatching { contentResolver.getType(it) }.getOrNull() }
+        if (uri == null || type !in setOf(LIST_MIME, "application/json")) return parseLink(intent.dataString)
         val bytes = runCatching { contentResolver.openInputStream(uri)?.use(::readCapped) }.getOrNull() ?: return null
         return receiveLink(bytes.decodeToString())
     }
