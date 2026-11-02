@@ -190,6 +190,7 @@ merece.
 - Capturas con la plantilla de `../gk/contenido/plantilla/tienda/` (su README): el frame en `apps.js`
   (`bobbin`), los demás idiomas en `textos.js` con sonnet, `./todas.sh bobbin` y revisión de un agente
   sonnet aparte con el listón en 9.
+- Estilo propio de las capturas (colores del icono, letra, composicion, lo que no se hace): `store/DISENO.md`.
 - Ficha: los textos de tienda, con sonnet, nunca con haiku.
 - Commit antes de que salga la versión, para que la lleve. En App Store las capturas solo cambian con
   una versión en preparación.
