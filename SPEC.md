@@ -973,6 +973,29 @@ entonces, compra única para la app y cobro aparte solo para el servicio con cos
 suscripción el método ni el diario. La sincronización de v1.2 no lo reabre: va sobre la nube del
 propio usuario (iCloud Drive o una carpeta que él elige), sin servidor nuestro.
 
+### Excepción a la regla 9: sin suscripción, a propósito (16-11-2026)
+
+La regla 9 de producto pide Pro con "suscripción y pago único". Bobbin se queda **solo con el pago
+único**, y se deja escrito para que nadie lo corrija después:
+
+- Pro cumple la regla en contenido: sincronización por la nube del propio usuario, libro A5 en PDF,
+  captura sin abrir la app y widgets.
+- La sincronización usa la nube del usuario, así que no hay coste recurrente que financiar con una cuota.
+- "Sin suscripción" es el filo frente a BujoFlow, Bullet y COMO, y la queja más repetida del nicho.
+- El precio no se toca: es la decisión abierta de la issue #74. Las quejas del nicho y su estado están
+  en `store/quejas.md`.
+
+### Reseñas y ofertas (16-11-2026)
+
+- El aviso del sistema (`StoreReview`) solo sale tras 2 días completos desde el primer arranque
+  (`PREF_FIRST_LAUNCH`; las instalaciones anteriores cuentan desde su primer arranque con esta
+  versión), con el paywall cerrado, una vez por instalación, y el "gastado" se marca después de la
+  llamada. Nunca el mismo día que la tarjeta del libro. Ajustes lleva siempre la fila "Valorar Bobbin"
+  (Play en Android, `?action=write-review` en iOS).
+- Una sola oferta automática: una tarjeta en Hoy (nunca un diálogo) desde el día siguiente a cerrar el
+  primer mes, para quien no tiene Pro: "Tu primer mes está cerrado. Conviértelo en un libro A5 que
+  puedas imprimir", con "Ver Pro". Se responde una vez (Ver Pro o Ahora no) y no vuelve.
+
 ---
 
 ## 8. Identidad y ficha: nombre, icono y ASO

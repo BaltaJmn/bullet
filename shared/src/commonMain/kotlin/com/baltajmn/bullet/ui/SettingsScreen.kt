@@ -93,6 +93,7 @@ import com.baltajmn.bullet.data.AppInfo
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.Lock
 import com.baltajmn.bullet.data.PRIVACY_URL
+import com.baltajmn.bullet.data.RATE_URL
 import com.baltajmn.bullet.data.SIBLINGS
 import com.baltajmn.bullet.data.fold
 import com.baltajmn.bullet.data.storeUrl
@@ -360,6 +361,7 @@ fun SettingsScreen(
             }
 
             SettingsSection(S.sectionAbout)
+            SettingsRow(title = S.rateRow, subtitle = null, onClick = { AppInfo.open(RATE_URL) })
             SettingsRow(title = S.privacyRow, subtitle = null, onClick = { AppInfo.open(PRIVACY_URL) })
             SettingsRow(title = S.version(AppInfo.version), subtitle = null, onClick = null)
 

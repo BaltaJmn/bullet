@@ -49,6 +49,7 @@ import com.baltajmn.bullet.billing.Billing
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.Lock
 import com.baltajmn.bullet.data.PREF_GUIDE_SEEN
+import com.baltajmn.bullet.data.noteFirstLaunch
 import com.baltajmn.bullet.data.Prefs
 import com.baltajmn.bullet.data.Reminders
 import com.baltajmn.bullet.data.Route
@@ -138,6 +139,7 @@ fun relocks(lockOn: Boolean, away: Duration?): Boolean = lockOn && away != null 
 @Composable
 fun App() {
     remember {
+        noteFirstLaunch()
         BobbinRepository.ensureLoaded()
         Billing.configure()
         Sync.start()

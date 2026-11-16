@@ -27,3 +27,18 @@ const val PREF_GUIDE_SEEN = "guideSeen"
 
 /** Whether Hoy's hint about the dot and the text was answered or made moot by using them (docs/pantallas.md 6.3). */
 const val PREF_HINT_SEEN = "hintSeen"
+
+/** Epoch millis of this install's first launch, as a string: the rating waits two full days after it. */
+const val PREF_FIRST_LAUNCH = "firstLaunch"
+
+/** ISO day the first Month review closed with nothing open: the book card waits for the day after. */
+const val PREF_FIRST_MONTH_DAY = "firstMonthDay"
+
+/** ISO day the rating was asked for, so the book card never shares it. */
+const val PREF_REVIEW_ASK_DAY = "reviewAskDay"
+
+/** ISO day the book card was first on screen, so the rating never shares it. */
+const val PREF_BOOK_CARD_DAY = "bookCardDay"
+
+/** Whether the book card was answered. */
+const val PREF_BOOK_CARD_DONE = "bookCardDone"

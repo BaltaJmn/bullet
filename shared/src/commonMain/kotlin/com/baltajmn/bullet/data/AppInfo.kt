@@ -8,6 +8,9 @@ import com.baltajmn.bullet.i18n.S
  */
 const val PRIVACY_URL = "https://bullet.baltajmn.dev/"
 
+/** This app's own page in the store of the platform, straight to writing a review where the store allows it. */
+expect val RATE_URL: String
+
 /** The few things about the build itself that the About section needs. */
 expect object AppInfo {
     /** Version name as the store shows it, "1.0.0". */

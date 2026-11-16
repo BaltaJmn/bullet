@@ -20,3 +20,5 @@ actual object AppInfo {
 actual val Sibling.storeUrl: String? get() = androidUrl
 
 actual val onIos: Boolean = false
+
+actual val RATE_URL: String = "https://play.google.com/store/apps/details?id=com.baltajmn.bullet"

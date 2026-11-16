@@ -3,6 +3,7 @@ package com.baltajmn.bullet
 import kotlinx.datetime.YearMonth
 import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.data.shouldAskReview
+import com.baltajmn.bullet.data.shouldShowBookCard
 import com.baltajmn.bullet.data.Link
 import com.baltajmn.bullet.data.nextReminder
 import com.baltajmn.bullet.data.parseLink
@@ -120,15 +121,73 @@ class DataTest {
 class ReviewPromptTest {
     private val sep = ReviewScope.Month(YearMonth(2026, 9))
     private val day = ReviewScope.Day(LocalDate(2026, 9, 23))
+    private val dayMs = 24L * 60 * 60 * 1000
+    private val installed = 1_000_000_000L
+    private val later = installed + 3 * dayMs
+
+    private fun ask(
+        asked: Boolean = false,
+        scope: ReviewScope = sep,
+        decided: Int = 4,
+        left: Int = 0,
+        installedAt: Long? = installed,
+        now: Long = later,
+        paywall: Boolean = false,
+        card: Boolean = false,
+    ) = shouldAskReview(asked, scope, decided, left, installedAt, now, paywall, card)
 
     @Test
     fun onlyTheFirstClosedMonthAsks() {
-        assertTrue(shouldAskReview(asked = false, sep, decided = 4, left = 0))
+        assertTrue(ask())
         // Once asked, a second closed month does not ask again.
-        assertFalse(shouldAskReview(asked = true, sep, decided = 4, left = 0))
+        assertFalse(ask(asked = true))
         // Half a review, a review that opened empty and a Day review never ask.
-        assertFalse(shouldAskReview(asked = false, sep, decided = 3, left = 1))
-        assertFalse(shouldAskReview(asked = false, sep, decided = 0, left = 0))
-        assertFalse(shouldAskReview(asked = false, day, decided = 4, left = 0))
+        assertFalse(ask(decided = 3, left = 1))
+        assertFalse(ask(decided = 0))
+        assertFalse(ask(scope = day))
+    }
+
+    @Test
+    fun needsTwoFullDaysSinceInstall() {
+        assertFalse(ask(now = installed + 2 * dayMs - 1))
+        assertTrue(ask(now = installed + 2 * dayMs))
+        // Without a stored first launch there is nothing to count from.
+        assertFalse(ask(installedAt = null))
+    }
+
+    @Test
+    fun neverOverThePaywallNorOnTheBookCardDay() {
+        assertFalse(ask(paywall = true))
+        assertFalse(ask(card = true))
+    }
+}
+
+/** The one-time card that offers the A5 book the day after the first month closed. */
+class BookCardTest {
+    private val closed = LocalDate(2026, 11, 30)
+    private val next = LocalDate(2026, 12, 1)
+
+    private fun show(
+        pro: Boolean = false,
+        done: Boolean = false,
+        first: LocalDate? = closed,
+        ask: LocalDate? = null,
+        today: LocalDate = next,
+    ) = shouldShowBookCard(pro, done, first, ask, today)
+
+    @Test
+    fun showsFromTheDayAfterTheFirstMonthClosed() {
+        assertFalse(show(today = closed))
+        assertTrue(show())
+        assertTrue(show(today = LocalDate(2026, 12, 9)))
+        assertFalse(show(first = null))
+    }
+
+    @Test
+    fun onlyOnceAndNeverForProOrOnTheRatingDay() {
+        assertFalse(show(done = true))
+        assertFalse(show(pro = true))
+        assertFalse(show(ask = next))
+        assertTrue(show(ask = closed))
     }
 }

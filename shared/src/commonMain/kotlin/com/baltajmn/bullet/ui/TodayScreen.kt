@@ -35,7 +35,10 @@ import com.baltajmn.bullet.data.PREF_HINT_SEEN
 import com.baltajmn.bullet.data.Prefs
 import com.baltajmn.bullet.data.Reminders
 import com.baltajmn.bullet.data.ShareContent
+import com.baltajmn.bullet.data.bookCardDue
 import com.baltajmn.bullet.data.dayShare
+import com.baltajmn.bullet.data.finishBookCard
+import com.baltajmn.bullet.data.noteBookCardShown
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.i18n.systemFirstDayOfWeek
 import com.baltajmn.bullet.model.Journal
@@ -267,6 +270,19 @@ internal fun Notices(
     val earlier = journal.openTasksBefore(today)
     if (earlier.isNotEmpty()) {
         NoticeCard(S.earlierOpen(earlier.size), S.earlierBody, listOf(S.reviewEarlier to { onReview(ReviewScope.Earlier(today)) }))
+    }
+    // Once, the day after the first month review closed, with the person's own month behind it (rule 10).
+    var bookCardGone by remember { mutableStateOf(false) }
+    if (!bookCardGone && bookCardDue(BobbinRepository.isPro, today)) {
+        LaunchedEffect(today) { noteBookCardShown(today) }
+        NoticeCard(
+            S.bookCardTitle,
+            S.bookCardBody,
+            listOf(
+                S.seePro to { finishBookCard(); bookCardGone = true; Paywall.show() },
+                S.notNow to { finishBookCard(); bookCardGone = true },
+            ),
+        )
     }
 }
 

@@ -976,10 +976,13 @@ quedan: no hace falta guardar un progreso aparte. Desde la segunda migración, "
 `migrationCount`. No hay ningún botón ni ruta de código que decida más de una tarea.
 
 Una **revisión mensual completa** es una de alcance `Month(m)` que termina con
-`openTasksOfMonth(m)` vacía. La primera dispara la valoración (#56): `askReviewAfter(scope, decided,
-left)` mira `shouldAskReview(asked, scope, decided, left)`, pone `Prefs.reviewAsked = true` y después
-llama a `StoreReview.request()`: la bandera va antes, para que un fallo dentro del diálogo del sistema
-no pueda pedir dos veces. Cuenta solo si se decidió al menos una tarea: una revisión que se abre ya
+`openTasksOfMonth(m)` vacía. La primera dispara la valoración (#56): `afterReview(scope, decided, left, today, paywallOpen)` mira
+`shouldAskReview`, que ademas exige 2 dias completos desde `Prefs.firstLaunch` (`noteFirstLaunch()` al
+arrancar), el paywall cerrado y que la tarjeta del libro no se haya enseñado hoy. Llama a
+`StoreReview.request()`, que devuelve si de verdad hizo la llamada, y solo entonces pone
+`Prefs.reviewAsked = true`. La misma función guarda `firstMonthDay`, el dia en que se cerro el primer mes:
+desde el dia siguiente, y para quien no tiene Pro, Hoy enseña una vez la tarjeta del libro A5
+(`shouldShowBookCard`), nunca el dia de la valoracion. Cuenta solo si se decidió al menos una tarea: una revisión que se abre ya
 vacía no demuestra nada. Una sola vez en la vida de la instalación, nunca al arrancar ni tras un error.
 
 ### 6.7 Índice, colecciones y threading
@@ -1618,7 +1621,7 @@ nunca por su cuenta.
 | `val revenueCatApiKey` | `billing/Billing.kt` | 6.16 | `goog_...` o `null` | `appl_...` o `null` |
 | `object FilePicker` | `data/FilePicker.kt` | `available`, `exportZip(suggestedName, write, onDone)`, `importFile(read, onDone)` con `PickResult` (`Done`, `Cancelled`, `Failed`). Cancelar no es fallar. Exportar pasa por el selector y no por la hoja de compartir: una copia tiene que quedar donde el usuario la encuentre | `CreateDocument("application/zip")`, `OpenDocument` | `UIDocumentPickerViewController` |
 | `fun writeWidgetState(json)`, `fun refreshWidgets()` | `data/Widgets.kt` | 6.13 | `filesDir/widget.json`, `updateAll`, alarma del cambio de día | `widget.json` en el App Group, `BobbinBridge.reloadWidgets` |
-| `object StoreReview` | `data/StoreReview.kt` | `request()`: pide la valoración al sistema, que decide si la enseña. Solo la llama 6.6 | `ReviewManagerFactory.create(context)`, `requestReviewFlow` y `launchReviewFlow` sobre `StoreReview.host` | `SKStoreReviewController.requestReviewInScene` con la escena activa |
+| `object StoreReview` | `data/StoreReview.kt` | `request(): Boolean`: pide la valoración al sistema, que decide si la enseña; devuelve si hizo la llamada. Solo la llama 6.6 | `ReviewManagerFactory.create(context)`, `requestReviewFlow` y `launchReviewFlow` sobre `StoreReview.host` | `SKStoreReviewController.requestReviewInScene` con la escena activa |
 | `object AppInfo`, `val Sibling.storeUrl`, `val onIos` | `data/AppInfo.kt` | versión visible, abrir una URL, la tienda de la plataforma | C line | C line |
 | `fun systemLanguage()`, `fun systemFirstDayOfWeek()` | `i18n/Strings.kt` | idioma de dos letras del sistema; primer día de la semana del locale | `Locale.getDefault()`, `Calendar.getInstance().firstDayOfWeek` | `NSLocale.preferredLanguages`, `NSCalendar.currentCalendar.firstWeekday` |
 
@@ -2043,7 +2046,8 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
     `canCreateTracker` es falso; archivar no libera hueco y borrar sí; con Pro, sin tope.
 20. **Valoración** (#56): `shouldAskReview` es cierto tras la primera revisión mensual completa y falso
     después de marcar `reviewAsked`; una segunda revisión mensual no vuelve a pedir; una revisión de día
-    no pide.
+    no pide; antes de 2 días de instalación, con el paywall abierto o el día de la tarjeta del libro,
+    tampoco. `shouldShowBookCard`: no el mismo día que cerró el primer mes, no con Pro, una sola vez.
 21. **Almacén: carga, reparación y esquema** (#14, #15, #33), con `MemoryFiles`: principal ilegible y
     `.bak` buena, carga la `.bak` y repara el principal sin rotarla; los dos ilegibles, cuarentena,
     diario vacío y ningún fichero sobrescrito; ninguno, diario nuevo; cien cambios seguidos por

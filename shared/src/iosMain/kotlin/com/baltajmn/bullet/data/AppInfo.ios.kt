@@ -17,3 +17,5 @@ actual object AppInfo {
 actual val Sibling.storeUrl: String? get() = iosUrl
 
 actual val onIos: Boolean = true
+
+actual val RATE_URL: String = "https://apps.apple.com/app/id6828976187?action=write-review"

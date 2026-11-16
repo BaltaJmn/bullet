@@ -6,11 +6,12 @@ import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIWindowScene
 
 actual object StoreReview {
-    actual fun request() {
+    actual fun request(): Boolean {
         val scene = UIApplication.sharedApplication.connectedScenes
             .filterIsInstance<UIWindowScene>()
             .firstOrNull { it.activationState == UISceneActivationStateForegroundActive }
-            ?: return
+            ?: return false
         SKStoreReviewController.requestReviewInScene(scene)
+        return true
     }
 }

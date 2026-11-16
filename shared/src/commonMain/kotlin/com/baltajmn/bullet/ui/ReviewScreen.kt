@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.ReadBackup
-import com.baltajmn.bullet.data.askReviewAfter
+import com.baltajmn.bullet.data.afterReview
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.i18n.caps
 import com.baltajmn.bullet.model.Bullet
@@ -175,7 +175,7 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit, onTo
         Step.END -> {
             val left = journal.reviewQueue(scope).size
             // The first month closed with nothing left open is when the rating is asked for, once (6.6).
-            LaunchedEffect(Unit) { askReviewAfter(scope, decided = total - left, left = left) }
+            LaunchedEffect(Unit) { afterReview(scope, decided = total - left, left = left, today = today, paywallOpen = Paywall.open) }
             Page(tab = false, bottom = { Footer { PrimaryButton(S.backToToday, onToToday, block = true) } }) {
                 ReviewTop(onClose)
                 Column(Modifier.padding(horizontal = 24.dp)) {
