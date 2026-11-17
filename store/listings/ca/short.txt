@@ -1,0 +1,1 @@
+Bujo i agenda diària amb rapid logging i migració a mà. Sense compte.

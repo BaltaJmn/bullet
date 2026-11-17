@@ -1,0 +1,1 @@
+Bujo y agenda diaria con rapid logging y migración a mano. Sin cuenta.

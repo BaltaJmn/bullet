@@ -1,0 +1,36 @@
+Compra única, sense compte i sense anuncis. Bobbin és un diari bullet journal per al mòbil que respecta el mètode de paper: rapid logging, tres bullets, cinc estats de tasca i migració a mà, entrada per entrada.
+
+S'obre a Avui amb el teclat a punt. Escrius una línia, prems Retorn i escrius la següent. Res per configurar abans, sense plantilles ni adhesius: bujo en català i una agenda minimalista que s'assembla al teu quadern.
+
+RAPID LOGGING DE DEBÒ
+Un punt per a una tasca, un cercle per a un esdeveniment, un guió per a una nota. Escriu o, - o un signifier a l'inici de la línia i el bullet canvia mentre escrius. Una tasca està oberta, feta, migrada, programada o descartada, i prioritat, inspiració i explorar marquen el que importa. La Clau explica cada símbol.
+
+DAILY LOG, MONTHLY LOG, FUTURE LOG I ÍNDEX
+Avui és el Daily Log. Mes és el Monthly Log: el calendari com a llista de dies i les tasques del mes. Futur és el Future Log, en blocs de mesos. L'Índex reuneix cada mes en què has escrit i cada col·lecció, en l'ordre en què les vas començar.
+
+MIGRACIÓ A MÀ
+Res no es mou sol. Les tasques obertes d'ahir no apareixen avui, un mes nou no copia l'anterior i el Future Log t'espera. Quan acaba el mes, Revisar t'ensenya una tasca oberta cada vegada: la migres, la programes, la mous a una col·lecció o la descartes. Una tasca migrada tres cops ho diu, i és l'única pressió que posa Bobbin.
+
+RELLEGEIX ABANS DE DECIDIR
+Cada revisió comença rellegint el període, amb lloc per a una reflexió curta. Un recordatori diari opcional, apagat per defecte, amb un text fix que mai cita el teu diari.
+
+COL·LECCIONS I SEGUIMENTS
+Col·leccions per a llibres, viatges o qualsevol cosa amb nom. Un seguiment marca un toc per dia a les files que tu defineixes, una pàgina per mes. Bobbin no porta estadístiques d'hàbits ni ratxes: per a això hi ha Quilt, una app germana, amb recordatoris i estadístiques.
+
+MÉS DEL MÈTODE
+Una col·lecció pot continuar en una de nova, enllaçades en els dos sentits. Un quadern nou repassa amb tu col·leccions i tasques, una a una, i l'Índex plega el vell sense esborrar res. La nota de reflexió pot oferir una pregunta. Escriu "demà", "el divendres" o "14 de març" i un suggeriment proposa programar-la; la data es llegeix al teu telèfon i mai s'aplica sola. L'Índex admet una icona i un tema per col·lecció o mes, amb filtre per tema, i els mesos passats ja migrats del tot se subratllen, com en paper. Pots portar entrades de Purl, MoodTraker i Quilt, una a una.
+
+EL TEU DIARI ES QUEDA AL TEU TELÈFON
+Un diari personal sense compte, sense núvol nostre i sense analítica. Exporta el diari sencer en un zip amb Markdown llegible, importa'l en un altre telèfon sense perdre res i bloqueja'l amb Face ID, Touch ID o el teu codi. Comparteix un dia, un mes o una col·lecció com a pàgina de punts. Amb Pro, sincronització opcional pel teu propi iCloud Drive: sense compte, sense servidor nostre i, si han canviat els dos costats, et pregunta abans.
+
+WIDGETS I IPAD
+Un widget d'Avui amb les tasques obertes, les fetes i els esdeveniments, mai el teu text. A iOS 18, un control del Centre de control, Escriure a Bobbin, obre Avui amb el teclat a punt. A l'iPad, l'Índex i el Futur s'obren a doble pàgina, com un quadern obert.
+
+GRATUÏT, PER SEMPRE
+El mètode sencer i tot el de "Més del mètode", la cerca, exportar i importar, compartir, el recordatori, el bloqueig, el widget d'Avui i el control Escriure a Bobbin: gratuït i sense límit de temps.
+
+BOBBIN PRO, UN SOL PAGAMENT
+Set cobertes més, paper pautat, quadrícula i llis, més d'un seguiment, el widget del mes i el de pantalla de bloqueig, el quadern com a llibre en PDF, anotar amb Siri i Dreceres, sincronitzar pel teu propi iCloud Drive i el resum de l'any en text. Un pagament, una sola vegada, mai una subscripció.
+
+EL QUE NO TROBARÀS
+Cap IA resumint els teus dies, cap promesa de salut mental, ni ratxes, ni anuncis, ni analítica. Si el que busques és una línia al dia per rellegir cada any, prova Purl.
