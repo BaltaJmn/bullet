@@ -4,6 +4,7 @@ import kotlinx.datetime.YearMonth
 import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.data.shouldAskReview
 import com.baltajmn.bullet.data.shouldShowBookCard
+import com.baltajmn.bullet.data.shouldShowEarlyBookCard
 import com.baltajmn.bullet.data.Link
 import com.baltajmn.bullet.data.nextReminder
 import com.baltajmn.bullet.data.parseLink
@@ -144,7 +145,17 @@ class ReviewPromptTest {
         // Half a review, a review that opened empty and a Day review never ask.
         assertFalse(ask(decided = 3, left = 1))
         assertFalse(ask(decided = 0))
-        assertFalse(ask(scope = day))
+        assertFalse(ask(scope = day, decided = 0))
+        assertFalse(ask(scope = day, decided = 3, left = 1))
+    }
+
+    @Test
+    fun aDayReviewThatClosesEverythingAsksOnDayThreeOrLater() {
+        assertTrue(ask(scope = day))
+        assertFalse(ask(scope = day, now = installed + dayMs))
+        assertFalse(ask(scope = day, asked = true))
+        assertFalse(ask(scope = day, card = true))
+        assertFalse(ask(scope = day, paywall = true))
     }
 
     @Test
@@ -189,5 +200,34 @@ class BookCardTest {
         assertFalse(show(pro = true))
         assertFalse(show(ask = next))
         assertTrue(show(ask = closed))
+    }
+}
+
+class EarlyBookCardTest {
+    private val days = listOf(LocalDate(2026, 11, 1), LocalDate(2026, 11, 2), LocalDate(2026, 11, 4), LocalDate(2026, 11, 4))
+    private val today = LocalDate(2026, 11, 5)
+
+    private fun show(
+        pro: Boolean = false,
+        done: Boolean = false,
+        d: List<LocalDate> = days,
+        count: Int = 5,
+        ask: LocalDate? = null,
+        now: LocalDate = today,
+    ) = shouldShowEarlyBookCard(pro, done, d, count, ask, now)
+
+    @Test
+    fun needsThreeDaysAndFiveEntriesAndWaitsForTheNextDay() {
+        assertTrue(show())
+        assertFalse(show(now = LocalDate(2026, 11, 4)))
+        assertFalse(show(count = 4))
+        assertFalse(show(d = days.take(2)))
+    }
+
+    @Test
+    fun onceNeverForProNorOnTheRatingDay() {
+        assertFalse(show(done = true))
+        assertFalse(show(pro = true))
+        assertFalse(show(ask = today))
     }
 }

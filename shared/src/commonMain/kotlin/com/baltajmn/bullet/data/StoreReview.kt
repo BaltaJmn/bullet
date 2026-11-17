@@ -1,5 +1,7 @@
 package com.baltajmn.bullet.data
 
+import com.baltajmn.bullet.model.Journal
+import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.ReviewScope
 import kotlin.time.Clock
 import kotlinx.datetime.DatePeriod
@@ -32,10 +34,11 @@ fun installedLongEnough(installedAtMs: Long?, nowMs: Long): Boolean =
     installedAtMs != null && nowMs - installedAtMs >= REVIEW_MIN_DAYS * DAY_MS
 
 /**
- * docs/tecnico.md 6.6: the first Month review that ends with nothing open, after deciding at least one
- * task, and never again in the install's life. A review that opened already empty proves nothing, and
- * a Day review is not the moment someone shows they stay. On top of that (rule 11): two full days since
- * install, no paywall open, and not on the day the book card showed on Hoy.
+ * docs/tecnico.md 6.6: the first Month or Day review that ends with nothing open, after deciding at
+ * least one task, and never again in the install's life. A review that opened already empty proves
+ * nothing. A Day review that closes everything is the daily proof that someone stays, so it asks too
+ * (the two full days since install below put it on day 3 or later). On top of that (rule 11): no
+ * paywall open, and not on the day the book card showed on Hoy.
  */
 fun shouldAskReview(
     asked: Boolean,
@@ -47,7 +50,7 @@ fun shouldAskReview(
     paywallOpen: Boolean,
     bookCardShownToday: Boolean,
 ): Boolean =
-    !asked && scope is ReviewScope.Month && decided > 0 && left == 0 &&
+    !asked && (scope is ReviewScope.Month || scope is ReviewScope.Day) && decided > 0 && left == 0 &&
         installedLongEnough(installedAtMs, nowMs) && !paywallOpen && !bookCardShownToday
 
 /**
@@ -90,16 +93,40 @@ fun shouldShowBookCard(
 ): Boolean =
     !isPro && !done && firstMonthDay != null && today >= firstMonthDay.plus(DatePeriod(days = 1)) && reviewAskDay != today
 
-/** Reads the stored days and decides; a bad stored value counts as missing. */
-fun bookCardDue(isPro: Boolean, today: LocalDate): Boolean = runCatching {
-    shouldShowBookCard(
-        isPro = isPro,
-        done = Prefs.bool(PREF_BOOK_CARD_DONE),
-        firstMonthDay = Prefs.string(PREF_FIRST_MONTH_DAY)?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
-        reviewAskDay = Prefs.string(PREF_REVIEW_ASK_DAY)?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
-        today = today,
-    )
-}.getOrDefault(false)
+/** Entries needed, on at least [BOOK_CARD_DAYS] different days, before the early book card shows. */
+const val BOOK_CARD_ENTRIES = 5
+const val BOOK_CARD_DAYS = 3
+
+/**
+ * The same one-time card for someone who writes but never closes a month: from the day after the 3rd
+ * day with entries, once the notebook holds at least [BOOK_CARD_ENTRIES]. Never on the rating's day.
+ */
+fun shouldShowEarlyBookCard(
+    isPro: Boolean,
+    done: Boolean,
+    entryDays: Collection<LocalDate>,
+    entryCount: Int,
+    reviewAskDay: LocalDate?,
+    today: LocalDate,
+): Boolean {
+    if (isPro || done || entryCount < BOOK_CARD_ENTRIES || reviewAskDay == today) return false
+    val third = entryDays.distinct().sorted().getOrNull(BOOK_CARD_DAYS - 1) ?: return false
+    return today > third
+}
+
+enum class BookCardKind { MONTH, ENTRIES }
+
+private fun storedDay(key: String): LocalDate? = Prefs.string(key)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+
+/** Reads the stored days and decides which card is due, if any; a bad stored value counts as missing. */
+fun bookCardDue(isPro: Boolean, today: LocalDate, journal: Journal): BookCardKind? = runCatching {
+    val done = Prefs.bool(PREF_BOOK_CARD_DONE)
+    val ask = storedDay(PREF_REVIEW_ASK_DAY)
+    if (shouldShowBookCard(isPro, done, storedDay(PREF_FIRST_MONTH_DAY), ask, today)) return@runCatching BookCardKind.MONTH
+    val live = journal.entries.filter { !it.gone }
+    val days = live.mapNotNull { (it.place as? Place.Daily)?.date }
+    if (shouldShowEarlyBookCard(isPro, done, days, live.size, ask, today)) BookCardKind.ENTRIES else null
+}.getOrNull()
 
 /** The card is on screen: remembers the day, so the rating is not asked on it. */
 fun noteBookCardShown(today: LocalDate) {

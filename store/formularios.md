@@ -239,7 +239,7 @@ No analytics, no ads, no AI services, no server of ours. The journal leaves the 
 Same everywhere; all countries but mainland China; 13 languages. No regulated industry, no third-party content, and nothing a user writes is shown to anyone else.
 
 7. In-App Purchase
-Bobbin Pro is a one-time non-consumable purchase (bullet_pro, 1.99 EUR); there is no subscription. It unlocks seven more covers, three papers, trackers past the first, the month widget and the lock screen widget, the notebook as a PDF book, "Note in Bobbin" in Siri and Shortcuts, iCloud Drive sync and the year summary. The whole method, export and import, sharing, the reminder, the lock and the Today widget are free. Pro opens from Settings > Bobbin Pro, from choosing a Pro cover or paper, from creating a second tracker, from a Pro widget and from the Pro rows in Settings. Restore purchase is in Settings and in the purchase dialog.
+Bobbin Pro is a one-time non-consumable purchase (bullet_pro, 4.99 EUR); there is no subscription. It unlocks seven more covers, three papers, trackers past the first, the month widget and the lock screen widget, the notebook as a PDF book, "Note in Bobbin" in Siri and Shortcuts, iCloud Drive sync and the year summary. The whole method, export and import, sharing, the reminder, the lock and the Today widget are free. Pro opens from Settings > Bobbin Pro, from choosing a Pro cover or paper, from creating a second tracker, from a Pro widget and from the Pro rows in Settings. Restore purchase is in Settings and in the purchase dialog.
 ```
 
 Datos de contacto de la revisión: los mismos de las hermanas, copiados de su ficha en App Store

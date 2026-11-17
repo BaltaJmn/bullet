@@ -4569,6 +4569,36 @@ object S {
         "印刷できるA5サイズの本にしましょう。",
         "인쇄할 수 있는 A5 책으로 만들어 보세요.",
     )
+    val bookCardEarlyTitle = t(
+        "Your notebook is taking shape",
+        "Tu cuaderno va tomando forma",
+        "Seu caderno está ganhando forma",
+        "Dein Notizbuch nimmt Form an",
+        "Ton carnet prend forme",
+        "Il tuo quaderno prende forma",
+        "Je notitieboek krijgt vorm",
+        "Twój notatnik nabiera kształtu",
+        "Твой блокнот обретает форму",
+        "Defterin şekilleniyor",
+        "Buku catatanmu mulai terbentuk",
+        "ノートが形になってきました",
+        "노트가 모양을 갖춰 가고 있어요",
+    )
+    val bookCardEarlyBody = t(
+        "Print this notebook as a PDF book. Pro, once.",
+        "Imprime este cuaderno como un libro en PDF. Pro, un solo pago.",
+        "Imprima este caderno como um livro em PDF. Pro, pagamento único.",
+        "Druck dieses Notizbuch als PDF-Buch aus. Pro, einmalig.",
+        "Imprime ce carnet sous forme de livre PDF. Pro, en une seule fois.",
+        "Stampa questo quaderno come libro in PDF. Pro, una volta sola.",
+        "Print dit notitieboek als pdf-boek. Pro, eenmalig.",
+        "Wydrukuj ten notatnik jako książkę w PDF. Pro, jednorazowo.",
+        "Распечатай этот блокнот как книгу в PDF. Pro, один раз.",
+        "Bu defteri PDF kitap olarak yazdır. Pro, tek seferlik.",
+        "Cetak buku catatan ini sebagai buku PDF. Pro, sekali bayar.",
+        "このノートをPDFの本として印刷できます。Proは買い切りです。",
+        "이 노트를 PDF 책으로 인쇄하세요. Pro, 한 번만 결제.",
+    )
     val seePro = t(
         "See Pro",
         "Ver Pro",

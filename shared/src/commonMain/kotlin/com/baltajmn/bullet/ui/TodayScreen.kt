@@ -35,6 +35,7 @@ import com.baltajmn.bullet.data.PREF_HINT_SEEN
 import com.baltajmn.bullet.data.Prefs
 import com.baltajmn.bullet.data.Reminders
 import com.baltajmn.bullet.data.ShareContent
+import com.baltajmn.bullet.data.BookCardKind
 import com.baltajmn.bullet.data.bookCardDue
 import com.baltajmn.bullet.data.dayShare
 import com.baltajmn.bullet.data.finishBookCard
@@ -273,11 +274,13 @@ internal fun Notices(
     }
     // Once, the day after the first month review closed, with the person's own month behind it (rule 10).
     var bookCardGone by remember { mutableStateOf(false) }
-    if (!bookCardGone && bookCardDue(BobbinRepository.isPro, today)) {
+    val bookCard = if (bookCardGone) null else bookCardDue(BobbinRepository.isPro, today, journal)
+    if (bookCard != null) {
         LaunchedEffect(today) { noteBookCardShown(today) }
+        val early = bookCard == BookCardKind.ENTRIES
         NoticeCard(
-            S.bookCardTitle,
-            S.bookCardBody,
+            if (early) S.bookCardEarlyTitle else S.bookCardTitle,
+            if (early) S.bookCardEarlyBody else S.bookCardBody,
             listOf(
                 S.seePro to { finishBookCard(); bookCardGone = true; Paywall.show() },
                 S.notNow to { finishBookCard(); bookCardGone = true },
