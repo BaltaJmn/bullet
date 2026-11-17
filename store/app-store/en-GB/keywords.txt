@@ -1,1 +1,1 @@
-bujo,notepad,diary,list,productivity,organiser,weekly,monthly,collection,index,paperless,ad-free
+agenda,notepad,logbook,list,productivity,organiser,weekly,monthly,collection,index,paperless,ad-free
