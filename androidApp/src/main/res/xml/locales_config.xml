@@ -14,4 +14,8 @@
     <locale android:name="id" />
     <locale android:name="ja" />
     <locale android:name="ko" />
+    <locale android:name="ar" />
+    <locale android:name="zh-Hans" />
+    <locale android:name="hi" />
+    <locale android:name="vi" />
 </locale-config>

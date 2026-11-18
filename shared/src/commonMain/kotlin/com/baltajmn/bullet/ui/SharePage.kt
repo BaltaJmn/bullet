@@ -27,6 +27,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import com.baltajmn.bullet.i18n.cursiveScript
 import androidx.compose.ui.unit.sp
 import com.baltajmn.bullet.data.ShareContent
 import com.baltajmn.bullet.data.ShareFormat
@@ -84,7 +85,7 @@ fun renderSharePages(
     val bottom = entriesBottom(format)
     val entryStyle = TextStyle(fontFamily = literata, fontSize = 38.sp, lineHeight = 54.sp, color = Ink)
     val titleStyle = TextStyle(fontFamily = literata, fontSize = 54.sp, lineHeight = 108.sp, color = Ink)
-    val headingStyle = TextStyle(fontSize = 25.sp, fontWeight = FontWeight.Medium, letterSpacing = 3.sp, color = Muted)
+    val headingStyle = TextStyle(fontSize = 25.sp, fontWeight = FontWeight.Medium, letterSpacing = if (cursiveScript()) 0.sp else 3.sp, color = Muted)
     val baseline = measurer.measure("I", entryStyle).firstBaseline
 
     val title = measurer.measure(content.title, titleStyle, constraints = Constraints(maxWidth = (RIGHT - 162f).toInt()))

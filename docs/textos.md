@@ -1,16 +1,17 @@
 # Textos de Bobbin
 
-Todos los textos de la app y el glosario fijo del método. Bobbin habla trece idiomas: en, es, pt (de
-Brasil), de y fr desde la v1.0, e it, nl, pl, ru, tr, id, ja y ko desde el 30-10-2026, los mismos que
-el resto de la familia. Cualquier otro idioma cae a inglés. De aquí salen `i18n/Strings.kt` (tabla `S`,
-con `t(en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko)` como en las hermanas), el espejo `L` de los
+Todos los textos de la app y el glosario fijo del método. Bobbin habla diecisiete idiomas: en, es, pt (de
+Brasil), de y fr desde la v1.0, it, nl, pl, ru, tr, id, ja y ko desde el 30-10-2026, los mismos que
+el resto de la familia, y ar, zh (chino simplificado), hi y vi desde el 18-11-2026. Cualquier otro idioma
+cae a inglés, también el chino tradicional. De aquí salen `i18n/Strings.kt` (tabla `S`,
+con `t(en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko, ar, zh, hi, vi)`), el espejo `L` de los
 widgets de iOS, los `InfoPlist.strings`, los `Localizable.strings` de la extensión de widgets y del App
 Intent (v1.1) y los `strings.xml` de Android.
 
-Las tablas de las secciones 1 a 25 dan los cinco primeros idiomas. Los otros ocho viven solo en
+Las tablas de las secciones 1 a 25 dan los cinco primeros idiomas. Los otros doce viven solo en
 `Strings.kt`, como en Chroma: copiarlos aquí sería una segunda copia de 600 textos que acaba
 divergiendo. Se escribieron y revisaron con las reglas, el glosario y las tablas de plurales y glifos
-de este documento, que sí están en los trece; un texto nuevo se escribe en los trece en `Strings.kt`
+de este documento, que sí están en los diecisiete; un texto nuevo se escribe en los diecisiete en `Strings.kt`
 con esas mismas reglas. Las claves son las que citan `docs/pantallas.md` y
 `docs/tecnico.md`; si aquí cambia una frase, manda este documento y allí se corrige la cita. Las
 secciones siguen el orden en que `Strings.kt` las lee, una sección del fichero por cada una de aquí.
@@ -22,7 +23,9 @@ para lo mismo.
 
 - Tuteo en español, `du` en alemán, `tu` en francés, `você` en portugués de Brasil, `tu` en italiano,
   `je` en neerlandés, `ty` en polaco, `ты` en ruso, `sen` en turco y `kamu` en indonesio. Japonés en
-  です・ます y coreano en 해요체, sin honoríficos, como en Chroma.
+  です・ます y coreano en 해요체, sin honoríficos, como en Chroma. Chino simplificado con `你`, hindi con
+  `आप`, vietnamita con `bạn` y árabe en imperativo masculino neutro (sin escribir las vocales cortas,
+  salvo la shadda que evita una lectura ambigua).
 - Frases cortas, en presente y sin exclamaciones. La app constata; no anima, no celebra, no reprocha.
   Prohibido cualquier equivalente de "nunca has...", "vas a perder..." o "llevas N días sin...".
 - Ninguna promesa de salud mental, de bienestar ni de productividad milagrosa.
@@ -71,13 +74,19 @@ Fijadas aquí para la app, la ficha y las capturas, sin excepción por idioma.
    | fr | `n == 0` o `n == 1` ("0 tâche", "1 tâche") | `n >= 2` |
    | pl | `n == 1` | dos formas: 2 a 4 salvo 12 a 14 ("2 zadania"); el resto, también 0 ("5 zadań") |
    | ru | acaba en 1 salvo 11 ("1 задача", "21 задача") | dos formas: acaba en 2 a 4 salvo 12 a 14 ("2 задачи"); el resto ("5 задач") |
-   | tr, id, ja, ko | una sola forma: tras un número no hay plural ("3 görev", "3 tugas", "3件", "3개") | |
+   | tr, id, ja, ko, zh, vi | una sola forma: tras un número no hay plural ("3 görev", "3 tugas", "3件", "3개", "3个任务", "3 việc cần làm") | |
+   | hi | `n == 0` o `n == 1` ("0 कार्य", "1 प्रविष्टि") | `n >= 2` ("2 प्रविष्टियाँ"); `कार्य` no cambia |
+   | ar | seis formas CLDR, `word(n, "cero\|uno\|dos\|pocos\|muchos\|otro")`: 0; 1; 2; resto 3 a 10; resto 11 a 99; el resto (100, 102...) | `arCount(n, w)`: 1 y 2 se dicen con el nombre solo ("مهمة واحدة", "مهمتان"), de 3 en adelante "3 مهام", "11 مهمة" |
 
    En el código, `word(n, "one|other")` o `word(n, "one|few|many")` elige la forma; una sola forma
    va sin `|`. Las ramas `isSingular(n)` de las frases enteras siguen la columna de la izquierda, y
    dentro de una rama de plural el polaco y el ruso concuerdan con `word(n, ...)`.
 
-   Las palabras que cambian con el número:
+   En árabe, las frases con un contador dentro que habría que concordar en dual ("dos abiertas") se
+escriben con el número detrás de dos puntos o entre paréntesis ("المهام المفتوحة: 3"), que vale para
+cualquier cifra.
+
+Las palabras que cambian con el número:
 
    | Palabra | en | es | pt | de | fr |
    |---|---|---|---|---|---|
@@ -165,6 +174,34 @@ capturas. Si una pantalla necesita el concepto, usa esta palabra y no un sinóni
 | Portada / Papel | Copertina / Carta | Omslag / Papier | Okładka / Papier | Обложка / Бумага | Kapak / Kağıt | Sampul / Kertas | カバー / 用紙 | 표지 / 속지 |
 | Símbolo (un glifo del método) | simbolo | symbool | symbol | символ | sembol | simbol | 記号 | 기호 |
 
+| Concepto | ar | zh | hi | vi |
+|---|---|---|---|---|
+| Hoy / Mes / Futuro / Índice (pestañas) | اليوم / الشهر / المستقبل / الفهرس | 今天 / 本月 / 未来 / 目录 | आज / माह / भविष्य / अनुक्रमणिका | Hôm nay / Tháng / Tương lai / Mục lục |
+| Lista / Seguimiento | قائمة / متتبع | 清单 / 追踪表 | सूची / ट्रैकर | Danh sách / Bảng theo dõi |
+| Pasar (migrar) | نقل | 转移 | आगे ले जाएँ | Chuyển |
+| Llevar a otro mes | نقل إلى شهر آخر | 移到其他月份 | दूसरे माह में ले जाएँ | Chuyển sang tháng khác |
+| Descartar | استبعاد | 放弃 | त्यागें | Bỏ |
+| Revisar / Reabrir / Releer | مراجعة / إعادة فتح / إعادة القراءة | 回顾 / 重新打开 / 重读 | समीक्षा / फिर खोलें / दोबारा पढ़ें | Xem lại / Mở lại / Đọc lại |
+| Entrada | إدخال | 记录 (contador 条) | प्रविष्टि | Mục |
+| Tarea / Evento / Nota | مهمة / حدث / ملاحظة | 任务 / 事件 / 笔记 | कार्य / कार्यक्रम / नोट | Việc cần làm / Sự kiện / Ghi chú |
+| Abierta / Hecha | مفتوحة / منجزة | 未完成 / 已完成 | खुला / पूर्ण | Đang mở / Xong |
+| Migrada / Programada (Clave) | مرحّلة / مجدولة | 已迁移 / 已排期 | स्थानांतरित / निर्धारित | Đã chuyển / Đã lên lịch |
+| Prioridad / Inspiración / Explorar | أولوية / إلهام / استكشاف | 优先 / 灵感 / 探索 | प्राथमिकता / प्रेरणा / खोजें | Ưu tiên / Cảm hứng / Khám phá |
+| Clave | المفتاح | 图例 | कुंजी | Chú giải |
+| Calendario / Tareas del mes | التقويم / مهام الشهر | 日历 / 本月任务 | कैलेंडर / माह के कार्य | Lịch / Việc của tháng |
+| Diario / Cuaderno | يوميات / دفتر | 手账 / 笔记本 | जर्नल / नोटबुक | nhật ký / Sổ tay |
+| Portada / Papel / Símbolo | الغلاف / الورق / رمز | 封面 / 纸张 / 符号 | कवर / पन्ना / चिह्न | Bìa / Giấy / ký hiệu |
+
+Los nombres de mes de vietnamita son "tháng 1" a "tháng 12" (con la inicial en mayúscula al titular);
+en hindi, "सितंबर" y no "सेप्टेंबर"; en árabe, los gregorianos del Golfo ("يناير", "سبتمبر"). Las
+palabras que busca el reconocedor de fechas: ar "اليوم / غدا / بعد غد", zh "今天 / 明天 / 后天",
+hi "आज / कल / परसों", vi "hôm nay / ngày mai / ngày kia".
+
+Árabe es de derecha a izquierda: la interfaz se refleja (start y end, nunca left y right) y los
+símbolos del método, que son dibujos, no se espejan. La imagen de "Compartir como imagen" conserva su
+composición izquierda a derecha. Las etiquetas `Eyebrow` no llevan espaciado entre letras en árabe ni
+hindi, que unen sus letras (`cursiveScript()`).
+
 Sin traducir en ningún idioma, como se busca el método: `bullet journal`, `bujo`, `bullet`,
 `signifier`, `rapid logging`, `Daily Log`, `Monthly Log` y `Future Log`. En la app no aparece ninguno:
 las pestañas dicen Hoy, Mes y Futuro, la Clave agrupa por lo que apuntas, lo que pasó con una tarea y
@@ -196,7 +233,7 @@ que dice Daily Log.
   lleva punto ("İ").
 - Las etiquetas `Eyebrow` se escriben aquí en caja normal y el estilo las pasa a mayúsculas con
   `uppercase()` al pintar (`docs/pantallas.md` 1.3). En alemán `ß` pasa a `SS`, que es correcto.
-- Los tests cambian `S.lang` para recorrer los trece idiomas (test 24); los textos sin parámetros se
+- Los tests cambian `S.lang` para recorrer los diecisiete idiomas (test 24); los textos sin parámetros se
   fijan una vez al arrancar, como en line.
 - Una clave que otra ya dice igual no se duplica en el código: la columna Parámetros lo indica con
   "= clave".

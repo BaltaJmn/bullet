@@ -208,6 +208,10 @@
 				id,
 				ja,
 				ko,
+				ar,
+				"zh-Hans",
+				hi,
+				vi,
 				Base,
 			);
 			mainGroup = DE754F57C7DC31D371EA3928;

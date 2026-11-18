@@ -22,6 +22,10 @@
 		<string>id</string>
 		<string>ja</string>
 		<string>ko</string>
+		<string>ar</string>
+		<string>zh-Hans</string>
+		<string>hi</string>
+		<string>vi</string>
 	</array>
 </dict>
 </plist>

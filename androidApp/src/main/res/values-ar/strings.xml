@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_preview_date">الأربعاء 23 سبتمبر</string>
+    <string name="widget_preview_open">مفتوحة</string>
+    <string name="widget_preview_done">منجزة</string>
+    <string name="widget_preview_events">أحداث</string>
+    <string name="widget_preview_month">سبتمبر</string>
+    <string name="tile_label">دوّن في Bobbin</string>
+    <string name="capture_widget_label">Bobbin: اكتب</string>
+    <string name="widget_capture_write">اكتب</string>
+    <string name="widget_today_description">المفتوح والمنجز والأحداث اليوم، دون أي نص</string>
+    <string name="widget_month_description">نقطة لكل يوم فيه إدخالات</string>
+    <string name="widget_capture_description">اكتب سطرًا في اليوم، دون أن تظهر كلمة من اليوميات على الشاشة الرئيسية</string>
+</resources>

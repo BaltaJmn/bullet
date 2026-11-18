@@ -12,7 +12,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 
-/** Test 24 (docs/tecnico.md 10): the examples of docs/textos.md, in the thirteen languages. */
+/** Test 24 (docs/tecnico.md 10): the examples of docs/textos.md, in the seventeen languages. */
 class StringsTest {
     private val saved = S.lang
     private val LANGS = SUPPORTED
@@ -40,6 +40,14 @@ class StringsTest {
         assertEquals("id", normalizeLanguage("in"))
         assertEquals("ja", normalizeLanguage("ja-JP"))
         assertEquals("en", normalizeLanguage("zh-Hant"))
+        assertEquals("zh", normalizeLanguage("zh-Hans-CN"))
+        assertEquals("zh", normalizeLanguage("zh"))
+        assertEquals("en", normalizeLanguage("zh-Hant-TW"))
+        assertEquals("en", normalizeLanguage("zh-TW"))
+        assertEquals("en", normalizeLanguage("zh-HK"))
+        assertEquals("ar", normalizeLanguage("ar-SA"))
+        assertEquals("hi", normalizeLanguage("hi-IN"))
+        assertEquals("vi", normalizeLanguage("vi-VN"))
         assertEquals("en", normalizeLanguage(""))
     }
 
@@ -81,6 +89,55 @@ class StringsTest {
         eachNew(
             { S.widgetDate(sep23) },
             "MER 23 SET", "WO 23 SEP", "ŚR 23 WRZ", "СР 23 СЕНТ", "ÇAR 23 EYL", "RAB 23 SEP", "9月23日(水)", "9월 23일 (수)",
+        )
+    }
+
+    /** The four languages added in November 2026: ar, zh, hi and vi, in step with [expected]. */
+    private fun eachLast(check: () -> String, vararg expected: String) {
+        listOf("ar", "zh", "hi", "vi").zip(expected).forEach { (code, want) ->
+            S.lang = code
+            assertEquals(want, check(), code)
+        }
+    }
+
+    @Test
+    fun datesInArabicChineseHindiAndVietnamese() {
+        eachLast({ S.dayTitle(sep23) }, "الأربعاء 23", "23日 星期三", "बुधवार 23", "Thứ tư 23")
+        eachLast({ S.shortDate(sep23) }, "23 سبتمبر", "9月23日", "23 सितंबर", "23 tháng 9")
+        eachLast(
+            { S.longDateWithYear(LocalDate(2026, 9, 22)) },
+            "الثلاثاء 22 سبتمبر 2026", "2026年9月22日 星期二", "मंगलवार, 22 सितंबर 2026", "Thứ ba, 22 tháng 9 năm 2026",
+        )
+        eachLast({ S.monthYear(sep2026) }, "سبتمبر 2026", "2026年9月", "सितंबर 2026", "tháng 9 năm 2026")
+        eachLast({ S.monthTitle(sep2026) }, "سبتمبر 2026", "2026年9月", "सितंबर 2026", "Tháng 9 năm 2026")
+        eachLast({ S.abbrDate(sep23) }, "23 سبتمبر", "9月23日", "23 सित॰", "23 thg 9")
+    }
+
+    @Test
+    fun arabicHasSixPluralForms() {
+        S.lang = "ar"
+        val got = listOf(0, 1, 2, 3, 10, 11, 99, 100, 102, 103).map { S.taskCount(it) }
+        assertEquals(
+            listOf("لا مهام", "مهمة واحدة", "مهمتان", "3 مهام", "10 مهام", "11 مهمة", "99 مهمة", "100 مهمة", "102 مهمة", "103 مهام"),
+            got,
+        )
+    }
+
+    @Test
+    fun chineseHindiAndVietnamesePlurals() {
+        eachLast({ S.taskCount(3) }, "3 مهام", "3个任务", "3 कार्य", "3 việc cần làm")
+        eachLast({ S.entryCount(1) }, "إدخال واحد", "1条记录", "1 प्रविष्टि", "1 mục")
+        eachLast({ S.entryCount(2) }, "إدخالان", "2条记录", "2 प्रविष्टियाँ", "2 mục")
+    }
+
+    @Test
+    fun importSummaryInTheLastFour() {
+        eachLast(
+            { S.importSummary(12, 3, 40) },
+            "تضيف النسخة الاحتياطية إدخالات جديدة (12) وإدخالات أحدث مما لديك (3)؛ إدخالات موجودة مسبقًا (40). لا يُحذف شيء.",
+            "备份内容：12 条新记录，3 条比你的更新；40 条本来就有。不会删除任何内容。",
+            "बैकअप की सामग्री: 12 नई प्रविष्टियाँ और 3 आपके वाले से नए; 40 पहले से यहाँ थे। कुछ भी हटाया नहीं जाता।",
+            "Bản sao lưu có 12 mục mới và 3 mục mới hơn của bạn; 40 mục đã có sẵn. Không có gì bị xóa.",
         )
     }
 

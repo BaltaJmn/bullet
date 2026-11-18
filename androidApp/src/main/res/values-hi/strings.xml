@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_preview_date">बुध 23 सित॰</string>
+    <string name="widget_preview_open">खुले</string>
+    <string name="widget_preview_done">पूर्ण</string>
+    <string name="widget_preview_events">कार्यक्रम</string>
+    <string name="widget_preview_month">सितंबर</string>
+    <string name="tile_label">Bobbin में लिखें</string>
+    <string name="capture_widget_label">Bobbin: लिखें</string>
+    <string name="widget_capture_write">लिखें</string>
+    <string name="widget_today_description">आज के खुले, पूरे और कार्यक्रम, बिना किसी पाठ के</string>
+    <string name="widget_month_description">प्रविष्टियों वाले हर दिन के लिए एक बिंदु</string>
+    <string name="widget_capture_description">आज में एक पंक्ति लिखें; होम स्क्रीन पर जर्नल का एक शब्द भी नहीं दिखता</string>
+</resources>

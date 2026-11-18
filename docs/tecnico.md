@@ -161,7 +161,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `data/AppInfo.kt` | `PRIVACY_URL`, `SIBLINGS`, `expect object AppInfo` | A `line/.../data/AppInfo.kt` |
 | `data/Sync.kt` | v1.2: `SYNC_NAME`, `Remote`, `expect object SyncFile`, `syncStep`, `SyncStep`, `object Sync` (12.7) | N |
 | `billing/Billing.kt` | `expect val revenueCatApiKey`, `object Billing` | A `line/.../billing/Billing.kt`: el derecho va a `Prefs`, no al diario |
-| `i18n/Strings.kt` | `expect fun systemLanguage()`, `expect fun systemFirstDayOfWeek()`, `object S` con `t(en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko)`, plurales y nombres de mes y día | A `line/.../i18n/Strings.kt` |
+| `i18n/Strings.kt` | `expect fun systemLanguage()`, `expect fun systemFirstDayOfWeek()`, `object S` con `t(en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko, ar, zh, hi, vi)`, plurales y nombres de mes y día | A `line/.../i18n/Strings.kt` |
 | `ui/theme/Theme.kt` | `BobbinTheme`, colores, `enum class Cover`, `enum class Paper`, `isWideScreen`, `MAX_CONTENT_WIDTH` | A `line/.../ui/theme/Theme.kt` |
 | `ui/theme/Grid.kt` | `gridUnit` | N (#17) |
 | `ui/theme/Paper.kt` | modificador que pinta el papel; `page()` y `Spread`, la página y la doble página en ancho grande | N (#17, #34) |
@@ -274,7 +274,7 @@ Simulador de iOS (9). Solo va a `androidHostTest` lo que necesita disco real o r
 | `androidApp/src/main/kotlin/com/baltajmn/bullet/MainActivity.kt` | `FragmentActivity`; lanzadores de ficheros y de permiso; `Lock.host` y `StoreReview.host`; el `data` del intent a `Route` | A line |
 | `androidApp/src/main/res/xml/` | `data_extraction_rules.xml`, `backup_rules.xml`, `locales_config.xml`, `file_paths.xml`, `today_widget_info.xml`, `month_widget_info.xml` (8.2) | A line |
 | `androidApp/src/main/res/layout/today_widget_preview.xml`, `month_widget_preview.xml` | previsualización del selector de widgets, mantenida a mano | A line |
-| `androidApp/src/main/res/values*/strings.xml` | `app_name` = `Bobbin` y las descripciones de los widgets, en los trece idiomas (`values-in` para el indonesio) | A line |
+| `androidApp/src/main/res/values*/strings.xml` | `app_name` = `Bobbin` y las descripciones de los widgets, en los diecisiete idiomas (`values-in` para el indonesio, `values-zh-rCN` para el chino simplificado) | A line |
 | `androidApp/src/main/res/values*/themes.xml`, `colors.xml` | `Theme.Bobbin` y los colores de la previsualización (8.2) | A line |
 | `androidApp/src/main/res/mipmap-*`, `drawable/` | icono, generado (#18) | N |
 | `iosApp/Configuration/Config.xcconfig` | 8.3 | A line |
@@ -1637,10 +1637,13 @@ nunca por su cuenta.
 | `object AppInfo`, `val Sibling.storeUrl`, `val onIos` | `data/AppInfo.kt` | versión visible, abrir una URL, la tienda de la plataforma | C line | C line |
 | `fun systemLanguage()`, `fun systemFirstDayOfWeek()` | `i18n/Strings.kt` | idioma de dos letras del sistema; primer día de la semana del locale | `Locale.getDefault()`, `Calendar.getInstance().firstDayOfWeek` | `NSLocale.preferredLanguages`, `NSCalendar.currentCalendar.firstWeekday` |
 
-`Strings.kt` obliga a los trece idiomas por firma de función
-(`t(en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko)`); los cinco primeros se copian de
-`docs/textos.md` y los otros ocho viven solo aquí. Android da el indonesio como `in`, su código antiguo:
-`normalizeLanguage` lo lee como `id`. Las mayúsculas de las etiquetas pasan por `S.caps` (`caps()`),
+`Strings.kt` obliga a los diecisiete idiomas por firma de función
+(`t(en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko, ar, zh, hi, vi)`); los cinco primeros se copian de
+`docs/textos.md` y los otros doce viven solo aquí. Android da el indonesio como `in`, su código antiguo:
+`normalizeLanguage` lo lee como `id`. `zh` es chino simplificado: `systemLanguage()` devuelve `zh-Hant` para
+el tradicional (script Hant, o región TW, HK, MO sin Hans) y `normalizeLanguage` lo manda a inglés. El árabe
+escribe de derecha a izquierda (la interfaz de Compose se refleja sola; la imagen de compartir queda en LTR)
+y tiene seis plurales (`arabic()`); en él, 1 y 2 se escriben sin cifra (`arCount`). Las mayúsculas de las etiquetas pasan por `S.caps` (`caps()`),
 porque la i del turco lleva punto. Los textos no salen de Compose Resources: parte se pinta fuera de un `@Composable`
 (receptor, Glance, `Canvas`, notificación). Plurales y nombres de mes y de día de la semana, por tabla
 propia, sin depender del locale de la plataforma.
@@ -2078,7 +2081,7 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
     `journal.tmp.json` a medias y un `journal.json` ilegible cargan la `.bak`; un corte simulado entre
     escribir el `.tmp` y el rename conserva el último estado válido; la cuarentena mueve los dos a
     `corrupt/`; `wipe` no deja nada en la carpeta.
-24. **Textos** (#16): cada función de `S` devuelve texto no vacío en los trece idiomas; los plurales de
+24. **Textos** (#16): cada función de `S` devuelve texto no vacío en los diecisiete idiomas; los plurales de
     0, 1 y 2 tareas y entradas son correctos en cada idioma; los doce meses y los siete días existen en
     cada idioma.
 25. **Tema** (#17, #34): contraste de cada par de texto y fondo de `docs/pantallas.md` 1, en claro y en
@@ -2310,7 +2313,7 @@ medias conserva lo decidido, porque cada decisión ya cambió su elemento.
 
 ### 12.3 Reflexión guiada
 
-`S.question(i)` con `i` en `0 until QUESTION_COUNT`, en los trece idiomas. En el paso de reflexión
+`S.question(i)` con `i` en `0 until QUESTION_COUNT`, en los diecisiete idiomas. En el paso de reflexión
 (6.6), una pregunta junto al campo de nota, opcional y que se salta igual que el paso. Elección:
 
 ```kotlin
@@ -2329,7 +2332,7 @@ data class DateHint(val date: LocalDate, val range: IntRange)   // range: dónde
 fun dateHint(text: String, lang: String, today: LocalDate): DateHint?
 ```
 
-Reconoce, en los trece idiomas: hoy y mañana ("mañana", "tomorrow", "amanhã", "morgen",
+Reconoce, en los diecisiete idiomas: hoy y mañana ("mañana", "tomorrow", "amanhã", "morgen",
 "demain", "明日"...), pasado mañana, un día de la semana (el siguiente de ese nombre, nunca hoy), "el 14" (el
 siguiente día 14, hoy incluido), "14 de marzo" y "14/3" (día y mes; si ya pasó este año, el que viene).
 Las palabras sueltas, los meses y los días de la semana salen de `i18n/Strings.kt` con el idioma que se

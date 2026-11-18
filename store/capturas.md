@@ -1,7 +1,7 @@
 # Capturas y gráficos de las fichas
 
 Seis escenas en los trece idiomas de la ficha (en-US, es-ES, pt-BR, de-DE, fr-FR, it-IT, nl-NL,
-pl-PL, ru-RU, tr-TR, id, ja-JP, ko-KR). Se sacan con un diario de demostración generado, nunca con uno real: un diario de verdad en una ficha pública es justo
+pl-PL, ru-RU, tr-TR, id, ja-JP, ko-KR; ar, zh-CN, hi-IN y vi tienen ficha pero todavía no capturas propias). Se sacan con un diario de demostración generado, nunca con uno real: un diario de verdad en una ficha pública es justo
 lo que esta app promete no hacer. Todo lo que se ve existe en la app; la portada y el papel Pro de la
 escena 06 son la vista previa de Ajustes, no un montaje aparte.
 

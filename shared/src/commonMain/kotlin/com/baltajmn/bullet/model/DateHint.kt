@@ -27,9 +27,10 @@ fun dateHint(text: String, lang: String, today: LocalDate): DateHint? {
     val months = monthList.joinToString("|")
     val weekdays = S.weekdayNames(lang).map(::fold)
 
-    // A word ends at anything that is not a Latin or Cyrillic letter or a digit; Japanese and Korean
-    // write without spaces, so for them a kanji or a hangul next to the expression is no boundary.
-    val letter = "a-z0-9\u00c0-\u024f\u0400-\u04ff"
+    // A word ends at anything that is not a letter or a digit of a script written with spaces: Latin
+    // (Vietnamese included), Cyrillic, Arabic or Devanagari. Chinese, Japanese and Korean write without
+    // spaces, so for them a character next to the expression is no boundary.
+    val letter = "a-z0-9\u00c0-\u024f\u0400-\u04ff\u0600-\u06ff\u0900-\u097f\u1e00-\u1eff"
     fun find(pattern: String): MatchResult? = Regex("(?<![$letter])(?:$pattern)(?![$letter])").find(folded)
     fun hint(m: MatchResult, date: LocalDate?) = date?.let { DateHint(it, origin[m.range.first]..origin[m.range.last]) }
 
@@ -40,6 +41,7 @@ fun dateHint(text: String, lang: String, today: LocalDate): DateHint? {
         "es", "pt" -> "(\\d{1,2})\\s+de\\s+($months)"
         "ja" -> "($months)\\s*(\\d{1,2})日"
         "ko" -> "($months)\\s*(\\d{1,2})일"
+        "zh" -> "($months)\\s*(\\d{1,2})[日号]"
         else -> "(\\d{1,2})\\.?\\s+($months)"
     }
     find(dayMonth)?.let { m ->
@@ -53,8 +55,8 @@ fun dateHint(text: String, lang: String, today: LocalDate): DateHint? {
     val figures = if (lang == "de") "(\\d{1,2})\\.(\\d{1,2})\\." else "(\\d{1,2})/(\\d{1,2})"
     find(figures)?.let { m ->
         val (a, b) = m.groupValues[1].toInt() to m.groupValues[2].toInt()
-        // In English, Japanese and Korean 3/14 is the month first; in the others, the day.
-        return hint(m, if (lang in setOf("en", "ja", "ko")) nextDayMonth(b, a, today) else nextDayMonth(a, b, today))
+        // In English, Chinese, Japanese and Korean 3/14 is the month first; in the others, the day.
+        return hint(m, if (lang in setOf("en", "zh", "ja", "ko")) nextDayMonth(b, a, today) else nextDayMonth(a, b, today))
     }
 
     // "segunda-feira" is also just "segunda" in Portuguese; Russian and Polish say a weekday after
@@ -90,7 +92,10 @@ fun dateHint(text: String, lang: String, today: LocalDate): DateHint? {
         "id" -> "tanggal\\s+(\\d{1,2})"
         "ja" -> "(\\d{1,2})日"
         "ko" -> "(\\d{1,2})일"
-        // Polish and Turkish say a bare day only with a declined number: no hint for it.
+        "zh" -> "(\\d{1,2})[日号]"
+        "vi" -> "ngay\\s+(\\d{1,2})"
+        // Polish and Turkish say a bare day only with a declined number: no hint for it. Nor Arabic or
+        // Hindi, which put a particle in front of the number that changes with the sentence.
         else -> return null
     }
     // Not "el 14:30" nor "el 14,5": a bare number followed by more number is not a day.

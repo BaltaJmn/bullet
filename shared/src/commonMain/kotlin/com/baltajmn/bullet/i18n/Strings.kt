@@ -15,13 +15,23 @@ expect fun systemLanguage(): String
 expect fun systemFirstDayOfWeek(): DayOfWeek
 
 /** The languages the app ships. Anything else falls back to English. */
-internal val SUPPORTED = listOf("en", "es", "pt", "de", "fr", "it", "nl", "pl", "ru", "tr", "id", "ja", "ko")
+internal val SUPPORTED = listOf("en", "es", "pt", "de", "fr", "it", "nl", "pl", "ru", "tr", "id", "ja", "ko", "ar", "zh", "hi", "vi")
 
 internal fun normalizeLanguage(code: String): String {
     // Android still reports Indonesian by its old ISO code.
     val two = code.take(2).lowercase().let { if (it == "in") "id" else it }
+    // Only Simplified Chinese is translated: Traditional (zh-Hant, zh-TW, zh-HK, zh-MO) reads English.
+    if (two == "zh" && isTraditionalChinese(code)) return "en"
     return two.takeIf { it in SUPPORTED } ?: "en"
 }
+
+private fun isTraditionalChinese(code: String): Boolean {
+    if (code.contains("Hant", ignoreCase = true)) return true
+    return !code.contains("Hans", ignoreCase = true) && Regex("[-_](TW|HK|MO)", RegexOption.IGNORE_CASE).containsMatchIn(code)
+}
+
+/** Arabic and Devanagari join their letters: spacing them out (the Eyebrow style does) breaks the word. */
+fun cursiveScript(): Boolean = S.lang == "ar" || S.lang == "hi"
 
 /** Upper case for a label, as [S.caps] writes it in the app's language. */
 fun String.caps(): String = S.caps(this)
@@ -48,13 +58,15 @@ object S {
     private fun t(
         en: String, es: String, pt: String, de: String, fr: String,
         it: String, nl: String, pl: String, ru: String, tr: String, id: String, ja: String, ko: String,
-    ): String = tIn(lang, en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko)
+        ar: String, zh: String, hi: String, vi: String,
+    ): String = tIn(lang, en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko, ar, zh, hi, vi)
 
     /** [t] in [code] rather than the device language: what a parser told the language reads (12.4). */
     private fun tIn(
         code: String,
         en: String, es: String, pt: String, de: String, fr: String,
         it: String, nl: String, pl: String, ru: String, tr: String, id: String, ja: String, ko: String,
+        ar: String, zh: String, hi: String, vi: String,
     ): String = when (code) {
         "es" -> es
         "pt" -> pt
@@ -68,6 +80,10 @@ object S {
         "id" -> id
         "ja" -> ja
         "ko" -> ko
+        "ar" -> ar
+        "zh" -> zh
+        "hi" -> hi
+        "vi" -> vi
         else -> en
     }
 
@@ -78,21 +94,39 @@ object S {
      * Method rule 3 (docs/textos.md): fr treats 0 and 1 as singular, the others only 1. Polish and
      * Russian pick among three forms with [word].
      */
-    private fun isPlural(n: Int): Boolean = if (lang == "fr") n >= 2 else n != 1
+    private fun isPlural(n: Int): Boolean = if (lang == "fr" || lang == "hi") n >= 2 else n != 1
     private fun isSingular(n: Int): Boolean = !isPlural(n)
 
     /**
      * The form of a word that goes with [n]. [forms] holds one form (no plural), "one|other" by
-     * [isPlural], or "one|few|many" for Polish and Russian ([slavic]).
+     * [isPlural], "one|few|many" for Polish and Russian ([slavic]), or the six forms of Arabic
+     * "zero|one|two|few|many|other" ([arabic]).
      */
     private fun word(n: Int, forms: String): String {
         val f = forms.split("|")
         return when (f.size) {
             1 -> f[0]
             2 -> if (isPlural(n)) f[1] else f[0]
+            6 -> arabic(n, f)
             else -> slavic(n, f[0], f[1], f[2])
         }
     }
+
+    /** Arabic has six plural categories (CLDR): 0, 1, 2, 3 to 10, 11 to 99, and the rest. */
+    private fun arabic(n: Int, f: List<String>): String {
+        val tens = n % 100
+        return when {
+            n == 0 -> f[0]
+            n == 1 -> f[1]
+            n == 2 -> f[2]
+            tens in 3..10 -> f[3]
+            tens in 11..99 -> f[4]
+            else -> f[5]
+        }
+    }
+
+    /** "3 مهام", but 1 and 2 are the noun alone ("مهمة واحدة", "مهمتان"): Arabic does not put a figure in front of them. */
+    private fun arCount(n: Int, w: String) = if (n <= 2) w else "$n $w"
 
     /** Polish and Russian: "1 задача", "2 задачи", "5 задач"; Russian takes [one] again for 21. */
     private fun slavic(n: Int, one: String, few: String, many: String): String {
@@ -119,6 +153,10 @@ object S {
         "tugas",
         "タスク",
         "할 일",
+        "لا مهام|مهمة واحدة|مهمتان|مهام|مهمة|مهمة",
+        "个任务",
+        "कार्य",
+        "việc cần làm",
     ))
 
     private fun wordEntry(n: Int) = word(n, t(
@@ -135,6 +173,10 @@ object S {
         "entri",
         "項目",
         "항목",
+        "لا إدخالات|إدخال واحد|إدخالان|إدخالات|إدخالًا|إدخال",
+        "条记录",
+        "प्रविष्टि|प्रविष्टियाँ",
+        "mục",
     ))
 
     private fun wordChange(n: Int) = word(
@@ -153,6 +195,10 @@ object S {
             "perubahan",
             "変更",
             "변경",
+            "لا تغييرات|تغيير واحد|تغييران|تغييرات|تغييرًا|تغيير",
+            "项更改",
+            "बदलाव",
+            "thay đổi",
         ),
     )
 
@@ -170,6 +216,10 @@ object S {
         "gambar",
         "画像",
         "이미지",
+        "لا صور|صورة واحدة|صورتان|صور|صورة|صورة",
+        "张图片",
+        "छवि|छवियाँ",
+        "ảnh",
     ))
 
     /** Generic count, not tied to one screen; used wherever a bare "n tasks" is needed. */
@@ -187,6 +237,10 @@ object S {
         "$n ${wordTask(n)}",
         "${n}件の${wordTask(n)}",
         "${wordTask(n)} ${n}개",
+        arCount(n, wordTask(n)),
+        "$n${wordTask(n)}",
+        "$n ${wordTask(n)}",
+        "$n ${wordTask(n)}",
     )
 
     /** Generic count, not tied to one screen; used wherever a bare "n entries" is needed. */
@@ -204,25 +258,33 @@ object S {
         "$n ${wordEntry(n)}",
         "${n}件の${wordEntry(n)}",
         "${wordEntry(n)} ${n}개",
+        arCount(n, wordEntry(n)),
+        "$n${wordEntry(n)}",
+        "$n ${wordEntry(n)}",
+        "$n ${wordEntry(n)}",
     )
 
     /** "1, 2, 5 y 9": commas and the language's conjunction before the last item. */
     fun joinAnd(items: List<String>): String {
         if (items.size <= 1) return items.firstOrNull().orEmpty()
-        val and = t(" and ", " y ", " e ", " und ", " et ", " e ", " en ", " i ", " и ", " ve ", " dan ", "と", ", ")
+        val and = t(" and ", " y ", " e ", " und ", " et ", " e ", " en ", " i ", " и ", " ve ", " dan ", "と", ", ", " و", "和", " और ", " và ")
         return items.dropLast(1).joinToString(listComma()) + and + items.last()
     }
 
     /** The comma between the items of a list; Japanese writes its own and no space. */
-    private fun listComma() = t(", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", "、", ", ")
+    private fun listComma() = t(", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", ", "、", ", ", "، ", "、", ", ", ", ")
 
     /** The full stop that closes a sentence the code ends; Japanese writes its own. */
-    private fun fullStop() = t(".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "。", ".")
+    private fun fullStop() = t(".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "。", ".", ".", "。", "।", ".")
 
     /** A weekday with a whole date: after it in Turkish, Japanese and Korean. */
     private fun weekdayWithDate(w: String, date: String) = t(
         "$w $date", "$w $date", "$w $date", "$w $date", "$w $date",
         "$w $date", "$w $date", "$w, $date", "$w, $date", "$date $w", "$w, $date", "$date $w", "$date $w",
+        "$w $date",
+        "$date $w",
+        "$w, $date",
+        "$w, $date",
     )
 
     private fun daysBetween(from: LocalDate, to: LocalDate): Int = (to.toEpochDays() - from.toEpochDays()).toInt()
@@ -251,6 +313,10 @@ object S {
         "Januari, Februari, Maret, April, Mei, Juni, Juli, Agustus, September, Oktober, November, Desember",
         "1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月",
         "1월, 2월, 3월, 4월, 5월, 6월, 7월, 8월, 9월, 10월, 11월, 12월",
+        "يناير, فبراير, مارس, أبريل, مايو, يونيو, يوليو, أغسطس, سبتمبر, أكتوبر, نوفمبر, ديسمبر",
+        "1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月",
+        "जनवरी, फ़रवरी, मार्च, अप्रैल, मई, जून, जुलाई, अगस्त, सितंबर, अक्टूबर, नवंबर, दिसंबर",
+        "tháng 1, tháng 2, tháng 3, tháng 4, tháng 5, tháng 6, tháng 7, tháng 8, tháng 9, tháng 10, tháng 11, tháng 12",
     ).split(", ")
 
     /** The month inside a date: Polish and Russian decline it ("14 września", "14 сентября"). */
@@ -274,6 +340,10 @@ object S {
         "Jan, Feb, Mar, Apr, Mei, Jun, Jul, Agu, Sep, Okt, Nov, Des",
         "1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月",
         "1월, 2월, 3월, 4월, 5월, 6월, 7월, 8월, 9월, 10월, 11월, 12월",
+        "يناير, فبراير, مارس, أبريل, مايو, يونيو, يوليو, أغسطس, سبتمبر, أكتوبر, نوفمبر, ديسمبر",
+        "1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月",
+        "जन॰, फ़र॰, मार्च, अप्रैल, मई, जून, जुल॰, अग॰, सित॰, अक्टू॰, नव॰, दिस॰",
+        "thg 1, thg 2, thg 3, thg 4, thg 5, thg 6, thg 7, thg 8, thg 9, thg 10, thg 11, thg 12",
     ).split(", ")
 
     fun weekdayNames(code: String = lang): List<String> = tIn(
@@ -291,6 +361,10 @@ object S {
         "Senin, Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu",
         "月曜日, 火曜日, 水曜日, 木曜日, 金曜日, 土曜日, 日曜日",
         "월요일, 화요일, 수요일, 목요일, 금요일, 토요일, 일요일",
+        "الاثنين, الثلاثاء, الأربعاء, الخميس, الجمعة, السبت, الأحد",
+        "星期一, 星期二, 星期三, 星期四, 星期五, 星期六, 星期日",
+        "सोमवार, मंगलवार, बुधवार, गुरुवार, शुक्रवार, शनिवार, रविवार",
+        "thứ hai, thứ ba, thứ tư, thứ năm, thứ sáu, thứ bảy, chủ nhật",
     ).split(", ")
 
     fun weekdayShort(): List<String> = t(
@@ -307,6 +381,10 @@ object S {
         "Sen, Sel, Rab, Kam, Jum, Sab, Min",
         "月, 火, 水, 木, 金, 土, 日",
         "월, 화, 수, 목, 금, 토, 일",
+        "اثنين, ثلاثاء, أربعاء, خميس, جمعة, سبت, أحد",
+        "周一, 周二, 周三, 周四, 周五, 周六, 周日",
+        "सोम, मंगल, बुध, गुरु, शुक्र, शनि, रवि",
+        "T2, T3, T4, T5, T6, T7, CN",
     ).split(", ")
 
     /** Monday to Sunday; Mes paints it starting from whichever day the week starts on. */
@@ -324,6 +402,10 @@ object S {
         "S, S, R, K, J, S, M",
         "月, 火, 水, 木, 金, 土, 日",
         "월, 화, 수, 목, 금, 토, 일",
+        "ن, ث, ر, خ, ج, س, ح",
+        "一, 二, 三, 四, 五, 六, 日",
+        "सो, मं, बु, गु, शु, श, र",
+        "2, 3, 4, 5, 6, 7, CN",
     ).split(", ")
 
     /** French writes the first of the month as "1er" in any date that carries the month name. */
@@ -335,6 +417,10 @@ object S {
         return t(
             "$w $n", "$w $n", "$w, $n", "$w, $n.", "$w $n",
             "$w $n", "$w $n", "$w, $n", "$w, $n", "$n $w", "$w, $n", "${n}日 $w", "${n}일 $w",
+            "$w $n",
+            "${n}日 $w",
+            "$w $n",
+            "$w $n",
         )
     }
 
@@ -343,6 +429,10 @@ object S {
     private fun monthAndYear(m: String, y: Int) = t(
         "$m $y", "$m de $y", "$m de $y", "$m $y", "$m $y",
         "$m $y", "$m $y", "$m $y", "$m $y", "$m $y", "$m $y", "${y}年$m", "${y}년 $m",
+        "$m $y",
+        "${y}年$m",
+        "$m $y",
+        "$m năm $y",
     )
 
     fun monthYear(month: YearMonth): String = monthAndYear(monthNames()[month.month.ordinal], month.year)
@@ -353,6 +443,10 @@ object S {
         return t(
             "$m $y", "$m $y", "$m $y", "$m $y", "$m $y",
             "$m $y", "$m $y", "$m $y", "$m $y", "$m $y", "$m $y", "${y}年$m", "${y}년 $m",
+            "$m $y",
+            "${y}年$m",
+            "$m $y",
+            "$m năm $y",
         )
     }
 
@@ -363,6 +457,10 @@ object S {
         return t(
             "$m $n", "$day de $m", "$day de $m", "$day. $m", "$day $m",
             "$n $m", "$n $m", "$n $m", "$n $m", "$n $m", "$n $m", "$m${n}日", "$m ${n}일",
+            "$n $m",
+            "$m${n}日",
+            "$n $m",
+            "$n $m",
         )
     }
 
@@ -370,6 +468,10 @@ object S {
     private fun withYear(date: String, y: Int) = t(
         "$date, $y", "$date de $y", "$date de $y", "$date $y", "$date $y",
         "$date $y", "$date $y", "$date $y", "$date $y", "$date $y", "$date $y", "${y}年$date", "${y}년 $date",
+        "$date $y",
+        "${y}年$date",
+        "$date $y",
+        "$date năm $y",
     )
 
     /** The weekday in front of [date], or behind it in Turkish, Japanese and Korean. */
@@ -379,6 +481,10 @@ object S {
         return t(
             "$up, $date", "$up, $date", "$up, $date", "$up, $date", "$up $date",
             "$up $date", "$up $date", "$up, $date", "$up, $date", "$date $w", "$up, $date", "$date $w", "$date $w",
+            "$up $date",
+            "$date $w",
+            "$up, $date",
+            "$up, $date",
         )
     }
 
@@ -394,6 +500,10 @@ object S {
         return t(
             "$m $n", "$n $m", "$n $m", "$n. $m", "$n $m",
             "$n $m", "$n $m", "$n $m", "$n $m", "$n $m", "$n $m", "$m${n}日", "$m ${n}일",
+            "$n $m",
+            "$m${n}日",
+            "$n $m",
+            "$n $m",
         )
     }
 
@@ -404,6 +514,10 @@ object S {
         return t(
             "$m $n, $y", "$n $m $y", "$n $m $y", "$n. $m $y", "$n $m $y",
             "$n $m $y", "$n $m $y", "$n $m $y", "$n $m $y", "$n $m $y", "$n $m $y", "${y}年$m${n}日", "${y}년 $m ${n}일",
+            "$n $m $y",
+            "${y}年$m${n}日",
+            "$n $m $y",
+            "$n $m $y",
         )
     }
 
@@ -414,13 +528,13 @@ object S {
     // --- 2. Comunes -------------------------------------------------------------------------
 
     val appName = "Bobbin"
-    val ok = t("OK", "Vale", "OK", "OK", "OK", "OK", "OK", "OK", "ОК", "Tamam", "OK", "OK", "확인")
-    val cancel = t("Cancel", "Cancelar", "Cancelar", "Abbrechen", "Annuler", "Annulla", "Annuleren", "Anuluj", "Отмена", "İptal", "Batal", "キャンセル", "취소")
-    val yes = t("Yes", "Sí", "Sim", "Ja", "Oui", "Sì", "Ja", "Tak", "Да", "Evet", "Ya", "はい", "예")
-    val notNow = t("Not now", "Ahora no", "Agora não", "Jetzt nicht", "Pas maintenant", "Non ora", "Niet nu", "Nie teraz", "Не сейчас", "Şimdi değil", "Nanti saja", "あとで", "나중에")
-    val close = t("Close", "Cerrar", "Fechar", "Schließen", "Fermer", "Chiudi", "Sluiten", "Zamknij", "Закрыть", "Kapat", "Tutup", "閉じる", "닫기")
-    val back = t("Back", "Volver", "Voltar", "Zurück", "Retour", "Indietro", "Terug", "Wstecz", "Назад", "Geri", "Kembali", "戻る", "뒤로")
-    val undo = t("Undo", "Deshacer", "Desfazer", "Rückgängig", "Annuler", "Annulla", "Ongedaan maken", "Cofnij", "Отменить", "Geri al", "Urungkan", "元に戻す", "되돌리기")
+    val ok = t("OK", "Vale", "OK", "OK", "OK", "OK", "OK", "OK", "ОК", "Tamam", "OK", "OK", "확인", "حسنًا", "好", "ठीक है", "OK")
+    val cancel = t("Cancel", "Cancelar", "Cancelar", "Abbrechen", "Annuler", "Annulla", "Annuleren", "Anuluj", "Отмена", "İptal", "Batal", "キャンセル", "취소", "إلغاء", "取消", "रद्द करें", "Hủy")
+    val yes = t("Yes", "Sí", "Sim", "Ja", "Oui", "Sì", "Ja", "Tak", "Да", "Evet", "Ya", "はい", "예", "نعم", "是", "हाँ", "Có")
+    val notNow = t("Not now", "Ahora no", "Agora não", "Jetzt nicht", "Pas maintenant", "Non ora", "Niet nu", "Nie teraz", "Не сейчас", "Şimdi değil", "Nanti saja", "あとで", "나중에", "ليس الآن", "暂不", "अभी नहीं", "Để sau")
+    val close = t("Close", "Cerrar", "Fechar", "Schließen", "Fermer", "Chiudi", "Sluiten", "Zamknij", "Закрыть", "Kapat", "Tutup", "閉じる", "닫기", "إغلاق", "关闭", "बंद करें", "Đóng")
+    val back = t("Back", "Volver", "Voltar", "Zurück", "Retour", "Indietro", "Terug", "Wstecz", "Назад", "Geri", "Kembali", "戻る", "뒤로", "رجوع", "返回", "वापस", "Quay lại")
+    val undo = t("Undo", "Deshacer", "Desfazer", "Rückgängig", "Annuler", "Annulla", "Ongedaan maken", "Cofnij", "Отменить", "Geri al", "Urungkan", "元に戻す", "되돌리기", "تراجع", "撤销", "पूर्ववत करें", "Hoàn tác")
     val working = t(
         "One moment...",
         "Un momento...",
@@ -435,19 +549,23 @@ object S {
         "Sebentar...",
         "少々お待ちください...",
         "잠시만요...",
+        "لحظة...",
+        "请稍候...",
+        "एक पल...",
+        "Chờ chút...",
     )
-    val add = t("Add", "Añadir", "Adicionar", "Hinzufügen", "Ajouter", "Aggiungi", "Toevoegen", "Dodaj", "Добавить", "Ekle", "Tambah", "追加", "추가")
-    val save = t("Save", "Guardar", "Salvar", "Speichern", "Enregistrer", "Salva", "Opslaan", "Zapisz", "Сохранить", "Kaydet", "Simpan", "保存", "저장")
-    val gotIt = t("Got it", "Entendido", "Entendi", "Verstanden", "Compris", "Capito", "Begrepen", "Rozumiem", "Понятно", "Anladım", "Mengerti", "わかりました", "알겠어요")
-    val previous = t("Back", "Atrás", "Voltar", "Zurück", "Retour", "Indietro", "Terug", "Wstecz", "Назад", "Geri", "Kembali", "戻る", "이전")
-    val next = t("Next", "Siguiente", "Próximo", "Weiter", "Suivant", "Avanti", "Volgende", "Dalej", "Далее", "İleri", "Berikutnya", "次へ", "다음")
+    val add = t("Add", "Añadir", "Adicionar", "Hinzufügen", "Ajouter", "Aggiungi", "Toevoegen", "Dodaj", "Добавить", "Ekle", "Tambah", "追加", "추가", "إضافة", "添加", "जोड़ें", "Thêm")
+    val save = t("Save", "Guardar", "Salvar", "Speichern", "Enregistrer", "Salva", "Opslaan", "Zapisz", "Сохранить", "Kaydet", "Simpan", "保存", "저장", "حفظ", "保存", "सहेजें", "Lưu")
+    val gotIt = t("Got it", "Entendido", "Entendi", "Verstanden", "Compris", "Capito", "Begrepen", "Rozumiem", "Понятно", "Anladım", "Mengerti", "わかりました", "알겠어요", "فهمت", "知道了", "समझ आया", "Đã hiểu")
+    val previous = t("Back", "Atrás", "Voltar", "Zurück", "Retour", "Indietro", "Terug", "Wstecz", "Назад", "Geri", "Kembali", "戻る", "이전", "رجوع", "返回", "वापस", "Quay lại")
+    val next = t("Next", "Siguiente", "Próximo", "Weiter", "Suivant", "Avanti", "Volgende", "Dalej", "Далее", "İleri", "Berikutnya", "次へ", "다음", "التالي", "下一步", "आगे", "Tiếp")
 
     // --- 3. Navegacion y cabeceras -----------------------------------------------------------
 
-    val tabToday = t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui", "Oggi", "Vandaag", "Dziś", "Сегодня", "Bugün", "Hari", "今日", "오늘")
-    val tabMonth = t("Month", "Mes", "Mês", "Monat", "Mois", "Mese", "Maand", "Miesiąc", "Месяц", "Ay", "Bulan", "月", "월간")
-    val tabFuture = t("Future", "Futuro", "Futuro", "Zukunft", "Futur", "Futuro", "Toekomst", "Przyszłość", "Будущее", "Gelecek", "Mendatang", "未来", "미래")
-    val tabIndex = t("Index", "Índice", "Índice", "Index", "Index", "Indice", "Index", "Indeks", "Индекс", "Dizin", "Indeks", "目次", "목차")
+    val tabToday = t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui", "Oggi", "Vandaag", "Dziś", "Сегодня", "Bugün", "Hari", "今日", "오늘", "اليوم", "今天", "आज", "Hôm nay")
+    val tabMonth = t("Month", "Mes", "Mês", "Monat", "Mois", "Mese", "Maand", "Miesiąc", "Месяц", "Ay", "Bulan", "月", "월간", "الشهر", "本月", "माह", "Tháng")
+    val tabFuture = t("Future", "Futuro", "Futuro", "Zukunft", "Futur", "Futuro", "Toekomst", "Przyszłość", "Будущее", "Gelecek", "Mendatang", "未来", "미래", "المستقبل", "未来", "भविष्य", "Tương lai")
+    val tabIndex = t("Index", "Índice", "Índice", "Index", "Index", "Indice", "Index", "Indeks", "Индекс", "Dizin", "Indeks", "目次", "목차", "الفهرس", "目录", "अनुक्रमणिका", "Mục lục")
     val backToToday = t(
         "Back to today",
         "Volver a hoy",
@@ -462,6 +580,10 @@ object S {
         "Kembali ke hari ini",
         "今日に戻る",
         "오늘로 돌아가기",
+        "العودة إلى اليوم",
+        "回到今天",
+        "आज पर लौटें",
+        "Về hôm nay",
     )
     val a11yPreviousDay = t(
         "Previous day",
@@ -477,6 +599,10 @@ object S {
         "Hari sebelumnya",
         "前の日",
         "전날",
+        "اليوم السابق",
+        "前一天",
+        "पिछला दिन",
+        "Ngày trước",
     )
     val a11yNextDay = t(
         "Next day",
@@ -492,6 +618,10 @@ object S {
         "Hari berikutnya",
         "次の日",
         "다음 날",
+        "اليوم التالي",
+        "后一天",
+        "अगला दिन",
+        "Ngày sau",
     )
     val a11yPreviousMonth = t(
         "Previous month",
@@ -507,6 +637,10 @@ object S {
         "Bulan sebelumnya",
         "前の月",
         "이전 달",
+        "الشهر السابق",
+        "上个月",
+        "पिछला माह",
+        "Tháng trước",
     )
     val a11yNextMonth = t(
         "Next month",
@@ -522,8 +656,12 @@ object S {
         "Bulan berikutnya",
         "次の月",
         "다음 달",
+        "الشهر التالي",
+        "下个月",
+        "अगला माह",
+        "Tháng sau",
     )
-    val a11yClose = t("Close", "Cerrar", "Fechar", "Schließen", "Fermer", "Chiudi", "Sluiten", "Zamknij", "Закрыть", "Kapat", "Tutup", "閉じる", "닫기")
+    val a11yClose = t("Close", "Cerrar", "Fechar", "Schließen", "Fermer", "Chiudi", "Sluiten", "Zamknij", "Закрыть", "Kapat", "Tutup", "閉じる", "닫기", "إغلاق", "关闭", "बंद करें", "Đóng")
     val a11ySettings = t(
         "Settings",
         "Ajustes",
@@ -538,6 +676,10 @@ object S {
         "Pengaturan",
         "設定",
         "설정",
+        "الإعدادات",
+        "设置",
+        "सेटिंग",
+        "Cài đặt",
     )
     val a11ySearch = t(
         "Search the journal",
@@ -553,6 +695,10 @@ object S {
         "Cari di jurnal",
         "ジャーナルを検索",
         "다이어리에서 검색",
+        "البحث في اليوميات",
+        "搜索手账",
+        "जर्नल में खोजें",
+        "Tìm trong nhật ký",
     )
     val a11yMoreActions = t(
         "More actions",
@@ -568,16 +714,20 @@ object S {
         "Tindakan lainnya",
         "その他の操作",
         "더 많은 동작",
+        "المزيد من الإجراءات",
+        "更多操作",
+        "और विकल्प",
+        "Thêm thao tác",
     )
-    val a11ySelected = t("selected", "elegida", "selecionada", "ausgewählt", "sélectionnée", "selezionata", "geselecteerd", "wybrane", "выбрано", "seçili", "dipilih", "選択中", "선택됨")
+    val a11ySelected = t("selected", "elegida", "selecionada", "ausgewählt", "sélectionnée", "selezionata", "geselecteerd", "wybrane", "выбрано", "seçili", "dipilih", "選択中", "선택됨", "محدد", "已选中", "चयनित", "đã chọn")
 
     /** Under the day's title: "Hoy, septiembre de 2026", or just the month away from the three near days. */
     fun daySubtitle(day: LocalDate, today: LocalDate): String {
         val month = monthYear(YearMonth(day.year, day.month))
         val near = when (daysBetween(today, day)) {
-            0 -> t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui", "Oggi", "Vandaag", "Dziś", "Сегодня", "Bugün", "Hari ini", "今日", "오늘")
-            -1 -> t("Yesterday", "Ayer", "Ontem", "Gestern", "Hier", "Ieri", "Gisteren", "Wczoraj", "Вчера", "Dün", "Kemarin", "昨日", "어제")
-            1 -> t("Tomorrow", "Mañana", "Amanhã", "Morgen", "Demain", "Domani", "Morgen", "Jutro", "Завтра", "Yarın", "Besok", "明日", "내일")
+            0 -> t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui", "Oggi", "Vandaag", "Dziś", "Сегодня", "Bugün", "Hari ini", "今日", "오늘", "اليوم", "今天", "आज", "Hôm nay")
+            -1 -> t("Yesterday", "Ayer", "Ontem", "Gestern", "Hier", "Ieri", "Gisteren", "Wczoraj", "Вчера", "Dün", "Kemarin", "昨日", "어제", "أمس", "昨天", "बीता कल", "Hôm qua")
+            1 -> t("Tomorrow", "Mañana", "Amanhã", "Morgen", "Demain", "Domani", "Morgen", "Jutro", "Завтра", "Yarın", "Besok", "明日", "내일", "غدًا", "明天", "आने वाला कल", "Ngày mai")
             else -> return month.replaceFirstChar { it.uppercase() }
         }
         return near + listComma() + month
@@ -600,11 +750,15 @@ object S {
             ", bulan yang sudah lewat",
             "、過去の月",
             ", 지나간 달",
+            "، شهر مضى",
+            "，已过去的月份",
+            ", बीता हुआ माह",
+            ", tháng đã qua",
         )
     }
 
     /** A year standing alone: Japanese and Korean write it with its own character. */
-    private fun yearAlone(y: Int) = t("$y", "$y", "$y", "$y", "$y", "$y", "$y", "$y", "$y", "$y", "$y", "${y}年", "${y}년")
+    private fun yearAlone(y: Int) = t("$y", "$y", "$y", "$y", "$y", "$y", "$y", "$y", "$y", "$y", "$y", "${y}年", "${y}년", "$y", "${y}年", "$y", "$y")
 
     fun backToMonth(month: YearMonth): String {
         val m = monthNames()[month.month.ordinal]
@@ -622,17 +776,21 @@ object S {
             "Kembali ke $m",
             "${m}に戻る",
             "${m} 페이지로 돌아가기",
+            "العودة إلى $m",
+            "回到$m",
+            "$m पर लौटें",
+            "Về $m",
         )
     }
 
     // --- 4. La entrada, la captura y la hoja --------------------------------------------------
 
     fun counter(n: Int, max: Int) = "$n/$max"
-    val bulletTask = t("Task", "Tarea", "Tarefa", "Aufgabe", "Tâche", "Attività", "Taak", "Zadanie", "Задача", "Görev", "Tugas", "タスク", "할 일")
-    val bulletEvent = t("Event", "Evento", "Evento", "Ereignis", "Événement", "Evento", "Gebeurtenis", "Wydarzenie", "Событие", "Etkinlik", "Acara", "イベント", "일정")
-    val bulletNote = t("Note", "Nota", "Nota", "Notiz", "Note", "Nota", "Notitie", "Notatka", "Заметка", "Not", "Catatan", "メモ", "메모")
-    val stateDone = t("Done", "Hecha", "Feita", "Erledigt", "Faite", "Fatta", "Voltooid", "Zrobione", "Выполнена", "Yapıldı", "Selesai", "完了", "완료")
-    val stateMigrated = t("Migrated", "Migrada", "Migrada", "Migriert", "Migrée", "Migrata", "Gemigreerd", "Zmigrowane", "Мигрирована", "Aktarıldı", "Dimigrasikan", "移行済み", "이월")
+    val bulletTask = t("Task", "Tarea", "Tarefa", "Aufgabe", "Tâche", "Attività", "Taak", "Zadanie", "Задача", "Görev", "Tugas", "タスク", "할 일", "مهمة", "任务", "कार्य", "Việc cần làm")
+    val bulletEvent = t("Event", "Evento", "Evento", "Ereignis", "Événement", "Evento", "Gebeurtenis", "Wydarzenie", "Событие", "Etkinlik", "Acara", "イベント", "일정", "حدث", "事件", "कार्यक्रम", "Sự kiện")
+    val bulletNote = t("Note", "Nota", "Nota", "Notiz", "Note", "Nota", "Notitie", "Notatka", "Заметка", "Not", "Catatan", "メモ", "메모", "ملاحظة", "笔记", "नोट", "Ghi chú")
+    val stateDone = t("Done", "Hecha", "Feita", "Erledigt", "Faite", "Fatta", "Voltooid", "Zrobione", "Выполнена", "Yapıldı", "Selesai", "完了", "완료", "منجزة", "已完成", "पूर्ण", "Xong")
+    val stateMigrated = t("Migrated", "Migrada", "Migrada", "Migriert", "Migrée", "Migrata", "Gemigreerd", "Zmigrowane", "Мигрирована", "Aktarıldı", "Dimigrasikan", "移行済み", "이월", "مرحّلة", "已迁移", "स्थानांतरित", "Đã chuyển")
     val stateScheduled = t(
         "Scheduled",
         "Programada",
@@ -647,6 +805,10 @@ object S {
         "Dijadwalkan",
         "スケジュール済み",
         "예정",
+        "مجدولة",
+        "已排期",
+        "निर्धारित",
+        "Đã lên lịch",
     )
     val stateDiscarded = t(
         "Discarded",
@@ -662,6 +824,10 @@ object S {
         "Dibuang",
         "破棄済み",
         "버림",
+        "مستبعدة",
+        "已放弃",
+        "त्यागा गया",
+        "Đã bỏ",
     )
     val signifierPriority = t(
         "Priority",
@@ -677,6 +843,10 @@ object S {
         "Prioritas",
         "優先",
         "우선순위",
+        "أولوية",
+        "优先",
+        "प्राथमिकता",
+        "Ưu tiên",
     )
     val signifierInspiration = t(
         "Inspiration",
@@ -692,8 +862,12 @@ object S {
         "Inspirasi",
         "ひらめき",
         "영감",
+        "إلهام",
+        "灵感",
+        "प्रेरणा",
+        "Cảm hứng",
     )
-    val signifierExplore = t("Explore", "Explorar", "Explorar", "Erkunden", "Explorer", "Esplora", "Verkennen", "Do zbadania", "Исследование", "Keşfet", "Jelajahi", "調べもの", "알아보기")
+    val signifierExplore = t("Explore", "Explorar", "Explorar", "Erkunden", "Explorer", "Esplora", "Verkennen", "Do zbadania", "Исследование", "Keşfet", "Jelajahi", "調べもの", "알아보기", "استكشاف", "探索", "खोजें", "Khám phá")
 
     fun wentToDay(d: LocalDate) = abbrDate(d)
     fun wentToMonth(month: YearMonth) = monthTitle(month)
@@ -719,6 +893,10 @@ object S {
             "Mendatang, $place",
             "未来、${place}",
             "미래, ${place}",
+            "المستقبل، $place",
+            "未来：$place",
+            "भविष्य, $place",
+            "Tương lai, $place",
         )
     }
 
@@ -738,6 +916,10 @@ object S {
             "Sudah kamu pindahkan sekali",
             "すでに1回移しています",
             "이미 한 번 옮겼어요",
+            "نُقلت مرة واحدة",
+            "已移动过 1 次",
+            "आप इसे एक बार आगे बढ़ा चुके हैं",
+            "Bạn đã chuyển việc này 1 lần",
         )
     } else {
         t(
@@ -754,11 +936,15 @@ object S {
             "Sudah kamu pindahkan $n kali",
             "すでに${n}回移しています",
             "이미 ${n}번 옮겼어요",
+            "عدد مرات النقل: $n",
+            "已移动过 $n 次",
+            "आप इसे $n बार आगे बढ़ा चुके हैं",
+            "Bạn đã chuyển việc này $n lần",
         )
     }
 
-    val actionDone = t("Done", "Hecha", "Feita", "Erledigt", "Faite", "Fatta", "Voltooid", "Zrobione", "Выполнена", "Yapıldı", "Selesai", "完了", "완료")
-    val actionDiscard = t("Discard", "Descartar", "Descartar", "Verwerfen", "Écarter", "Scarta", "Schrappen", "Odrzuć", "Вычеркнуть", "Bırak", "Buang", "破棄", "버리기")
+    val actionDone = t("Done", "Hecha", "Feita", "Erledigt", "Faite", "Fatta", "Voltooid", "Zrobione", "Выполнена", "Yapıldı", "Selesai", "完了", "완료", "تم", "完成", "हो गया", "Xong")
+    val actionDiscard = t("Discard", "Descartar", "Descartar", "Verwerfen", "Écarter", "Scarta", "Schrappen", "Odrzuć", "Вычеркнуть", "Bırak", "Buang", "破棄", "버리기", "استبعاد", "放弃", "त्यागें", "Bỏ")
     val actionReopen = t(
         "Reopen",
         "Reabrir",
@@ -773,6 +959,10 @@ object S {
         "Buka lagi",
         "未完了に戻す",
         "다시 열기",
+        "إعادة فتح",
+        "重新打开",
+        "फिर खोलें",
+        "Mở lại",
     )
     val actionRecover = t(
         "Bring back",
@@ -788,6 +978,10 @@ object S {
         "Kembalikan",
         "復元",
         "되살리기",
+        "استعادة",
+        "恢复",
+        "वापस लाएँ",
+        "Khôi phục",
     )
     val actionGoToCopy = t(
         "Go to the copy",
@@ -803,6 +997,10 @@ object S {
         "Ke salinan",
         "コピーへ移動",
         "사본으로 가기",
+        "الانتقال إلى النسخة",
+        "前往副本",
+        "प्रति पर जाएँ",
+        "Đến bản sao",
     )
     val actionEdit = t(
         "Edit the text",
@@ -818,8 +1016,12 @@ object S {
         "Ubah teks",
         "テキストを編集",
         "텍스트 고치기",
+        "تعديل النص",
+        "编辑文字",
+        "पाठ संपादित करें",
+        "Sửa nội dung",
     )
-    val actionDelete = t("Delete", "Borrar", "Apagar", "Löschen", "Supprimer", "Elimina", "Verwijderen", "Usuń", "Удалить", "Sil", "Hapus", "削除", "삭제")
+    val actionDelete = t("Delete", "Borrar", "Apagar", "Löschen", "Supprimer", "Elimina", "Verwijderen", "Usuń", "Удалить", "Sil", "Hapus", "削除", "삭제", "حذف", "删除", "हटाएँ", "Xóa")
     val moveToday = t(
         "Move to today",
         "Pasar a hoy",
@@ -834,6 +1036,10 @@ object S {
         "Pindahkan ke hari ini",
         "今日に移す",
         "오늘로 옮기기",
+        "نقل إلى اليوم",
+        "移到今天",
+        "आज में ले जाएँ",
+        "Chuyển sang hôm nay",
     )
     val moveTomorrow = t(
         "Move to tomorrow",
@@ -849,6 +1055,10 @@ object S {
         "Pindahkan ke besok",
         "明日に移す",
         "내일로 옮기기",
+        "نقل إلى الغد",
+        "移到明天",
+        "कल में ले जाएँ",
+        "Chuyển sang ngày mai",
     )
     val moveNextDay = t(
         "Move to the next day",
@@ -864,6 +1074,10 @@ object S {
         "Pindahkan ke hari berikutnya",
         "次の日に移す",
         "다음 날로 옮기기",
+        "نقل إلى اليوم التالي",
+        "移到后一天",
+        "अगले दिन ले जाएँ",
+        "Chuyển sang ngày sau",
     )
     val moveOtherMonth = t(
         "Move to another month",
@@ -879,6 +1093,10 @@ object S {
         "Pindahkan ke bulan lain",
         "別の月に移す",
         "다른 달로 옮기기",
+        "نقل إلى شهر آخر",
+        "移到其他月份",
+        "दूसरे माह में ले जाएँ",
+        "Chuyển sang tháng khác",
     )
     val moveElsewhere = t(
         "Move somewhere else",
@@ -894,6 +1112,10 @@ object S {
         "Pindahkan ke tempat lain",
         "ほかの場所に移す",
         "다른 곳으로 옮기기",
+        "نقل إلى مكان آخر",
+        "移到别处",
+        "कहीं और ले जाएँ",
+        "Chuyển đi nơi khác",
     )
     val priorityOn = t(
         "Mark as priority",
@@ -909,6 +1131,10 @@ object S {
         "Tandai sebagai prioritas",
         "優先にする",
         "우선순위로 표시",
+        "تحديد كأولوية",
+        "标为优先",
+        "प्राथमिकता चुनें",
+        "Đánh dấu ưu tiên",
     )
     val priorityOff = t(
         "Remove priority",
@@ -924,6 +1150,10 @@ object S {
         "Hilangkan prioritas",
         "優先を外す",
         "우선순위 해제",
+        "إزالة الأولوية",
+        "取消优先",
+        "प्राथमिकता हटाएँ",
+        "Bỏ ưu tiên",
     )
     val otherMarks = t(
         "Other margin marks",
@@ -939,6 +1169,10 @@ object S {
         "Tanda margin lainnya",
         "余白のほかの印",
         "다른 여백 표시",
+        "علامات هامشية أخرى",
+        "其他边注标记",
+        "अन्य हाशिया चिह्न",
+        "Dấu lề khác",
     )
     val backToOptions = t(
         "Back to the options",
@@ -954,6 +1188,10 @@ object S {
         "Kembali ke pilihan",
         "選択肢に戻る",
         "옵션으로 돌아가기",
+        "العودة إلى الخيارات",
+        "回到选项",
+        "विकल्पों पर लौटें",
+        "Về các lựa chọn",
     )
 
     // What each action does, under its name (docs/pantallas.md 5.6): the consequence, never an instruction.
@@ -971,6 +1209,10 @@ object S {
         "Tetap di tempatnya, ditandai dengan x.",
         "元の場所に残り、x印が付きます。",
         "제자리에 남고 x 표시가 붙어요.",
+        "تبقى في مكانها وعليها علامة x.",
+        "留在原处，标上 x。",
+        "यहीं रहता है, x से चिह्नित।",
+        "Vẫn ở nguyên chỗ, đánh dấu x.",
     )
     val otherMonthHow = t(
         "You pick the month and it waits in Future.",
@@ -986,6 +1228,10 @@ object S {
         "Kamu memilih bulannya, lalu tugasnya menunggu di Mendatang.",
         "月を選ぶと、未来で待ちます。",
         "달을 고르면 미래에서 기다려요.",
+        "تختار الشهر وتنتظر في المستقبل.",
+        "你选好月份，它就在“未来”里等着。",
+        "आप माह चुनते हैं और यह भविष्य में इंतज़ार करता है।",
+        "Bạn chọn tháng, việc này sẽ chờ ở Tương lai.",
     )
     val discardHow = t(
         "No longer needed. It stays crossed out.",
@@ -1001,6 +1247,10 @@ object S {
         "Tidak diperlukan lagi. Tetap tercoret.",
         "もう必要ありません。取り消し線が引かれて残ります。",
         "더는 필요 없어요. 취소선이 그어진 채 남아요.",
+        "لم تعد مطلوبة. تبقى مشطوبة.",
+        "不再需要，保留为划掉的样子。",
+        "अब ज़रूरत नहीं। यह कटा हुआ रहता है।",
+        "Không cần nữa. Việc này vẫn nằm đó, bị gạch bỏ.",
     )
     val reopenHow = t(
         "It's open again.",
@@ -1016,6 +1266,10 @@ object S {
         "Terbuka lagi.",
         "未完了に戻ります。",
         "다시 미완료가 돼요.",
+        "عادت مفتوحة.",
+        "已重新打开。",
+        "यह फिर खुल गया।",
+        "Việc này đã mở lại.",
     )
     val priorityOnHow = t(
         "An asterisk in the margin.",
@@ -1031,6 +1285,10 @@ object S {
         "Tanda bintang di margin.",
         "余白にアスタリスクが付きます。",
         "여백에 별표가 붙어요.",
+        "نجمة في الهامش.",
+        "边上加一个星号。",
+        "हाशिये में एक तारा।",
+        "Một dấu sao ở lề.",
     )
     val priorityOffHow = t(
         "The asterisk leaves the margin.",
@@ -1046,6 +1304,10 @@ object S {
         "Tanda bintang hilang dari margin.",
         "余白のアスタリスクが消えます。",
         "여백의 별표가 사라져요.",
+        "تغادر النجمة الهامش.",
+        "星号从边上去掉。",
+        "तारा हाशिये से हट जाता है।",
+        "Dấu sao rời khỏi lề.",
     )
     val otherMarksHow = t(
         "Inspiration or explore.",
@@ -1061,6 +1323,10 @@ object S {
         "Inspirasi atau jelajahi.",
         "ひらめきか調べもの。",
         "영감 또는 알아보기.",
+        "إلهام أو استكشاف.",
+        "灵感或探索。",
+        "प्रेरणा या खोज।",
+        "Cảm hứng hoặc khám phá.",
     )
     val elsewhereHow = t(
         "A day this month, the month's tasks or a list.",
@@ -1076,6 +1342,10 @@ object S {
         "Satu hari di bulan ini, tugas bulan ini, atau satu daftar.",
         "この月のある日、月のタスク、またはリスト。",
         "이번 달의 하루, 이달의 할 일 또는 목록.",
+        "يوم من هذا الشهر أو مهام الشهر أو قائمة.",
+        "本月的某一天、本月任务或一份清单。",
+        "इस माह का कोई दिन, माह के कार्य या कोई सूची।",
+        "Một ngày trong tháng này, việc của tháng hoặc một danh sách.",
     )
     val deleteHow = t(
         "It leaves the journal. You can undo it for a few seconds.",
@@ -1091,6 +1361,10 @@ object S {
         "Hilang dari jurnal. Bisa diurungkan selama beberapa detik.",
         "ジャーナルから消えます。数秒間は元に戻せます。",
         "다이어리에서 사라져요. 몇 초 동안은 되돌릴 수 있어요.",
+        "تغادر اليوميات. يمكنك التراجع خلال ثوانٍ.",
+        "它会从手账中移除，几秒内可以撤销。",
+        "यह जर्नल से हट जाता है। कुछ सेकंड तक आप इसे पूर्ववत कर सकते हैं।",
+        "Mục này rời khỏi nhật ký. Bạn có thể hoàn tác trong vài giây.",
     )
 
     /** "En agosto queda una >." with the review's [month], "Aquí queda una >." without one. [mark] is the method's own sign. */
@@ -1111,6 +1385,10 @@ object S {
                 "Di sini tersisa tanda $mark.",
                 "ここに ${mark} が残ります。",
                 "${mark} 표시가 여기에 남아요.",
+                "تبقى هنا علامة $mark.",
+                "$mark 留在这里。",
+                "यहाँ $mark बना रहता है।",
+                "Dấu $mark vẫn ở đây.",
             )
         } else {
             t(
@@ -1127,6 +1405,10 @@ object S {
                 "Di bulan $m tersisa tanda $mark.",
                 "${m}に ${mark} が残ります。",
                 "${m}에 ${mark} 표시가 남아요.",
+                "تبقى علامة $mark في $m.",
+                "$mark 留在$m。",
+                "$m में $mark बना रहता है।",
+                "Dấu $mark vẫn ở $m.",
             )
         }
     }
@@ -1147,6 +1429,10 @@ object S {
             "Menunggu di Mendatang, bulan $m.",
             "未来の${m}で待っています。",
             "미래의 ${m}에서 기다려요.",
+            "تنتظر في المستقبل، ضمن $m.",
+            "在“未来”的${m}里等着。",
+            "भविष्य में, $m के अंतर्गत इंतज़ार करता है।",
+            "Chờ ở Tương lai, trong $m.",
         )
     }
 
@@ -1173,6 +1459,10 @@ object S {
                     "hari ini, $phrase",
                     "今日(${phrase})",
                     "오늘, ${phrase}",
+                    "اليوم، $phrase",
+                    "今天，$phrase",
+                    "आज, $phrase",
+                    "hôm nay, $phrase",
                 )
                 1 -> t(
                     "tomorrow, $phrase",
@@ -1188,6 +1478,10 @@ object S {
                     "besok, $phrase",
                     "明日(${phrase})",
                     "내일, ${phrase}",
+                    "غدًا، $phrase",
+                    "明天，$phrase",
+                    "कल, $phrase",
+                    "ngày mai, $phrase",
                 )
                 -1 -> t(
                     "yesterday, $phrase",
@@ -1203,8 +1497,12 @@ object S {
                     "kemarin, $phrase",
                     "昨日(${phrase})",
                     "어제, ${phrase}",
+                    "أمس، $phrase",
+                    "昨天，$phrase",
+                    "बीता कल, $phrase",
+                    "hôm qua, $phrase",
                 )
-                else -> t(phrase, "el $phrase", phrase, phrase, phrase, "$phrase", phrase, phrase, "$phrase", phrase, "$phrase", phrase, phrase)
+                else -> t(phrase, "el $phrase", phrase, phrase, phrase, "$phrase", phrase, phrase, "$phrase", phrase, "$phrase", phrase, phrase, phrase, phrase, phrase, phrase)
             }
         }
         is Place.Monthly -> if (place.day != null) {
@@ -1225,6 +1523,10 @@ object S {
                 "tugas $m",
                 "${m}のタスク",
                 "${m} 할 일",
+                "مهام $m",
+                "${m}的任务",
+                "$m के कार्य",
+                "Việc của $m",
             )
         }
         is Place.Future -> {
@@ -1249,6 +1551,10 @@ object S {
                 "$where, di Mendatang",
                 "未来の${where}",
                 "${where}, 미래",
+                "$where، في المستقبل",
+                "$where，在“未来”",
+                "$where, भविष्य में",
+                "$where, trong Tương lai",
             )
         }
         is Place.InCollection -> t(
@@ -1265,6 +1571,10 @@ object S {
             "daftar $list",
             "リスト「${list}」",
             "${list} 목록",
+            "القائمة $list",
+            "清单$list",
+            "सूची $list",
+            "danh sách $list",
         )
     }
 
@@ -1284,6 +1594,10 @@ object S {
             date,
             date,
             "tanggal $date",
+            date,
+            date,
+            date,
+            date,
             date,
             date,
         )
@@ -1306,6 +1620,10 @@ object S {
             "$w, ${d.day}",
             "${d.day}日 ${w}",
             "${d.day}일 ${w}",
+            "$w ${d.day}",
+            "${d.day}日 $w",
+            "$w ${d.day}",
+            "$w ${d.day}",
         )
         return t(
             "$w, ${shortDate(d)}",
@@ -1321,6 +1639,10 @@ object S {
             "$w, ${shortDate(d)}",
             "${shortDate(d)} ${w}",
             "${shortDate(d)} ${w}",
+            "$w, ${shortDate(d)}",
+            "${shortDate(d)} $w",
+            "$w, ${shortDate(d)}",
+            "$w, ${shortDate(d)}",
         )
     }
 
@@ -1342,6 +1664,10 @@ object S {
         "Dipindahkan ke $label",
         "移動先: ${label}",
         "옮긴 곳: ${label}",
+        "نُقلت إلى $label",
+        "已移到：$label",
+        "$label में ले जाया गया",
+        "Đã chuyển đến $label",
     )
     fun scheduledTo(label: String) = t(
         "Moved to $label",
@@ -1357,6 +1683,10 @@ object S {
         "Dipindahkan ke $label",
         "移動先: ${label}",
         "옮긴 곳: ${label}",
+        "نُقلت إلى $label",
+        "已移到：$label",
+        "$label में ले जाया गया",
+        "Đã chuyển đến $label",
     )
     fun cameFrom(label: String) = t(
         "Came from $label",
@@ -1372,6 +1702,10 @@ object S {
         "Berasal dari $label",
         "移動元: ${label}",
         "옮겨 온 곳: ${label}",
+        "جاءت من $label",
+        "来自：$label",
+        "$label से आया",
+        "Đến từ $label",
     )
     fun copiesTo(label: String) = sentence(t(
         "A copy goes to $label",
@@ -1387,6 +1721,10 @@ object S {
         "Disalin ke $label",
         "${label}にコピーされます。",
         "사본이 생길 곳: ${label}",
+        "تُنسخ إلى $label",
+        "副本会放到：$label",
+        "प्रति $label में जाती है",
+        "Bản sao sẽ vào $label",
     ))
     fun copyIsAt(label: String) = sentence(t(
         "Copy: $label",
@@ -1402,6 +1740,10 @@ object S {
         "Salinan ada di $label",
         "コピーは${label}にあります。",
         "사본: ${label}",
+        "النسخة في $label",
+        "副本在：$label",
+        "प्रति $label में है",
+        "Bản sao ở $label",
     ))
 
     /** A label that already ends a sentence ("24." in German) gets no second full stop. */
@@ -1423,6 +1765,10 @@ object S {
             "Tugas baru...",
             "新しいタスク...",
             "새 할 일...",
+            "مهمة جديدة...",
+            "新任务...",
+            "नया कार्य...",
+            "Việc mới...",
         )
         Bullet.EVENT -> t(
             "New event...",
@@ -1438,6 +1784,10 @@ object S {
             "Acara baru...",
             "新しいイベント...",
             "새 일정...",
+            "حدث جديد...",
+            "新事件...",
+            "नया कार्यक्रम...",
+            "Sự kiện mới...",
         )
         Bullet.NOTE -> t(
             "New note...",
@@ -1453,18 +1803,22 @@ object S {
             "Catatan baru...",
             "新しいメモ...",
             "새 메모...",
+            "ملاحظة جديدة...",
+            "新笔记...",
+            "नया नोट...",
+            "Ghi chú mới...",
         )
     }
 
     /** The word before the composer's destination, which goes in bold: "En **hoy**", "For **today**". */
-    val composeFor = t("For", "En", "Para", "Für", "Pour", "Per", "Voor", "Na:", "Куда:", "Şuraya:", "Untuk", "追加先", "적는 곳:")
+    val composeFor = t("For", "En", "Para", "Für", "Pour", "Per", "Voor", "Na:", "Куда:", "Şuraya:", "Untuk", "追加先", "적는 곳:", "في", "添加到", "कहाँ:", "Cho")
 
     /** The composer's destination (docs/pantallas.md 5.2). [list] is set for a collection, and is its title. */
     fun targetLabel(place: Place, today: LocalDate, list: String?): String = when (place) {
         is Place.Daily -> when (daysBetween(today, place.date)) {
-            0 -> t("today", "hoy", "hoje", "heute", "aujourd'hui", "oggi", "vandaag", "dziś", "сегодня", "bugün", "hari ini", "今日", "오늘")
-            1 -> t("tomorrow", "mañana", "amanhã", "morgen", "demain", "domani", "morgen", "jutro", "завтра", "yarın", "besok", "明日", "내일")
-            else -> dayPhrase(place.date, sameMonth = true).let { t(it, "el $it", it, it, it, it, it, it, it, it, it, it, it) }
+            0 -> t("today", "hoy", "hoje", "heute", "aujourd'hui", "oggi", "vandaag", "dziś", "сегодня", "bugün", "hari ini", "今日", "오늘", "اليوم", "今天", "आज", "hôm nay")
+            1 -> t("tomorrow", "mañana", "amanhã", "morgen", "demain", "domani", "morgen", "jutro", "завтра", "yarın", "besok", "明日", "내일", "غدًا", "明天", "कल", "ngày mai")
+            else -> dayPhrase(place.date, sameMonth = true).let { t(it, "el $it", it, it, it, it, it, it, it, it, it, it, it, it, it, it, it) }
         }
         is Place.Monthly -> if (place.day != null) {
             monthDayLabel(place.month, place.day, withYear = false)
@@ -1484,6 +1838,10 @@ object S {
                 "tugas $m",
                 "${m}のタスク",
                 "${m} 할 일",
+                "مهام $m",
+                "${m}的任务",
+                "$m के कार्य",
+                "Việc của $m",
             )
         }
         is Place.Future -> if (place.day != null) {
@@ -1511,6 +1869,10 @@ object S {
             "Tugas ditambahkan untuk $label",
             "${label}にタスクを追加しました。",
             "할 일을 추가했어요: ${label}",
+            "أُضيفت المهمة إلى $label",
+            "任务已添加到$label",
+            "$label में कार्य जोड़ा गया",
+            "Đã thêm việc cần làm vào $label",
         ))
         Bullet.EVENT -> sentence(t(
             "Event added for $label",
@@ -1526,6 +1888,10 @@ object S {
             "Acara ditambahkan untuk $label",
             "${label}にイベントを追加しました。",
             "일정을 추가했어요: ${label}",
+            "أُضيف الحدث إلى $label",
+            "事件已添加到$label",
+            "$label में कार्यक्रम जोड़ा गया",
+            "Đã thêm sự kiện vào $label",
         ))
         Bullet.NOTE -> sentence(t(
             "Note added for $label",
@@ -1541,11 +1907,15 @@ object S {
             "Catatan ditambahkan untuk $label",
             "${label}にメモを追加しました。",
             "메모를 추가했어요: ${label}",
+            "أُضيفت الملاحظة إلى $label",
+            "笔记已添加到$label",
+            "$label में नोट जोड़ा गया",
+            "Đã thêm ghi chú vào $label",
         ))
     }
 
     // The line that confirms an action, with undo (docs/pantallas.md 5.8).
-    val toastDone = t("Done.", "Hecha.", "Feita.", "Erledigt.", "Faite.", "Fatta.", "Voltooid.", "Zrobione.", "Выполнена.", "Yapıldı.", "Selesai.", "完了しました。", "완료했어요.")
+    val toastDone = t("Done.", "Hecha.", "Feita.", "Erledigt.", "Faite.", "Fatta.", "Voltooid.", "Zrobione.", "Выполнена.", "Yapıldı.", "Selesai.", "完了しました。", "완료했어요.", "تم.", "已完成。", "हो गया।", "Xong.")
     val toastDiscarded = t(
         "Discarded.",
         "Descartada.",
@@ -1560,6 +1930,10 @@ object S {
         "Dibuang.",
         "破棄しました。",
         "버렸어요.",
+        "تم الاستبعاد.",
+        "已放弃。",
+        "त्याग दिया गया।",
+        "Đã bỏ.",
     )
     val toastPriorityOn = t(
         "Marked as priority.",
@@ -1575,6 +1949,10 @@ object S {
         "Ditandai sebagai prioritas.",
         "優先にしました。",
         "우선순위로 표시했어요.",
+        "تم تحديدها كأولوية.",
+        "已标为优先。",
+        "प्राथमिकता चुनी गई।",
+        "Đã đánh dấu ưu tiên.",
     )
     val toastPriorityOff = t(
         "No longer a priority.",
@@ -1590,6 +1968,10 @@ object S {
         "Bukan prioritas lagi.",
         "優先を外しました。",
         "우선순위를 해제했어요.",
+        "لم تعد أولوية.",
+        "已取消优先。",
+        "अब प्राथमिकता नहीं है।",
+        "Không còn là ưu tiên.",
     )
     val toastSaved = t(
         "Saved.",
@@ -1605,6 +1987,10 @@ object S {
         "Tersimpan.",
         "保存しました。",
         "저장했어요.",
+        "تم الحفظ.",
+        "已保存。",
+        "सहेजा गया।",
+        "Đã lưu.",
     )
 
     fun toastScheduled(month: YearMonth): String {
@@ -1623,6 +2009,10 @@ object S {
             "Dipindahkan ke bulan $m. Menunggu di Mendatang.",
             "${m}に移しました。未来で待っています。",
             "옮긴 곳: ${m}. 미래에서 기다려요.",
+            "نُقلت إلى $m. وتنتظر في المستقبل.",
+            "已移到$m，在“未来”里等着。",
+            "$m में ले जाया गया। यह भविष्य में इंतज़ार करता है।",
+            "Đã chuyển đến $m. Việc này chờ ở Tương lai.",
         )
     }
 
@@ -1646,6 +2036,10 @@ object S {
                     "Tugas terbuka",
                     "未完了のタスク",
                     "미완료 할 일",
+                    "مهمة مفتوحة",
+                    "未完成的任务",
+                    "खुला कार्य",
+                    "Việc cần làm đang mở",
                 )
                 TaskStatus.DONE -> t(
                     "Done task",
@@ -1661,6 +2055,10 @@ object S {
                     "Tugas selesai",
                     "完了したタスク",
                     "완료한 할 일",
+                    "مهمة منجزة",
+                    "已完成的任务",
+                    "पूरा किया गया कार्य",
+                    "Việc cần làm đã xong",
                 )
                 TaskStatus.MIGRATED -> t(
                     "Moved task",
@@ -1676,6 +2074,10 @@ object S {
                     "Tugas dipindahkan",
                     "移したタスク",
                     "옮긴 할 일",
+                    "مهمة منقولة",
+                    "已移动的任务",
+                    "आगे बढ़ाया गया कार्य",
+                    "Việc cần làm đã chuyển",
                 )
                 TaskStatus.SCHEDULED -> t(
                     "Task moved to another month",
@@ -1691,6 +2093,10 @@ object S {
                     "Tugas dipindahkan ke bulan lain",
                     "別の月に移したタスク",
                     "다른 달로 옮긴 할 일",
+                    "مهمة نُقلت إلى شهر آخر",
+                    "已移到其他月份的任务",
+                    "दूसरे माह में भेजा गया कार्य",
+                    "Việc cần làm đã chuyển sang tháng khác",
                 )
                 TaskStatus.IRRELEVANT -> t(
                     "Discarded task",
@@ -1706,6 +2112,10 @@ object S {
                     "Tugas dibuang",
                     "破棄したタスク",
                     "버린 할 일",
+                    "مهمة مستبعدة",
+                    "已放弃的任务",
+                    "त्यागा गया कार्य",
+                    "Việc cần làm đã bỏ",
                 )
             }
         }
@@ -1723,11 +2133,15 @@ object S {
             ", prioritas",
             "、優先",
             ", 우선순위",
+            "، أولوية",
+            "，优先",
+            ", प्राथमिकता",
+            ", ưu tiên",
         ) else kind
     }
 
-    val toToday = t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui", "Oggi", "Vandaag", "Dziś", "Сегодня", "Bugün", "Hari ini", "今日", "오늘")
-    val toTomorrow = t("Tomorrow", "Mañana", "Amanhã", "Morgen", "Demain", "Domani", "Morgen", "Jutro", "Завтра", "Yarın", "Besok", "明日", "내일")
+    val toToday = t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui", "Oggi", "Vandaag", "Dziś", "Сегодня", "Bugün", "Hari ini", "今日", "오늘", "اليوم", "今天", "आज", "Hôm nay")
+    val toTomorrow = t("Tomorrow", "Mañana", "Amanhã", "Morgen", "Demain", "Domani", "Morgen", "Jutro", "Завтра", "Yarın", "Besok", "明日", "내일", "غدًا", "明天", "आने वाला कल", "Ngày mai")
     val toThisMonth = t(
         "This month's tasks",
         "Tareas de este mes",
@@ -1742,6 +2156,10 @@ object S {
         "Tugas bulan ini",
         "今月のタスク",
         "이번 달 할 일",
+        "مهام هذا الشهر",
+        "本月任务",
+        "इस माह के कार्य",
+        "Việc của tháng này",
     )
     val toDayOfMonth = t(
         "A day this month",
@@ -1757,6 +2175,10 @@ object S {
         "Satu hari di bulan ini",
         "今月のある日",
         "이번 달의 하루",
+        "يوم من هذا الشهر",
+        "本月的某一天",
+        "इस माह का कोई दिन",
+        "Một ngày trong tháng này",
     )
     val toCollection = t(
         "To a list",
@@ -1772,9 +2194,13 @@ object S {
         "Ke daftar",
         "リストへ",
         "목록으로",
+        "إلى قائمة",
+        "放到清单",
+        "किसी सूची में",
+        "Vào danh sách",
     )
-    val dayField = t("day", "día", "dia", "Tag", "jour", "giorno", "dag", "dzień", "день", "gün", "tanggal", "日", "일")
-    val moveAction = t("Move", "Pasar", "Passar", "Verschieben", "Déplacer", "Sposta", "Verplaatsen", "Przenieś", "Перенести", "Taşı", "Pindahkan", "移す", "옮기기")
+    val dayField = t("day", "día", "dia", "Tag", "jour", "giorno", "dag", "dzień", "день", "gün", "tanggal", "日", "일", "يوم", "日", "दिन", "ngày")
+    val moveAction = t("Move", "Pasar", "Passar", "Verschieben", "Déplacer", "Sposta", "Verplaatsen", "Przenieś", "Перенести", "Taşı", "Pindahkan", "移す", "옮기기", "نقل", "转移", "आगे ले जाएँ", "Chuyển")
 
     fun dayOutOfRange(month: YearMonth, day: Int): String {
         val name = monthName(month)
@@ -1792,6 +2218,10 @@ object S {
             "$name tidak punya tanggal $day.",
             "${name}に${day}日はありません。",
             "${name}에는 ${day}일이 없어요.",
+            "لا يوجد يوم $day في $name.",
+            "${name}没有${day}日。",
+            "$name में $day तारीख़ नहीं है।",
+            "$name không có ngày $day.",
         )
     }
 
@@ -1809,6 +2239,10 @@ object S {
         "Hari itu sudah lewat.",
         "その日はもう過ぎています。",
         "그날은 이미 지났어요.",
+        "مضى ذلك اليوم.",
+        "那一天已经过去了。",
+        "वह दिन बीत चुका है।",
+        "Ngày đó đã qua.",
     )
     val newList = t(
         "New list",
@@ -1824,6 +2258,10 @@ object S {
         "Daftar baru",
         "新しいリスト",
         "새 목록",
+        "قائمة جديدة",
+        "新清单",
+        "नई सूची",
+        "Danh sách mới",
     )
     val showMoreMonths = t(
         "Show more months",
@@ -1839,6 +2277,10 @@ object S {
         "Lihat bulan lainnya",
         "さらに月を表示",
         "더 많은 달 보기",
+        "عرض مزيد من الأشهر",
+        "显示更多月份",
+        "और माह दिखाएँ",
+        "Xem thêm tháng",
     )
     val entryDeleted = t(
         "Entry deleted.",
@@ -1854,6 +2296,10 @@ object S {
         "Entri dihapus.",
         "項目を削除しました。",
         "항목을 삭제했어요.",
+        "حُذف الإدخال.",
+        "已删除记录。",
+        "प्रविष्टि हटाई गई।",
+        "Đã xóa mục.",
     )
     val collectionDeleted = t(
         "List deleted.",
@@ -1869,6 +2315,10 @@ object S {
         "Daftar dihapus.",
         "リストを削除しました。",
         "목록을 삭제했어요.",
+        "حُذفت القائمة.",
+        "已删除清单。",
+        "सूची हटाई गई।",
+        "Đã xóa danh sách.",
     )
     val rowDeleted = t(
         "Row deleted.",
@@ -1884,6 +2334,10 @@ object S {
         "Baris dihapus.",
         "行を削除しました。",
         "줄을 삭제했어요.",
+        "حُذف الصف.",
+        "已删除这一行。",
+        "पंक्ति हटाई गई।",
+        "Đã xóa hàng.",
     )
 
     /** docs/pantallas.md 1.5: the name of each glyph, for the screen reader. */
@@ -1905,6 +2359,10 @@ object S {
                 "Tugas selesai",
                 "完了したタスク",
                 "완료한 할 일",
+                "مهمة منجزة",
+                "已完成的任务",
+                "पूरा किया गया कार्य",
+                "Việc cần làm đã xong",
             )
             TaskStatus.MIGRATED -> t(
                 "Migrated task",
@@ -1920,6 +2378,10 @@ object S {
                 "Tugas dimigrasikan",
                 "移行済みのタスク",
                 "이월한 할 일",
+                "مهمة مرحّلة",
+                "已迁移的任务",
+                "स्थानांतरित कार्य",
+                "Việc cần làm đã chuyển",
             )
             TaskStatus.SCHEDULED -> t(
                 "Scheduled task",
@@ -1935,6 +2397,10 @@ object S {
                 "Tugas dijadwalkan",
                 "スケジュール済みのタスク",
                 "예정한 할 일",
+                "مهمة مجدولة",
+                "已排期的任务",
+                "निर्धारित कार्य",
+                "Việc cần làm đã lên lịch",
             )
             TaskStatus.IRRELEVANT -> t(
                 "Discarded task",
@@ -1950,6 +2416,10 @@ object S {
                 "Tugas dibuang",
                 "破棄したタスク",
                 "버린 할 일",
+                "مهمة مستبعدة",
+                "已放弃的任务",
+                "त्यागा गया कार्य",
+                "Việc cần làm đã bỏ",
             )
             TaskStatus.OPEN -> bulletTask
         }
@@ -1978,6 +2448,10 @@ object S {
         "Di kalender",
         "カレンダーにあるもの",
         "캘린더에서",
+        "في التقويم",
+        "在日历上",
+        "कैलेंडर पर",
+        "Trên lịch",
     )
     val noticeCorrupt = t(
         "Couldn't read the journal. The files were set aside and nothing was deleted.",
@@ -1993,6 +2467,10 @@ object S {
         "Jurnal tidak bisa dibaca. Berkasnya disimpan terpisah dan tidak ada yang dihapus.",
         "ジャーナルを読み込めませんでした。ファイルは別に保存してあり、何も削除されていません。",
         "다이어리를 읽지 못했어요. 파일은 따로 보관했고 아무것도 삭제하지 않았어요.",
+        "تعذّرت قراءة اليوميات. حُفظت الملفات جانبًا ولم يُحذف شيء.",
+        "无法读取手账。文件已被单独保留，没有删除任何内容。",
+        "जर्नल पढ़ा नहीं जा सका। फ़ाइलें अलग रख दी गईं और कुछ भी हटाया नहीं गया।",
+        "Không đọc được nhật ký. Các tệp đã được để riêng và không có gì bị xóa.",
     )
     val noticeSaveFailed = t(
         "Couldn't save. I'll try again with your next change.",
@@ -2008,6 +2486,10 @@ object S {
         "Tidak bisa menyimpan. Aku coba lagi pada perubahanmu berikutnya.",
         "保存できませんでした。次の変更のときに、もう一度試します。",
         "저장하지 못했어요. 다음 변경 때 다시 시도할게요.",
+        "تعذّر الحفظ. سأحاول مجددًا عند تعديلك التالي.",
+        "没能保存。下次改动时我会再试一次。",
+        "सहेजा नहीं जा सका। आपके अगले बदलाव पर फिर कोशिश की जाएगी।",
+        "Không lưu được. Mình sẽ thử lại ở lần thay đổi tiếp theo.",
     )
 
     fun offerReminder(hour: Int, minute: Int): String {
@@ -2026,6 +2508,10 @@ object S {
             "Ingatkan kamu untuk meninjau harimu pukul $time?",
             "${time}に1日の見直しをお知らせしますか？",
             "${time}에 하루를 살펴보도록 알려 드릴까요?",
+            "هل تريد تذكيرًا لمراجعة يومك في $time؟",
+            "每天 $time 提醒你回顾一天吗？",
+            "क्या $time पर दिन को दोहराने की याद दिलाई जाए?",
+            "Nhắc bạn xem lại ngày lúc $time?",
         )
     }
 
@@ -2047,6 +2533,10 @@ object S {
             "$name masih punya $n $w terbuka",
             "${name}は未完了の${w}が${n}件",
             "${name}에 미완료 할 일이 ${n}개 남아 있어요",
+            "المهام المفتوحة في $name: $n",
+            "${name}还有$n${w}未完成",
+            "$name में अब भी $n $w खुले हैं",
+            "$name vẫn còn $n $w đang mở",
         )
     }
     val unclosedBody = t(
@@ -2063,6 +2553,10 @@ object S {
         "Putuskan apa yang terjadi pada masing-masing: selesai, ke hari ini, ke bulan lain, atau dibuang. Tidak ada yang berpindah kecuali kamu memintanya.",
         "それぞれどうするか決めてください: 完了、今日に移す、別の月に移す、破棄。選ぶまで、何も動きません。",
         "각각 어떻게 할지 정해 주세요: 완료, 오늘로, 다른 달로, 아니면 버리기. 직접 정하지 않으면 아무것도 움직이지 않아요.",
+        "قرّر مصير كل مهمة: منجزة، أو إلى اليوم، أو إلى شهر آخر، أو مستبعدة. لا يتحرك شيء ما لم تقل ذلك.",
+        "为每一项决定去向：完成、移到今天、移到其他月份，或放弃。你不说，就什么都不会动。",
+        "हर एक के लिए तय करें: पूरा हुआ, आज में, दूसरे माह में, या त्याग दें। आप कहें नहीं तो कुछ भी नहीं हिलता।",
+        "Quyết định từng việc: xong, chuyển sang hôm nay, sang tháng khác hoặc bỏ. Không có gì tự di chuyển nếu bạn không muốn.",
     )
 
     /** Also the review's own label (docs/pantallas.md 11.1). */
@@ -2082,6 +2576,10 @@ object S {
             "Tinjau $m",
             "${m}を見直す",
             "${m} 살펴보기",
+            "مراجعة $m",
+            "回顾$m",
+            "$m की समीक्षा",
+            "Xem lại $m",
         )
     }
 
@@ -2101,6 +2599,10 @@ object S {
                 "$n tugas masih terbuka dari hari-hari sebelumnya",
                 "以前の日から未完了のタスクが${n}件残っています",
                 "지난 날들의 미완료 할 일이 ${n}개 남아 있어요",
+                "مهمة واحدة ما زالت مفتوحة من أيام سابقة",
+                "有 $n 个任务来自之前的日子，尚未完成",
+                "पिछले दिनों का $n कार्य अब भी खुला है",
+                "Còn $n việc cần làm đang mở từ những ngày trước",
             )
         } else {
             t(
@@ -2117,6 +2619,10 @@ object S {
                 "$n tugas masih terbuka dari hari-hari sebelumnya",
                 "以前の日から未完了のタスクが${n}件残っています",
                 "지난 날들의 미완료 할 일이 ${n}개 남아 있어요",
+                "المهام المفتوحة من أيام سابقة: $n",
+                "有 $n 个任务来自之前的日子，尚未完成",
+                "पिछले दिनों के $n कार्य अब भी खुले हैं",
+                "Còn $n việc cần làm đang mở từ những ngày trước",
             )
         }
     }
@@ -2134,6 +2640,10 @@ object S {
         "Semuanya dari hari-hari bulan ini yang sudah lewat. Putuskan apa yang terjadi pada masing-masing.",
         "今月のすでに過ぎた日のものです。それぞれどうするか決めてください。",
         "이번 달에서 이미 지난 날들의 할 일이에요. 각각 어떻게 할지 정해 주세요.",
+        "هي من أيام مضت من هذا الشهر. قرّر مصير كل واحدة.",
+        "它们来自本月已过去的日子，请为每一项决定去向。",
+        "ये इस माह के बीत चुके दिनों की हैं। हर एक के लिए तय करें कि क्या होगा।",
+        "Chúng đến từ những ngày đã qua trong tháng này. Hãy quyết định từng việc.",
     )
     val reviewEarlier = t(
         "Review those days",
@@ -2149,6 +2659,10 @@ object S {
         "Tinjau hari-hari itu",
         "それらの日を見直す",
         "지난 날들 살펴보기",
+        "مراجعة تلك الأيام",
+        "回顾这些天",
+        "उन दिनों की समीक्षा",
+        "Xem lại những ngày đó",
     )
     val reviewDay = t(
         "Review the day",
@@ -2164,6 +2678,10 @@ object S {
         "Tinjau hari",
         "この日を見直す",
         "하루 살펴보기",
+        "مراجعة اليوم",
+        "回顾今天",
+        "दिन की समीक्षा",
+        "Xem lại ngày",
     )
 
     /** Once, on Hoy, until "Entendido" or the first use (docs/pantallas.md 6.3). ^...^ goes in bold. */
@@ -2181,6 +2699,10 @@ object S {
         "^Ketuk titik^ pada tugas untuk menandainya selesai. ^Ketuk teks^ untuk melihat semua yang bisa kamu lakukan dengannya.",
         "タスクの^点をタップ^すると、完了にできます。^テキストをタップ^すると、できる操作がすべて表示されます。",
         "할 일의 ^점을 탭하면^ 완료로 표시돼요. ^내용을 탭하면^ 그 할 일로 할 수 있는 모든 것을 볼 수 있어요.",
+        "^اضغط على النقطة^ بجانب المهمة لتحديدها منجزة. ^اضغط على النص^ لترى كل ما يمكنك فعله بها.",
+        "^点一下圆点^把任务标为完成，^点一下文字^查看所有可用操作。",
+        "कार्य को पूरा चिह्नित करने के लिए उसके ^बिंदु पर टैप करें^। उसके साथ क्या-क्या कर सकते हैं, यह देखने के लिए ^पाठ पर टैप करें^।",
+        "^Chạm vào dấu chấm^ của việc cần làm để đánh dấu xong. ^Chạm vào chữ^ để xem mọi thao tác.",
     )
 
     /** Hoy with nothing on it (docs/pantallas.md 6.2), followed by [writeBelow]. */
@@ -2199,6 +2721,10 @@ object S {
             "Belum ada yang ditulis hari ini.",
             "今日はまだ何も書かれていません。",
             "오늘 쓴 것이 없어요.",
+            "لم يُكتب شيء اليوم.",
+            "今天还没有记录。",
+            "आज कुछ नहीं लिखा गया।",
+            "Hôm nay chưa viết gì.",
         )
         1 -> t(
             "Nothing written for tomorrow.",
@@ -2214,6 +2740,10 @@ object S {
             "Belum ada yang ditulis untuk besok.",
             "明日の分はまだ何も書かれていません。",
             "내일 쓴 것이 없어요.",
+            "لم يُكتب شيء ليوم غد.",
+            "明天还没有安排。",
+            "कल के लिए कुछ नहीं लिखा गया।",
+            "Chưa viết gì cho ngày mai.",
         )
         else -> t(
             "Nothing written on this day.",
@@ -2229,6 +2759,10 @@ object S {
             "Belum ada yang ditulis di tanggal ini.",
             "この日には何も書かれていません。",
             "이 날 쓴 것이 없어요.",
+            "لم يُكتب شيء في هذا اليوم.",
+            "这一天没有记录。",
+            "इस दिन कुछ नहीं लिखा गया।",
+            "Ngày này chưa viết gì.",
         )
     }
     val writeBelow = t(
@@ -2245,6 +2779,10 @@ object S {
         "Tulis di bawah untuk mulai.",
         "始めるには、下に書き込んでください。",
         "시작하려면 아래에 써 보세요.",
+        "اكتب في الأسفل للبدء.",
+        "在下方输入即可开始。",
+        "शुरू करने के लिए नीचे लिखें।",
+        "Viết bên dưới để bắt đầu.",
     )
     val shareDay = t(
         "Share this day",
@@ -2260,6 +2798,10 @@ object S {
         "Bagikan hari ini",
         "この日を共有",
         "이 날 공유",
+        "مشاركة هذا اليوم",
+        "分享这一天",
+        "इस दिन को साझा करें",
+        "Chia sẻ ngày này",
     )
 
     // --- 6. Mes ---------------------------------------------------------------------------
@@ -2278,6 +2820,10 @@ object S {
         "Tugas bulan ini",
         "月のタスク",
         "이달의 할 일",
+        "مهام الشهر",
+        "本月任务",
+        "माह के कार्य",
+        "Việc của tháng",
     )
     val calendarTitle = t(
         "Calendar",
@@ -2293,6 +2839,10 @@ object S {
         "Kalender",
         "カレンダー",
         "캘린더",
+        "التقويم",
+        "日历",
+        "कैलेंडर",
+        "Lịch",
     )
 
     val monthExplain = t(
@@ -2309,6 +2859,10 @@ object S {
         "Di atas, yang terjadi setiap hari. Di bawah, yang ingin kamu lakukan bulan ini tanpa tanggal pasti.",
         "上は、毎日の出来事。下は、日付を決めずにこの月にやりたいこと。",
         "위에는 날마다 있는 일, 아래에는 이번 달에 하고 싶지만 날짜를 정하지 않은 일이에요.",
+        "في الأعلى ما يحدث كل يوم، وفي الأسفل ما تريد إنجازه هذا الشهر دون تاريخ محدد.",
+        "上面是每天发生的事，下面是本月想做但没定日期的事。",
+        "ऊपर, हर दिन क्या होता है। नीचे, इस माह आप क्या करना चाहते हैं, बिना किसी तय तारीख़ के।",
+        "Phía trên là những gì diễn ra mỗi ngày. Phía dưới là việc bạn muốn làm trong tháng này mà chưa có ngày cố định.",
     )
     val calendarHint = t(
         "Tap a day to write on it",
@@ -2324,6 +2878,10 @@ object S {
         "Ketuk satu hari untuk mencatat di situ",
         "日をタップして書き込む",
         "날짜를 탭하면 그 날에 적어요",
+        "اضغط على يوم للكتابة فيه",
+        "点一下某一天来写",
+        "किसी दिन पर टैप करके लिखें",
+        "Chạm vào một ngày để viết",
     )
 
     /** On the picked day of Mes and the picked block of Futuro: where the composer writes. */
@@ -2341,6 +2899,10 @@ object S {
         "Mencatat di sini",
         "ここに書き込みます",
         "여기에 적는 중",
+        "الكتابة هنا",
+        "正在这里写",
+        "यहाँ लिख रहे हैं",
+        "Đang viết ở đây",
     )
     val monthTasksEmpty = t(
         "None yet.",
@@ -2356,6 +2918,10 @@ object S {
         "Belum ada.",
         "まだありません。",
         "아직 없어요.",
+        "لا شيء بعد.",
+        "还没有。",
+        "अभी कुछ नहीं।",
+        "Chưa có gì.",
     )
     val shareMonth = t(
         "Share this month",
@@ -2371,6 +2937,10 @@ object S {
         "Bagikan bulan ini",
         "この月を共有",
         "이 달 공유",
+        "مشاركة هذا الشهر",
+        "分享这个月",
+        "इस माह को साझा करें",
+        "Chia sẻ tháng này",
     )
 
     fun futureWaiting(n: Int): String {
@@ -2389,6 +2959,10 @@ object S {
                 "$n entri dari Mendatang menunggu bulan ini",
                 "未来の項目${n}件が、この月を待っています",
                 "미래에서 이번 달을 기다리는 항목이 ${n}개 있어요",
+                "إدخال واحد من «المستقبل» بانتظار هذا الشهر",
+                "有 $n 条“未来”记录在等这个月",
+                "भविष्य की $n प्रविष्टि इस माह की प्रतीक्षा में है",
+                "$n mục Tương lai đang chờ tháng này",
             )
         } else {
             t(
@@ -2405,6 +2979,10 @@ object S {
                 "$n entri dari Mendatang menunggu bulan ini",
                 "未来の項目${n}件が、この月を待っています",
                 "미래에서 이번 달을 기다리는 항목이 ${n}개 있어요",
+                "إدخالات «المستقبل» بانتظار هذا الشهر: $n",
+                "有 $n 条“未来”记录在等这个月",
+                "भविष्य की $n प्रविष्टियाँ इस माह की प्रतीक्षा में हैं",
+                "$n mục Tương lai đang chờ tháng này",
             )
         }
     }
@@ -2422,6 +3000,10 @@ object S {
         "Kamu mencatatnya untuk bulan ini. Pindahkan ke kalender, biarkan, atau buang.",
         "この月のために書いた項目です。カレンダーに移すか、そのままにするか、破棄するか選べます。",
         "이번 달로 적어 둔 항목이에요. 캘린더로 옮기거나, 그대로 두거나, 버릴 수 있어요.",
+        "دوّنتها لهذا الشهر. انقلها إلى التقويم أو اتركها أو استبعدها.",
+        "它们是你为这个月记下的。可以移到日历、保留或放弃。",
+        "आपने इन्हें इसी माह के लिए लिखा था। इन्हें कैलेंडर में ले जाएँ, रहने दें या त्याग दें।",
+        "Bạn đã ghi chúng cho tháng này. Hãy chuyển vào lịch, để lại hoặc bỏ.",
     )
     val reviewFuture = t(
         "Review Future",
@@ -2437,6 +3019,10 @@ object S {
         "Tinjau Mendatang",
         "未来を見直す",
         "미래 살펴보기",
+        "مراجعة المستقبل",
+        "回顾“未来”",
+        "भविष्य की समीक्षा",
+        "Xem lại Tương lai",
     )
 
     // --- 7. Futuro --------------------------------------------------------------------------
@@ -2455,6 +3041,10 @@ object S {
         "$n bulan berikutnya",
         "これからの${n}か月",
         "앞으로 ${n}개월",
+        "الأشهر القادمة ($n)",
+        "接下来 $n 个月",
+        "अगले $n माह",
+        "$n tháng tới",
     )
     val futureExplain = t(
         "Write down what isn't due yet. When its month comes, you review it and decide: nothing drops into Today on its own.",
@@ -2470,6 +3060,10 @@ object S {
         "Catat apa yang belum waktunya. Saat bulannya tiba, kamu meninjaunya lalu memutuskan: tidak ada yang turun sendiri ke tab Hari.",
         "まだ先のことを書き留めます。その月が来たら見直して決めます。何も勝手に「今日」へ移ることはありません。",
         "아직 때가 안 된 일을 적어 두세요. 그 달이 오면 직접 살펴보고 정해요. 오늘로 저절로 내려오는 것은 없어요.",
+        "دوّن ما لم يحن وقته بعد. وعندما يأتي شهره تراجعه وتقرّر: لا شيء ينتقل إلى «اليوم» من تلقاء نفسه.",
+        "把还没到时候的事记下来。到了那个月，你来回顾并决定：不会有任何事自己跳进“今天”。",
+        "जो अभी देय नहीं है, उसे लिख लें। उसका माह आने पर आप समीक्षा करके तय करते हैं: कुछ भी अपने-आप आज में नहीं आ जाता।",
+        "Ghi lại những gì chưa đến hạn. Khi đến tháng của nó, bạn xem lại và quyết định: không có gì tự rơi vào Hôm nay.",
     )
     val futureEmpty = t(
         "Nothing yet.",
@@ -2485,6 +3079,10 @@ object S {
         "Belum ada apa-apa.",
         "まだ何もありません。",
         "아직 없어요.",
+        "لا شيء بعد.",
+        "还没有。",
+        "अभी कुछ नहीं।",
+        "Chưa có gì.",
     )
     fun onDay(day: Int) = t(
         "Day $day",
@@ -2500,6 +3098,10 @@ object S {
         "Tanggal $day",
         "${day}日",
         "${day}일",
+        "اليوم $day",
+        "${day}日",
+        "दिन $day",
+        "Ngày $day",
     )
 
     // --- 8. Indice ------------------------------------------------------------------------
@@ -2518,9 +3120,13 @@ object S {
         "Seluruh jurnalmu, di satu tempat",
         "ジャーナルのすべてを、ひとつの場所に",
         "다이어리 전체를 한곳에",
+        "كل يومياتك في مكان واحد",
+        "你的整本手账，都在这里",
+        "आपका पूरा जर्नल, एक ही जगह",
+        "Toàn bộ nhật ký của bạn, ở một nơi",
     )
-    val indexMonths = t("Months", "Meses", "Meses", "Monate", "Mois", "Mesi", "Maanden", "Miesiące", "Месяцы", "Aylar", "Bulan", "月別", "월별")
-    val indexLists = t("Lists", "Listas", "Listas", "Listen", "Listes", "Liste", "Lijsten", "Listy", "Списки", "Listeler", "Daftar", "リスト", "목록")
+    val indexMonths = t("Months", "Meses", "Meses", "Monate", "Mois", "Mesi", "Maanden", "Miesiące", "Месяцы", "Aylar", "Bulan", "月別", "월별", "الأشهر", "月份", "माह", "Tháng")
+    val indexLists = t("Lists", "Listas", "Listas", "Listen", "Listes", "Liste", "Lijsten", "Listy", "Списки", "Listeler", "Daftar", "リスト", "목록", "القوائم", "清单", "सूचियाँ", "Danh sách")
     val indexListsHint = t(
         "Trips, ideas, books: what doesn't go in a day",
         "Viajes, ideas, libros: lo que no va en un día",
@@ -2535,8 +3141,12 @@ object S {
         "Perjalanan, ide, buku: yang tidak muat dalam satu hari",
         "旅行、アイデア、本: 1日に入りきらないもの",
         "여행, 아이디어, 책: 하루에 담기지 않는 것",
+        "رحلات وأفكار وكتب: ما لا يتسع له يوم",
+        "旅行、点子、书：一天装不下的东西",
+        "यात्राएँ, विचार, किताबें: जो एक दिन में नहीं समाता",
+        "Chuyến đi, ý tưởng, sách: những gì không vừa trong một ngày",
     )
-    val indexTrackers = t("Trackers", "Seguimientos", "Trackers", "Tracker", "Suivis", "Tracker", "Trackers", "Trackery", "Трекеры", "Çizelgeler", "Pelacak", "トラッカー", "트래커")
+    val indexTrackers = t("Trackers", "Seguimientos", "Trackers", "Tracker", "Suivis", "Tracker", "Trackers", "Trackery", "Трекеры", "Çizelgeler", "Pelacak", "トラッカー", "트래커", "المتتبعات", "追踪表", "ट्रैकर", "Bảng theo dõi")
     val indexTrackersHint = t(
         "One row per habit, one box per day",
         "Una fila por hábito, un cuadro por día",
@@ -2551,6 +3161,10 @@ object S {
         "Satu baris per kebiasaan, satu kotak per hari",
         "習慣ごとに1行、日ごとに1マス",
         "습관마다 한 줄, 하루마다 한 칸",
+        "صف لكل عادة ومربع لكل يوم",
+        "每个习惯一行，每天一格",
+        "हर आदत की एक पंक्ति, हर दिन का एक खाना",
+        "Mỗi thói quen một hàng, mỗi ngày một ô",
     )
     val newTracker = t(
         "New tracker",
@@ -2566,6 +3180,10 @@ object S {
         "Pelacak baru",
         "新しいトラッカー",
         "새 트래커",
+        "متتبع جديد",
+        "新追踪表",
+        "नया ट्रैकर",
+        "Bảng theo dõi mới",
     )
     val listNameHint = t(
         "Name of the list",
@@ -2581,6 +3199,10 @@ object S {
         "Nama daftar",
         "リストの名前",
         "목록 이름",
+        "اسم القائمة",
+        "清单名称",
+        "सूची का नाम",
+        "Tên danh sách",
     )
     val trackerNameHint = t(
         "Name of the tracker",
@@ -2596,6 +3218,10 @@ object S {
         "Nama pelacak",
         "トラッカーの名前",
         "트래커 이름",
+        "اسم المتتبع",
+        "追踪表名称",
+        "ट्रैकर का नाम",
+        "Tên bảng theo dõi",
     )
     val listCreated = t(
         "List created. Write its first line below.",
@@ -2611,6 +3237,10 @@ object S {
         "Daftar dibuat. Tulis baris pertamanya di bawah.",
         "リストを作りました。下に最初の1行を書いてください。",
         "목록을 만들었어요. 아래에 첫 줄을 써 보세요.",
+        "أُنشئت القائمة. اكتب سطرها الأول في الأسفل.",
+        "清单已创建。在下方写第一行。",
+        "सूची बन गई। पहली पंक्ति नीचे लिखें।",
+        "Đã tạo danh sách. Viết dòng đầu tiên bên dưới.",
     )
     fun archivedToggle(n: Int) = t(
         "Archived ($n)",
@@ -2626,6 +3256,10 @@ object S {
         "Diarsipkan ($n)",
         "アーカイブ済み(${n})",
         "보관됨 (${n})",
+        "المؤرشفة ($n)",
+        "已归档（$n）",
+        "संग्रहीत ($n)",
+        "Đã lưu trữ ($n)",
     )
     val indexEmpty = t(
         "Months show up here as soon as you write in them.",
@@ -2641,11 +3275,15 @@ object S {
         "Bulan muncul di sini begitu kamu menulis di dalamnya.",
         "月は、書き込むとすぐここに表示されます。",
         "어떤 달에 쓰기 시작하면 바로 여기에 나타나요.",
+        "تظهر الأشهر هنا بمجرد أن تكتب فيها.",
+        "只要在某个月里写了东西，它就会出现在这里。",
+        "जैसे ही आप किसी माह में लिखते हैं, वह यहाँ दिखने लगता है।",
+        "Tháng sẽ hiện ở đây ngay khi bạn viết trong đó.",
     )
 
     // --- 9. Coleccion y seguimiento ---------------------------------------------------------
 
-    val listSubtitle = t("List", "Lista", "Lista", "Liste", "Liste", "Lista", "Lijst", "Lista", "Список", "Liste", "Daftar", "リスト", "목록")
+    val listSubtitle = t("List", "Lista", "Lista", "Liste", "Liste", "Lista", "Lijst", "Lista", "Список", "Liste", "Daftar", "リスト", "목록", "قائمة", "清单", "सूची", "Danh sách")
     val listEmpty = t(
         "Empty list. Write the first line below.",
         "Lista vacía. Escribe abajo la primera línea.",
@@ -2660,6 +3298,10 @@ object S {
         "Daftar kosong. Tulis baris pertama di bawah.",
         "空のリストです。下に最初の1行を書いてください。",
         "빈 목록이에요. 아래에 첫 줄을 써 보세요.",
+        "قائمة فارغة. اكتب السطر الأول في الأسفل.",
+        "空清单。在下方写第一行。",
+        "खाली सूची। पहली पंक्ति नीचे लिखें।",
+        "Danh sách trống. Viết dòng đầu tiên bên dưới.",
     )
     val shareList = t(
         "Share the list",
@@ -2675,6 +3317,10 @@ object S {
         "Bagikan daftar",
         "リストを共有",
         "목록 공유",
+        "مشاركة القائمة",
+        "分享清单",
+        "सूची साझा करें",
+        "Chia sẻ danh sách",
     )
     val rename = t(
         "Rename",
@@ -2690,8 +3336,12 @@ object S {
         "Ubah nama",
         "名前を変更",
         "이름 변경",
+        "إعادة تسمية",
+        "重命名",
+        "नाम बदलें",
+        "Đổi tên",
     )
-    val archive = t("Archive", "Archivar", "Arquivar", "Archivieren", "Archiver", "Archivia", "Archiveren", "Archiwizuj", "Архивировать", "Arşivle", "Arsipkan", "アーカイブ", "보관")
+    val archive = t("Archive", "Archivar", "Arquivar", "Archivieren", "Archiver", "Archivia", "Archiveren", "Archiwizuj", "Архивировать", "Arşivle", "Arsipkan", "アーカイブ", "보관", "أرشفة", "归档", "संग्रहीत करें", "Lưu trữ")
     val unarchive = t(
         "Unarchive",
         "Sacar del archivo",
@@ -2706,8 +3356,12 @@ object S {
         "Keluarkan dari arsip",
         "アーカイブから戻す",
         "보관 해제",
+        "إلغاء الأرشفة",
+        "取消归档",
+        "संग्रह से निकालें",
+        "Bỏ lưu trữ",
     )
-    val deleteCollection = t("Delete", "Borrar", "Apagar", "Löschen", "Supprimer", "Elimina", "Verwijderen", "Usuń", "Удалить", "Sil", "Hapus", "削除", "삭제")
+    val deleteCollection = t("Delete", "Borrar", "Apagar", "Löschen", "Supprimer", "Elimina", "Verwijderen", "Usuń", "Удалить", "Sil", "Hapus", "削除", "삭제", "حذف", "删除", "हटाएँ", "Xóa")
     val archivedNote = t(
         "Archived.",
         "Archivada.",
@@ -2722,6 +3376,10 @@ object S {
         "Diarsipkan.",
         "アーカイブ済み。",
         "보관했어요.",
+        "تمت الأرشفة.",
+        "已归档。",
+        "संग्रहीत किया गया।",
+        "Đã lưu trữ.",
     )
 
     fun trackerSubtitle(month: YearMonth): String {
@@ -2740,6 +3398,10 @@ object S {
             "Pelacak $m",
             "${m}のトラッカー",
             "${m} 트래커",
+            "متتبع $m",
+            "${m}追踪表",
+            "$m का ट्रैकर",
+            "Bảng theo dõi $m",
         )
     }
     val trackerExplain = t(
@@ -2756,6 +3418,10 @@ object S {
         "Ketuk kotak untuk menandai hari itu, ketuk lagi untuk menghapus tandanya. Bulan depan dimulai kosong.",
         "マスをタップするとその日に印が付き、もう一度タップすると消えます。来月は白紙から始まります。",
         "칸을 탭하면 그 날이 표시되고, 한 번 더 탭하면 지워져요. 다음 달은 빈 칸으로 시작해요.",
+        "اضغط على مربع لتحديد ذلك اليوم، واضغط مرة أخرى لمسحه. يبدأ الشهر التالي فارغًا.",
+        "点一下格子标记那一天，再点一下取消。下个月从空白开始。",
+        "उस दिन को चिह्नित करने के लिए खाने पर टैप करें; मिटाने के लिए फिर टैप करें। अगला माह खाली शुरू होता है।",
+        "Chạm vào một ô để đánh dấu ngày đó, chạm lần nữa để xóa. Tháng sau bắt đầu trống.",
     )
     val trackerRowHint = t(
         "New row",
@@ -2771,6 +3437,10 @@ object S {
         "Baris baru",
         "新しい行",
         "새 줄",
+        "صف جديد",
+        "新增一行",
+        "नई पंक्ति",
+        "Hàng mới",
     )
     val rowDelete = t(
         "Delete row",
@@ -2786,6 +3456,10 @@ object S {
         "Hapus baris",
         "行を削除",
         "줄 삭제",
+        "حذف الصف",
+        "删除这一行",
+        "पंक्ति हटाएँ",
+        "Xóa hàng",
     )
 
     // --- 10. Revisar ------------------------------------------------------------------------
@@ -2808,6 +3482,10 @@ object S {
                 "Sebelum memutuskan, baca ulang bulan $m",
                 "決める前に、${m}を読み返す",
                 "정하기 전에 ${m} 다시 읽기",
+                "قبل أن تقرّر، أعد قراءة $m",
+                "决定之前，再读一遍$m",
+                "तय करने से पहले $m फिर से पढ़ें",
+                "Trước khi quyết định, đọc lại $m",
             )
         } else {
             t(
@@ -2824,6 +3502,10 @@ object S {
                 "Sebelum memutuskan, baca ulang hari-hari ini",
                 "決める前に、これらの日を読み返す",
                 "정하기 전에 이 날들 다시 읽기",
+                "قبل أن تقرّر، أعد قراءة هذه الأيام",
+                "决定之前，再读一遍这些天",
+                "तय करने से पहले इन दिनों को फिर से पढ़ें",
+                "Trước khi quyết định, đọc lại những ngày này",
             )
         }
     }
@@ -2843,6 +3525,10 @@ object S {
             "Tidak ada tugas yang masih terbuka.",
             "未完了のタスクは残っていません。",
             "미완료로 남은 할 일이 없어요.",
+            "لم تبق أي مهمة مفتوحة.",
+            "没有遗留未完成的任务。",
+            "कोई कार्य खुला नहीं बचा।",
+            "Không còn việc nào đang mở.",
         )
         isSingular(n) -> t(
             "$n task was left open. Next you'll see it and decide what happens to it.",
@@ -2858,6 +3544,10 @@ object S {
             "$n tugas masih terbuka. Setelah ini kamu akan melihatnya dan memutuskan apa yang terjadi padanya.",
             "未完了のタスクが${n}件残っています。このあと、それを見てどうするか決めます。",
             "미완료로 남은 할 일이 ${n}개 있어요. 이어서 그 할 일을 보고 어떻게 할지 정해요.",
+            "بقيت مهمة واحدة مفتوحة. ستراها بعد قليل وتقرّر مصيرها.",
+            "还有 $n 个任务没完成。接下来会逐个显示，由你决定去向。",
+            "$n कार्य खुला रह गया। आगे आप उसे देखेंगे और तय करेंगे कि उसका क्या होगा।",
+            "Còn $n việc cần làm đang mở. Tiếp theo bạn sẽ xem và quyết định số phận của nó.",
         )
         else -> t(
             "$n tasks were left open. Next you'll see them one at a time and decide what happens to each.",
@@ -2873,6 +3563,10 @@ object S {
             "$n tugas masih terbuka. Setelah ini kamu akan melihatnya satu per satu dan memutuskan apa yang terjadi pada masing-masing.",
             "未完了のタスクが${n}件残っています。このあと1件ずつ見て、それぞれどうするか決めます。",
             "미완료로 남은 할 일이 ${n}개 있어요. 이어서 하나씩 보면서 각각 어떻게 할지 정해요.",
+            "بقيت مهام مفتوحة: $n. ستراها واحدة تلو الأخرى وتقرّر مصير كل منها.",
+            "还有 $n 个任务没完成。接下来会一个个显示，由你决定每一个的去向。",
+            "$n कार्य खुले रह गए। आगे आप उन्हें एक-एक करके देखेंगे और हर एक के लिए तय करेंगे।",
+            "Còn $n việc cần làm đang mở. Tiếp theo bạn sẽ xem từng việc và quyết định cho mỗi việc.",
         )
     }
 
@@ -2893,6 +3587,10 @@ object S {
                 "Catatan tentang bulan $m (opsional)",
                 "${m}についてのメモ(任意)",
                 "${m}에 대한 메모 (선택)",
+                "ملاحظة عن $m (اختياري)",
+                "写一句关于${m}的话（可选）",
+                "$m के बारे में एक नोट (वैकल्पिक)",
+                "Ghi chú về $m (tùy chọn)",
             )
         } else {
             t(
@@ -2909,12 +3607,16 @@ object S {
                 "Catatan tentang hari-hari ini (opsional)",
                 "これらの日についてのメモ(任意)",
                 "이 날들에 대한 메모 (선택)",
+                "ملاحظة عن هذه الأيام (اختياري)",
+                "写一句关于这些天的话（可选）",
+                "इन दिनों के बारे में एक नोट (वैकल्पिक)",
+                "Ghi chú về những ngày này (tùy chọn)",
             )
         }
     }
 
     fun decideTasks(n: Int): String = when {
-        n == 0 -> t("Finish", "Terminar", "Terminar", "Fertig", "Terminer", "Concludi", "Afronden", "Zakończ", "Завершить", "Bitir", "Selesai", "見直しを終える", "끝내기")
+        n == 0 -> t("Finish", "Terminar", "Terminar", "Fertig", "Terminer", "Concludi", "Afronden", "Zakończ", "Завершить", "Bitir", "Selesai", "見直しを終える", "끝내기", "إنهاء", "完成", "समाप्त करें", "Hoàn tất")
         n == 1 -> t(
             "Decide the task",
             "Decidir la tarea",
@@ -2929,6 +3631,10 @@ object S {
             "Putuskan tugas ini",
             "1件のタスクを決める",
             "할 일 정하기",
+            "قرّر مصير المهمة",
+            "决定这个任务",
+            "कार्य पर निर्णय लें",
+            "Quyết định việc này",
         )
         else -> t(
             "Decide the $n tasks",
@@ -2944,6 +3650,10 @@ object S {
             "Putuskan $n tugas",
             "${n}件のタスクを決める",
             "할 일 ${n}개 정하기",
+            "قرّر مصير المهام ($n)",
+            "决定这 $n 个任务",
+            "$n कार्यों पर निर्णय लें",
+            "Quyết định $n việc",
         )
     }
 
@@ -2961,6 +3671,10 @@ object S {
         "Tugas $i dari $n",
         "タスク ${i}/${n}",
         "할 일 ${i}/${n}",
+        "المهمة $i من $n",
+        "第 $i 个任务，共 $n 个",
+        "$n में से कार्य $i",
+        "Việc $i trên $n",
     )
     fun entryOf(i: Int, n: Int) = t(
         "Entry $i of $n",
@@ -2976,6 +3690,10 @@ object S {
         "Entri $i dari $n",
         "項目 ${i}/${n}",
         "항목 ${i}/${n}",
+        "الإدخال $i من $n",
+        "第 $i 条，共 $n 条",
+        "$n में से प्रविष्टि $i",
+        "Mục $i trên $n",
     )
     fun collectionOf(i: Int, n: Int) = t(
         "Collection $i of $n",
@@ -2991,6 +3709,10 @@ object S {
         "Koleksi $i dari $n",
         "コレクション ${i}/${n}",
         "목록 ${i}/${n}",
+        "القائمة $i من $n",
+        "第 $i 份清单，共 $n 份",
+        "$n में से सूची $i",
+        "Danh sách $i trên $n",
     )
 
     /** The review's own "Hecha": in a month review the task stays in that month (docs/pantallas.md 11.2). */
@@ -3010,6 +3732,10 @@ object S {
             "Tetap di bulan $m, ditandai dengan x.",
             "${m}に残り、x印が付きます。",
             "${m}에 그대로 남고 x 표시가 붙어요.",
+            "تبقى في $m وعليها علامة x.",
+            "留在$m，标上 x。",
+            "$m में रहता है, x से चिह्नित।",
+            "Vẫn ở $m, đánh dấu x.",
         )
     }
     val decideLater = t(
@@ -3026,6 +3752,10 @@ object S {
         "Putuskan nanti",
         "あとで決める",
         "나중에 정하기",
+        "قرّر لاحقًا",
+        "稍后决定",
+        "बाद में तय करें",
+        "Quyết định sau",
     )
     val decideLaterHow = t(
         "It stays open and the notice stays.",
@@ -3041,6 +3771,10 @@ object S {
         "Tetap terbuka dan pemberitahuannya tetap ada.",
         "未完了のまま残り、お知らせも消えません。",
         "미완료로 남고, 안내도 그대로 있어요.",
+        "تبقى مفتوحة ويبقى التنبيه.",
+        "它继续保持未完成，提醒也会保留。",
+        "यह खुला रहता है और सूचना बनी रहती है।",
+        "Việc vẫn mở và thông báo vẫn còn.",
     )
     val reviewFinished = t(
         "Review finished",
@@ -3056,6 +3790,10 @@ object S {
         "Tinjauan selesai",
         "見直し完了",
         "살펴보기 완료",
+        "انتهت المراجعة",
+        "回顾完成",
+        "समीक्षा पूरी हुई",
+        "Đã xem lại xong",
     )
 
     fun reviewEndTitle(month: YearMonth?, left: Int): String {
@@ -3076,6 +3814,10 @@ object S {
                     "Hari-hari ini, hampir selesai",
                     "これらの日、あと少し",
                     "이 날들, 거의 다 됐어요",
+                    "هذه الأيام، تقريبًا",
+                    "这些天，快好了",
+                    "ये दिन, लगभग",
+                    "Những ngày này, gần xong",
                 )
             } else {
                 t(
@@ -3092,6 +3834,10 @@ object S {
                     "Hari-hari ini, selesai ditinjau",
                     "これらの日、見直し済み",
                     "이 날들, 살펴봤어요",
+                    "هذه الأيام، تمت مراجعتها",
+                    "这些天，已回顾",
+                    "ये दिन, समीक्षा हो गई",
+                    "Những ngày này, đã xem lại",
                 )
             }
         }
@@ -3111,6 +3857,10 @@ object S {
                 "$m, hampir selesai",
                 "${m}、あと少し",
                 "${m}, 거의 다 됐어요",
+                "$m، تقريبًا",
+                "$m，快好了",
+                "$m, लगभग",
+                "$m, gần xong",
             )
         } else {
             t(
@@ -3127,6 +3877,10 @@ object S {
                 "$m, selesai ditinjau",
                 "${m}、見直し済み",
                 "${m}, 살펴봤어요",
+                "$m، تمت مراجعته",
+                "$m，已回顾",
+                "$m, समीक्षा हो गई",
+                "$m, đã xem lại",
             )
         }
     }
@@ -3147,6 +3901,10 @@ object S {
             "Kamu menyisakan $left $w untuk nanti. Pemberitahuannya tetap ada di tab Hari sampai kamu memutuskan.",
             "${left}件の${w}をあとに残しました。決めるまで、お知らせは「今日」に表示されたままです。",
             "나중에 정하려고 남겨 둔 할 일이 ${left}개 있어요. 정할 때까지 안내가 오늘 화면에 남아 있어요.",
+            "المهام المؤجلة: $left. يبقى التنبيه في «اليوم» حتى تقرّر.",
+            "你把 $left${w}留到了之后。提醒会一直留在“今天”，直到你决定。",
+            "आपने $left $w बाद के लिए छोड़ दिए। आपके तय करने तक सूचना आज पर बनी रहती है।",
+            "Bạn để lại $left $w cho sau. Thông báo vẫn ở Hôm nay cho đến khi bạn quyết định.",
         )
     } else {
         t(
@@ -3163,10 +3921,14 @@ object S {
             "Yang kamu pindahkan ke hari ini sudah ada di tab Hari, dan yang kamu pindahkan ke bulan lain menunggu di Mendatang.",
             "今日に移したものはすでに今日に入っていて、別の月に移したものは未来で待っています。",
             "오늘로 옮긴 것은 이미 오늘 목록에 있고, 다른 달로 옮긴 것은 미래에서 기다려요.",
+            "ما نقلته إلى اليوم موجود بالفعل في قائمتك، وما نقلته إلى شهر آخر ينتظر في المستقبل.",
+            "移到今天的已经在你的清单里，移到其他月份的在“未来”里等着。",
+            "जो आपने आज में ले जाया, वह पहले से आपकी सूची में है, और जो दूसरे माह में भेजा, वह भविष्य में इंतज़ार कर रहा है।",
+            "Việc bạn chuyển sang hôm nay đã nằm trong danh sách, còn việc chuyển sang tháng khác sẽ chờ ở Tương lai.",
         )
     }
 
-    val skip = t("Skip", "Saltar", "Pular", "Überspringen", "Passer", "Salta", "Overslaan", "Pomiń", "Пропустить", "Atla", "Lewati", "スキップ", "건너뛰기")
+    val skip = t("Skip", "Saltar", "Pular", "Überspringen", "Passer", "Salta", "Overslaan", "Pomiń", "Пропустить", "Atla", "Lewati", "スキップ", "건너뛰기", "تخطّي", "跳过", "छोड़ें", "Bỏ qua")
 
     fun fromDay(d: LocalDate): String {
         val w = weekdayNames()[d.dayOfWeek.ordinal]
@@ -3184,6 +3946,10 @@ object S {
             "$w, ${d.day}",
             "${d.day}日 ${w}",
             "${d.day}일 ${w}",
+            "$w ${d.day}",
+            "${d.day}日 $w",
+            "$w ${d.day}",
+            "$w ${d.day}",
         )
         return t(
             "From $phrase",
@@ -3199,6 +3965,10 @@ object S {
             "Dari $phrase",
             "${phrase}から",
             "${phrase}에서",
+            "من $phrase",
+            "来自$phrase",
+            "$phrase से",
+            "Từ $phrase",
         )
     }
 
@@ -3218,6 +3988,10 @@ object S {
             "Tugas $name",
             "${name}のタスク",
             "${name} 할 일",
+            "مهام $name",
+            "${name}的任务",
+            "$name के कार्य",
+            "Việc của $name",
         )
     }
 
@@ -3237,6 +4011,10 @@ object S {
             "Kalender, $date",
             "カレンダー、${date}",
             "캘린더, ${date}",
+            "التقويم، $date",
+            "日历，$date",
+            "कैलेंडर, $date",
+            "Lịch, $date",
         )
     }
 
@@ -3256,6 +4034,10 @@ object S {
             "Mendatang, $place",
             "未来、${place}",
             "미래, ${place}",
+            "المستقبل، $place",
+            "未来：$place",
+            "भविष्य, $place",
+            "Tương lai, $place",
         )
     }
 
@@ -3273,6 +4055,10 @@ object S {
         "Pindahkan ke kalender",
         "カレンダーに移す",
         "캘린더로 옮기기",
+        "نقل إلى التقويم",
+        "移到日历",
+        "कैलेंडर में ले जाएँ",
+        "Chuyển vào lịch",
     )
     fun goesTo(label: String) = sentence(t(
         "Goes to $label",
@@ -3288,8 +4074,12 @@ object S {
         "Masuk ke $label",
         "${label}に移ります。",
         "가는 곳: ${label}",
+        "تنتقل إلى $label",
+        "将移到：$label",
+        "$label में जाएगा",
+        "Sẽ chuyển đến $label",
     ))
-    val futureLeave = t("Leave it", "Dejarla", "Deixar", "Lassen", "La laisser", "Lasciala", "Laten staan", "Zostaw", "Оставить", "Kalsın", "Biarkan", "そのままにする", "그대로 두기")
+    val futureLeave = t("Leave it", "Dejarla", "Deixar", "Lassen", "La laisser", "Lasciala", "Laten staan", "Zostaw", "Оставить", "Kalsın", "Biarkan", "そのままにする", "그대로 두기", "اتركها", "保留", "रहने दें", "Để nguyên")
     val futureLeaveHow = t(
         "It keeps waiting in Future.",
         "Sigue esperando en Futuro.",
@@ -3304,6 +4094,10 @@ object S {
         "Tetap menunggu di Mendatang.",
         "未来で待ち続けます。",
         "미래에서 계속 기다려요.",
+        "تظل تنتظر في المستقبل.",
+        "它继续在“未来”里等着。",
+        "यह भविष्य में इंतज़ार करता रहता है।",
+        "Việc này tiếp tục chờ ở Tương lai.",
     )
     val futureAllDecided = t(
         "Everything Future kept for this month is decided.",
@@ -3319,6 +4113,10 @@ object S {
         "Semua yang disimpan Mendatang untuk bulan ini sudah diputuskan.",
         "この月のために未来にあったものは、すべて決まりました。",
         "이번 달을 위해 미래에 있던 항목을 모두 정했어요.",
+        "تم البتّ في كل ما احتفظ به المستقبل لهذا الشهر.",
+        "“未来”为这个月留着的内容都已决定。",
+        "भविष्य ने इस माह के लिए जो कुछ रखा था, सब तय हो गया।",
+        "Mọi thứ Tương lai giữ cho tháng này đã được quyết định.",
     )
 
     // --- 11. Buscar -------------------------------------------------------------------------
@@ -3337,8 +4135,12 @@ object S {
         "Satu kata atau #tagar",
         "ことば、または #タグ",
         "단어 또는 #태그",
+        "كلمة أو #وسم",
+        "一个词或 #标签",
+        "कोई शब्द या #टैग",
+        "Một từ hoặc #thẻ",
     )
-    val filterOpen = t("Open", "Abiertas", "Abertas", "Offen", "Ouvertes", "Aperte", "Open", "Otwarte", "Открытые", "Açık", "Terbuka", "未完了", "미완료")
+    val filterOpen = t("Open", "Abiertas", "Abertas", "Offen", "Ouvertes", "Aperte", "Open", "Otwarte", "Открытые", "Açık", "Terbuka", "未完了", "미완료", "فتح", "打开", "खोलें", "Mở")
     fun monthGroup(month: YearMonth) = monthTitle(month)
     fun futureGroup(month: YearMonth) = wentToFuture(month)
     val searchEmpty = t(
@@ -3355,6 +4157,10 @@ object S {
         "Cari sebuah kata, atau ketik # dan tagar.",
         "ことばを入力するか、# とタグを入力してください。",
         "단어를 검색하거나 # 뒤에 태그를 입력해 보세요.",
+        "ابحث عن كلمة، أو اكتب # ثم وسمًا.",
+        "搜索一个词，或输入 # 加标签。",
+        "कोई शब्द खोजें, या # के साथ टैग लिखें।",
+        "Tìm một từ, hoặc gõ # và một thẻ.",
     )
     val searchNothing = t(
         "Nothing with those words.",
@@ -3370,11 +4176,15 @@ object S {
         "Tidak ada yang memuat kata-kata itu.",
         "そのことばに合うものはありません。",
         "그 단어가 들어간 것이 없어요.",
+        "لا شيء بهذه الكلمات.",
+        "没有包含这些词的内容。",
+        "इन शब्दों वाला कुछ नहीं मिला।",
+        "Không có gì với những từ này.",
     )
 
     // --- 12. Clave --------------------------------------------------------------------------
 
-    val keyTitle = t("Key", "Clave", "Legenda", "Legende", "Légende", "Legenda", "Legenda", "Legenda", "Легенда", "Anahtar", "Keterangan", "凡例", "범례")
+    val keyTitle = t("Key", "Clave", "Legenda", "Legende", "Légende", "Legenda", "Legenda", "Legenda", "Легенда", "Anahtar", "Keterangan", "凡例", "범례", "المفتاح", "图例", "कुंजी", "Chú giải")
     val keyWhat = t(
         "What each symbol means",
         "Qué significa cada símbolo",
@@ -3389,6 +4199,10 @@ object S {
         "Arti setiap simbol",
         "それぞれの記号の意味",
         "각 기호의 뜻",
+        "معنى كل رمز",
+        "每个符号的含义",
+        "हर चिह्न का अर्थ",
+        "Ý nghĩa từng ký hiệu",
     )
     val keyWrite = t(
         "What you write down",
@@ -3404,6 +4218,10 @@ object S {
         "Yang kamu catat",
         "書き留めるもの",
         "적는 것",
+        "ما تدوّنه",
+        "你写下的内容",
+        "आप जो लिखते हैं",
+        "Những gì bạn ghi",
     )
     val keyHappened = t(
         "What happened to a task",
@@ -3419,6 +4237,10 @@ object S {
         "Apa yang terjadi pada tugas",
         "タスクのその後",
         "할 일에 일어난 일",
+        "ما جرى للمهمة",
+        "任务的去向",
+        "कार्य के साथ क्या हुआ",
+        "Việc cần làm đã ra sao",
     )
     val keyMargin = t(
         "In the margin",
@@ -3434,6 +4256,10 @@ object S {
         "Di margin",
         "余白",
         "여백",
+        "في الهامش",
+        "在边上",
+        "हाशिये में",
+        "Ở lề",
     )
     val keyTask = t(
         "Something to do.",
@@ -3449,6 +4275,10 @@ object S {
         "Sesuatu yang perlu dikerjakan.",
         "やること。",
         "해야 할 일.",
+        "شيء عليك فعله.",
+        "要做的事。",
+        "करने के लिए कोई काम।",
+        "Việc cần làm.",
     )
     val keyEvent = t(
         "Something that happens on a date.",
@@ -3464,6 +4294,10 @@ object S {
         "Sesuatu yang terjadi pada suatu tanggal.",
         "日付のある出来事。",
         "날짜에 일어나는 일.",
+        "شيء يحدث في تاريخ معيّن.",
+        "在某个日期发生的事。",
+        "किसी तारीख़ पर होने वाली बात।",
+        "Việc diễn ra vào một ngày.",
     )
     val keyNote = t(
         "Something you want to remember.",
@@ -3479,6 +4313,10 @@ object S {
         "Sesuatu yang ingin kamu ingat.",
         "覚えておきたいこと。",
         "기억하고 싶은 것.",
+        "شيء تريد تذكّره.",
+        "想要记住的事。",
+        "कुछ जो आप याद रखना चाहते हैं।",
+        "Điều bạn muốn nhớ.",
     )
     val keyDone = t(
         "Stays where it was, with an x.",
@@ -3494,8 +4332,12 @@ object S {
         "Tetap di tempatnya, dengan x.",
         "元の場所に残り、xが付きます。",
         "있던 자리에 x 표시와 함께 남아요.",
+        "تبقى في مكانها مع علامة x.",
+        "留在原处，标上 x。",
+        "वहीं रहता है, x के साथ।",
+        "Vẫn ở chỗ cũ, kèm dấu x.",
     )
-    val movedName = t("Moved", "Pasada", "Passada", "Verschoben", "Déplacée", "Spostata", "Verplaatst", "Przeniesione", "Перенесена", "Taşındı", "Dipindahkan", "移動済み", "옮김")
+    val movedName = t("Moved", "Pasada", "Passada", "Verschoben", "Déplacée", "Spostata", "Verplaatst", "Przeniesione", "Перенесена", "Taşındı", "Dipindahkan", "移動済み", "옮김", "منقولة", "已移动", "आगे बढ़ाया", "Đã chuyển")
     val keyMoved = t(
         "You took it to another day or a list. In the method: migrated.",
         "La llevaste a otro día o a una lista. En el método: migrada.",
@@ -3510,6 +4352,10 @@ object S {
         "Kamu membawanya ke hari lain atau ke daftar. Dalam metode: dimigrasikan.",
         "別の日やリストに移したもの。メソッドでは「移行済み」。",
         "다른 날이나 목록으로 옮겼어요. 원래 방식에서는 이월이라고 불러요.",
+        "نقلتها إلى يوم آخر أو إلى قائمة. في المنهج: مرحّلة.",
+        "你把它移到了另一天或一份清单。方法里叫：迁移。",
+        "आप इसे दूसरे दिन या किसी सूची में ले गए। विधि में: स्थानांतरित।",
+        "Bạn đã đưa nó sang ngày khác hoặc một danh sách. Trong phương pháp: đã chuyển.",
     )
     val otherMonthName = t(
         "Moved to another month",
@@ -3525,6 +4371,10 @@ object S {
         "Dipindahkan ke bulan lain",
         "別の月へ移動済み",
         "다른 달로 옮김",
+        "نُقلت إلى شهر آخر",
+        "已移到其他月份",
+        "दूसरे माह में भेजा",
+        "Đã chuyển sang tháng khác",
     )
     val keyOtherMonth = t(
         "Waits in Future. In the method: scheduled.",
@@ -3540,6 +4390,10 @@ object S {
         "Menunggu di Mendatang. Dalam metode: dijadwalkan.",
         "未来で待っています。メソッドでは「スケジュール済み」。",
         "미래에서 기다려요. 원래 방식에서는 예정이라고 불러요.",
+        "تنتظر في المستقبل. في المنهج: مجدولة.",
+        "在“未来”里等着。方法里叫：排期。",
+        "भविष्य में इंतज़ार करता है। विधि में: निर्धारित।",
+        "Chờ ở Tương lai. Trong phương pháp: đã lên lịch.",
     )
     val keyDiscarded = t(
         "It wasn't needed any more. In the method: irrelevant.",
@@ -3555,6 +4409,10 @@ object S {
         "Sudah tidak diperlukan. Dalam metode: tidak relevan.",
         "もう必要なくなったもの。メソッドでは「不要」。",
         "더는 필요 없었어요. 원래 방식에서는 관련 없음이라고 불러요.",
+        "لم تعد مطلوبة. في المنهج: غير ذات صلة.",
+        "不再需要了。方法里叫：无关。",
+        "अब इसकी ज़रूरत नहीं रही। विधि में: अप्रासंगिक।",
+        "Không cần nữa. Trong phương pháp: không còn liên quan.",
     )
     val keyPriority = t(
         "What comes before everything else.",
@@ -3570,6 +4428,10 @@ object S {
         "Yang didahulukan sebelum yang lain.",
         "何よりも先にすること。",
         "다른 모든 것보다 먼저인 것.",
+        "ما يأتي قبل كل شيء.",
+        "排在一切之前的事。",
+        "जो सबसे पहले आता है।",
+        "Điều đứng trước mọi thứ khác.",
     )
     val keyInspiration = t(
         "An idea worth keeping.",
@@ -3585,6 +4447,10 @@ object S {
         "Ide yang layak disimpan.",
         "残しておきたいアイデア。",
         "간직할 만한 생각.",
+        "فكرة تستحق الاحتفاظ بها.",
+        "值得留住的想法。",
+        "रखने लायक कोई विचार।",
+        "Một ý tưởng đáng giữ.",
     )
     val keyExplore = t(
         "Something to look into.",
@@ -3600,6 +4466,10 @@ object S {
         "Sesuatu yang perlu ditelusuri.",
         "調べてみたいこと。",
         "알아볼 만한 것.",
+        "شيء تريد الاطلاع عليه.",
+        "想去了解的事。",
+        "देखने-समझने लायक कोई बात।",
+        "Điều cần tìm hiểu.",
     )
 
     /** The prefixes of docs/tecnico.md 6.2, as written; ^...^ goes in bold. */
@@ -3617,6 +4487,10 @@ object S {
         "Saat menulis: mulai dengan ^o^ untuk acara, ^-^ untuk catatan, dan ^*^, ^!^ atau ^?^ untuk tanda margin.",
         "書くとき: 行の先頭に ^o^ を付けるとイベント、^-^ を付けるとメモ、^*^、^!^、^?^ を付けると余白の印になります。",
         "줄을 이렇게 시작하면 종류가 바뀌어요. 일정 ^o^, 메모 ^-^, 여백 표시 ^*^ ^!^ ^?^.",
+        "عند الكتابة: ابدأ بـ ^o^ للحدث، و^-^ للملاحظة، و^*^ أو ^!^ أو ^?^ لعلامات الهامش.",
+        "书写时：以 ^o^ 开头表示事件，^-^ 表示笔记，^*^、^!^ 或 ^?^ 表示边注标记。",
+        "लिखते समय: कार्यक्रम के लिए ^o^, नोट के लिए ^-^, और हाशिये के चिह्नों के लिए ^*^, ^!^ या ^?^ से शुरू करें।",
+        "Khi viết: bắt đầu bằng ^o^ cho sự kiện, ^-^ cho ghi chú, và ^*^, ^!^ hoặc ^?^ cho dấu lề.",
     )
 
     // The guide of the first start (docs/pantallas.md 13.1): four steps, each with its moving picture.
@@ -3634,6 +4508,10 @@ object S {
         "Mulai menulis",
         "書き始める",
         "적기 시작하기",
+        "ابدأ الكتابة",
+        "开始书写",
+        "लिखना शुरू करें",
+        "Bắt đầu viết",
     )
     fun guideStep(i: Int, n: Int) = t(
         "Step $i of $n",
@@ -3649,6 +4527,10 @@ object S {
         "Langkah $i dari $n",
         "ステップ ${i}/${n}",
         "${n}단계 중 ${i}단계",
+        "الخطوة $i من $n",
+        "第 $i 步，共 $n 步",
+        "$n में से चरण $i",
+        "Bước $i trên $n",
     )
     val guideTitles = listOf(
         t(
@@ -3665,6 +4547,10 @@ object S {
             "Tulis dalam satu baris",
             "1行で書く",
             "한 줄로 적어요",
+            "اكتبها في سطر واحد",
+            "写成一行",
+            "इसे एक पंक्ति में लिखें",
+            "Viết trong một dòng",
         ),
         t(
             "Tap the dot when it's done",
@@ -3680,6 +4566,10 @@ object S {
             "Ketuk titiknya kalau sudah selesai",
             "終わったら点をタップ",
             "끝나면 점을 탭해요",
+            "اضغط على النقطة عند إنجازها",
+            "完成后点一下圆点",
+            "पूरा होने पर बिंदु पर टैप करें",
+            "Chạm vào dấu chấm khi xong",
         ),
         t(
             "You move what's pending",
@@ -3695,6 +4585,10 @@ object S {
             "Yang tertunda, kamu yang memindahkan",
             "残ったものは自分で移す",
             "남은 일은 직접 옮겨요",
+            "أنت تنقل ما بقي معلّقًا",
+            "未完成的由你来移动",
+            "जो बाकी है, उसे आप आगे ले जाते हैं",
+            "Bạn chuyển những việc còn dang dở",
         ),
         t(
             "Once a month, review",
@@ -3710,6 +4604,10 @@ object S {
             "Sebulan sekali, tinjau",
             "月に1回、見直す",
             "한 달에 한 번, 살펴봐요",
+            "مرة كل شهر، راجِع",
+            "每月回顾一次",
+            "महीने में एक बार, समीक्षा करें",
+            "Mỗi tháng một lần, xem lại",
         ),
     )
     val guideTexts = listOf(
@@ -3727,6 +4625,10 @@ object S {
             "Setiap baris adalah tugas, acara, atau catatan. Simbol di depannya memberi tahu yang mana.",
             "1行が、タスク、イベント、メモのどれか1つです。行の頭の記号で見分けます。",
             "한 줄이 할 일, 일정, 메모 중 하나예요. 앞에 붙은 기호가 무엇인지 알려 줘요.",
+            "كل سطر هو مهمة أو حدث أو ملاحظة. الرمز في بدايته يخبرك أيّها.",
+            "每一行是一个任务、事件或笔记，开头的符号告诉你是哪一种。",
+            "हर पंक्ति एक कार्य, कार्यक्रम या नोट है। आगे का चिह्न बताता है कि कौन-सा।",
+            "Mỗi dòng là một việc cần làm, một sự kiện hoặc một ghi chú. Ký hiệu đứng trước cho bạn biết là loại nào.",
         ),
         t(
             "The task stays where it was, marked with an x. If you got it wrong, another tap reopens it.",
@@ -3742,6 +4644,10 @@ object S {
             "Tugas tetap di tempatnya, ditandai dengan x. Kalau keliru, ketuk sekali lagi untuk membukanya kembali.",
             "タスクは元の場所に残り、xが付きます。間違えたら、もう一度タップすると未完了に戻ります。",
             "할 일은 있던 자리에 x 표시와 함께 남아요. 잘못 눌렀다면 한 번 더 탭하면 다시 열려요.",
+            "تبقى المهمة في مكانها وعليها علامة x. وإن أخطأت، تعيدها نقرة أخرى مفتوحة.",
+            "任务留在原处，标上 x。点错了，再点一下就会重新打开。",
+            "कार्य वहीं रहता है, x से चिह्नित। गलती हो जाए तो एक और टैप उसे फिर खोल देता है।",
+            "Việc cần làm vẫn ở chỗ cũ, đánh dấu x. Nếu bạn nhầm, chạm thêm một lần nữa sẽ mở lại.",
         ),
         t(
             "Nothing moves on its own. You move a task to tomorrow, take it to another month or discard it, and the page keeps the trace.",
@@ -3757,6 +4663,10 @@ object S {
             "Tidak ada yang berpindah sendiri. Kamu memindahkan tugas ke besok, membawanya ke bulan lain, atau membuangnya, dan halaman menyimpan jejaknya.",
             "何も勝手には動きません。タスクを明日に移す、別の月に移す、破棄する。そのあとが、ページに跡として残ります。",
             "저절로 움직이는 것은 없어요. 할 일을 내일로 옮기거나, 다른 달로 옮기거나, 버리면 페이지에 흔적이 남아요.",
+            "لا شيء يتحرك من تلقاء نفسه. تنقل المهمة إلى الغد أو إلى شهر آخر أو تستبعدها، وتحتفظ الصفحة بالأثر.",
+            "什么都不会自己移动。你可以把任务移到明天、移到其他月份或放弃，页面会留下痕迹。",
+            "कुछ भी अपने-आप नहीं हिलता। आप कार्य को कल में ले जाते हैं, दूसरे माह में भेजते हैं या त्याग देते हैं, और पन्ना उसका निशान रखता है।",
+            "Không có gì tự di chuyển. Bạn chuyển việc sang ngày mai, sang tháng khác hoặc bỏ nó, và trang giấy giữ lại dấu vết.",
         ),
         t(
             "Bobbin tells you what was left open last month and shows it to you one at a time, with each way out explained.",
@@ -3772,6 +4682,10 @@ object S {
             "Bobbin memberi tahu apa yang masih terbuka dari bulan lalu dan menampilkannya satu per satu, dengan setiap pilihan dijelaskan.",
             "先月に未完了だったものをBobbinが知らせ、1件ずつ表示して、それぞれの選択肢を説明します。",
             "Bobbin이 지난달에 미완료로 남은 것을 알려 주고, 하나씩 보여 주면서 각 선택지를 설명해요.",
+            "يخبرك Bobbin بما بقي مفتوحًا في الشهر الماضي ويعرضه عليك واحدًا تلو الآخر، مع شرح كل مخرج.",
+            "Bobbin 会告诉你上个月有哪些没完成，并一项一项展示给你，把每种处理方式都讲清楚。",
+            "Bobbin बताता है कि पिछले माह क्या खुला रह गया था और उसे एक-एक करके दिखाता है, हर रास्ते की व्याख्या के साथ।",
+            "Bobbin cho bạn biết tháng trước còn gì đang mở và cho xem từng việc một, kèm giải thích từng cách xử lý.",
         ),
     )
 
@@ -3790,6 +4704,10 @@ object S {
         "Beli tinta",
         "インクを買う",
         "잉크 사기",
+        "اشترِ حبرًا",
+        "买墨水",
+        "स्याही खरीदें",
+        "Mua mực",
     )
     val guideDinner = t(
         "Dinner with Ana",
@@ -3805,6 +4723,10 @@ object S {
         "Makan malam dengan Ana",
         "アナと夕食",
         "아나와 저녁 식사",
+        "عشاء مع سارة",
+        "和小安吃晚饭",
+        "अनन्या के साथ डिनर",
+        "Ăn tối với Ana",
     )
     val guideOpens = t(
         "Opens at 10",
@@ -3820,6 +4742,10 @@ object S {
         "Buka jam 10",
         "10時に開店",
         "10시에 열어요",
+        "يفتح الساعة 10",
+        "10 点开门",
+        "10 बजे खुलता है",
+        "Mở cửa lúc 10 giờ",
     )
     val guideQuote = t(
         "Send the quote",
@@ -3835,6 +4761,10 @@ object S {
         "Kirim penawaran",
         "見積もりを送る",
         "견적서 보내기",
+        "أرسل عرض السعر",
+        "发送报价",
+        "कोटेशन भेजें",
+        "Gửi báo giá",
     )
     val guideBank = t(
         "Call the bank",
@@ -3850,8 +4780,12 @@ object S {
         "Telepon bank",
         "銀行に電話する",
         "은행에 전화하기",
+        "اتصل بالبنك",
+        "给银行打电话",
+        "बैंक को फ़ोन करें",
+        "Gọi cho ngân hàng",
     )
-    val guideCopy = t("Copy", "Copia", "Cópia", "Kopie", "Copie", "Copia", "Kopie", "Kopia", "Копия", "Kopya", "Salinan", "コピー", "사본")
+    val guideCopy = t("Copy", "Copia", "Cópia", "Kopie", "Copie", "Copia", "Kopie", "Kopia", "Копия", "Kopya", "Salinan", "コピー", "사본", "نسخة", "副本", "प्रति", "Bản sao")
     fun guideUnclosed(n: Int) = t(
         "$n tasks not closed",
         "$n tareas sin cerrar",
@@ -3866,8 +4800,12 @@ object S {
         "$n tugas terbuka",
         "未完了のタスク${n}件",
         "미완료 할 일 ${n}개",
+        "المهام غير المكتملة: $n",
+        "$n 个任务未完成",
+        "$n कार्य अधूरे",
+        "$n việc cần làm chưa xong",
     )
-    val guideToToday = t("To today", "A hoy", "Para hoje", "Auf heute", "À aujourd'hui", "A oggi", "Naar vandaag", "Na dziś", "На сегодня", "Bugüne", "Ke hari ini", "今日へ", "오늘로")
+    val guideToToday = t("To today", "A hoy", "Para hoje", "Auf heute", "À aujourd'hui", "A oggi", "Naar vandaag", "Na dziś", "На сегодня", "Bugüne", "Ke hari ini", "今日へ", "오늘로", "إلى اليوم", "到今天", "आज में", "Sang hôm nay")
     val guideToMonth = t(
         "Other month",
         "A otro mes",
@@ -3882,11 +4820,15 @@ object S {
         "Bulan lain",
         "別の月へ",
         "다른 달로",
+        "شهر آخر",
+        "其他月份",
+        "दूसरा माह",
+        "Tháng khác",
     )
 
     // --- 13. Ajustes ------------------------------------------------------------------------
 
-    val sectionHelp = t("Help", "Ayuda", "Ajuda", "Hilfe", "Aide", "Aiuto", "Help", "Pomoc", "Помощь", "Yardım", "Bantuan", "ヘルプ", "도움말")
+    val sectionHelp = t("Help", "Ayuda", "Ajuda", "Hilfe", "Aide", "Aiuto", "Help", "Pomoc", "Помощь", "Yardım", "Bantuan", "ヘルプ", "도움말", "مساعدة", "帮助", "सहायता", "Trợ giúp")
     val guideAgain = t(
         "See the guide again",
         "Ver la guía otra vez",
@@ -3901,6 +4843,10 @@ object S {
         "Lihat panduan lagi",
         "ガイドをもう一度見る",
         "가이드 다시 보기",
+        "عرض الدليل مجددًا",
+        "再看一遍引导",
+        "गाइड फिर से देखें",
+        "Xem lại hướng dẫn",
     )
     val guideAgainSub = t(
         "The four screens from the first start.",
@@ -3916,6 +4862,10 @@ object S {
         "Empat layar dari saat pertama dibuka.",
         "初回起動時の4つの画面。",
         "첫 실행 때 본 네 화면이에요.",
+        "الشاشات الأربع من أول تشغيل.",
+        "首次启动时的四个页面。",
+        "पहली बार खुलने पर दिखी चार स्क्रीन।",
+        "Bốn màn hình của lần mở đầu tiên.",
     )
     val keyRowSub = t(
         "The method's key, with its usual names.",
@@ -3931,6 +4881,10 @@ object S {
         "Keterangan metode, dengan nama-nama yang biasa dipakai.",
         "メソッドの凡例。ふだん使われる名前で説明します。",
         "방식의 범례와 원래 쓰는 이름이에요.",
+        "مفتاح المنهج بأسمائه المعتادة.",
+        "方法的图例，用的是惯用名称。",
+        "विधि की कुंजी, उसके सामान्य नामों के साथ।",
+        "Bảng chú giải của phương pháp, với tên gọi quen thuộc.",
     )
     val settingsTitle = t(
         "Settings",
@@ -3946,8 +4900,12 @@ object S {
         "Pengaturan",
         "設定",
         "설정",
+        "الإعدادات",
+        "设置",
+        "सेटिंग",
+        "Cài đặt",
     )
-    val sectionDay = t("Day", "Día", "Dia", "Tag", "Jour", "Giorno", "Dag", "Dzień", "День", "Gün", "Hari", "1日", "하루")
+    val sectionDay = t("Day", "Día", "Dia", "Tag", "Jour", "Giorno", "Dag", "Dzień", "День", "Gün", "Hari", "1日", "하루", "اليوم", "日", "दिन", "Ngày")
     val dayStartRow = t(
         "The day starts",
         "El día empieza",
@@ -3962,10 +4920,14 @@ object S {
         "Hari dimulai",
         "1日の始まり",
         "하루의 시작",
+        "يبدأ اليوم",
+        "一天从几点开始",
+        "दिन शुरू होता है",
+        "Ngày bắt đầu",
     )
     fun dayStartAt(hour: Int): String {
         val time = clock(hour, 0)
-        return t("At $time", "A las $time", "Às $time", "Um $time", "À $time", "Alle $time", "Om $time", "O $time", "В $time", "Saat $time", "Pukul $time", "${time}から", "${time}")
+        return t("At $time", "A las $time", "Às $time", "Um $time", "À $time", "Alle $time", "Om $time", "O $time", "В $time", "Saat $time", "Pukul $time", "${time}から", "${time}", "عند $time", "$time", "$time पर", "Lúc $time")
     }
     val weekStartRow = t(
         "The week starts",
@@ -3981,6 +4943,10 @@ object S {
         "Pekan dimulai",
         "週の始まり",
         "한 주의 시작",
+        "يبدأ الأسبوع",
+        "一周从哪天开始",
+        "सप्ताह शुरू होता है",
+        "Tuần bắt đầu",
     )
 
     private fun ptWeekArticle(day: DayOfWeek) = if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY) "No" else "Na"
@@ -4001,6 +4967,10 @@ object S {
             "$name, seperti sistem",
             "${name}(システムと同じ)",
             "${name}, 시스템 설정대로",
+            "$name، مثل النظام",
+            "$name，与系统一致",
+            "$name, सिस्टम के अनुसार",
+            "$name, theo hệ thống",
         )
     }
 
@@ -4020,6 +4990,10 @@ object S {
             "$name",
             name,
             name,
+            name,
+            name,
+            name,
+            name,
         )
     }
 
@@ -4037,6 +5011,10 @@ object S {
         "Seperti sistem",
         "システムと同じ",
         "시스템 설정대로",
+        "مثل النظام",
+        "与系统一致",
+        "सिस्टम के अनुसार",
+        "Theo hệ thống",
     )
     val sectionReminder = t(
         "Reminder",
@@ -4052,6 +5030,10 @@ object S {
         "Pengingat",
         "リマインダー",
         "알림",
+        "تذكير",
+        "提醒",
+        "रिमाइंडर",
+        "Nhắc nhở",
     )
     val reminderRow = t(
         "Reminder to go over the day",
@@ -4067,11 +5049,15 @@ object S {
         "Pengingat untuk meninjau hari",
         "1日を見直すリマインダー",
         "하루 살펴보기 알림",
+        "تذكير بمراجعة اليوم",
+        "回顾一天的提醒",
+        "दिन की समीक्षा की याद",
+        "Nhắc xem lại ngày",
     )
-    val reminderOff = t("Off", "Apagado", "Desativado", "Aus", "Désactivé", "Disattivato", "Uit", "Wyłączone", "Выключено", "Kapalı", "Mati", "オフ", "꺼짐")
+    val reminderOff = t("Off", "Apagado", "Desativado", "Aus", "Désactivé", "Disattivato", "Uit", "Wyłączone", "Выключено", "Kapalı", "Mati", "オフ", "꺼짐", "متوقف", "关闭", "बंद", "Tắt")
     fun reminderAt(hour: Int, minute: Int): String {
         val time = clock(hour, minute)
-        return t("At $time", "A las $time", "Às $time", "Um $time", "À $time", "Alle $time", "Om $time", "O $time", "В $time", "Saat $time", "Pukul $time", "${time}に通知", "${time}")
+        return t("At $time", "A las $time", "Às $time", "Um $time", "À $time", "Alle $time", "Om $time", "O $time", "В $time", "Saat $time", "Pukul $time", "${time}に通知", "${time}", "عند $time", "$time", "$time पर", "Lúc $time")
     }
     val reminderDenied = t(
         "Bobbin's notifications are turned off in the system.",
@@ -4087,6 +5073,10 @@ object S {
         "Notifikasi Bobbin dimatikan di sistem.",
         "Bobbinの通知がシステムでオフになっています。",
         "시스템에서 Bobbin 알림이 꺼져 있어요.",
+        "إشعارات Bobbin متوقفة في النظام.",
+        "Bobbin 的通知在系统中已关闭。",
+        "सिस्टम में Bobbin की सूचनाएँ बंद हैं।",
+        "Thông báo của Bobbin đang tắt trong hệ thống.",
     )
     val openSystemSettings = t(
         "Open settings",
@@ -4102,6 +5092,10 @@ object S {
         "Buka pengaturan",
         "設定を開く",
         "설정 열기",
+        "فتح الإعدادات",
+        "打开设置",
+        "सेटिंग खोलें",
+        "Mở cài đặt",
     )
     val sectionPrivacy = t(
         "Privacy",
@@ -4117,6 +5111,10 @@ object S {
         "Privasi",
         "プライバシー",
         "개인정보",
+        "الخصوصية",
+        "隐私",
+        "गोपनीयता",
+        "Quyền riêng tư",
     )
     val lockRow = t(
         "Lock the journal",
@@ -4132,6 +5130,10 @@ object S {
         "Kunci jurnal",
         "ジャーナルをロック",
         "다이어리 잠금",
+        "قفل اليوميات",
+        "锁定手账",
+        "जर्नल लॉक करें",
+        "Khóa nhật ký",
     )
     val lockSubtitle = t(
         "Asks for your face, your fingerprint or your phone code",
@@ -4147,6 +5149,10 @@ object S {
         "Meminta wajah, sidik jari, atau kode ponselmu",
         "顔、指紋、または端末のパスコードで開きます",
         "얼굴, 지문 또는 휴대폰 암호를 요청해요",
+        "يطلب وجهك أو بصمتك أو رمز هاتفك",
+        "需要面容、指纹或手机密码",
+        "चेहरा, फ़िंगरप्रिंट या फ़ोन का कोड माँगता है",
+        "Yêu cầu khuôn mặt, vân tay hoặc mật mã điện thoại",
     )
     val lockUnavailable = t(
         "Set a screen lock on your phone to use this.",
@@ -4162,8 +5168,12 @@ object S {
         "Atur kunci layar di ponselmu untuk memakainya.",
         "使うには、端末で画面ロックを設定してください。",
         "사용하려면 휴대폰에 화면 잠금을 설정하세요.",
+        "اضبط قفل الشاشة في هاتفك لاستخدام هذه الميزة.",
+        "请先在手机上设置锁屏，才能使用。",
+        "इसका उपयोग करने के लिए अपने फ़ोन में स्क्रीन लॉक सेट करें।",
+        "Hãy đặt khóa màn hình cho điện thoại để dùng tính năng này.",
     )
-    val sectionNotebook = t("Notebook", "Cuaderno", "Caderno", "Notizbuch", "Carnet", "Quaderno", "Notitieboek", "Notatnik", "Блокнот", "Defter", "Buku catatan", "ノート", "노트")
+    val sectionNotebook = t("Notebook", "Cuaderno", "Caderno", "Notizbuch", "Carnet", "Quaderno", "Notitieboek", "Notatnik", "Блокнот", "Defter", "Buku catatan", "ノート", "노트", "دفتر", "笔记本", "नोटबुक", "Sổ tay")
     val previewTask = t(
         "Buy ink",
         "Comprar tinta",
@@ -4178,6 +5188,10 @@ object S {
         "Beli tinta",
         "インクを買う",
         "잉크 사기",
+        "اشترِ حبرًا",
+        "买墨水",
+        "स्याही खरीदें",
+        "Mua mực",
     )
     val previewEvent = t(
         "Dinner with Ana",
@@ -4193,6 +5207,10 @@ object S {
         "Makan malam dengan Ana",
         "アナと夕食",
         "아나와 저녁 식사",
+        "عشاء مع سارة",
+        "和小安吃晚饭",
+        "अनन्या के साथ डिनर",
+        "Ăn tối với Ana",
     )
 
     private val COVER_ORDER = listOf("rose", "peach", "butter", "sage", "mint", "sky", "periwinkle", "lilac")
@@ -4212,6 +5230,10 @@ object S {
             "Mawar, Persik, Mentega, Hijau sage, Mint, Langit, Periwinkle, Lilac",
             "ローズ, ピーチ, バター, セージ, ミント, スカイ, ペリウィンクル, ライラック",
             "로즈, 피치, 버터, 세이지, 민트, 하늘, 페리윙클, 라일락",
+            "وردي, خوخي, كريمي, أخضر مريمي, نعناعي, سماوي, أزرق بنفسجي, ليلكي",
+            "玫瑰, 蜜桃, 奶油, 鼠尾草绿, 薄荷, 天空, 长春花蓝, 丁香紫",
+            "गुलाबी, आड़ू, मक्खनी, सेज, पुदीना, आसमानी, नीलकंठी, लैवेंडर",
+            "Hồng, Đào, Bơ, Xô thơm, Bạc hà, Trời, Dừa cạn, Tử đinh hương",
         ).split(", ")
         return names[COVER_ORDER.indexOf(id).takeIf { it >= 0 } ?: COVER_ORDER.indexOf("sage")]
     }
@@ -4233,6 +5255,10 @@ object S {
             "titik-titik, bergaris, kotak-kotak, polos",
             "ドット, 罫線, 方眼, 無地",
             "도트, 줄, 모눈, 무지",
+            "منقّط, مسطّر, مربعات, فارغ",
+            "点阵, 横线, 方格, 空白",
+            "बिंदुदार, रेखित, ग्रिड, कोरा",
+            "chấm, kẻ dòng, kẻ ô, trống",
         ).split(", ")
         return names[PAPER_ORDER.indexOf(id).takeIf { it >= 0 } ?: PAPER_ORDER.indexOf("dotted")]
     }
@@ -4251,6 +5277,10 @@ object S {
         "Hijau sage dan titik-titik gratis; sisanya dengan Bobbin Pro.",
         "セージとドットは無料です。ほかはBobbin Proで使えます。",
         "세이지와 도트는 무료이고, 나머지는 Bobbin Pro에 포함돼요.",
+        "الأخضر المريمي والمنقّط مجانيان؛ والباقي مع Bobbin Pro.",
+        "鼠尾草绿和点阵免费，其余随 Bobbin Pro 提供。",
+        "सेज और बिंदुदार मुफ़्त हैं; बाकी Bobbin Pro के साथ आते हैं।",
+        "Xô thơm và kiểu chấm là miễn phí; phần còn lại có trong Bobbin Pro.",
     )
     val useThis = t(
         "Use this style",
@@ -4266,8 +5296,12 @@ object S {
         "Pakai gaya ini",
         "このスタイルを使う",
         "이 스타일 사용",
+        "استخدام هذا النمط",
+        "使用这个样式",
+        "यह शैली अपनाएँ",
+        "Dùng kiểu này",
     )
-    val sectionBackup = t("Backup", "Copia", "Cópia", "Sicherung", "Sauvegarde", "Copia", "Back-up", "Kopia zapasowa", "Резервная копия", "Yedek", "Cadangan", "バックアップ", "백업")
+    val sectionBackup = t("Backup", "Copia", "Cópia", "Sicherung", "Sauvegarde", "Copia", "Back-up", "Kopia zapasowa", "Резервная копия", "Yedek", "Cadangan", "バックアップ", "백업", "نسخة احتياطية", "备份", "बैकअप", "Sao lưu")
     val exportRow = t(
         "Export backup",
         "Exportar copia",
@@ -4282,6 +5316,10 @@ object S {
         "Ekspor cadangan",
         "バックアップを書き出す",
         "백업 내보내기",
+        "تصدير نسخة احتياطية",
+        "导出备份",
+        "बैकअप निर्यात करें",
+        "Xuất bản sao lưu",
     )
     val exportSubtitle = t(
         "A zip with your journal in JSON and Markdown",
@@ -4297,6 +5335,10 @@ object S {
         "Berkas zip berisi jurnalmu dalam JSON dan Markdown",
         "ジャーナルをJSONとMarkdownで入れたzip",
         "다이어리를 JSON과 Markdown으로 담은 zip",
+        "ملف zip يحوي يومياتك بصيغتي JSON وMarkdown",
+        "一个 zip，内含 JSON 和 Markdown 格式的手账",
+        "JSON और Markdown में आपके जर्नल वाली एक zip फ़ाइल",
+        "Một tệp zip chứa nhật ký ở dạng JSON và Markdown",
     )
     val exportNothing = t(
         "There's nothing to back up yet.",
@@ -4312,6 +5354,10 @@ object S {
         "Belum ada yang bisa dicadangkan.",
         "まだバックアップするものがありません。",
         "아직 백업할 것이 없어요.",
+        "لا يوجد ما يُحفظ بعد.",
+        "还没有可备份的内容。",
+        "अभी बैकअप करने के लिए कुछ नहीं है।",
+        "Chưa có gì để sao lưu.",
     )
     val importRow = t(
         "Import backup",
@@ -4327,6 +5373,10 @@ object S {
         "Impor cadangan",
         "バックアップを読み込む",
         "백업 가져오기",
+        "استيراد نسخة احتياطية",
+        "导入备份",
+        "बैकअप आयात करें",
+        "Nhập bản sao lưu",
     )
     val importSubtitle = t(
         "Joins your journal, nothing gets deleted",
@@ -4342,8 +5392,16 @@ object S {
         "Digabung dengan jurnalmu, tidak ada yang dihapus",
         "今のジャーナルと合わせます。何も削除されません",
         "다이어리와 합쳐지고, 아무것도 지워지지 않아요",
+        "يُدمج مع يومياتك دون حذف أي شيء",
+        "与你的手账合并，不会删除任何内容",
+        "आपके जर्नल में जुड़ जाता है, कुछ भी नहीं हटता",
+        "Gộp vào nhật ký của bạn, không xóa gì",
     )
     val sectionPro = t(
+        "Bobbin Pro",
+        "Bobbin Pro",
+        "Bobbin Pro",
+        "Bobbin Pro",
         "Bobbin Pro",
         "Bobbin Pro",
         "Bobbin Pro",
@@ -4372,6 +5430,10 @@ object S {
         "Bobbin Pro",
         "Bobbin Pro",
         "Bobbin Pro",
+        "Bobbin Pro",
+        "Bobbin Pro",
+        "Bobbin Pro",
+        "Bobbin Pro",
     )
     val proSubtitle = t(
         "Covers, papers, trackers and widgets. One-time payment",
@@ -4387,6 +5449,10 @@ object S {
         "Sampul, kertas, pelacak, dan widget. Sekali bayar",
         "カバー、用紙、トラッカー、ウィジェット。買い切り",
         "표지, 속지, 트래커, 위젯. 한 번 결제",
+        "أغلفة وأوراق ومتتبعات وودجات. دفعة واحدة",
+        "封面、纸张、追踪表和小组件。一次性付费",
+        "कवर, पन्ने, ट्रैकर और विजेट। एक बार का भुगतान",
+        "Bìa, giấy, bảng theo dõi và widget. Thanh toán một lần",
     )
     val proOwned = t(
         "Purchased. Thank you.",
@@ -4402,6 +5468,10 @@ object S {
         "Sudah dibeli. Terima kasih.",
         "購入済みです。ありがとうございます。",
         "구매했어요. 고마워요.",
+        "تم الشراء. شكرًا لك.",
+        "已购买。谢谢。",
+        "खरीद हो गई। धन्यवाद।",
+        "Đã mua. Cảm ơn bạn.",
     )
     val restoreRow = t(
         "Restore purchase",
@@ -4417,6 +5487,10 @@ object S {
         "Pulihkan pembelian",
         "購入を復元",
         "구매 복원",
+        "استعادة المشتريات",
+        "恢复购买",
+        "खरीद बहाल करें",
+        "Khôi phục giao dịch mua",
     )
     val restoreDone = t(
         "Purchase restored.",
@@ -4432,6 +5506,10 @@ object S {
         "Pembelian dipulihkan.",
         "購入を復元しました。",
         "구매를 복원했어요.",
+        "تمت استعادة الشراء.",
+        "已恢复购买。",
+        "खरीद बहाल हो गई।",
+        "Đã khôi phục giao dịch mua.",
     )
     val restoreNothing = t(
         "There's no purchase to restore.",
@@ -4447,6 +5525,10 @@ object S {
         "Tidak ada pembelian yang bisa dipulihkan.",
         "復元できる購入はありません。",
         "복원할 구매가 없어요.",
+        "لا توجد عملية شراء لاستعادتها.",
+        "没有可恢复的购买。",
+        "बहाल करने के लिए कोई खरीद नहीं है।",
+        "Không có giao dịch mua nào để khôi phục.",
     )
     val sectionMoreApps = t(
         "More apps",
@@ -4462,6 +5544,10 @@ object S {
         "Aplikasi lainnya",
         "ほかのアプリ",
         "다른 앱",
+        "المزيد من التطبيقات",
+        "更多应用",
+        "और ऐप",
+        "Thêm ứng dụng",
     )
     val siblingPurl = t(
         "One line a day, read again every year",
@@ -4477,6 +5563,10 @@ object S {
         "Satu baris sehari, dibaca ulang setiap tahun",
         "1日1行を、毎年読み返す",
         "하루 한 줄, 해마다 다시 읽어요",
+        "سطر واحد كل يوم، تقرؤه من جديد كل عام",
+        "每天一行，每年重读",
+        "रोज़ एक पंक्ति, हर साल फिर से पढ़ें",
+        "Mỗi ngày một dòng, năm nào cũng đọc lại",
     )
     val siblingQuilt = t(
         "Your habits, a year at a glance",
@@ -4492,6 +5582,10 @@ object S {
         "Kebiasaanmu, satu tahun sekilas pandang",
         "習慣を、1年ひと目で",
         "습관을 한 해 한눈에",
+        "عاداتك، سنة كاملة بنظرة واحدة",
+        "你的习惯，一年尽收眼底",
+        "आपकी आदतें, पूरा साल एक नज़र में",
+        "Thói quen của bạn, cả năm trong một cái nhìn",
     )
     val siblingMood = t(
         "How each day went, in colour",
@@ -4507,8 +5601,12 @@ object S {
         "Bagaimana setiap harimu berlalu, dalam warna",
         "その日がどうだったかを、色で",
         "하루하루가 어땠는지, 색으로",
+        "كيف مرّ كل يوم، بالألوان",
+        "每一天过得怎样，用颜色记下",
+        "हर दिन कैसा रहा, रंगों में",
+        "Mỗi ngày trôi qua thế nào, bằng màu sắc",
     )
-    val sectionAbout = t("About", "Acerca de", "Sobre", "Über", "À propos", "Informazioni", "Over", "O aplikacji", "О приложении", "Hakkında", "Tentang", "このアプリについて", "정보")
+    val sectionAbout = t("About", "Acerca de", "Sobre", "Über", "À propos", "Informazioni", "Over", "O aplikacji", "О приложении", "Hakkında", "Tentang", "このアプリについて", "정보", "حول", "关于", "ऐप के बारे में", "Giới thiệu")
     val privacyRow = t(
         "Privacy policy",
         "Política de privacidad",
@@ -4523,6 +5621,10 @@ object S {
         "Kebijakan privasi",
         "プライバシーポリシー",
         "개인정보 처리방침",
+        "سياسة الخصوصية",
+        "隐私政策",
+        "गोपनीयता नीति",
+        "Chính sách quyền riêng tư",
     )
     val rateRow = t(
         "Rate Bobbin",
@@ -4538,6 +5640,10 @@ object S {
         "Beri nilai Bobbin",
         "Bobbinを評価",
         "Bobbin 평가하기",
+        "قيّم Bobbin",
+        "给 Bobbin 评分",
+        "Bobbin को रेट करें",
+        "Đánh giá Bobbin",
     )
     val bookCardTitle = t(
         "Your first month is done",
@@ -4553,6 +5659,10 @@ object S {
         "Bulan pertamamu sudah selesai",
         "最初の1か月が終わりました",
         "첫 달을 마무리했어요",
+        "انتهى شهرك الأول",
+        "你的第一个月完成了",
+        "आपका पहला माह पूरा हुआ",
+        "Tháng đầu tiên của bạn đã xong",
     )
     val bookCardBody = t(
         "Turn it into an A5 book you can print.",
@@ -4568,6 +5678,10 @@ object S {
         "Jadikan buku A5 yang bisa kamu cetak.",
         "印刷できるA5サイズの本にしましょう。",
         "인쇄할 수 있는 A5 책으로 만들어 보세요.",
+        "حوّله إلى كتاب بحجم A5 يمكنك طباعته.",
+        "把它变成可以打印的 A5 小册子。",
+        "इसे A5 की ऐसी किताब बनाएँ जिसे आप प्रिंट कर सकें।",
+        "Biến nó thành cuốn sách A5 để in.",
     )
     val bookCardEarlyTitle = t(
         "Your notebook is taking shape",
@@ -4583,6 +5697,10 @@ object S {
         "Buku catatanmu mulai terbentuk",
         "ノートが形になってきました",
         "노트가 모양을 갖춰 가고 있어요",
+        "دفترك يتشكّل",
+        "你的笔记本渐渐成形",
+        "आपकी नोटबुक आकार ले रही है",
+        "Sổ tay của bạn đang thành hình",
     )
     val bookCardEarlyBody = t(
         "Print this notebook as a PDF book. Pro, once.",
@@ -4598,6 +5716,10 @@ object S {
         "Cetak buku catatan ini sebagai buku PDF. Pro, sekali bayar.",
         "このノートをPDFの本として印刷できます。Proは買い切りです。",
         "이 노트를 PDF 책으로 인쇄하세요. Pro, 한 번만 결제.",
+        "اطبع هذا الدفتر ككتاب PDF. Pro، مرة واحدة.",
+        "把这本笔记本打印成 PDF 书册。Pro，一次购买。",
+        "इस नोटबुक को PDF किताब के रूप में प्रिंट करें। Pro, एक बार।",
+        "In cuốn sổ này thành sách PDF. Pro, mua một lần.",
     )
     val proEverything = t(
         "Everything in Pro",
@@ -4613,6 +5735,10 @@ object S {
         "Semua isi Pro",
         "Proに含まれるもの",
         "Pro에 포함된 모든 것",
+        "كل ما في Pro",
+        "Pro 的全部内容",
+        "Pro में सब कुछ",
+        "Mọi thứ trong Pro",
     )
     val seePro = t(
         "See Pro",
@@ -4628,6 +5754,10 @@ object S {
         "Lihat Pro",
         "Proを見る",
         "Pro 보기",
+        "عرض Pro",
+        "查看 Pro",
+        "Pro देखें",
+        "Xem Pro",
     )
     fun version(v: String) = t(
         "Version $v",
@@ -4643,6 +5773,10 @@ object S {
         "Versi $v",
         "バージョン ${v}",
         "버전 ${v}",
+        "الإصدار $v",
+        "版本 $v",
+        "संस्करण $v",
+        "Phiên bản $v",
     )
     val wipeRow = t(
         "Delete all data",
@@ -4658,6 +5792,10 @@ object S {
         "Hapus semua data",
         "すべてのデータを削除",
         "모든 데이터 삭제",
+        "حذف جميع البيانات",
+        "删除所有数据",
+        "सारा डेटा हटाएँ",
+        "Xóa toàn bộ dữ liệu",
     )
     val wipeSubtitle = t(
         "Leaves the journal empty on this phone. Bobbin Pro stays.",
@@ -4673,11 +5811,19 @@ object S {
         "Mengosongkan jurnal di ponsel ini. Bobbin Pro tetap ada.",
         "この端末のジャーナルを空にします。Bobbin Proは残ります。",
         "이 휴대폰의 다이어리를 비워요. Bobbin Pro는 그대로예요.",
+        "يترك اليوميات فارغة على هذا الهاتف. يبقى Bobbin Pro.",
+        "清空这部手机上的手账。Bobbin Pro 保留。",
+        "इस फ़ोन पर जर्नल खाली हो जाता है। Bobbin Pro बना रहता है।",
+        "Để nhật ký trống trên điện thoại này. Bobbin Pro vẫn còn.",
     )
 
     // --- 14. Bobbin Pro ----------------------------------------------------------------------
 
     val proTitle = t(
+        "Bobbin Pro",
+        "Bobbin Pro",
+        "Bobbin Pro",
+        "Bobbin Pro",
         "Bobbin Pro",
         "Bobbin Pro",
         "Bobbin Pro",
@@ -4706,6 +5852,10 @@ object S {
         "Sekali beli, tanpa langganan.",
         "買い切りで、サブスクリプションはありません。",
         "한 번 결제, 구독 없음.",
+        "عملية شراء لمرة واحدة، بلا اشتراك.",
+        "一次性购买，无需订阅。",
+        "एक बार की खरीद, कोई सदस्यता नहीं।",
+        "Mua một lần, không đăng ký định kỳ.",
     )
     val proCovers = t(
         "Seven more covers",
@@ -4721,6 +5871,10 @@ object S {
         "Tujuh sampul lagi",
         "カバーがさらに7種類",
         "표지 일곱 개 더",
+        "سبعة أغلفة إضافية",
+        "另外七款封面",
+        "सात और कवर",
+        "Thêm bảy mẫu bìa",
     )
     val proPapers = t(
         "Lined, grid and blank paper",
@@ -4736,6 +5890,10 @@ object S {
         "Kertas bergaris, kotak-kotak, dan polos",
         "罫線、方眼、無地の用紙",
         "줄, 모눈, 무지 속지",
+        "ورق مسطّر ومربعات وفارغ",
+        "横线、方格和空白纸张",
+        "रेखित, ग्रिड और कोरे पन्ने",
+        "Giấy kẻ dòng, kẻ ô và trống",
     )
     val proTrackers = t(
         "More than one tracker",
@@ -4751,6 +5909,10 @@ object S {
         "Lebih dari satu pelacak",
         "複数のトラッカー",
         "트래커 두 개 이상",
+        "أكثر من متتبع واحد",
+        "不止一个追踪表",
+        "एक से ज़्यादा ट्रैकर",
+        "Nhiều hơn một bảng theo dõi",
     )
     val proMonthWidget = t(
         "The month widget",
@@ -4766,6 +5928,10 @@ object S {
         "Widget bulan",
         "月のウィジェット",
         "월간 위젯",
+        "ودجت الشهر",
+        "月份小组件",
+        "माह का विजेट",
+        "Widget tháng",
     )
     val proLockWidget = t(
         "The lock screen widget",
@@ -4781,6 +5947,10 @@ object S {
         "Widget layar kunci",
         "ロック画面のウィジェット",
         "잠금 화면 위젯",
+        "ودجت شاشة القفل",
+        "锁屏小组件",
+        "लॉक स्क्रीन विजेट",
+        "Widget màn hình khóa",
     )
     val proFree = t(
         "The whole method is free, and it will stay that way.",
@@ -4796,6 +5966,10 @@ object S {
         "Seluruh metodenya gratis, dan akan tetap begitu.",
         "メソッドのすべてが無料で、これからもそうです。",
         "방식 전체는 무료이고, 앞으로도 그래요.",
+        "المنهج كله مجاني، وسيبقى كذلك.",
+        "整个方法都是免费的，以后也一直如此。",
+        "पूरी विधि मुफ़्त है और हमेशा मुफ़्त रहेगी।",
+        "Toàn bộ phương pháp là miễn phí và sẽ luôn như vậy.",
     )
     fun buy(price: String) = t(
         "Buy for $price",
@@ -4811,6 +5985,10 @@ object S {
         "Beli $price",
         "${price}で購入",
         "${price}에 구매",
+        "شراء بـ $price",
+        "以 $price 购买",
+        "$price में खरीदें",
+        "Mua với $price",
     )
     val restore = t(
         "Restore",
@@ -4826,6 +6004,10 @@ object S {
         "Pulihkan",
         "復元",
         "복원",
+        "استعادة",
+        "恢复",
+        "बहाल करें",
+        "Khôi phục",
     )
     val storeUnavailable = t(
         "The store is not available right now.",
@@ -4841,6 +6023,10 @@ object S {
         "Toko tidak tersedia saat ini.",
         "ストアは現在利用できません。",
         "지금은 스토어를 사용할 수 없어요.",
+        "المتجر غير متاح الآن.",
+        "商店暂时不可用。",
+        "स्टोर अभी उपलब्ध नहीं है।",
+        "Cửa hàng hiện không khả dụng.",
     )
     val buyFailed = t(
         "The purchase could not be completed.",
@@ -4856,6 +6042,10 @@ object S {
         "Pembelian tidak bisa diselesaikan.",
         "購入を完了できませんでした。",
         "구매를 완료하지 못했어요.",
+        "تعذّر إتمام الشراء.",
+        "无法完成购买。",
+        "खरीद पूरी नहीं हो सकी।",
+        "Không thể hoàn tất giao dịch mua.",
     )
 
     // --- 15. Importar, exportar y borrar -------------------------------------------------------
@@ -4874,6 +6064,10 @@ object S {
         "Impor cadangan",
         "バックアップを読み込む",
         "백업 가져오기",
+        "استيراد نسخة احتياطية",
+        "导入备份",
+        "बैकअप आयात करें",
+        "Nhập bản sao lưu",
     )
 
     private fun importAddedPhrase(n: Int): String = if (isSingular(n)) {
@@ -4891,6 +6085,10 @@ object S {
             "1 entri baru",
             "新しい項目1件",
             "새 항목 1개",
+            "إدخال جديد واحد",
+            "1 条新记录",
+            "1 नई प्रविष्टि",
+            "1 mục mới",
         )
     } else {
         t(
@@ -4907,6 +6105,10 @@ object S {
             "$n entri baru",
             "新しい項目${n}件",
             "새 항목 ${n}개",
+            "إدخالات جديدة ($n)",
+            "$n 条新记录",
+            "$n नई प्रविष्टियाँ",
+            "$n mục mới",
         )
     }
 
@@ -4925,6 +6127,10 @@ object S {
             "1 lebih baru dari milikmu",
             "今の項目より新しいもの1件",
             "내 것보다 최신인 항목 1개",
+            "إدخال واحد أحدث مما لديك",
+            "1 条比你的更新",
+            "1 आपके वाले से नया",
+            "1 mục mới hơn của bạn",
         )
     } else {
         t(
@@ -4941,6 +6147,10 @@ object S {
             "$n lebih baru dari milikmu",
             "今の項目より新しいもの${n}件",
             "내 것보다 최신인 항목 ${n}개",
+            "إدخالات أحدث مما لديك ($n)",
+            "$n 条比你的更新",
+            "$n आपके वाले से नए",
+            "$n mục mới hơn của bạn",
         )
     }
 
@@ -4959,6 +6169,10 @@ object S {
             "1 sudah ada",
             "1件はすでにありました",
             "이미 있던 항목 1개",
+            "إدخال واحد موجود مسبقًا",
+            "1 条本来就有",
+            "1 पहले से यहाँ था",
+            "1 mục đã có sẵn",
         )
     } else {
         t(
@@ -4975,6 +6189,10 @@ object S {
             "$n sudah ada",
             "${n}件はすでにありました",
             "이미 있던 항목 ${n}개",
+            "إدخالات موجودة مسبقًا ($n)",
+            "$n 条本来就有",
+            "$n पहले से यहाँ थे",
+            "$n mục đã có sẵn",
         )
     }
 
@@ -5002,9 +6220,13 @@ object S {
                 "tidak membawa hal baru",
                 "新しいものはありません",
                 "백업에 새로 가져올 항목이 없어요",
+                "لا تضيف النسخة الاحتياطية شيئًا جديدًا",
+                "没有新内容",
+                "कुछ भी नया नहीं",
+                "không có gì mới",
             )
         } else {
-            val and = t(" and ", " y ", " e ", " und ", " et ", " e ", " en ", " i ", " и ", " ve ", " dan ", "、", ", ")
+            val and = t(" and ", " y ", " e ", " und ", " et ", " e ", " en ", " i ", " и ", " ve ", " dan ", "、", ", ", " و", "，", " और ", " và ")
             t(
                 "brings ",
                 "trae ",
@@ -5019,6 +6241,10 @@ object S {
                 "membawa ",
                 "",
                 "백업에서 가져올 것: ",
+                "تضيف النسخة الاحتياطية ",
+                "",
+                "",
+                "có ",
             ) + parts.joinToString(and)
         }
         val tail = if (same > 0) {
@@ -5037,6 +6263,10 @@ object S {
                 "; $same2.",
                 "。${same2}。",
                 ". ${same2}.",
+                "؛ $same2.",
+                "；$same2。",
+                "; $same2।",
+                "; $same2.",
             )
         } else {
             fullStop()
@@ -5055,10 +6285,14 @@ object S {
             "Cadangan ini $brings$tail Tidak ada yang dihapus.",
             "バックアップの内容: ${brings}${tail}何も削除されません。",
             "${brings}${tail} 아무것도 삭제되지 않아요.",
+            "$brings$tail لا يُحذف شيء.",
+            "备份内容：$brings${tail}不会删除任何内容。",
+            "बैकअप की सामग्री: $brings$tail कुछ भी हटाया नहीं जाता।",
+            "Bản sao lưu $brings$tail Không có gì bị xóa.",
         )
     }
 
-    val importAction = t("Import", "Importar", "Importar", "Importieren", "Importer", "Importa", "Importeren", "Importuj", "Импортировать", "İçe aktar", "Impor", "読み込む", "가져오기")
+    val importAction = t("Import", "Importar", "Importar", "Importieren", "Importer", "Importa", "Importeren", "Importuj", "Импортировать", "İçe aktar", "Impor", "読み込む", "가져오기", "استيراد", "导入", "आयात करें", "Nhập")
 
     fun importDone(n: Int): String = if (n == 0) {
         t(
@@ -5075,6 +6309,10 @@ object S {
             "Jurnal sudah mutakhir: tidak ada yang perlu diubah.",
             "ジャーナルは最新です。変更するものはありませんでした。",
             "다이어리가 최신 상태예요. 바꿀 것이 없었어요.",
+            "اليوميات محدّثة: لم يكن هناك ما يتغيّر.",
+            "手账已是最新：没有需要更改的内容。",
+            "जर्नल अद्यतित है: बदलने के लिए कुछ नहीं था।",
+            "Nhật ký đã cập nhật: không có gì để thay đổi.",
         )
     } else {
         val c = wordChange(n)
@@ -5092,6 +6330,10 @@ object S {
             "Jurnal sudah mutakhir: $n $c.",
             "ジャーナルは最新です: ${n}件の${c}。",
             "다이어리가 최신 상태예요. ${c} ${n}건.",
+            "اليوميات محدّثة: ${arCount(n, c)}.",
+            "手账已是最新：$n$c。",
+            "जर्नल अद्यतित है: $n $c।",
+            "Nhật ký đã cập nhật: $n $c.",
         )
     }
 
@@ -5109,6 +6351,10 @@ object S {
         "Impor gagal",
         "読み込めませんでした",
         "가져오지 못했어요",
+        "تعذّر الاستيراد",
+        "无法导入",
+        "आयात नहीं हो सका",
+        "Không nhập được",
     )
     val importDamaged = t(
         "The backup is incomplete or damaged. Your journal wasn't touched.",
@@ -5124,6 +6370,10 @@ object S {
         "Cadangan tidak lengkap atau rusak. Jurnalmu tidak diubah.",
         "バックアップが不完全か壊れています。今のジャーナルには手を加えていません。",
         "백업이 불완전하거나 손상됐어요. 다이어리는 그대로예요.",
+        "النسخة الاحتياطية ناقصة أو تالفة. لم تُمسّ يومياتك.",
+        "备份不完整或已损坏。你的手账没有被改动。",
+        "बैकअप अधूरा या क्षतिग्रस्त है। आपका जर्नल छुआ नहीं गया।",
+        "Bản sao lưu không đầy đủ hoặc bị hỏng. Nhật ký của bạn không bị thay đổi.",
     )
     val importTooNew = t(
         "This backup is from a newer version of Bobbin. Update the app and try again.",
@@ -5139,6 +6389,10 @@ object S {
         "Cadangan ini dari versi Bobbin yang lebih baru. Perbarui aplikasinya lalu coba lagi.",
         "このバックアップは新しいバージョンのBobbinで作られました。アプリを更新してもう一度お試しください。",
         "더 새로운 버전의 Bobbin에서 만든 백업이에요. 앱을 업데이트한 뒤 다시 시도해 주세요.",
+        "هذه النسخة الاحتياطية من إصدار أحدث من Bobbin. حدّث التطبيق وحاول مجددًا.",
+        "这份备份来自更新版本的 Bobbin。请更新应用后再试。",
+        "यह बैकअप Bobbin के नए संस्करण का है। ऐप अपडेट करके फिर कोशिश करें।",
+        "Bản sao lưu này thuộc phiên bản Bobbin mới hơn. Hãy cập nhật ứng dụng rồi thử lại.",
     )
     val importEmpty = t(
         "The backup has no entries or collections.",
@@ -5154,6 +6408,10 @@ object S {
         "Cadangan ini tidak berisi entri atau koleksi.",
         "バックアップに項目もコレクションもありません。",
         "백업에 항목도 목록도 없어요.",
+        "لا تحتوي النسخة الاحتياطية على إدخالات أو قوائم.",
+        "这份备份里没有记录，也没有清单。",
+        "बैकअप में कोई प्रविष्टि या सूची नहीं है।",
+        "Bản sao lưu không có mục hay danh sách nào.",
     )
     val exportFailed = t(
         "Couldn't save the backup.",
@@ -5169,6 +6427,10 @@ object S {
         "Gagal menyimpan cadangan.",
         "バックアップを保存できませんでした。",
         "백업을 저장하지 못했어요.",
+        "تعذّر حفظ النسخة الاحتياطية.",
+        "无法保存备份。",
+        "बैकअप सहेजा नहीं जा सका।",
+        "Không lưu được bản sao lưu.",
     )
     val wipeTitle = t(
         "Delete the whole journal?",
@@ -5184,6 +6446,10 @@ object S {
         "Hapus seluruh jurnal?",
         "ジャーナルをすべて削除しますか？",
         "다이어리 전체를 삭제할까요?",
+        "حذف اليوميات بالكامل؟",
+        "要删除整本手账吗？",
+        "पूरा जर्नल हटाएँ?",
+        "Xóa toàn bộ nhật ký?",
     )
     val wipeText = t(
         "All entries, collections and settings on this phone are deleted. Backups you exported are not touched, and Bobbin Pro stays.",
@@ -5199,8 +6465,12 @@ object S {
         "Semua entri, koleksi, dan pengaturan di ponsel ini dihapus. Cadangan yang sudah kamu ekspor tidak disentuh, dan Bobbin Pro tetap ada.",
         "この端末のすべての項目、コレクション、設定が削除されます。書き出したバックアップには影響せず、Bobbin Proは残ります。",
         "이 휴대폰의 모든 항목, 목록, 설정이 삭제돼요. 내보낸 백업은 그대로 있고, Bobbin Pro도 유지돼요.",
+        "تُحذف كل الإدخالات والقوائم والإعدادات على هذا الهاتف. النسخ الاحتياطية التي صدّرتها لا تُمسّ، ويبقى Bobbin Pro.",
+        "这部手机上的所有记录、清单和设置都会被删除。你导出的备份不受影响，Bobbin Pro 保留。",
+        "इस फ़ोन की सभी प्रविष्टियाँ, सूचियाँ और सेटिंग हटा दी जाती हैं। आपके निर्यात किए बैकअप को छुआ नहीं जाता, और Bobbin Pro बना रहता है।",
+        "Mọi mục, danh sách và cài đặt trên điện thoại này sẽ bị xóa. Các bản sao lưu bạn đã xuất không bị ảnh hưởng, và Bobbin Pro vẫn còn.",
     )
-    val wipeContinue = t("Continue", "Continuar", "Continuar", "Weiter", "Continuer", "Continua", "Doorgaan", "Kontynuuj", "Продолжить", "Devam", "Lanjutkan", "続ける", "계속")
+    val wipeContinue = t("Continue", "Continuar", "Continuar", "Weiter", "Continuer", "Continua", "Doorgaan", "Kontynuuj", "Продолжить", "Devam", "Lanjutkan", "続ける", "계속", "متابعة", "继续", "जारी रखें", "Tiếp tục")
     fun wipeConfirmTitle(word: String) = t(
         "Type the word $word to confirm",
         "Escribe la palabra $word para confirmar",
@@ -5215,8 +6485,12 @@ object S {
         "Ketik kata $word untuk mengonfirmasi",
         "確認のため「${word}」と入力してください",
         "확인하려면 이 단어를 입력하세요: ${word}",
+        "اكتب الكلمة $word للتأكيد",
+        "输入“$word”以确认",
+        "पुष्टि के लिए शब्द $word लिखें",
+        "Gõ từ $word để xác nhận",
     )
-    val wipeWord = t("delete", "borrar", "apagar", "löschen", "effacer", "elimina", "verwijderen", "usuń", "удалить", "sil", "hapus", "削除", "삭제")
+    val wipeWord = t("delete", "borrar", "apagar", "löschen", "effacer", "elimina", "verwijderen", "usuń", "удалить", "sil", "hapus", "削除", "삭제", "حذف", "删除", "हटाएँ", "xóa")
     val wipeAction = t(
         "Delete everything",
         "Borrar todo",
@@ -5231,6 +6505,10 @@ object S {
         "Hapus semuanya",
         "すべて削除",
         "모두 삭제",
+        "حذف كل شيء",
+        "全部删除",
+        "सब कुछ हटाएँ",
+        "Xóa tất cả",
     )
 
     // --- 16. Bloqueo y avisos de carga ---------------------------------------------------------
@@ -5249,6 +6527,10 @@ object S {
         "Buka kunci",
         "ロックを解除",
         "잠금 해제",
+        "فتح القفل",
+        "解锁",
+        "अनलॉक करें",
+        "Mở khóa",
     )
     val lockPromptTitle = t(
         "Open Bobbin",
@@ -5264,6 +6546,10 @@ object S {
         "Buka Bobbin",
         "Bobbinを開く",
         "Bobbin 열기",
+        "فتح Bobbin",
+        "打开 Bobbin",
+        "Bobbin खोलें",
+        "Mở Bobbin",
     )
     val lockPromptSubtitle = t(
         "Your journal is locked",
@@ -5279,6 +6565,10 @@ object S {
         "Jurnalmu terkunci",
         "ジャーナルはロックされています",
         "다이어리가 잠겨 있어요",
+        "يومياتك مقفلة",
+        "你的手账已锁定",
+        "आपका जर्नल लॉक है",
+        "Nhật ký của bạn đã khóa",
     )
     val updateNeeded = t(
         "This journal was written with a newer version of Bobbin. Update the app to open it; nothing was touched.",
@@ -5294,6 +6584,10 @@ object S {
         "Jurnal ini ditulis dengan versi Bobbin yang lebih baru. Perbarui aplikasinya untuk membukanya; tidak ada yang diubah.",
         "このジャーナルは新しいバージョンのBobbinで書かれています。開くにはアプリを更新してください。何も変更されていません。",
         "더 새로운 버전의 Bobbin으로 쓴 다이어리예요. 열려면 앱을 업데이트하세요. 아무것도 건드리지 않았어요.",
+        "كُتبت هذه اليوميات بإصدار أحدث من Bobbin. حدّث التطبيق لفتحها؛ لم يُمسّ شيء.",
+        "这本手账是用更新版本的 Bobbin 写的。请更新应用后再打开；没有改动任何内容。",
+        "यह जर्नल Bobbin के नए संस्करण में लिखा गया था। इसे खोलने के लिए ऐप अपडेट करें; कुछ भी छुआ नहीं गया।",
+        "Nhật ký này được viết bằng phiên bản Bobbin mới hơn. Hãy cập nhật ứng dụng để mở; không có gì bị thay đổi.",
     )
     val openStore = t(
         "Open the store",
@@ -5309,6 +6603,10 @@ object S {
         "Buka toko aplikasi",
         "ストアを開く",
         "스토어 열기",
+        "فتح المتجر",
+        "打开商店",
+        "स्टोर खोलें",
+        "Mở cửa hàng",
     )
     val migrationFailed = t(
         "Couldn't prepare the journal for this version. It is intact and nothing was touched.",
@@ -5324,6 +6622,10 @@ object S {
         "Jurnal tidak bisa disiapkan untuk versi ini. Jurnalnya utuh dan tidak ada yang diubah.",
         "このバージョン用にジャーナルを準備できませんでした。ジャーナルは無事で、何も変更されていません。",
         "이 버전에 맞게 다이어리를 준비하지 못했어요. 다이어리는 온전하고 아무것도 건드리지 않았어요.",
+        "تعذّر تجهيز اليوميات لهذا الإصدار. هي سليمة ولم يُمسّ شيء.",
+        "无法为这个版本准备手账。它完好无损，没有改动任何内容。",
+        "इस संस्करण के लिए जर्नल तैयार नहीं हो सका। वह सुरक्षित है और कुछ भी छुआ नहीं गया।",
+        "Không chuẩn bị được nhật ký cho phiên bản này. Nhật ký vẫn nguyên vẹn và không có gì bị thay đổi.",
     )
 
     // --- 17. Compartir ----------------------------------------------------------------------
@@ -5342,6 +6644,10 @@ object S {
         "Bagikan sebagai gambar",
         "画像として共有",
         "이미지로 공유",
+        "مشاركة كصورة",
+        "分享为图片",
+        "छवि के रूप में साझा करें",
+        "Chia sẻ dạng ảnh",
     )
     val shareText = t(
         "Share as text",
@@ -5357,6 +6663,10 @@ object S {
         "Bagikan sebagai teks",
         "テキストとして共有",
         "텍스트로 공유",
+        "مشاركة كنص",
+        "分享为文字",
+        "पाठ के रूप में साझा करें",
+        "Chia sẻ dạng văn bản",
     )
     fun sharePages(n: Int) = t(
         "$n ${wordImage(n)}",
@@ -5372,6 +6682,10 @@ object S {
         "$n ${wordImage(n)}",
         "${n}枚の${wordImage(n)}",
         "${wordImage(n)} ${n}장",
+        arCount(n, wordImage(n)),
+        "$n${wordImage(n)}",
+        "$n ${wordImage(n)}",
+        "$n ${wordImage(n)}",
     )
     fun pageOf(i: Int, n: Int) = t(
         "$i of $n",
@@ -5387,6 +6701,10 @@ object S {
         "$i dari $n",
         "${i}/${n}",
         "${i}/${n}",
+        "$i من $n",
+        "$i/$n",
+        "$n में से $i",
+        "$i trên $n",
     )
 
     // --- 18. Notificacion --------------------------------------------------------------------
@@ -5405,6 +6723,10 @@ object S {
         "Sejenak untuk meninjau hari",
         "1日を見直す時間です",
         "하루를 살펴볼 시간이에요",
+        "لحظة لمراجعة اليوم",
+        "留点时间回顾今天",
+        "दिन को दोहराने का एक पल",
+        "Một chút thời gian để xem lại ngày",
     )
     val reminderBody = t(
         "Read today back and decide what comes next.",
@@ -5420,6 +6742,10 @@ object S {
         "Baca ulang hari ini dan putuskan apa selanjutnya.",
         "今日書いたものを読み返して、次にどうするか決めてください。",
         "오늘을 다시 읽고 다음에 할 일을 정해 보세요.",
+        "أعد قراءة اليوم وقرّر ما يأتي بعده.",
+        "把今天重读一遍，再决定接下来怎么办。",
+        "आज को फिर से पढ़ें और तय करें कि आगे क्या होगा।",
+        "Đọc lại hôm nay và quyết định điều tiếp theo.",
     )
     val reminderChannel = t(
         "Reminder to go over the day",
@@ -5435,6 +6761,10 @@ object S {
         "Pengingat untuk meninjau hari",
         "1日を見直すリマインダー",
         "하루 살펴보기 알림",
+        "تذكير بمراجعة اليوم",
+        "回顾一天的提醒",
+        "दिन की समीक्षा की याद",
+        "Nhắc xem lại ngày",
     )
 
     // --- 19. Widgets -------------------------------------------------------------------------
@@ -5447,6 +6777,10 @@ object S {
             t(
                 "$w $n $m", "$w $n $m", "$w $n $m", "$w $n $m", "$w $n $m",
                 "$w $n $m", "$w $n $m", "$w $n $m", "$w $n $m", "$w $n $m", "$w $n $m", "$m${n}日($w)", "$m ${n}일 ($w)",
+                "$w $n $m",
+                "$m${n}日 $w",
+                "$w $n $m",
+                "$w, $n $m",
             ),
         )
     }
@@ -5469,6 +6803,10 @@ object S {
         "terbuka",
         "未完了",
         "미완료",
+        "مفتوحة",
+        "未完成",
+        "खुले",
+        "đang mở",
     ))
 
     fun widgetDone(n: Int) = word(n, t(
@@ -5485,6 +6823,10 @@ object S {
         "selesai",
         "完了",
         "완료",
+        "منجزة",
+        "已完成",
+        "पूर्ण",
+        "xong",
     ))
 
     fun widgetEvents(n: Int) = word(n, t(
@@ -5501,6 +6843,10 @@ object S {
         "acara",
         "イベント",
         "일정",
+        "أحداث|حدث|حدثان|أحداث|حدثًا|حدث",
+        "个事件",
+        "कार्यक्रम",
+        "sự kiện",
     ))
 
     val widgetReview = t(
@@ -5517,6 +6863,10 @@ object S {
         "Perlu ditinjau",
         "見直し待ち",
         "살펴볼 것",
+        "للمراجعة",
+        "待回顾",
+        "समीक्षा बाकी",
+        "Cần xem lại",
     )
     val widgetUnlock = t(
         "Tap to turn it on",
@@ -5532,8 +6882,12 @@ object S {
         "Ketuk untuk mengaktifkan",
         "タップしてオンにする",
         "탭해서 켜기",
+        "اضغط لتشغيله",
+        "点一下开启",
+        "चालू करने के लिए टैप करें",
+        "Chạm để bật",
     )
-    val pickerTodayName = t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui", "Oggi", "Vandaag", "Dziś", "Сегодня", "Bugün", "Hari ini", "今日", "오늘")
+    val pickerTodayName = t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui", "Oggi", "Vandaag", "Dziś", "Сегодня", "Bugün", "Hari ini", "今日", "오늘", "اليوم", "今天", "आज", "Hôm nay")
     val pickerTodayDescription = t(
         "Today's open, done and events, without any text",
         "Abiertas, hechas y eventos de hoy, sin ningún texto",
@@ -5548,8 +6902,12 @@ object S {
         "Tugas terbuka, selesai, dan acara hari ini, tanpa teks apa pun",
         "今日の未完了、完了、イベント。テキストは表示しません",
         "오늘의 미완료, 완료, 일정을 글 없이 보여 줘요",
+        "المفتوح والمنجز والأحداث اليوم، دون أي نص",
+        "今天的未完成、已完成和事件，不含任何文字",
+        "आज के खुले, पूरे और कार्यक्रम, बिना किसी पाठ के",
+        "Việc đang mở, đã xong và sự kiện hôm nay, không có chữ",
     )
-    val pickerMonthName = t("The month", "El mes", "O mês", "Der Monat", "Le mois", "Il mese", "De maand", "Miesiąc", "Месяц", "Ay", "Bulan", "月", "월간")
+    val pickerMonthName = t("The month", "El mes", "O mês", "Der Monat", "Le mois", "Il mese", "De maand", "Miesiąc", "Месяц", "Ay", "Bulan", "月", "월간", "الشهر", "本月", "माह", "Tháng")
     val pickerMonthDescription = t(
         "One dot for each day with entries",
         "Un punto por cada día con entradas",
@@ -5564,6 +6922,10 @@ object S {
         "Satu titik untuk setiap hari yang punya entri",
         "項目がある日に点がひとつ",
         "항목이 있는 날마다 점 하나",
+        "نقطة لكل يوم فيه إدخالات",
+        "有记录的日子各有一个圆点",
+        "प्रविष्टियों वाले हर दिन के लिए एक बिंदु",
+        "Mỗi ngày có mục là một chấm",
     )
     val pickerLockName = t(
         "Open tasks",
@@ -5579,6 +6941,10 @@ object S {
         "Tugas terbuka",
         "未完了のタスク",
         "미완료 할 일",
+        "المهام المفتوحة",
+        "未完成的任务",
+        "खुले कार्य",
+        "Việc đang mở",
     )
     val pickerLockDescription = t(
         "Today's open tasks on the lock screen",
@@ -5594,6 +6960,10 @@ object S {
         "Tugas terbuka hari ini di layar kunci",
         "今日の未完了のタスクをロック画面に表示",
         "잠금 화면에 오늘의 미완료 할 일",
+        "مهام اليوم المفتوحة على شاشة القفل",
+        "锁屏上显示今天未完成的任务",
+        "लॉक स्क्रीन पर आज के खुले कार्य",
+        "Việc đang mở hôm nay trên màn hình khóa",
     )
 
     // --- 20. Accesibilidad -------------------------------------------------------------------
@@ -5634,6 +7004,10 @@ object S {
         "Selesaikan",
         "完了にする",
         "완료하기",
+        "إتمام",
+        "完成",
+        "पूरा करें",
+        "Hoàn thành",
     )
     val a11yReopen = t(
         "Reopen",
@@ -5649,6 +7023,10 @@ object S {
         "Buka lagi",
         "未完了に戻す",
         "다시 열기",
+        "إعادة فتح",
+        "重新打开",
+        "फिर खोलें",
+        "Mở lại",
     )
     val a11yOptions = t(
         "See options",
@@ -5664,8 +7042,12 @@ object S {
         "Lihat pilihan",
         "操作を表示",
         "옵션 보기",
+        "عرض الخيارات",
+        "查看选项",
+        "विकल्प देखें",
+        "Xem tùy chọn",
     )
-    val a11yMoveUp = t("Move up", "Subir", "Subir", "Nach oben", "Monter", "Sposta su", "Omhoog", "W górę", "Переместить выше", "Yukarı taşı", "Pindah ke atas", "上へ移動", "위로 옮기기")
+    val a11yMoveUp = t("Move up", "Subir", "Subir", "Nach oben", "Monter", "Sposta su", "Omhoog", "W górę", "Переместить выше", "Yukarı taşı", "Pindah ke atas", "上へ移動", "위로 옮기기", "تحريك لأعلى", "上移", "ऊपर ले जाएँ", "Chuyển lên")
     val a11yMoveDown = t(
         "Move down",
         "Bajar",
@@ -5680,6 +7062,10 @@ object S {
         "Pindah ke bawah",
         "下へ移動",
         "아래로 옮기기",
+        "تحريك لأسفل",
+        "下移",
+        "नीचे ले जाएँ",
+        "Chuyển xuống",
     )
 
     fun a11yDayRow(day: Int, weekday: String, n: Int): String {
@@ -5698,6 +7084,10 @@ object S {
                 "tanpa entri",
                 "項目なし",
                 "항목 없음",
+                "لا إدخالات",
+                "没有记录",
+                "कोई प्रविष्टि नहीं",
+                "không có mục",
             )
         } else {
             entryCount(n)
@@ -5716,13 +7106,17 @@ object S {
             "$day, $weekday, $entries",
             "${day}日、${weekday}、${entries}",
             "${day}일, ${weekday}, ${entries}",
+            "$day، $weekday، $entries",
+            "$day，$weekday，$entries",
+            "$day, $weekday, $entries",
+            "$day, $weekday, $entries",
         )
     }
 
     fun a11yTrackerCell(row: String, date: LocalDate, marked: Boolean): String {
         val when2 = shortDate(date)
         val state = if (marked) {
-            t("marked", "marcada", "marcada", "markiert", "cochée", "segnata", "gemarkeerd", "oznaczone", "отмечено", "işaretli", "ditandai", "印あり", "표시됨")
+            t("marked", "marcada", "marcada", "markiert", "cochée", "segnata", "gemarkeerd", "oznaczone", "отмечено", "işaretli", "ditandai", "印あり", "표시됨", "محدد", "已标记", "चिह्नित", "đã đánh dấu")
         } else {
             t(
                 "not marked",
@@ -5738,6 +7132,10 @@ object S {
                 "belum ditandai",
                 "印なし",
                 "표시 안 됨",
+                "غير محدد",
+                "未标记",
+                "चिह्नित नहीं",
+                "chưa đánh dấu",
             )
         }
         return "$row, $when2, $state"
@@ -5758,6 +7156,10 @@ object S {
             "Tidak ada hari yang ditandai",
             "印の付いた日はありません",
             "표시한 날이 없어요",
+            "لا يوجد يوم محدد",
+            "没有标记的日子",
+            "कोई दिन चिह्नित नहीं",
+            "Chưa đánh dấu ngày nào",
         )
         val list = joinAnd(days.map { it.toString() })
         return t(
@@ -5774,6 +7176,10 @@ object S {
             "Ditandai: $list",
             "印の付いた日: ${list}",
             "표시한 날: ${list}",
+            "المحدد: $list",
+            "已标记：$list",
+            "चिह्नित: $list",
+            "Đã đánh dấu: $list",
         )
     }
 
@@ -5793,6 +7199,10 @@ object S {
         "Lanjutkan di koleksi baru",
         "新しいコレクションで続ける",
         "새 목록에서 이어 쓰기",
+        "المتابعة في قائمة جديدة",
+        "在新清单中继续",
+        "नई सूची में जारी रखें",
+        "Tiếp tục trong danh sách mới",
     )
     val continueTitle = t(
         "Continue in...",
@@ -5808,8 +7218,12 @@ object S {
         "Lanjutkan di...",
         "続ける先...",
         "이어 쓸 곳...",
+        "المتابعة في...",
+        "继续到...",
+        "इसमें जारी रखें...",
+        "Tiếp tục trong...",
     )
-    val create = t("Create", "Crear", "Criar", "Erstellen", "Créer", "Crea", "Maken", "Utwórz", "Создать", "Oluştur", "Buat", "作成", "만들기")
+    val create = t("Create", "Crear", "Criar", "Erstellen", "Créer", "Crea", "Maken", "Utwórz", "Создать", "Oluştur", "Buat", "作成", "만들기", "إنشاء", "创建", "बनाएँ", "Tạo")
     fun threadFrom(title: String) = t(
         "Continued from $title",
         "Viene de $title",
@@ -5824,6 +7238,10 @@ object S {
         "Lanjutan dari $title",
         "「${title}」から続く",
         "이어 온 곳: ${title}",
+        "تتمة من $title",
+        "接续自“$title”",
+        "$title से जारी",
+        "Tiếp theo từ $title",
     )
     fun threadNext(title: String) = t(
         "Continues in $title",
@@ -5839,6 +7257,10 @@ object S {
         "Berlanjut di $title",
         "「${title}」に続く",
         "이어지는 곳: ${title}",
+        "تستمر في $title",
+        "接续到“$title”",
+        "$title में जारी",
+        "Tiếp tục ở $title",
     )
     val newNotebookRow = t(
         "New notebook",
@@ -5854,6 +7276,10 @@ object S {
         "Buku catatan baru",
         "新しいノート",
         "새 노트",
+        "دفتر جديد",
+        "新笔记本",
+        "नई नोटबुक",
+        "Sổ tay mới",
     )
     val newNotebookSub = t(
         "Go through collections and tasks to start another",
@@ -5869,8 +7295,12 @@ object S {
         "Tinjau koleksi dan tugas untuk memulai yang baru",
         "コレクションとタスクを順に見直して、新しいノートを始めます",
         "목록과 할 일을 하나씩 살펴보며 새로 시작해요",
+        "راجع القوائم والمهام لتبدأ دفترًا آخر",
+        "回顾清单和任务，再开始新的一本",
+        "दूसरी शुरू करने के लिए सूचियों और कार्यों को देखें",
+        "Xem lại danh sách và việc cần làm để bắt đầu cuốn khác",
     )
-    val notebookKeep = t("Keep", "Mantener", "Manter", "Behalten", "Garder", "Mantieni", "Houden", "Zachowaj", "Оставить", "Koru", "Pertahankan", "残す", "유지")
+    val notebookKeep = t("Keep", "Mantener", "Manter", "Behalten", "Garder", "Mantieni", "Houden", "Zachowaj", "Оставить", "Koru", "Pertahankan", "残す", "유지", "إبقاء", "保留", "रखें", "Giữ")
     val notebookContinue = t(
         "Continue in a new one",
         "Continuar en una nueva",
@@ -5885,6 +7315,10 @@ object S {
         "Lanjutkan di yang baru",
         "新しいノートで続ける",
         "새 노트로 이어 가기",
+        "المتابعة في دفتر جديد",
+        "在新的一本里继续",
+        "नई में जारी रखें",
+        "Tiếp tục trong cuốn mới",
     )
     val notebookArchive = t(
         "Archive",
@@ -5900,6 +7334,10 @@ object S {
         "Arsipkan",
         "アーカイブ",
         "보관",
+        "أرشفة",
+        "归档",
+        "संग्रहीत करें",
+        "Lưu trữ",
     )
 
     fun notebookDone(d: LocalDate): String {
@@ -5918,6 +7356,10 @@ object S {
             "Buku catatan baru sejak $date.",
             "${date}から新しいノートです。",
             "${date}부터 새 노트예요.",
+            "دفتر جديد من $date.",
+            "从 $date 开始的新笔记本。",
+            "$date से नई नोटबुक।",
+            "Sổ tay mới từ $date.",
         )
     }
 
@@ -5937,6 +7379,10 @@ object S {
             "Buku catatan sampai $date",
             "${date}までのノート",
             "${date}까지의 노트",
+            "دفتر حتى $date",
+            "截至 $date 的笔记本",
+            "$date तक की नोटबुक",
+            "Sổ tay đến $date",
         )
     }
 
@@ -5957,6 +7403,10 @@ object S {
             "Jadwalkan untuk $date",
             "${date}にスケジュール",
             "예정일: ${date}",
+            "جدولة ليوم $date",
+            "安排到 $date",
+            "$date के लिए निर्धारित करें",
+            "Lên lịch cho $date",
         )
     }
 
@@ -5974,6 +7424,10 @@ object S {
         "Catat di Bobbin",
         "Bobbinにメモ",
         "Bobbin에 적기",
+        "دوّن في Bobbin",
+        "记到 Bobbin",
+        "Bobbin में लिखें",
+        "Ghi vào Bobbin",
     )
     val captureSaved = t(
         "Noted in Bobbin.",
@@ -5989,6 +7443,10 @@ object S {
         "Tercatat di Bobbin.",
         "Bobbinにメモしました。",
         "Bobbin에 적었어요.",
+        "تم التدوين في Bobbin.",
+        "已记到 Bobbin。",
+        "Bobbin में लिख लिया गया।",
+        "Đã ghi vào Bobbin.",
     )
     val captureEmpty = t(
         "There was nothing to note.",
@@ -6004,6 +7462,10 @@ object S {
         "Tidak ada yang perlu dicatat.",
         "メモするものがありませんでした。",
         "적을 내용이 없었어요.",
+        "لم يكن هناك ما يُدوَّن.",
+        "没有可记的内容。",
+        "लिखने के लिए कुछ नहीं था।",
+        "Không có gì để ghi.",
     )
     val captureNeedsPro = t(
         "Noting from outside the app is part of Bobbin Pro. Open the app to see it.",
@@ -6019,6 +7481,10 @@ object S {
         "Mencatat dari luar aplikasi adalah bagian dari Bobbin Pro. Buka aplikasinya untuk melihatnya.",
         "アプリの外からメモするのはBobbin Proの機能です。アプリを開いて確認してください。",
         "앱 밖에서 적는 기능은 Bobbin Pro에 포함돼요. 앱을 열어서 확인해 보세요.",
+        "التدوين من خارج التطبيق من مزايا Bobbin Pro. افتح التطبيق للاطلاع عليه.",
+        "在应用之外记录属于 Bobbin Pro。打开应用查看。",
+        "ऐप के बाहर से लिखना Bobbin Pro का हिस्सा है। देखने के लिए ऐप खोलें।",
+        "Ghi nhanh từ bên ngoài ứng dụng là một phần của Bobbin Pro. Hãy mở ứng dụng để xem.",
     )
     val proBook = t(
         "The book as a PDF",
@@ -6034,6 +7500,10 @@ object S {
         "Buku sebagai PDF",
         "PDFの本",
         "PDF 책",
+        "الكتاب بصيغة PDF",
+        "PDF 书册",
+        "PDF के रूप में किताब",
+        "Cuốn sách dạng PDF",
     )
 
     fun proCapture(onIos: Boolean): String = if (onIos) {
@@ -6051,6 +7521,10 @@ object S {
             "Catat lewat Siri dan Pintasan",
             "Siriとショートカットでメモ",
             "Siri와 단축어로 적기",
+            "دوّن بواسطة Siri والاختصارات",
+            "用 Siri 和快捷指令记录",
+            "Siri और शॉर्टकट से लिखें",
+            "Ghi bằng Siri và Phím tắt",
         )
     } else {
         t(
@@ -6067,6 +7541,10 @@ object S {
             "Catat dari Setelan Cepat",
             "クイック設定からメモ",
             "빠른 설정에서 적기",
+            "دوّن من الإعدادات السريعة",
+            "从快捷设置记录",
+            "क्विक सेटिंग से लिखें",
+            "Ghi từ Cài đặt nhanh",
         )
     }
 
@@ -6084,6 +7562,10 @@ object S {
         "Buku PDF",
         "PDFの本",
         "PDF 책",
+        "الكتاب بصيغة PDF",
+        "PDF 书册",
+        "PDF किताब",
+        "Sách dạng PDF",
     )
     val bookSub = t(
         "The notebook laid out, to print or keep",
@@ -6099,6 +7581,10 @@ object S {
         "Buku catatan yang sudah ditata, untuk dicetak atau disimpan",
         "レイアウトしたノート。印刷や保存に",
         "인쇄하거나 보관할 수 있게 편집한 노트",
+        "الدفتر منسّقًا للطباعة أو الحفظ",
+        "排好版的笔记本，可打印或留存",
+        "छपाई या सहेजने के लिए सजी हुई नोटबुक",
+        "Cuốn sổ được dàn trang, để in hoặc lưu giữ",
     )
     val bookAction = t(
         "Make the book as a PDF",
@@ -6114,6 +7600,10 @@ object S {
         "Buat buku sebagai PDF",
         "本をPDFで作成",
         "PDF 책 만들기",
+        "إنشاء الكتاب بصيغة PDF",
+        "生成 PDF 书册",
+        "किताब को PDF में बनाएँ",
+        "Tạo sách dạng PDF",
     )
 
     fun bookRange(from: YearMonth, to: YearMonth): String {
@@ -6133,6 +7623,10 @@ object S {
             "$a sampai $b",
             "${a}から${b}まで",
             "${a}부터 ${b}까지",
+            "من $a إلى $b",
+            "$a 至 $b",
+            "$a से $b",
+            "$a đến $b",
         )
     }
 
@@ -6151,6 +7645,10 @@ object S {
             "Menata buku: halaman $n dari $total",
             "本をレイアウト中: ${n}/${total}ページ",
             "책을 편집하는 중: ${total}쪽 중 ${n}쪽",
+            "تنسيق الكتاب: الصفحة $n من $total",
+            "正在排版：第 $n 页，共 $total 页",
+            "किताब सजाई जा रही है: $total में से पृष्ठ $n",
+            "Đang dàn trang sách: trang $n trên $total",
         )
     }
 
@@ -6168,13 +7666,17 @@ object S {
         "Gagal membuat buku.",
         "本を作成できませんでした。",
         "책을 만들지 못했어요.",
+        "تعذّر إنشاء الكتاب.",
+        "无法生成书册。",
+        "किताब नहीं बन सकी।",
+        "Không tạo được sách.",
     )
 
     // Natural language dates (v1.1, docs/tecnico.md 12.4): the single-word vocabulary that
     // model/DateHint.kt reads; the multi-word recognition patterns of docs/textos.md 23 stay in
     // that document for DateHint.kt (#66) to consult directly.
-    fun dateWordToday(code: String = lang) = tIn(code, "today", "hoy", "hoje", "heute", "aujourd'hui", "oggi", "vandaag", "dzisiaj", "сегодня", "bugün", "hari ini", "今日", "오늘")
-    fun dateWordTomorrow(code: String = lang) = tIn(code, "tomorrow", "mañana", "amanhã", "morgen", "demain", "domani", "morgen", "jutro", "завтра", "yarın", "besok", "明日", "내일")
+    fun dateWordToday(code: String = lang) = tIn(code, "today", "hoy", "hoje", "heute", "aujourd'hui", "oggi", "vandaag", "dzisiaj", "сегодня", "bugün", "hari ini", "今日", "오늘", "اليوم", "今天", "आज", "hôm nay")
+    fun dateWordTomorrow(code: String = lang) = tIn(code, "tomorrow", "mañana", "amanhã", "morgen", "demain", "domani", "morgen", "jutro", "завтра", "yarın", "besok", "明日", "내일", "غدا", "明天", "कल", "ngày mai")
     fun dateWordDayAfterTomorrow(code: String = lang) = tIn(
         code,
         "day after tomorrow",
@@ -6190,6 +7692,10 @@ object S {
         "lusa",
         "明後日",
         "모레",
+        "بعد غد",
+        "后天",
+        "परसों",
+        "ngày kia",
     )
 
     // Question bank (docs/tecnico.md 12.3): S.question(i) with i in 0 until QUESTION_COUNT.
@@ -7013,6 +8519,258 @@ object S {
         "이 날들을 한 줄로 정리한다면 뭐라고 쓸까요?",
     )
 
+    private val QUESTIONS_AR = listOf(
+        "ما الذي لن تنقله لو اضطررت إلى إعادة كتابته بيدك؟",
+        "أي مهمة تنتظر منذ أطول وقت؟",
+        "ما الذي فعلته ولم تدوّنه قط؟",
+        "أي حدث من هذه الأيام تريد أن تتذكره؟",
+        "أي ملاحظة فاجأتك عندما قرأتها من جديد؟",
+        "ما الذي كنت ستشطبه اليوم دون ندم؟",
+        "ما الذي كان يستحق الوقت الذي استغرقه؟",
+        "على ماذا وافقت وكنت سترفضه الآن؟",
+        "أي مهمة تبيّن أنها أصغر مما ظننت؟",
+        "ما أول شيء ستفعله غدًا؟",
+        "ما الذي يستحق قائمة خاصة به؟",
+        "أي فكرة تعود إليك باستمرار؟",
+        "من أكثر شخص يظهر في هذه الصفحات؟",
+        "ما الذي أنجزته وقد بدأته منذ زمن بعيد؟",
+        "ما الذي كنت ستفعله بشكل مختلف لو عشت الأيام نفسها؟",
+        "ما الذي تعلمته وتريد الاحتفاظ به؟",
+        "أي مهمة هي في الحقيقة عدة مهام؟",
+        "ما الذي يمكنه الانتظار؟",
+        "ما الذي سار أفضل مما توقعت؟",
+        "ما الذي يسعدك أنك دوّنته؟",
+        "ما الذي لاحظته فقط عندما قرأته من جديد؟",
+        "ما الذي تركته دون إنهاء عن قصد؟",
+        "أي مكان تتذكره من هذه الأيام؟",
+        "أي محادثة كنت ستدوّنها بكاملها؟",
+        "ما الشيء الصغير الذي جعل يومًا أفضل؟",
+        "أي مهمة تواصل نقلها، ولماذا؟",
+        "ما الذي تتمنى لو كان لديك وقت أطول له؟",
+        "ما الذي كنت ستحذفه من قائمتك لو لم يسألك أحد؟",
+        "ماذا فعلت لأجل شخص آخر؟",
+        "ماذا فعل شخص آخر لأجلك؟",
+        "ما الذي تريد تكراره؟",
+        "ما أفضل لحظة عادية؟",
+        "أي سؤال ما زال مفتوحًا؟",
+        "ما الذي قرأته أو شاهدته أو سمعته ويستحق تدوينة؟",
+        "ماذا قرّرت، وماذا نتج عن ذلك؟",
+        "ما الذي بدأته دون تخطيط؟",
+        "أي مهمة كنت ستسلّمها لشخص آخر؟",
+        "ما الذي أجّلته وتبيّن أنه على ما يرام؟",
+        "ما الذي ينقص هذه الصفحات؟",
+        "ماذا كنت ستستكشف في عصر يوم فارغ؟",
+        "أي أولوية تغيّرت في الطريق؟",
+        "ما الذي أصلحته، في البيت أو في مكان آخر؟",
+        "أي يوم تريد أن تعيد قراءته أولًا؟",
+        "ما الذي اشتريته وكان يستحق؟",
+        "ما الذي طبخته أو أكلته ويستحق أن يُتذكر؟",
+        "أي عادة ظهرت دون أن تنتبه؟",
+        "ما الذي سيجعل الأيام القادمة أبسط؟",
+        "على ماذا قلت لا، وكيف جرى الأمر؟",
+        "أي مهمة يمكنك إنجازها في خمس دقائق؟",
+        "ما الذي فاجأك في طريقة قضائك لوقتك؟",
+        "ما الذي تريد أن تتذكره من هذه الأيام بعد عام؟",
+        "ما الذي كان أصعب مما بدا؟",
+        "أين ذهبت لأول مرة؟",
+        "ما الذي صنعته بيديك؟",
+        "أي خطة تغيّرت، وما الذي حلّ محلها؟",
+        "أي خبر ميّز هذه الأيام؟",
+        "ما الذي يمكنك أن تضعه جانبًا؟",
+        "ما الذي كنت تنتظره، وهل وصل؟",
+        "ماذا ستكتب في السطر الأول من الصفحة التالية؟",
+        "كيف تلخّص هذه الأيام في سطر واحد؟",
+    )
+
+    private val QUESTIONS_ZH = listOf(
+        "如果必须亲手重抄一遍，哪些事你不会带到下一页？",
+        "哪个任务等得最久？",
+        "你做过哪件事，却从没写下来？",
+        "这几天里，哪件事你想记住？",
+        "重读时，哪条笔记让你意外？",
+        "今天你会毫不犹豫划掉什么？",
+        "哪件事花的时间是值得的？",
+        "你答应过什么，现在会拒绝？",
+        "哪个任务其实比想象的小？",
+        "明天你第一件要做的事是什么？",
+        "什么值得拥有一份自己的清单？",
+        "哪个想法总是回来找你？",
+        "这些页面里，谁出现得最多？",
+        "哪件很久以前开始的事，你终于做完了？",
+        "同样的日子再来一次，你会换什么做法？",
+        "你学到了什么，想留住？",
+        "哪个任务其实是好几个任务？",
+        "什么可以先放一放？",
+        "什么事比你预想的顺利？",
+        "你庆幸自己写下了什么？",
+        "重读时，你才注意到什么？",
+        "你有意没做完的是什么？",
+        "这几天里，你记得哪个地方？",
+        "哪次对话你想完整记下来？",
+        "哪件小事让某一天变得更好？",
+        "哪个任务你一直在转移，为什么？",
+        "你希望给什么留更多时间？",
+        "如果没人问起，你会从清单里删掉什么？",
+        "你为别人做了什么？",
+        "别人为你做了什么？",
+        "你想重复什么？",
+        "最美好的平凡时刻是哪一个？",
+        "哪个问题还没有答案？",
+        "你读过、看过或听过什么，值得记一笔？",
+        "你做了什么决定，结果如何？",
+        "哪件事你没打算开始，却开始了？",
+        "哪个任务你想交给别人？",
+        "你拖延的事里，哪件后来没事了？",
+        "这些页面里缺了什么？",
+        "空闲的下午，你想探索什么？",
+        "一路上，哪个优先事项变了？",
+        "你修好了什么，在家里或别的地方？",
+        "你最想先重读哪一天？",
+        "你买过什么，觉得很值？",
+        "你做过或吃过什么，值得记住？",
+        "哪个习惯，你没留意它就养成了？",
+        "什么能让接下来的日子更简单？",
+        "你拒绝了什么，结果怎样？",
+        "哪个任务五分钟就能做完？",
+        "你花时间的方式里，什么让你意外？",
+        "这几天里，一年后你还想记得什么？",
+        "什么事比看上去更难？",
+        "你第一次去了哪里？",
+        "你亲手做了什么？",
+        "哪个计划变了，换成了什么？",
+        "哪条消息为这几天留下了印记？",
+        "什么可以放下了？",
+        "你一直在等什么，它来了吗？",
+        "下一页的第一行，你想写什么？",
+        "用一行字概括这几天，你会怎么写？",
+    )
+
+    private val QUESTIONS_HI = listOf(
+        "अगर आपको इसे हाथ से दोबारा लिखना पड़ता, तो आप क्या आगे नहीं ले जाते?",
+        "कौन-सा कार्य सबसे ज़्यादा समय से इंतज़ार कर रहा है?",
+        "आपने ऐसा क्या किया जो कभी लिखा नहीं?",
+        "इन दिनों की कौन-सी घटना आप याद रखना चाहते हैं?",
+        "दोबारा पढ़ने पर कौन-सा नोट आपको चौंका गया?",
+        "आज आप बिना पछतावे के क्या काट देते?",
+        "किस चीज़ में लगा समय सार्थक रहा?",
+        "आपने किस बात पर हाँ कहा था, जिस पर अब ना कहते?",
+        "कौन-सा कार्य सोच से छोटा निकला?",
+        "कल आप सबसे पहले क्या करेंगे?",
+        "किस चीज़ की अपनी अलग सूची होनी चाहिए?",
+        "कौन-सा विचार बार-बार लौट आता है?",
+        "इन पन्नों में सबसे ज़्यादा कौन दिखता है?",
+        "आपने ऐसा क्या पूरा किया जो बहुत पहले शुरू किया था?",
+        "इन्हीं दिनों को दोबारा जीते तो आप क्या अलग करते?",
+        "आपने क्या सीखा जिसे आप सँजोकर रखना चाहते हैं?",
+        "कौन-सा कार्य असल में कई कार्य हैं?",
+        "क्या इंतज़ार कर सकता है?",
+        "क्या आपकी उम्मीद से बेहतर हुआ?",
+        "आपको किस बात की खुशी है कि आपने उसे लिख लिया?",
+        "दोबारा पढ़ते समय आपने क्या नोटिस किया?",
+        "आपने जान-बूझकर क्या अधूरा छोड़ा?",
+        "इन दिनों की कौन-सी जगह आपको याद है?",
+        "कौन-सी बातचीत आप पूरी लिखना चाहेंगे?",
+        "किस छोटी चीज़ ने किसी दिन को बेहतर बना दिया?",
+        "आप किस कार्य को बार-बार आगे बढ़ाते हैं, और क्यों?",
+        "आप किस चीज़ के लिए और समय चाहेंगे?",
+        "अगर कोई न पूछता, तो आप अपनी सूची से क्या हटा देते?",
+        "आपने किसी और के लिए क्या किया?",
+        "किसी ने आपके लिए क्या किया?",
+        "आप क्या दोहराना चाहते हैं?",
+        "सबसे अच्छा साधारण पल कौन-सा था?",
+        "कौन-सा सवाल अभी भी खुला है?",
+        "आपने क्या पढ़ा, देखा या सुना जो एक नोट के लायक है?",
+        "आपने क्या तय किया, और उसका क्या नतीजा निकला?",
+        "आपने बिना योजना के क्या शुरू कर दिया?",
+        "कौन-सा कार्य आप किसी और को सौंप देते?",
+        "आपने क्या टाला, जो आख़िर ठीक ही निकला?",
+        "इन पन्नों में क्या कमी है?",
+        "किसी खाली दोपहर में आप क्या खोजते?",
+        "रास्ते में कौन-सी प्राथमिकता बदल गई?",
+        "आपने क्या ठीक किया, घर में या कहीं और?",
+        "आप किस दिन को सबसे पहले दोबारा पढ़ेंगे?",
+        "आपने क्या खरीदा जो पैसा वसूल रहा?",
+        "आपने क्या पकाया या खाया जो याद रखने लायक है?",
+        "कौन-सी आदत आपके ध्यान दिए बिना बन गई?",
+        "आने वाले दिनों को क्या सरल बना देगा?",
+        "आपने किस बात को ना कहा, और कैसा रहा?",
+        "कौन-सा कार्य आप पाँच मिनट में कर सकते हैं?",
+        "आपने समय कैसे बिताया, इसमें आपको क्या हैरानी हुई?",
+        "इन दिनों में से एक साल बाद आप क्या याद रखना चाहेंगे?",
+        "क्या दिखने से ज़्यादा कठिन था?",
+        "आप पहली बार कहाँ गए?",
+        "आपने अपने हाथों से क्या बनाया?",
+        "कौन-सी योजना बदली, और उसकी जगह क्या आया?",
+        "किस ख़बर ने इन दिनों पर छाप छोड़ी?",
+        "आप क्या एक तरफ़ रख सकते हैं?",
+        "आप किसका इंतज़ार कर रहे थे, और क्या वह आ गया?",
+        "अगले पन्ने की पहली पंक्ति में आप क्या लिखेंगे?",
+        "इन दिनों को आप एक पंक्ति में कैसे समेटेंगे?",
+    )
+
+    private val QUESTIONS_VI = listOf(
+        "Nếu phải chép lại bằng tay, bạn sẽ không chuyển việc nào sang trang sau?",
+        "Việc nào đã chờ lâu nhất?",
+        "Bạn đã làm gì mà chưa bao giờ ghi lại?",
+        "Sự kiện nào trong những ngày này bạn muốn nhớ?",
+        "Ghi chú nào làm bạn ngạc nhiên khi đọc lại?",
+        "Hôm nay bạn sẽ gạch bỏ điều gì mà không tiếc?",
+        "Điều gì xứng đáng với thời gian nó tốn?",
+        "Bạn đã nhận lời điều gì mà bây giờ sẽ từ chối?",
+        "Việc nào hóa ra nhỏ hơn bạn nghĩ?",
+        "Ngày mai bạn sẽ làm gì đầu tiên?",
+        "Điều gì xứng đáng có một danh sách riêng?",
+        "Ý tưởng nào cứ quay lại mãi?",
+        "Ai xuất hiện nhiều nhất trong những trang này?",
+        "Bạn đã hoàn thành điều gì mà đã bắt đầu từ rất lâu?",
+        "Với chính những ngày này, bạn sẽ làm khác đi điều gì?",
+        "Bạn đã học được điều gì và muốn giữ lại?",
+        "Việc nào thực ra là nhiều việc gộp lại?",
+        "Điều gì có thể để sau?",
+        "Điều gì diễn ra tốt hơn bạn mong đợi?",
+        "Bạn mừng vì đã ghi lại điều gì?",
+        "Bạn chỉ nhận ra điều gì khi đọc lại?",
+        "Bạn cố ý để dở điều gì?",
+        "Bạn nhớ nơi nào trong những ngày này?",
+        "Cuộc trò chuyện nào bạn muốn ghi lại đầy đủ?",
+        "Điều nhỏ nào đã làm một ngày tốt hơn?",
+        "Việc nào bạn cứ chuyển mãi, và vì sao?",
+        "Bạn muốn có thêm thời gian cho điều gì?",
+        "Nếu không ai hỏi, bạn sẽ bỏ gì khỏi danh sách?",
+        "Bạn đã làm gì cho người khác?",
+        "Người khác đã làm gì cho bạn?",
+        "Bạn muốn lặp lại điều gì?",
+        "Khoảnh khắc bình thường nào là đẹp nhất?",
+        "Câu hỏi nào vẫn còn bỏ ngỏ?",
+        "Bạn đã đọc, xem hay nghe điều gì đáng ghi một dòng?",
+        "Bạn đã quyết định điều gì và kết quả ra sao?",
+        "Bạn đã bắt đầu điều gì mà không hề lên kế hoạch?",
+        "Việc nào bạn sẽ giao cho người khác?",
+        "Bạn đã trì hoãn điều gì mà rốt cuộc vẫn ổn?",
+        "Những trang này còn thiếu điều gì?",
+        "Vào một buổi chiều rảnh, bạn sẽ khám phá điều gì?",
+        "Ưu tiên nào đã thay đổi giữa chừng?",
+        "Bạn đã sửa được gì, ở nhà hay ở nơi khác?",
+        "Bạn muốn đọc lại ngày nào trước?",
+        "Bạn đã mua gì mà thấy đáng đồng tiền?",
+        "Bạn đã nấu hay ăn món gì đáng nhớ?",
+        "Thói quen nào đã đến mà bạn không để ý?",
+        "Điều gì sẽ làm những ngày sắp tới đơn giản hơn?",
+        "Bạn đã từ chối điều gì, và mọi chuyện ra sao?",
+        "Việc nào bạn có thể làm xong trong năm phút?",
+        "Cách bạn dùng thời gian có điều gì làm bạn ngạc nhiên?",
+        "Một năm nữa, bạn muốn nhớ điều gì từ những ngày này?",
+        "Điều gì khó hơn vẻ ngoài của nó?",
+        "Lần đầu tiên bạn đến nơi nào?",
+        "Bạn đã làm ra thứ gì bằng đôi tay?",
+        "Kế hoạch nào đã thay đổi, và điều gì thay thế nó?",
+        "Tin tức nào đã in dấu những ngày này?",
+        "Bạn có thể gác lại điều gì?",
+        "Bạn đã chờ điều gì, và nó đã đến chưa?",
+        "Bạn sẽ viết gì ở dòng đầu tiên của trang sau?",
+        "Bạn sẽ tóm tắt những ngày này trong một dòng thế nào?",
+    )
+
     /** [i] in 0 until QUESTION_COUNT (docs/tecnico.md 12.3); order matches docs/textos.md 23. */
     fun question(i: Int): String {
         val list = when (lang) {
@@ -7028,6 +8786,10 @@ object S {
             "id" -> QUESTIONS_ID
             "ja" -> QUESTIONS_JA
             "ko" -> QUESTIONS_KO
+            "ar" -> QUESTIONS_AR
+            "zh" -> QUESTIONS_ZH
+            "hi" -> QUESTIONS_HI
+            "vi" -> QUESTIONS_VI
             else -> QUESTIONS_EN
         }
         return list[i]
@@ -7049,8 +8811,12 @@ object S {
         "Sinkronisasi",
         "同期",
         "동기화",
+        "المزامنة",
+        "同步",
+        "सिंक",
+        "Đồng bộ",
     )
-    val syncOff = t("Off", "Apagada", "Desativada", "Aus", "Désactivée", "Disattivata", "Uit", "Wyłączona", "Выключена", "Kapalı", "Mati", "オフ", "꺼짐")
+    val syncOff = t("Off", "Apagada", "Desativada", "Aus", "Désactivée", "Disattivata", "Uit", "Wyłączona", "Выключена", "Kapalı", "Mati", "オフ", "꺼짐", "متوقفة", "关闭", "बंद", "Tắt")
     val syncICloud = t(
         "With iCloud Drive",
         "Con iCloud Drive",
@@ -7065,6 +8831,10 @@ object S {
         "Dengan iCloud Drive",
         "iCloud Driveを使用",
         "iCloud Drive 사용",
+        "عبر iCloud Drive",
+        "使用 iCloud Drive",
+        "iCloud Drive के साथ",
+        "Với iCloud Drive",
     )
     fun syncFile(name: String) = t(
         "With $name, in the folder you chose",
@@ -7080,6 +8850,10 @@ object S {
         "Dengan $name, di folder yang kamu pilih",
         "選んだフォルダの${name}を使用",
         "선택한 폴더의 ${name} 사용",
+        "عبر $name، في المجلد الذي اخترته",
+        "使用 $name，在你选的文件夹里",
+        "$name के साथ, आपके चुने फ़ोल्डर में",
+        "Với $name, trong thư mục bạn đã chọn",
     )
     fun syncLast(hour: Int, minute: Int): String {
         val time = clock(hour, minute)
@@ -7097,6 +8871,10 @@ object S {
             "Terakhir pukul $time",
             "前回: ${time}",
             "마지막 동기화: ${time}",
+            "آخر مرة، $time",
+            "上次：$time",
+            "पिछली बार, $time",
+            "Lần trước, $time",
         )
     }
     val syncConflictTitle = t(
@@ -7113,6 +8891,10 @@ object S {
         "Kedua sisi berubah",
         "両方で変更があります",
         "양쪽 모두 바뀌었어요",
+        "تغيّر الطرفان",
+        "两边都有改动",
+        "दोनों तरफ़ बदलाव हुए हैं",
+        "Cả hai bên đều đã thay đổi",
     )
     val syncConflictText = t(
         "This phone and the other one have different changes since last time. Choose which one to keep, or merge them after seeing a summary.",
@@ -7128,6 +8910,10 @@ object S {
         "Ponsel ini dan yang satunya punya perubahan yang berbeda sejak terakhir kali. Pilih mana yang dipertahankan, atau gabungkan setelah melihat ringkasan.",
         "この端末ともう一方の端末で、前回からそれぞれ違う変更があります。どちらかを残すか、概要を見てから両方を合わせるか、選べます。",
         "마지막 동기화 이후 이 휴대폰과 다른 쪽에 서로 다른 변경이 생겼어요. 어느 쪽을 유지할지 고르거나, 요약을 본 뒤 합칠 수 있어요.",
+        "في هذا الهاتف والآخر تغييرات مختلفة منذ المرة الأخيرة. اختر أيهما تبقي، أو ادمجهما بعد الاطلاع على ملخص.",
+        "这部手机和另一边自上次以来各有不同的改动。选择保留哪一边，或者看过摘要后合并。",
+        "पिछली बार के बाद से इस फ़ोन और दूसरी तरफ़ अलग-अलग बदलाव हुए हैं। चुनें कि किसे रखना है, या सारांश देखकर दोनों को मिला दें।",
+        "Từ lần trước, điện thoại này và bên kia có những thay đổi khác nhau. Hãy chọn giữ bên nào, hoặc gộp cả hai sau khi xem tóm tắt.",
     )
     val syncKeepThis = t(
         "Keep this phone",
@@ -7143,6 +8929,10 @@ object S {
         "Pakai ponsel ini",
         "この端末を残す",
         "이 휴대폰 유지",
+        "إبقاء هذا الهاتف",
+        "保留这部手机的",
+        "इस फ़ोन वाला रखें",
+        "Giữ bản trên máy này",
     )
     val syncKeepOther = t(
         "Keep the other",
@@ -7158,6 +8948,10 @@ object S {
         "Pakai yang satunya",
         "もう一方を残す",
         "다른 쪽 유지",
+        "إبقاء الآخر",
+        "保留另一边的",
+        "दूसरा रखें",
+        "Giữ bản kia",
     )
     val syncMerge = t(
         "Merge both",
@@ -7173,6 +8967,10 @@ object S {
         "Gabungkan keduanya",
         "両方を合わせる",
         "둘 다 합치기",
+        "دمج الاثنين",
+        "合并两者",
+        "दोनों मिलाएँ",
+        "Gộp cả hai",
     )
     val syncCreate = t(
         "Create a new bobbin-sync.json",
@@ -7188,6 +8986,10 @@ object S {
         "Buat bobbin-sync.json baru",
         "新しいbobbin-sync.jsonを作成",
         "새 bobbin-sync.json 만들기",
+        "إنشاء bobbin-sync.json جديد",
+        "新建 bobbin-sync.json",
+        "नया bobbin-sync.json बनाएँ",
+        "Tạo bobbin-sync.json mới",
     )
     val syncOpen = t(
         "Use the one from another device",
@@ -7203,6 +9005,10 @@ object S {
         "Pakai yang dari perangkat lain",
         "ほかの端末のものを使う",
         "다른 기기의 파일 사용",
+        "استخدام الملف من جهاز آخر",
+        "使用另一台设备上的",
+        "दूसरे डिवाइस वाला उपयोग करें",
+        "Dùng bản từ thiết bị khác",
     )
     val syncNoICloud = t(
         "To sync, sign in to iCloud and turn on iCloud Drive in Settings.",
@@ -7218,6 +9024,10 @@ object S {
         "Untuk menyinkronkan, masuk ke iCloud dan aktifkan iCloud Drive di Pengaturan.",
         "同期するには、設定でiCloudにサインインし、iCloud Driveをオンにしてください。",
         "동기화하려면 설정에서 iCloud에 로그인하고 iCloud Drive를 켜세요.",
+        "للمزامنة، سجّل الدخول إلى iCloud وفعّل iCloud Drive من الإعدادات.",
+        "要同步，请在设置里登录 iCloud 并开启 iCloud Drive。",
+        "सिंक करने के लिए iCloud में साइन इन करें और सेटिंग में iCloud Drive चालू करें।",
+        "Để đồng bộ, hãy đăng nhập iCloud và bật iCloud Drive trong Cài đặt.",
     )
     val proSync = t(
         "Sync through your own cloud",
@@ -7233,6 +9043,10 @@ object S {
         "Sinkronisasi lewat cloud milikmu sendiri",
         "自分のクラウドで同期",
         "내 클라우드로 동기화",
+        "المزامنة عبر سحابتك الخاصة",
+        "通过你自己的云同步",
+        "अपने क्लाउड से सिंक करें",
+        "Đồng bộ qua đám mây của riêng bạn",
     )
     val proYearSummary = t(
         "The year summary",
@@ -7248,6 +9062,10 @@ object S {
         "Ringkasan tahun",
         "1年のまとめ",
         "한 해 요약",
+        "ملخص السنة",
+        "年度总结",
+        "साल का सारांश",
+        "Tổng kết năm",
     )
     val yearSummaryRow = t(
         "Year summary",
@@ -7263,6 +9081,10 @@ object S {
         "Ringkasan tahun",
         "1年のまとめ",
         "한 해 요약",
+        "ملخص السنة",
+        "年度总结",
+        "साल का सारांश",
+        "Tổng kết năm",
     )
     val yearSummarySub = t(
         "Inspirations, priorities done and what travelled the most",
@@ -7278,6 +9100,10 @@ object S {
         "Inspirasi, prioritas yang selesai, dan yang paling banyak berpindah",
         "ひらめき、完了した優先、いちばん旅したもの",
         "영감, 완료한 우선순위, 가장 많이 옮겨 다닌 것",
+        "الإلهامات والأولويات المنجزة وما تنقّل أكثر",
+        "灵感、完成的优先事项，以及移动最多的任务",
+        "प्रेरणाएँ, पूरी की गई प्राथमिकताएँ और जो सबसे ज़्यादा आगे बढ़ता रहा",
+        "Cảm hứng, ưu tiên đã xong và những việc bị chuyển nhiều nhất",
     )
     fun yearSummaryTitle(year: Int) = t(
         "Your $year",
@@ -7293,6 +9119,10 @@ object S {
         "Tahunmu $year",
         "${year}年",
         "나의 ${year}년",
+        "عامك $year",
+        "${year}年",
+        "आपका $year",
+        "Năm $year của bạn",
     )
     val summaryInspirations = t(
         "Inspirations",
@@ -7308,6 +9138,10 @@ object S {
         "Inspirasi",
         "ひらめき",
         "영감",
+        "الإلهامات",
+        "灵感",
+        "प्रेरणाएँ",
+        "Cảm hứng",
     )
     val summaryPriorities = t(
         "Priorities done",
@@ -7323,6 +9157,10 @@ object S {
         "Prioritas yang selesai",
         "完了した優先",
         "완료한 우선순위",
+        "الأولويات المنجزة",
+        "完成的优先事项",
+        "पूरी की गई प्राथमिकताएँ",
+        "Ưu tiên đã xong",
     )
     val summaryMostMigrated = t(
         "Travelled the most",
@@ -7338,6 +9176,10 @@ object S {
         "Paling banyak berpindah",
         "いちばん旅したもの",
         "가장 많이 옮겨 다닌 것",
+        "الأكثر تنقّلًا",
+        "移动最多",
+        "सबसे ज़्यादा आगे बढ़ा",
+        "Bị chuyển nhiều nhất",
     )
     val a11yPreviousYear = t(
         "Previous year",
@@ -7353,6 +9195,10 @@ object S {
         "Tahun sebelumnya",
         "前の年",
         "이전 해",
+        "السنة السابقة",
+        "上一年",
+        "पिछला साल",
+        "Năm trước",
     )
     val a11yNextYear = t(
         "Next year",
@@ -7368,6 +9214,10 @@ object S {
         "Tahun berikutnya",
         "次の年",
         "다음 해",
+        "السنة التالية",
+        "下一年",
+        "अगला साल",
+        "Năm sau",
     )
     val summaryEmpty = t(
         "This year you marked no inspirations or priorities. Next year starts blank.",
@@ -7383,6 +9233,10 @@ object S {
         "Tahun ini kamu tidak menandai inspirasi atau prioritas. Tahun depan dimulai kosong.",
         "この年は、ひらめきも優先も付けませんでした。次の年は白紙から始まります。",
         "올해는 영감도 우선순위도 표시하지 않았어요. 내년은 빈 페이지로 시작해요.",
+        "لم تحدد هذا العام أي إلهام أو أولوية. تبدأ السنة القادمة فارغة.",
+        "今年你没有标记灵感或优先事项。下一年从空白开始。",
+        "इस साल आपने कोई प्रेरणा या प्राथमिकता चिह्नित नहीं की। अगला साल खाली शुरू होता है।",
+        "Năm nay bạn chưa đánh dấu cảm hứng hay ưu tiên nào. Năm sau bắt đầu trống.",
     )
     val iconAndTheme = t(
         "Icon and theme",
@@ -7398,6 +9252,10 @@ object S {
         "Ikon dan tema",
         "アイコンとテーマ",
         "아이콘과 테마",
+        "الأيقونة والمظهر",
+        "图标与主题",
+        "आइकन और थीम",
+        "Biểu tượng và chủ đề",
     )
     val iconNone = t(
         "No icon",
@@ -7413,8 +9271,12 @@ object S {
         "Tanpa ikon",
         "アイコンなし",
         "아이콘 없음",
+        "بلا أيقونة",
+        "无图标",
+        "कोई आइकन नहीं",
+        "Không biểu tượng",
     )
-    val themeHint = t("Theme", "Tema", "Tema", "Thema", "Thème", "Tema", "Thema", "Motyw", "Тема", "Tema", "Tema", "テーマ", "테마")
+    val themeHint = t("Theme", "Tema", "Tema", "Thema", "Thème", "Tema", "Thema", "Motyw", "Тема", "Tema", "Tema", "テーマ", "테마", "المظهر", "主题", "थीम", "Chủ đề")
     val themeNone = t(
         "No theme",
         "Sin tema",
@@ -7429,6 +9291,10 @@ object S {
         "Tanpa tema",
         "テーマなし",
         "테마 없음",
+        "بلا مظهر",
+        "无主题",
+        "कोई थीम नहीं",
+        "Không chủ đề",
     )
 
     private val ICON_ORDER = listOf("star", "heart", "book", "home", "work", "travel", "money", "health", "food", "music", "idea", "people")
@@ -7448,6 +9314,10 @@ object S {
             "Bintang, Hati, Buku, Rumah, Kerja, Perjalanan, Uang, Kesehatan, Makanan, Musik, Ide, Orang",
             "星, ハート, 本, 家, 仕事, 旅行, お金, 健康, 食べ物, 音楽, アイデア, 人",
             "별, 하트, 책, 집, 일, 여행, 돈, 건강, 음식, 음악, 아이디어, 사람",
+            "نجمة, قلب, كتاب, منزل, عمل, سفر, مال, صحة, طعام, موسيقى, فكرة, أشخاص",
+            "星星, 爱心, 书, 家, 工作, 旅行, 钱, 健康, 食物, 音乐, 点子, 人",
+            "तारा, दिल, किताब, घर, काम, यात्रा, पैसा, स्वास्थ्य, खाना, संगीत, विचार, लोग",
+            "Ngôi sao, Trái tim, Sách, Nhà, Công việc, Du lịch, Tiền, Sức khỏe, Đồ ăn, Âm nhạc, Ý tưởng, Mọi người",
         ).split(", ")
         return names[ICON_ORDER.indexOf(id).takeIf { it >= 0 } ?: 0]
     }
@@ -7469,6 +9339,10 @@ object S {
         "Impor ke hari itu",
         "その日に読み込む",
         "그날로 가져오기",
+        "استيراد إلى ذلك اليوم",
+        "导入到那一天",
+        "उस दिन में आयात करें",
+        "Nhập vào ngày đó",
     )
     val importElsewhere = t(
         "To another day or collection",
@@ -7484,8 +9358,12 @@ object S {
         "Ke hari lain atau koleksi",
         "別の日またはコレクションへ",
         "다른 날이나 목록으로",
+        "إلى يوم آخر أو قائمة",
+        "到另一天或清单",
+        "दूसरे दिन या सूची में",
+        "Sang ngày khác hoặc danh sách",
     )
-    val importSkip = t("Skip", "Saltar", "Pular", "Überspringen", "Passer", "Salta", "Overslaan", "Pomiń", "Пропустить", "Atla", "Lewati", "スキップ", "건너뛰기")
+    val importSkip = t("Skip", "Saltar", "Pular", "Überspringen", "Passer", "Salta", "Overslaan", "Pomiń", "Пропустить", "Atla", "Lewati", "スキップ", "건너뛰기", "تخطّي", "跳过", "छोड़ें", "Bỏ qua")
 
     fun importSiblingDone(n: Int): String = when {
         n == 0 -> t(
@@ -7502,6 +9380,10 @@ object S {
             "Tidak ada yang diimpor.",
             "何も読み込まれませんでした。",
             "아무것도 가져오지 않았어요.",
+            "لم يُستورد شيء.",
+            "没有导入任何内容。",
+            "कुछ भी आयात नहीं हुआ।",
+            "Không nhập gì cả.",
         )
         isSingular(n) -> t(
             "1 entry imported.",
@@ -7517,6 +9399,10 @@ object S {
             "1 entri diimpor.",
             "1件の項目を読み込みました。",
             "항목 1개를 가져왔어요.",
+            "تم استيراد إدخال واحد.",
+            "已导入 1 条记录。",
+            "1 प्रविष्टि आयात हुई।",
+            "Đã nhập 1 mục.",
         )
         else -> t(
             "$n entries imported.",
@@ -7532,6 +9418,10 @@ object S {
             "$n entri diimpor.",
             "${n}件の項目を読み込みました。",
             "항목 ${n}개를 가져왔어요.",
+            "الإدخالات المستوردة: $n.",
+            "已导入 $n 条记录。",
+            "$n प्रविष्टियाँ आयात हुईं।",
+            "Đã nhập $n mục.",
         )
     }
 
@@ -7549,6 +9439,10 @@ object S {
         "Berkas itu bukan cadangan dari Bobbin, Purl, MoodTraker, atau Quilt.",
         "このファイルは、Bobbin、Purl、MoodTraker、Quiltのバックアップではありません。",
         "이 파일은 Bobbin, Purl, MoodTraker, Quilt의 백업이 아니에요.",
+        "هذا الملف ليس نسخة احتياطية من Bobbin أو Purl أو MoodTraker أو Quilt.",
+        "这个文件不是 Bobbin、Purl、MoodTraker 或 Quilt 的备份。",
+        "यह फ़ाइल Bobbin, Purl, MoodTraker या Quilt का बैकअप नहीं है।",
+        "Tệp đó không phải là bản sao lưu của Bobbin, Purl, MoodTraker hay Quilt.",
     )
 
     // --- 25. v1.3 -----------------------------------------------------------------------------
@@ -7568,6 +9462,10 @@ object S {
         "Kirim daftar",
         "リストを送る",
         "목록 보내기",
+        "إرسال القائمة",
+        "发送清单",
+        "सूची भेजें",
+        "Gửi danh sách",
     )
     val sendAsFile = t(
         "Send as a file",
@@ -7583,6 +9481,10 @@ object S {
         "Kirim sebagai berkas",
         "ファイルとして送る",
         "파일로 보내기",
+        "إرسال كملف",
+        "以文件发送",
+        "फ़ाइल के रूप में भेजें",
+        "Gửi dạng tệp",
     )
     val sendAsFileSub = t(
         "For AirDrop, Quick Share or email. With Bobbin, it opens and merges with theirs.",
@@ -7598,8 +9500,12 @@ object S {
         "Untuk AirDrop, Quick Share, atau email. Dengan Bobbin, daftarnya terbuka dan digabung dengan milik penerima.",
         "AirDrop、Quick Share、メールで送れます。Bobbinで開くと、相手のリストと合わさります。",
         "AirDrop, Quick Share, 이메일용이에요. Bobbin에서 열면 받는 사람의 목록과 합쳐져요.",
+        "عبر AirDrop أو المشاركة السريعة أو البريد. ومع Bobbin يُفتح ويندمج مع قائمة المستلم.",
+        "适合 AirDrop、快速分享或邮件。对方用 Bobbin 打开后会与其清单合并。",
+        "AirDrop, क्विक शेयर या ईमेल के लिए। Bobbin में यह खुलता है और उनकी सूची के साथ मिल जाता है।",
+        "Dùng cho AirDrop, Quick Share hoặc email. Với Bobbin, tệp sẽ mở ra và gộp vào danh sách của họ.",
     )
-    val sendBlank = t("Blank", "En blanco", "Em branco", "Leer", "Vierge", "In bianco", "Blanco", "Pusta", "Пустой", "Boş", "Kosong", "白紙", "빈 목록")
+    val sendBlank = t("Blank", "En blanco", "Em branco", "Leer", "Vierge", "In bianco", "Blanco", "Pusta", "Пустой", "Boş", "Kosong", "白紙", "빈 목록", "فارغة", "空白", "खाली", "Trống")
     val sendBlankSub = t(
         "Just the text, everything open, as a new list.",
         "Solo los textos, todo abierto, como una lista nueva.",
@@ -7614,6 +9520,10 @@ object S {
         "Hanya teksnya, semua terbuka, sebagai daftar baru.",
         "テキストだけを、すべて未完了の新しいリストとして。",
         "글만, 모두 미완료로, 새 목록으로 보내요.",
+        "النص فقط، كل شيء مفتوح، كقائمة جديدة.",
+        "只有文字，全部未完成，作为一份新清单。",
+        "सिर्फ़ पाठ, सब कुछ खुला, एक नई सूची के रूप में।",
+        "Chỉ có chữ, mọi thứ đều mở, như một danh sách mới.",
     )
     val sendTrackerBlank = t(
         "A tracker is sent with its rows and without marks.",
@@ -7629,6 +9539,10 @@ object S {
         "Pelacak dikirim dengan baris-barisnya dan tanpa tanda.",
         "トラッカーは、行だけを印なしで送ります。",
         "트래커는 줄은 그대로, 표시는 없이 보내져요.",
+        "يُرسل المتتبع بصفوفه ودون علامات.",
+        "追踪表会连同各行一起发送，但不带标记。",
+        "ट्रैकर अपनी पंक्तियों के साथ भेजा जाता है, बिना चिह्नों के।",
+        "Bảng theo dõi được gửi cùng các hàng nhưng không có dấu.",
     )
 
     /** Written in normal case here; the Eyebrow style uppercases it when painting. */
@@ -7646,6 +9560,10 @@ object S {
         "Daftar diterima",
         "受け取ったリスト",
         "받은 목록",
+        "وصلت قائمة",
+        "收到清单",
+        "सूची मिली",
+        "Đã nhận danh sách",
     )
     fun receivedCount(n: Int): String = entryCount(n)
     fun receivedRows(n: Int): String {
@@ -7663,8 +9581,12 @@ object S {
             "baris",
             "行",
             "줄",
+            "لا صفوف|صف واحد|صفان|صفوف|صفًا|صف",
+            "行",
+            "पंक्ति|पंक्तियाँ",
+            "hàng",
         ))
-        return t("$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "${n}${w}", "${n}${w}")
+        return t("$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "$n $w", "${n}${w}", "${n}${w}", arCount(n, w), "$n$w", "$n $w", "$n $w")
     }
     fun receivedMore(n: Int) = t(
         "and $n more",
@@ -7680,6 +9602,10 @@ object S {
         "dan $n lainnya",
         "ほか${n}件",
         "외 ${n}개",
+        "و$n غيرها",
+        "另外 $n 项",
+        "और $n",
+        "và $n mục khác",
     )
     val addToIndex = t(
         "Add to Index",
@@ -7695,6 +9621,10 @@ object S {
         "Tambah ke Indeks",
         "目次に追加",
         "목차에 추가",
+        "إضافة إلى الفهرس",
+        "添加到目录",
+        "अनुक्रमणिका में जोड़ें",
+        "Thêm vào Mục lục",
     )
     fun alreadyHave(title: String) = t(
         "You already have $title",
@@ -7710,6 +9640,10 @@ object S {
         "Kamu sudah punya $title",
         "「${title}」はすでにあります",
         "이미 있는 목록: ${title}",
+        "لديك $title بالفعل",
+        "你已经有“$title”了",
+        "आपके पास $title पहले से है",
+        "Bạn đã có $title",
     )
 
     /** [added] or [updated] is dropped when it is 0; both at 0 never gets here, that is [mergeNothing]. */
@@ -7717,7 +9651,7 @@ object S {
         val parts = listOfNotNull(
             added.takeIf { it > 0 }?.let { importAddedPhrase(it) },
             updated.takeIf { it > 0 }?.let { importUpdatedPhrase(it) },
-        ).joinToString(t(" and ", " y ", " e ", " und ", " et ", " e ", " en ", " i ", " и ", " ve ", " dan ", "、", ", "))
+        ).joinToString(t(" and ", " y ", " e ", " und ", " et ", " e ", " en ", " i ", " и ", " ve ", " dan ", "、", ", ", " و", "、", " और ", " và "))
         return t(
             "It brings $parts. Nothing gets deleted.",
             "Trae $parts. No se borra nada.",
@@ -7732,9 +9666,13 @@ object S {
             "Daftar ini membawa $parts. Tidak ada yang dihapus.",
             "${parts}が含まれています。何も削除されません。",
             "가져올 것: ${parts}. 아무것도 삭제되지 않아요.",
+            "تتضمن $parts. لا يُحذف شيء.",
+            "包含 $parts。不会删除任何内容。",
+            "इसमें $parts हैं। कुछ भी हटाया नहीं जाता।",
+            "Có $parts. Không có gì bị xóa.",
         )
     }
-    val mergeList = t("Merge", "Juntar", "Juntar", "Zusammenführen", "Fusionner", "Unisci", "Samenvoegen", "Połącz", "Объединить", "Birleştir", "Gabungkan", "合わせる", "합치기")
+    val mergeList = t("Merge", "Juntar", "Juntar", "Zusammenführen", "Fusionner", "Unisci", "Samenvoegen", "Połącz", "Объединить", "Birleştir", "Gabungkan", "合わせる", "합치기", "دمج", "合并", "मिलाएँ", "Gộp")
     val mergeNothing = t(
         "You already have this list exactly as it is.",
         "Ya tienes esta lista igual.",
@@ -7749,6 +9687,10 @@ object S {
         "Kamu sudah punya daftar ini persis seperti ini.",
         "このリストは、まったく同じものがすでにあります。",
         "이 목록은 이미 똑같이 있어요.",
+        "لديك هذه القائمة بالفعل كما هي.",
+        "你已经有一模一样的这份清单了。",
+        "यह सूची आपके पास बिल्कुल इसी रूप में पहले से है।",
+        "Bạn đã có danh sách này đúng như vậy.",
     )
     val listAdded = t(
         "List added to the Index",
@@ -7764,6 +9706,10 @@ object S {
         "Daftar ditambahkan ke Indeks",
         "リストを目次に追加しました",
         "목록을 목차에 추가했어요",
+        "أُضيفت القائمة إلى الفهرس",
+        "清单已添加到目录",
+        "सूची अनुक्रमणिका में जोड़ी गई",
+        "Đã thêm danh sách vào Mục lục",
     )
     val listMerged = t(
         "Lists merged",
@@ -7779,6 +9725,10 @@ object S {
         "Daftar digabungkan",
         "リストを合わせました",
         "목록을 합쳤어요",
+        "تم دمج القوائم",
+        "清单已合并",
+        "सूचियाँ मिला दी गईं",
+        "Đã gộp danh sách",
     )
     val listDamaged = t(
         "This list is incomplete or damaged. Your journal wasn't touched.",
@@ -7794,6 +9744,10 @@ object S {
         "Daftar ini tidak lengkap atau rusak. Jurnalmu tidak diubah.",
         "このリストは不完全か壊れています。ジャーナルには手を加えていません。",
         "이 목록이 불완전하거나 손상됐어요. 다이어리는 그대로예요.",
+        "هذه القائمة ناقصة أو تالفة. لم تُمسّ يومياتك.",
+        "这份清单不完整或已损坏。你的手账没有被改动。",
+        "यह सूची अधूरी या क्षतिग्रस्त है। आपका जर्नल छुआ नहीं गया।",
+        "Danh sách này không đầy đủ hoặc bị hỏng. Nhật ký của bạn không bị thay đổi.",
     )
     val sentListEmpty = t(
         "This list has nothing in it.",
@@ -7809,6 +9763,10 @@ object S {
         "Daftar ini kosong.",
         "このリストは空です。",
         "이 목록은 비어 있어요.",
+        "هذه القائمة فارغة.",
+        "这份清单是空的。",
+        "इस सूची में कुछ नहीं है।",
+        "Danh sách này trống.",
     )
     val listTooNew = t(
         "This list comes from a newer version of Bobbin. Update the app to open it.",
@@ -7824,11 +9782,15 @@ object S {
         "Daftar ini dari versi Bobbin yang lebih baru. Perbarui aplikasinya untuk membukanya.",
         "このリストは新しいバージョンのBobbinのものです。開くにはアプリを更新してください。",
         "더 새로운 버전의 Bobbin에서 온 목록이에요. 열려면 앱을 업데이트하세요.",
+        "هذه القائمة من إصدار أحدث من Bobbin. حدّث التطبيق لفتحها.",
+        "这份清单来自更新版本的 Bobbin。请更新应用后再打开。",
+        "यह सूची Bobbin के नए संस्करण से आई है। इसे खोलने के लिए ऐप अपडेट करें।",
+        "Danh sách này đến từ phiên bản Bobbin mới hơn. Hãy cập nhật ứng dụng để mở.",
     )
 
     // The week (docs/pantallas.md 23.13, #78).
-    val viewDay = t("Day", "Día", "Dia", "Tag", "Jour", "Giorno", "Dag", "Dzień", "День", "Gün", "Hari", "日", "일간")
-    val viewWeek = t("Week", "Semana", "Semana", "Woche", "Semaine", "Settimana", "Week", "Tydzień", "Неделя", "Hafta", "Pekan", "週", "주간")
+    val viewDay = t("Day", "Día", "Dia", "Tag", "Jour", "Giorno", "Dag", "Dzień", "День", "Gün", "Hari", "日", "일간", "يوم", "日", "दिन", "Ngày")
+    val viewWeek = t("Week", "Semana", "Semana", "Woche", "Semaine", "Settimana", "Week", "Tydzień", "Неделя", "Hafta", "Pekan", "週", "주간", "أسبوع", "周", "सप्ताह", "Tuần")
     fun weekTitle(start: LocalDate): String {
         val d = shortDate(start)
         return t(
@@ -7845,6 +9807,10 @@ object S {
             "Pekan $d",
             "${d}の週",
             "${d}의 한 주",
+            "أسبوع $d",
+            "$d 当周",
+            "$d का सप्ताह",
+            "Tuần $d",
         )
     }
     fun weekRange(from: LocalDate, to: LocalDate): String {
@@ -7864,6 +9830,10 @@ object S {
             "$a sampai $b",
             "${a}から${b}",
             "${a}부터 ${b}까지",
+            "من $a إلى $b",
+            "$a 至 $b",
+            "$a से $b",
+            "Từ $a đến $b",
         )
     }
 
@@ -7871,7 +9841,7 @@ object S {
     private fun dayFirst(d: LocalDate) = "${d.day} ${monthNames("en")[d.month.ordinal]}"
 
     /** Written in normal case here; the Eyebrow style uppercases it when painting. */
-    val weekToday = t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui", "Oggi", "Vandaag", "Dziś", "Сегодня", "Bugün", "Hari ini", "今日", "오늘")
+    val weekToday = t("Today", "Hoy", "Hoje", "Heute", "Aujourd'hui", "Oggi", "Vandaag", "Dziś", "Сегодня", "Bugün", "Hari ini", "今日", "오늘", "اليوم", "今天", "आज", "Hôm nay")
     fun weekDayLabel(d: LocalDate, withMonth: Boolean): String {
         val w = weekdayNames()[d.dayOfWeek.ordinal]
         return if (withMonth) weekdayWithDate(w, shortDate(d)) else t(
@@ -7888,6 +9858,10 @@ object S {
             "$w, ${d.day}",
             "${d.day}日 ${w}",
             "${d.day}일 ${w}",
+            "$w ${d.day}",
+            "${d.day}日 $w",
+            "$w, ${d.day}",
+            "$w, ${d.day}",
         )
     }
     val backToThisWeek = t(
@@ -7904,6 +9878,10 @@ object S {
         "Kembali ke pekan ini",
         "今週に戻る",
         "이번 주로 돌아가기",
+        "العودة إلى هذا الأسبوع",
+        "回到本周",
+        "इस सप्ताह पर लौटें",
+        "Về tuần này",
     )
     val inCalendar = t(
         "In the calendar",
@@ -7919,6 +9897,10 @@ object S {
         "Di kalender",
         "カレンダーにあるもの",
         "캘린더에",
+        "في التقويم",
+        "在日历里",
+        "कैलेंडर में",
+        "Trong lịch",
     )
     val inFuture = t(
         "In Future",
@@ -7934,6 +9916,10 @@ object S {
         "Di Mendatang",
         "未来にあるもの",
         "미래에",
+        "في المستقبل",
+        "在“未来”里",
+        "भविष्य में",
+        "Trong Tương lai",
     )
     val a11yPreviousWeek = t(
         "Previous week",
@@ -7949,6 +9935,10 @@ object S {
         "Pekan sebelumnya",
         "前の週",
         "이전 주",
+        "الأسبوع السابق",
+        "上一周",
+        "पिछला सप्ताह",
+        "Tuần trước",
     )
     val a11yNextWeek = t(
         "Next week",
@@ -7964,6 +9954,10 @@ object S {
         "Pekan berikutnya",
         "次の週",
         "다음 주",
+        "الأسبوع التالي",
+        "下一周",
+        "अगला सप्ताह",
+        "Tuần sau",
     )
 
     // A hardware keyboard (docs/pantallas.md 23.15, #80).
@@ -7981,6 +9975,10 @@ object S {
         "Dengan keyboard",
         "キーボード操作",
         "키보드로",
+        "باستخدام لوحة المفاتيح",
+        "使用键盘",
+        "कीबोर्ड के साथ",
+        "Với bàn phím",
     )
     val keyNew = t(
         "Write in today",
@@ -7996,8 +9994,12 @@ object S {
         "Tulis untuk hari ini",
         "今日に書く",
         "오늘 페이지에 쓰기",
+        "اكتب في اليوم",
+        "写到今天",
+        "आज में लिखें",
+        "Viết vào hôm nay",
     )
-    val keySearch = t("Search", "Buscar", "Buscar", "Suchen", "Rechercher", "Cerca", "Zoeken", "Szukaj", "Поиск", "Ara", "Cari", "検索", "검색")
+    val keySearch = t("Search", "Buscar", "Buscar", "Suchen", "Rechercher", "Cerca", "Zoeken", "Szukaj", "Поиск", "Ara", "Cari", "検索", "검색", "بحث", "搜索", "खोजें", "Tìm kiếm")
     val keyTabs = t(
         "Go to Today, Month, Future or Index",
         "Ir a Hoy, Mes, Futuro o Índice",
@@ -8012,6 +10014,10 @@ object S {
         "Buka Hari, Bulan, Mendatang, atau Indeks",
         "今日、月、未来、目次へ移動",
         "오늘, 월간, 미래, 목차로 이동",
+        "الانتقال إلى اليوم أو الشهر أو المستقبل أو الفهرس",
+        "前往“今天”“本月”“未来”或“目录”",
+        "आज, माह, भविष्य या अनुक्रमणिका पर जाएँ",
+        "Đến Hôm nay, Tháng, Tương lai hoặc Mục lục",
     )
     val keyPrevNext = t(
         "Previous and next",
@@ -8027,8 +10033,12 @@ object S {
         "Sebelumnya dan berikutnya",
         "前と次",
         "이전과 다음",
+        "السابق والتالي",
+        "上一个和下一个",
+        "पिछला और अगला",
+        "Trước và sau",
     )
-    val keyBack = t("Back", "Atrás", "Voltar", "Zurück", "Retour", "Indietro", "Terug", "Wstecz", "Назад", "Geri", "Kembali", "戻る", "뒤로")
+    val keyBack = t("Back", "Atrás", "Voltar", "Zurück", "Retour", "Indietro", "Terug", "Wstecz", "Назад", "Geri", "Kembali", "戻る", "뒤로", "رجوع", "返回", "वापस", "Quay lại")
 
     // Sharing a tracker and the story shape (docs/pantallas.md 23.12, #77).
     val shareTracker = t(
@@ -8045,12 +10055,16 @@ object S {
         "Bagikan pelacak ini",
         "このトラッカーを共有",
         "이 트래커 공유",
+        "مشاركة هذا المتتبع",
+        "分享这个追踪表",
+        "इस ट्रैकर को साझा करें",
+        "Chia sẻ bảng theo dõi này",
     )
-    val formatPost = t("Post", "Publicación", "Post", "Beitrag", "Publication", "Post", "Post", "Post", "Пост", "Gönderi", "Postingan", "投稿", "게시물")
-    val formatStory = t("Story", "Historia", "Story", "Story", "Story", "Storia", "Story", "Relacja", "История", "Hikaye", "Cerita", "ストーリー", "스토리")
+    val formatPost = t("Post", "Publicación", "Post", "Beitrag", "Publication", "Post", "Post", "Post", "Пост", "Gönderi", "Postingan", "投稿", "게시물", "منشور", "帖子", "पोस्ट", "Bài đăng")
+    val formatStory = t("Story", "Historia", "Story", "Story", "Story", "Storia", "Story", "Relacja", "История", "Hikaye", "Cerita", "ストーリー", "스토리", "ستوري", "快拍", "स्टोरी", "Story")
 
     // Writing from outside, second part (docs/pantallas.md 23.14, #79).
-    val captureWidgetLabel = t("Write", "Escribir", "Escrever", "Schreiben", "Écrire", "Scrivi", "Schrijven", "Napisz", "Записать", "Yaz", "Tulis", "書く", "쓰기")
+    val captureWidgetLabel = t("Write", "Escribir", "Escrever", "Schreiben", "Écrire", "Scrivi", "Schrijven", "Napisz", "Записать", "Yaz", "Tulis", "書く", "쓰기", "اكتب", "写", "लिखें", "Viết")
     val proWriteOutside = t(
         "Write without opening the app",
         "Escribir sin abrir la app",
@@ -8065,5 +10079,9 @@ object S {
         "Menulis tanpa membuka aplikasi",
         "アプリを開かずに書く",
         "앱을 열지 않고 쓰기",
+        "اكتب دون فتح التطبيق",
+        "无需打开应用即可书写",
+        "ऐप खोले बिना लिखें",
+        "Viết mà không cần mở ứng dụng",
     )
 }

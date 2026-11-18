@@ -1,0 +1,14 @@
+<resources>
+    <!-- docs/textos.md 22. -->
+    <string name="widget_preview_date">T4, 23 thg 9</string>
+    <string name="widget_preview_open">đang mở</string>
+    <string name="widget_preview_done">xong</string>
+    <string name="widget_preview_events">sự kiện</string>
+    <string name="widget_preview_month">THÁNG 9</string>
+    <string name="tile_label">Ghi vào Bobbin</string>
+    <string name="capture_widget_label">Bobbin: Viết</string>
+    <string name="widget_capture_write">Viết</string>
+    <string name="widget_today_description">Việc đang mở, đã xong và sự kiện hôm nay, không có chữ</string>
+    <string name="widget_month_description">Mỗi ngày có mục là một chấm</string>
+    <string name="widget_capture_description">Viết một dòng vào hôm nay, không có chữ nào của nhật ký hiện trên màn hình chính</string>
+</resources>

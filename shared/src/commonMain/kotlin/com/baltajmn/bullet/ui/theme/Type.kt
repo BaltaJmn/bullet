@@ -8,6 +8,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import com.baltajmn.bullet.i18n.cursiveScript
 import bobbin.shared.generated.resources.Res
 import bobbin.shared.generated.resources.literata_regular
 import org.jetbrains.compose.resources.Font
@@ -35,7 +36,7 @@ object Type {
 
     /** Block and section labels. The caller passes the text through caps(). */
     val Eyebrow: TextStyle @Composable get() =
-        system(11.sp, 24.sp, FontWeight.Medium, colors.onSurfaceVariant).copy(letterSpacing = 1.4.sp)
+        system(11.sp, 24.sp, FontWeight.Medium, colors.onSurfaceVariant).copy(letterSpacing = if (cursiveScript()) 0.sp else 1.4.sp)
 
     private val colors @Composable get() = MaterialTheme.colorScheme
 

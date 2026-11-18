@@ -1,0 +1,3 @@
+/* Frases de Siri (docs/textos.md 23). */
+"Note in ${applicationName}" = "在${applicationName}里记一笔";
+"Add an entry to ${applicationName}" = "在${applicationName}里添加一条记录";

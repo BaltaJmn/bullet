@@ -5,12 +5,16 @@ import WidgetKit
 /// The mirror of `Strings.kt` for the extension, which cannot reach Kotlin (docs/textos.md 19).
 enum L {
     private static var code: String {
-        let two = String((Locale.preferredLanguages.first ?? "en").prefix(2))
+        let first = Locale.preferredLanguages.first ?? "en"
+        // Only Simplified Chinese is translated: Traditional (Hant, TW, HK, MO) reads English, as in Strings.kt.
+        if first.hasPrefix("zh"), first.contains("Hant") || (!first.contains("Hans") && ["-TW", "-HK", "-MO"].contains(where: { first.contains($0) })) { return "en" }
+        let two = String(first.prefix(2))
         return two == "in" ? "id" : two
     }
 
     static func t(_ en: String, _ es: String, _ pt: String, _ de: String, _ fr: String, _ it: String, _ nl: String,
-                  _ pl: String, _ ru: String, _ tr: String, _ id: String, _ ja: String, _ ko: String) -> String {
+                  _ pl: String, _ ru: String, _ tr: String, _ id: String, _ ja: String, _ ko: String,
+                  _ ar: String, _ zh: String, _ hi: String, _ vi: String) -> String {
         switch code {
         case "es": return es
         case "pt": return pt
@@ -24,15 +28,28 @@ enum L {
         case "id": return id
         case "ja": return ja
         case "ko": return ko
+        case "ar": return ar
+        case "zh": return zh
+        case "hi": return hi
+        case "vi": return vi
         default: return en
         }
     }
 
-    /// One form, "one|other" (French takes the singular for 0 too), or Polish and Russian "one|few|many".
+    /// One form, "one|other" (French and Hindi take the singular for 0 too), Polish and Russian "one|few|many",
+    /// or Arabic "zero|one|two|few|many|other".
     private static func word(_ n: Int, _ forms: String) -> String {
         let f = forms.components(separatedBy: "|")
         if f.count == 1 { return f[0] }
-        if f.count == 2 { return (code == "fr" ? n < 2 : n == 1) ? f[0] : f[1] }
+        if f.count == 2 { return (code == "fr" || code == "hi" ? n < 2 : n == 1) ? f[0] : f[1] }
+        if f.count == 6 {
+            let tens = n % 100
+            if n == 0 { return f[0] }
+            if n == 1 { return f[1] }
+            if n == 2 { return f[2] }
+            if (3...10).contains(tens) { return f[3] }
+            return (11...99).contains(tens) ? f[4] : f[5]
+        }
         let tens = n % 100, units = n % 10
         if n == 1 || (code == "ru" && units == 1 && tens != 11) { return f[0] }
         return (2...4).contains(units) && !(12...14).contains(tens) ? f[1] : f[2]
@@ -52,7 +69,11 @@ enum L {
             "açık",
             "terbuka",
             "未完了",
-            "미완료"
+            "미완료",
+            "مفتوحة",
+            "未完成",
+            "खुले",
+            "đang mở"
         ))
     }
 
@@ -70,7 +91,11 @@ enum L {
             "yapıldı",
             "selesai",
             "完了",
-            "완료"
+            "완료",
+            "منجزة",
+            "已完成",
+            "पूर्ण",
+            "xong"
         ))
     }
 
@@ -88,7 +113,11 @@ enum L {
             "etkinlik",
             "acara",
             "イベント",
-            "일정"
+            "일정",
+            "أحداث|حدث|حدثان|أحداث|حدثًا|حدث",
+            "个事件",
+            "कार्यक्रम",
+            "sự kiện"
         ))
     }
 
@@ -106,7 +135,11 @@ enum L {
             "Gözden geçirilecek",
             "Perlu ditinjau",
             "見直し待ち",
-            "살펴볼 것"
+            "살펴볼 것",
+            "للمراجعة",
+            "待回顾",
+            "समीक्षा बाकी",
+            "Cần xem lại"
         )
     }
 
@@ -125,7 +158,11 @@ enum L {
             "Açmak için dokun",
             "Ketuk untuk mengaktifkan",
             "タップしてオンにする",
-            "탭해서 켜기"
+            "탭해서 켜기",
+            "اضغط لتشغيله",
+            "点一下开启",
+            "चालू करने के लिए टैप करें",
+            "Chạm để bật"
         )
     }
 
@@ -143,7 +180,11 @@ enum L {
             "Pzt, Sal, Çar, Per, Cum, Cmt, Paz",
             "Sen, Sel, Rab, Kam, Jum, Sab, Min",
             "月, 火, 水, 木, 金, 土, 日",
-            "월, 화, 수, 목, 금, 토, 일"
+            "월, 화, 수, 목, 금, 토, 일",
+            "اثنين, ثلاثاء, أربعاء, خميس, جمعة, سبت, أحد",
+            "周一, 周二, 周三, 周四, 周五, 周六, 周日",
+            "सोम, मंगल, बुध, गुरु, शुक्र, शनि, रवि",
+            "T2, T3, T4, T5, T6, T7, CN"
         ).components(separatedBy: ", ")
     }
 
@@ -161,7 +202,11 @@ enum L {
             "Oca, Şub, Mar, Nis, May, Haz, Tem, Ağu, Eyl, Eki, Kas, Ara",
             "Jan, Feb, Mar, Apr, Mei, Jun, Jul, Agu, Sep, Okt, Nov, Des",
             "1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月",
-            "1월, 2월, 3월, 4월, 5월, 6월, 7월, 8월, 9월, 10월, 11월, 12월"
+            "1월, 2월, 3월, 4월, 5월, 6월, 7월, 8월, 9월, 10월, 11월, 12월",
+            "يناير, فبراير, مارس, أبريل, مايو, يونيو, يوليو, أغسطس, سبتمبر, أكتوبر, نوفمبر, ديسمبر",
+            "1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月",
+            "जन॰, फ़र॰, मार्च, अप्रैल, मई, जून, जुल॰, अग॰, सित॰, अक्टू॰, नव॰, दिस॰",
+            "thg 1, thg 2, thg 3, thg 4, thg 5, thg 6, thg 7, thg 8, thg 9, thg 10, thg 11, thg 12"
         ).components(separatedBy: ", ")
     }
 
@@ -179,7 +224,11 @@ enum L {
             "Pazartesi, Salı, Çarşamba, Perşembe, Cuma, Cumartesi, Pazar",
             "Senin, Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu",
             "月曜日, 火曜日, 水曜日, 木曜日, 金曜日, 土曜日, 日曜日",
-            "월요일, 화요일, 수요일, 목요일, 금요일, 토요일, 일요일"
+            "월요일, 화요일, 수요일, 목요일, 금요일, 토요일, 일요일",
+            "الاثنين, الثلاثاء, الأربعاء, الخميس, الجمعة, السبت, الأحد",
+            "星期一, 星期二, 星期三, 星期四, 星期五, 星期六, 星期日",
+            "सोमवार, मंगलवार, बुधवार, गुरुवार, शुक्रवार, शनिवार, रविवार",
+            "thứ hai, thứ ba, thứ tư, thứ năm, thứ sáu, thứ bảy, chủ nhật"
         ).components(separatedBy: ", ")
     }
 
@@ -197,7 +246,11 @@ enum L {
             "Ocak, Şubat, Mart, Nisan, Mayıs, Haziran, Temmuz, Ağustos, Eylül, Ekim, Kasım, Aralık",
             "Januari, Februari, Maret, April, Mei, Juni, Juli, Agustus, September, Oktober, November, Desember",
             "1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月",
-            "1월, 2월, 3월, 4월, 5월, 6월, 7월, 8월, 9월, 10월, 11월, 12월"
+            "1월, 2월, 3월, 4월, 5월, 6월, 7월, 8월, 9월, 10월, 11월, 12월",
+            "يناير, فبراير, مارس, أبريل, مايو, يونيو, يوليو, أغسطس, سبتمبر, أكتوبر, نوفمبر, ديسمبر",
+            "1月, 2月, 3月, 4月, 5月, 6月, 7月, 8月, 9月, 10月, 11月, 12月",
+            "जनवरी, फ़रवरी, मार्च, अप्रैल, मई, जून, जुलाई, अगस्त, सितंबर, अक्टूबर, नवंबर, दिसंबर",
+            "tháng 1, tháng 2, tháng 3, tháng 4, tháng 5, tháng 6, tháng 7, tháng 8, tháng 9, tháng 10, tháng 11, tháng 12"
         ).components(separatedBy: ", ")
     }
 
@@ -215,6 +268,8 @@ enum L {
         switch code {
         case "ja": text = "\(m)\(n)日(\(w))"
         case "ko": text = "\(m) \(n)일 (\(w))"
+        case "zh": text = "\(m)\(n)日 \(w)"
+        case "vi": text = "\(w), \(n) \(m)"
         default: text = "\(w) \(n) \(m)"
         }
         return caps(text)

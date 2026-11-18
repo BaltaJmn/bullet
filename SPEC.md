@@ -21,8 +21,8 @@ escrito aparte y aquí solo se resume lo imprescindible para entender cada decis
 |---|---|
 | `docs/tecnico.md` | El contrato de implementación: identificadores, versiones, árbol de código, formatos de `journal.json` y `widget.json`, algoritmos, puentes de plataforma, CI, tests numerados y qué secciones gobiernan cada issue |
 | `docs/pantallas.md` | La interfaz pantalla a pantalla, con sus estados vacíos y los cuatro gestos de la app |
-| `docs/textos.md` | Todos los textos en los trece idiomas y el glosario fijo del método |
-| `store/` | La tienda: fichas en trece idiomas, novedades, capturas, formularios, política de privacidad, compras, CI y el checklist de lanzamiento |
+| `docs/textos.md` | Todos los textos en los diecisiete idiomas y el glosario fijo del método |
+| `store/` | La tienda: fichas en diecisiete idiomas, novedades, capturas, formularios, política de privacidad, compras, CI y el checklist de lanzamiento |
 | `CLAUDE.md` | Las reglas de trabajo que cargan solas las sesiones de Claude Code |
 | Issues del repo | `gh issue list -R BaltaJmn/bullet`: #1 a #80, una por pieza, de v1.0 a v1.3 (§3, §11) |
 
@@ -401,10 +401,11 @@ iOS y nada más.
 - **Tienda y salida** (#57 a #62): ficha, capturas, privacidad y formularios, beta, prueba en
   dispositivo físico y lanzamiento.
 
-Y lo que atraviesa todo: trece idiomas sin selector, siguiendo al sistema: inglés, español,
+Y lo que atraviesa todo: diecisiete idiomas sin selector, siguiendo al sistema: inglés, español,
 portugués, alemán y francés desde la v1.0, y desde el 30-10-2026 italiano, neerlandés, polaco, ruso,
 turco, indonesio, japonés y coreano, los mismos que el resto de la familia, para que las fichas y las
-capturas de las cinco apps salgan en los mismos idiomas; teléfono y tableta, vertical y horizontal; tema claro u oscuro según el sistema.
+capturas de las cinco apps salgan en los mismos idiomas, y desde el 18-11-2026 árabe, chino simplificado,
+hindi y vietnamita (la app y las fichas; las capturas siguen en los trece); teléfono y tableta, vertical y horizontal; tema claro u oscuro según el sistema.
 
 ### v1.1: issues #63 a #68, lo que se pedirá en las reseñas
 
@@ -1104,7 +1105,7 @@ Palabras clave:
 - Portugués, alemán y francés: sin datos; se escriben en #57 a partir del glosario de
   `docs/textos.md`, con "bullet journal" y "bujo" sin traducir, que es como se busca el método.
 
-Los textos definitivos de las dos fichas, en los trece idiomas, van en `store/listings/` (Play) y
+Los textos definitivos de las dos fichas, en los diecisiete idiomas, van en `store/listings/` (Play) y
 `store/app-store/` (App Store), con sus topes comprobados (#57). Las reglas que no cambian por idioma:
 
 - La **primera frase** de la descripción dice compra única, sin cuenta y sin anuncios.
@@ -1175,7 +1176,7 @@ data/Reminders.kt        expect: el recordatorio de reflexión
 data/Sharing.kt          expect: imagen de página punteada o texto, y hoja de compartir
 data/AppInfo.kt          URL de la política, SIBLINGS, versión
 billing/Billing.kt       expect: RevenueCat, comprar / restaurar / refrescar, último derecho conocido
-i18n/Strings.kt          los trece idiomas en una tabla, obligados por firma
+i18n/Strings.kt          los diecisiete idiomas en una tabla, obligados por firma
 ui/theme/Theme.kt        papel y tinta, portadas, papeles, Literata, corte de pantalla ancha
 ui/BulletGlyph.kt        los glifos del método, en Canvas
 ui/Icons.kt              los iconos de las pestañas, la cabecera y las hojas, en Canvas
