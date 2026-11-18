@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.baltajmn.bullet.billing.Billing
 import com.baltajmn.bullet.billing.PurchaseOutcome
+import com.baltajmn.bullet.data.Offers
 import com.baltajmn.bullet.data.onIos
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
@@ -50,6 +51,7 @@ object Paywall {
     fun show(onPro: () -> Unit = {}) {
         this.onPro = onPro
         open = true
+        Offers.proTouched()
     }
 
     internal fun close(bought: Boolean) {
@@ -77,6 +79,8 @@ fun ProDialog() {
         loading = false
     }
     val price = pack?.storeProduct?.price?.formatted
+    var more by remember { mutableStateOf(false) }
+    if (!loading && price == null) LaunchedEffect(Unit) { Offers.noteError() }
 
     AlertDialog(
         onDismissRequest = { if (!busy) Paywall.close(bought = false) },
@@ -94,14 +98,17 @@ fun ProDialog() {
         },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                listOfNotNull(S.proCovers, S.proPapers, S.proTrackers, S.proMonthWidget, S.proLockWidget.takeIf { onIos }, S.proCapture(onIos), S.proWriteOutside.takeIf { !onIos }, S.proBook, S.proSync, S.proYearSummary)
-                    .forEach { line ->
-                        Row(Modifier.heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
-                            BulletGlyph(Bullet.NOTE, TaskStatus.OPEN)
-                            Box(Modifier.width(8.dp))
-                            Text(line, style = Type.Body)
-                        }
+                // Six reasons at most; the rest wait behind one row so the buy button below stays in view.
+                val reasons = listOfNotNull(S.proBook, S.proTrackers, S.proMonthWidget, S.proSync, S.proCapture(onIos), S.proCovers) to
+                    listOfNotNull(S.proPapers, S.proLockWidget.takeIf { onIos }, S.proWriteOutside.takeIf { !onIos }, S.proYearSummary)
+                (if (more) reasons.first + reasons.second else reasons.first).forEach { line ->
+                    Row(Modifier.heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
+                        BulletGlyph(Bullet.NOTE, TaskStatus.OPEN)
+                        Box(Modifier.width(8.dp))
+                        Text(line, style = Type.Body)
                     }
+                }
+                if (!more) QuietButton(S.proEverything, { more = true })
                 Text(S.proFree, style = Type.Secondary, modifier = Modifier.padding(top = 8.dp))
                 // With no store there is no price, and a button that cannot say what it costs is not an offer.
                 if (!loading && price == null) Text(S.storeUnavailable, style = Type.Secondary, modifier = Modifier.padding(top = 8.dp))
@@ -122,6 +129,7 @@ fun ProDialog() {
                                 // Changing your mind says nothing and shows nothing.
                                 PurchaseOutcome.Cancelled -> busy = false
                                 PurchaseOutcome.Failed -> {
+                                    Offers.noteError()
                                     busy = false
                                     note = S.buyFailed
                                 }

@@ -4599,6 +4599,21 @@ object S {
         "このノートをPDFの本として印刷できます。Proは買い切りです。",
         "이 노트를 PDF 책으로 인쇄하세요. Pro, 한 번만 결제.",
     )
+    val proEverything = t(
+        "Everything in Pro",
+        "Todo lo que incluye Pro",
+        "Tudo o que o Pro inclui",
+        "Alles in Pro",
+        "Tout ce que contient Pro",
+        "Tutto ciò che include Pro",
+        "Alles in Pro",
+        "Wszystko w Pro",
+        "Всё, что входит в Pro",
+        "Pro'daki her şey",
+        "Semua isi Pro",
+        "Proに含まれるもの",
+        "Pro에 포함된 모든 것",
+    )
     val seePro = t(
         "See Pro",
         "Ver Pro",

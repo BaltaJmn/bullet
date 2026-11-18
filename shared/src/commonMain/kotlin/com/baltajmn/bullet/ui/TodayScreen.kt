@@ -38,8 +38,7 @@ import com.baltajmn.bullet.data.ShareContent
 import com.baltajmn.bullet.data.BookCardKind
 import com.baltajmn.bullet.data.bookCardDue
 import com.baltajmn.bullet.data.dayShare
-import com.baltajmn.bullet.data.finishBookCard
-import com.baltajmn.bullet.data.noteBookCardShown
+import com.baltajmn.bullet.data.Offers
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.i18n.systemFirstDayOfWeek
 import com.baltajmn.bullet.model.Journal
@@ -272,18 +271,19 @@ internal fun Notices(
     if (earlier.isNotEmpty()) {
         NoticeCard(S.earlierOpen(earlier.size), S.earlierBody, listOf(S.reviewEarlier to { onReview(ReviewScope.Earlier(today)) }))
     }
-    // Once, the day after the first month review closed, with the person's own month behind it (rule 10).
-    var bookCardGone by remember { mutableStateOf(false) }
-    val bookCard = if (bookCardGone) null else bookCardDue(BobbinRepository.isPro, today, journal)
+    // The first-time card (rule 10) after a first good result, and once the quiet return 7 days after the
+    // last Pro surface; never more than one Pro surface per session. It counts as a Pro touch when it first
+    // appears, not when it is closed.
+    val bookCard = bookCardDue(BobbinRepository.isPro, today, journal)
     if (bookCard != null) {
-        LaunchedEffect(today) { noteBookCardShown(today) }
-        val early = bookCard == BookCardKind.ENTRIES
+        LaunchedEffect(bookCard) { Offers.cardShown(bookCard, today) }
+        val early = bookCard != BookCardKind.MONTH
         NoticeCard(
             if (early) S.bookCardEarlyTitle else S.bookCardTitle,
             if (early) S.bookCardEarlyBody else S.bookCardBody,
             listOf(
-                S.seePro to { finishBookCard(); bookCardGone = true; Paywall.show() },
-                S.notNow to { finishBookCard(); bookCardGone = true },
+                S.seePro to { Offers.cardAnswered(); Paywall.show() },
+                S.notNow to { Offers.cardAnswered() },
             ),
         )
     }

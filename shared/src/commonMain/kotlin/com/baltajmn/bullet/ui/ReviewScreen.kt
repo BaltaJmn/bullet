@@ -174,8 +174,10 @@ fun ReviewScreen(scope: ReviewScope, today: LocalDate, onClose: () -> Unit, onTo
 
         Step.END -> {
             val left = journal.reviewQueue(scope).size
-            // The first month closed with nothing left open is when the rating is asked for, once (6.6).
-            LaunchedEffect(Unit) { afterReview(scope, decided = total - left, left = left, today = today, paywallOpen = Paywall.open) }
+            // A review closed with nothing left open is the good moment: it may ask for the rating (6.6) or let the quiet Pro return show.
+            LaunchedEffect(Unit) {
+                afterReview(scope, decided = total - left, left = left, today = today, overlayOpen = Paywall.open || EntrySheetState.id != null)
+            }
             Page(tab = false, bottom = { Footer { PrimaryButton(S.backToToday, onToToday, block = true) } }) {
                 ReviewTop(onClose)
                 Column(Modifier.padding(horizontal = 24.dp)) {

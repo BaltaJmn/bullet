@@ -49,6 +49,8 @@ import com.baltajmn.bullet.billing.Billing
 import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.Lock
 import com.baltajmn.bullet.data.PREF_GUIDE_SEEN
+import com.baltajmn.bullet.data.NEW_SESSION_AFTER_MINUTES
+import com.baltajmn.bullet.data.Offers
 import com.baltajmn.bullet.data.noteFirstLaunch
 import com.baltajmn.bullet.data.Prefs
 import com.baltajmn.bullet.data.Reminders
@@ -115,6 +117,7 @@ import com.baltajmn.bullet.ui.theme.coverSoft
 import com.baltajmn.bullet.ui.theme.page
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 import kotlinx.datetime.LocalDate
@@ -140,6 +143,7 @@ fun relocks(lockOn: Boolean, away: Duration?): Boolean = lockOn && away != null 
 fun App() {
     remember {
         noteFirstLaunch()
+        Offers.begin()
         BobbinRepository.ensureLoaded()
         Billing.configure()
         Sync.start()
@@ -182,6 +186,8 @@ fun App() {
     // one, and Mes to the new month; a past day or month someone was reading stays put.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         if (relocks(BobbinRepository.journal.settings.lockOn, backgroundAt?.elapsedNow())) locked = true
+        // A long time away is a new session for the one-Pro-surface-per-session rule.
+        if ((backgroundAt?.elapsedNow() ?: Duration.ZERO) >= NEW_SESSION_AFTER_MINUTES.minutes) Offers.newSession()
         backgroundAt = null
         val wasToday = viewedDay == today
         val wasThisWeek = viewedWeek == today

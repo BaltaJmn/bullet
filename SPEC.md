@@ -989,12 +989,15 @@ La regla 9 de producto pide Pro con "suscripción y pago único". Bobbin se qued
 
 - El aviso del sistema (`StoreReview`) solo sale tras 2 días completos desde el primer arranque
   (`PREF_FIRST_LAUNCH`; las instalaciones anteriores cuentan desde su primer arranque con esta
-  versión), con el paywall cerrado, una vez por instalación, y el "gastado" se marca después de la
-  llamada. Nunca el mismo día que la tarjeta del libro. Ajustes lleva siempre la fila "Valorar Bobbin"
+  versión), tras una revisión que lo cierra todo, una vez por versión y con 120 días entre dos, sin
+  ninguna hoja abierta ni error reciente, y el "gastado" se marca después de la llamada. Nunca en las 24 h
+  siguientes a una superficie nueva de Pro. Pro no cuenta para nada: quien no compra también lo ve. Ajustes lleva siempre la fila "Valorar Bobbin"
   (Play en Android, `?action=write-review` en iOS).
 - Una sola oferta automática: una tarjeta en Hoy (nunca un diálogo) desde el día siguiente a cerrar el
   primer mes, para quien no tiene Pro: "Tu primer mes está cerrado. Conviértelo en un libro A5 que
-  puedas imprimir", con "Ver Pro". Se responde una vez (Ver Pro o Ahora no) y no vuelve.
+  puedas imprimir", con "Ver Pro" (o la versión temprana, tras 3 días con entradas). Se va al responderla o tras 3 días
+  en Hoy, y sale una sola vez por sesión como máximo. Un único regreso tranquilo (la misma tarjeta, 7 días
+  después de la última superficie de Pro, tras una revisión que lo cierra todo, 3 veces como tope).
 
 ---
 

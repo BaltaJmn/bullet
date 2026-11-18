@@ -3,7 +3,9 @@ package com.baltajmn.bullet
 import kotlinx.datetime.YearMonth
 import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.data.shouldAskReview
+import com.baltajmn.bullet.data.WINBACK_MAX
 import com.baltajmn.bullet.data.shouldShowBookCard
+import com.baltajmn.bullet.data.shouldShowWinBack
 import com.baltajmn.bullet.data.shouldShowEarlyBookCard
 import com.baltajmn.bullet.data.Link
 import com.baltajmn.bullet.data.nextReminder
@@ -18,7 +20,9 @@ import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.Place
 import com.baltajmn.bullet.model.Signifier
 import com.baltajmn.bullet.model.TaskStatus
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -118,31 +122,34 @@ class DataTest {
     }
 }
 
-/** Test 20 (docs/tecnico.md 10, #56): the rating is asked for once, after the first closed month. */
+/** Test 20 (docs/tecnico.md 10, #56): the rating is asked for once per version, 120 days apart, after a real success. */
 class ReviewPromptTest {
     private val sep = ReviewScope.Month(YearMonth(2026, 9))
     private val day = ReviewScope.Day(LocalDate(2026, 9, 23))
+    private val earlier = ReviewScope.Earlier(LocalDate(2026, 9, 23))
     private val dayMs = 24L * 60 * 60 * 1000
+    private val hourMs = 60L * 60 * 1000
     private val installed = 1_000_000_000L
     private val later = installed + 3 * dayMs
 
     private fun ask(
-        asked: Boolean = false,
         scope: ReviewScope = sep,
         decided: Int = 4,
         left: Int = 0,
         installedAt: Long? = installed,
         now: Long = later,
-        paywall: Boolean = false,
-        card: Boolean = false,
-    ) = shouldAskReview(asked, scope, decided, left, installedAt, now, paywall, card)
+        lastAsk: Long? = null,
+        lastVersion: String? = null,
+        version: String = "1.1.0",
+        touch: Long? = null,
+        overlay: Boolean = false,
+        error: Boolean = false,
+        quiet: Boolean = false,
+    ) = shouldAskReview(scope, decided, left, installedAt, now, lastAsk, lastVersion, version, touch, overlay, error, quiet)
 
     @Test
-    fun onlyTheFirstClosedMonthAsks() {
+    fun onlyAReviewThatClosesEverythingAsks() {
         assertTrue(ask())
-        // Once asked, a second closed month does not ask again.
-        assertFalse(ask(asked = true))
-        // Half a review, a review that opened empty and a Day review never ask.
         assertFalse(ask(decided = 3, left = 1))
         assertFalse(ask(decided = 0))
         assertFalse(ask(scope = day, decided = 0))
@@ -150,12 +157,10 @@ class ReviewPromptTest {
     }
 
     @Test
-    fun aDayReviewThatClosesEverythingAsksOnDayThreeOrLater() {
+    fun aDayOrEarlierReviewThatClosesEverythingAsksOnDayThreeOrLater() {
         assertTrue(ask(scope = day))
+        assertTrue(ask(scope = earlier))
         assertFalse(ask(scope = day, now = installed + dayMs))
-        assertFalse(ask(scope = day, asked = true))
-        assertFalse(ask(scope = day, card = true))
-        assertFalse(ask(scope = day, paywall = true))
     }
 
     @Test
@@ -167,13 +172,41 @@ class ReviewPromptTest {
     }
 
     @Test
-    fun neverOverThePaywallNorOnTheBookCardDay() {
-        assertFalse(ask(paywall = true))
-        assertFalse(ask(card = true))
+    fun oncePerVersionAndAtLeast120DaysApart() {
+        val asked = later
+        // Same version never again, however long it has been.
+        assertFalse(ask(lastAsk = asked, lastVersion = "1.1.0", now = asked + 400 * dayMs))
+        // A new version still waits for the 120 days.
+        assertFalse(ask(lastAsk = asked, lastVersion = "1.1.0", version = "1.2.0", now = asked + 119 * dayMs))
+        assertTrue(ask(lastAsk = asked, lastVersion = "1.1.0", version = "1.2.0", now = asked + 120 * dayMs))
+        // An ask from before versions were stored (version unknown) counts from its date, and is not forever.
+        assertFalse(ask(lastAsk = asked, lastVersion = null, now = asked + 10 * dayMs))
+        assertTrue(ask(lastAsk = asked, lastVersion = null, now = asked + 121 * dayMs))
+    }
+
+    @Test
+    fun aNewProTouchKeepsItAwayForADay() {
+        assertFalse(ask(touch = later - 23 * hourMs))
+        assertTrue(ask(touch = later - 24 * hourMs))
+        assertTrue(ask(touch = null))
+    }
+
+    @Test
+    fun neverOverASheetNorAfterAnErrorNorOnTheQuietLaunch() {
+        assertFalse(ask(overlay = true))
+        assertFalse(ask(error = true))
+        assertFalse(ask(quiet = true))
+    }
+
+    @Test
+    fun updatingFromABuildWithoutTheNewKeys() {
+        // Missing keys read as null: nobody is locked out forever, and the quiet launch is the only wait.
+        assertTrue(ask(lastAsk = null, lastVersion = null, touch = null))
+        assertFalse(ask(lastAsk = null, quiet = true))
     }
 }
 
-/** The one-time card that offers the A5 book the day after the first month closed. */
+/** The first-time card that offers the A5 book the day after the first month closed. */
 class BookCardTest {
     private val closed = LocalDate(2026, 11, 30)
     private val next = LocalDate(2026, 12, 1)
@@ -183,8 +216,9 @@ class BookCardTest {
         done: Boolean = false,
         first: LocalDate? = closed,
         ask: LocalDate? = null,
+        shown: LocalDate? = null,
         today: LocalDate = next,
-    ) = shouldShowBookCard(pro, done, first, ask, today)
+    ) = shouldShowBookCard(pro, done, first, ask, shown, today)
 
     @Test
     fun showsFromTheDayAfterTheFirstMonthClosed() {
@@ -201,6 +235,12 @@ class BookCardTest {
         assertFalse(show(ask = next))
         assertTrue(show(ask = closed))
     }
+
+    @Test
+    fun anIgnoredCardGoesAwayByItselfAfterThreeDays() {
+        assertTrue(show(shown = next, today = LocalDate(2026, 12, 3)))
+        assertFalse(show(shown = next, today = LocalDate(2026, 12, 4)))
+    }
 }
 
 class EarlyBookCardTest {
@@ -213,8 +253,9 @@ class EarlyBookCardTest {
         d: List<LocalDate> = days,
         count: Int = 5,
         ask: LocalDate? = null,
+        shown: LocalDate? = null,
         now: LocalDate = today,
-    ) = shouldShowEarlyBookCard(pro, done, d, count, ask, now)
+    ) = shouldShowEarlyBookCard(pro, done, d, count, ask, shown, now)
 
     @Test
     fun needsThreeDaysAndFiveEntriesAndWaitsForTheNextDay() {
@@ -229,5 +270,78 @@ class EarlyBookCardTest {
         assertFalse(show(done = true))
         assertFalse(show(pro = true))
         assertFalse(show(ask = today))
+    }
+
+    @Test
+    fun sittingOnHoyOnLaterDaysIsNotForever() {
+        assertTrue(show(shown = today, now = LocalDate(2026, 11, 7)))
+        assertFalse(show(shown = today, now = LocalDate(2026, 11, 8)))
+    }
+}
+
+/** The one quiet return of the Pro card: 7 days after the last Pro surface, after a good moment. */
+class WinBackTest {
+    private val dayMs = 24L * 60 * 60 * 1000
+    private val seen = 2_000_000_000L
+    private val today = LocalDate(2026, 12, 10)
+
+    private fun back(
+        pro: Boolean = false,
+        good: Boolean = true,
+        rated: Boolean = false,
+        lastSeen: Long? = seen,
+        lastBack: Long? = null,
+        count: Int = 0,
+        ask: LocalDate? = null,
+        now: Long = seen + 7 * dayMs,
+    ) = shouldShowWinBack(pro, good, rated, lastSeen, lastBack, count, ask, today, now)
+
+    @Test
+    fun sevenDaysAfterTheLastSurfaceAndOnlyAfterAGoodMoment() {
+        assertTrue(back())
+        assertFalse(back(now = seen + 7 * dayMs - 1))
+        assertFalse(back(good = false))
+        // Never shown anything: nothing to return to, the first-time card owns that.
+        assertFalse(back(lastSeen = null))
+    }
+
+    @Test
+    fun neverForProNorOnARatingDayNorTwiceAWeekNorForever() {
+        assertFalse(back(pro = true))
+        assertFalse(back(rated = true))
+        assertFalse(back(ask = today))
+        assertFalse(back(lastBack = seen + 7 * dayMs - dayMs, now = seen + 7 * dayMs))
+        assertTrue(back(lastBack = seen, now = seen + 14 * dayMs))
+        assertFalse(back(count = WINBACK_MAX))
+    }
+}
+
+/** A realistic first fortnight of a free person who writes every day, put through the pure rules. */
+class FirstFortnightTest {
+    private val dayMs = 24L * 60 * 60 * 1000
+    private val installed = 5_000_000_000L
+    private val start = LocalDate(2026, 12, 1)
+
+    @Test
+    fun cardOnDayFourThenRatingThenTheReturnOnDayThirteen() {
+        val entryDays = (0..13).map { LocalDate(2026, 12, 1 + it) }
+        // Day 1 and 2 (index 0 and 1): no card, whatever else.
+        assertFalse(shouldShowEarlyBookCard(false, false, entryDays.take(2), 8, null, null, start.plus(DatePeriod(days = 1))))
+        // The third day with entries is index 2: the card comes the day after.
+        assertFalse(shouldShowEarlyBookCard(false, false, entryDays.take(3), 12, null, null, start.plus(DatePeriod(days = 2))))
+        val cardDay = start.plus(DatePeriod(days = 3))
+        assertTrue(shouldShowEarlyBookCard(false, false, entryDays.take(4), 16, null, null, cardDay))
+        val touch = installed + 3 * dayMs
+        // A Day review that same day is too soon after the touch; the next day it may ask.
+        fun ask(at: Long) = shouldAskReview(ReviewScope.Day(start), 3, 0, installed, at, null, null, "1.0.0", touch, false, false, false)
+        assertFalse(ask(touch + 5 * 60 * 60 * 1000))
+        assertTrue(ask(touch + dayMs))
+        // The card was left alone for three days and is gone; the return needs 7 days and a good moment.
+        val last = touch + 2 * dayMs
+        assertFalse(shouldShowEarlyBookCard(false, false, entryDays, 40, null, cardDay, start.plus(DatePeriod(days = 6))))
+        assertFalse(shouldShowWinBack(false, true, false, last, null, 0, null, start.plus(DatePeriod(days = 8)), last + 6 * dayMs))
+        assertTrue(shouldShowWinBack(false, true, false, last, null, 0, null, start.plus(DatePeriod(days = 9)), last + 7 * dayMs))
+        // The same day the rating was asked for, it stays away.
+        assertFalse(shouldShowWinBack(false, true, true, last, null, 0, start.plus(DatePeriod(days = 9)), start.plus(DatePeriod(days = 9)), last + 7 * dayMs))
     }
 }

@@ -975,15 +975,27 @@ Todas cambian el estado de la tarea, así que dejar la revisión a medias y volv
 quedan: no hace falta guardar un progreso aparte. Desde la segunda migración, "migrada N veces" con
 `migrationCount`. No hay ningún botón ni ruta de código que decida más de una tarea.
 
-Una **revisión mensual completa** es una de alcance `Month(m)` que termina con
-`openTasksOfMonth(m)` vacía. La primera dispara la valoración (#56): `afterReview(scope, decided, left, today, paywallOpen)` mira
-`shouldAskReview`, que ademas exige 2 dias completos desde `Prefs.firstLaunch` (`noteFirstLaunch()` al
-arrancar), el paywall cerrado y que la tarjeta del libro no se haya enseñado hoy. Llama a
-`StoreReview.request()`, que devuelve si de verdad hizo la llamada, y solo entonces pone
-`Prefs.reviewAsked = true`. La misma función guarda `firstMonthDay`, el dia en que se cerro el primer mes:
-desde el dia siguiente, y para quien no tiene Pro, Hoy enseña una vez la tarjeta del libro A5
-(`shouldShowBookCard`), nunca el dia de la valoracion. Cuenta solo si se decidió al menos una tarea: una revisión que se abre ya
-vacía no demuestra nada. Una sola vez en la vida de la instalación, nunca al arrancar ni tras un error.
+Un **buen momento** (`isGoodMoment`) es una revisión de alcance `Month`, `Day` o `Earlier` que termina con
+la cola vacía tras decidir al menos una tarea; una revisión que se abre ya vacía no demuestra nada.
+`afterReview(scope, decided, left, today, overlayOpen)` lo anota (`Offers.goodMoment`, lo que espera el
+regreso de Pro) y pregunta a `shouldAskReview` (#56), que exige: 2 dias completos desde `Prefs.firstLaunch`;
+una vez por version de la app y al menos 120 dias entre dos (`reviewLastMs`, `reviewVersion`); ninguna hoja
+ni dialogo abierto (paywall, hoja de entrada, conflicto de sincronizacion); ningun error reciente; ninguna
+nueva superficie de Pro en las ultimas 24 h (`proTouchMs`); y no en el primer arranque con esta logica
+(`Offers.quiet`, `Prefs.offersInit`). Nada de esto mira si hay Pro. `StoreReview.request()` devuelve si de
+verdad hizo la llamada, y solo entonces se guardan las claves. La misma funcion guarda `firstMonthDay`.
+
+**Superficies de Pro** (`data/StoreReview.kt`, `object Offers`). Un "toque de Pro" es una superficie que
+aparece de nuevo: la tarjeta la primera vez que sale, el regreso, el paywall abierto por un limite, Ajustes
+o el enlace (se anota al mostrarse, no al cerrarse). La tarjeta que sigue en Hoy los dias siguientes no
+cuenta: solo refresca `proSeenMs`. La tarjeta de primera vez (`shouldShowBookCard` el dia siguiente al
+primer mes cerrado, `shouldShowEarlyBookCard` tras el 3.er dia con entradas y 5 entradas) se queda 3 dias
+en Hoy y se va sola si se ignora. El **regreso** (`shouldShowWinBack`, misma tarjeta, tipo `WINBACK`) sale
+7 dias despues de la ultima vez que se vio una superficie de Pro, justo tras un buen momento de la sesion,
+con 7 dias entre dos, 3 veces como maximo en la vida, nunca el dia de la valoracion ni con Pro. Nunca dos
+superficies de Pro automaticas en una sesion (30 minutos fuera empiezan otra). Quien actualiza desde una
+version sin estas claves: el primer arranque no ofrece ni pide nada, y una valoracion o una tarjeta ya
+vistas empiezan a contar desde ese arranque.
 
 ### 6.7 Índice, colecciones y threading
 
@@ -2044,10 +2056,10 @@ Fechas y relojes siempre fijos y pasados como parámetro. Un emoji se escribe co
 19. **Seguimientos** (#50): la página de un mes nuevo tiene las mismas filas, `days` vacíos y
     `threadFrom` a la anterior, y no se guarda hasta la primera marca; con uno existente y sin Pro,
     `canCreateTracker` es falso; archivar no libera hueco y borrar sí; con Pro, sin tope.
-20. **Valoración** (#56): `shouldAskReview` es cierto tras la primera revisión mensual completa y falso
-    después de marcar `reviewAsked`; una segunda revisión mensual no vuelve a pedir; una revisión de día
-    no pide; antes de 2 días de instalación, con el paywall abierto o el día de la tarjeta del libro,
-    tampoco. `shouldShowBookCard`: no el mismo día que cerró el primer mes, no con Pro, una sola vez.
+20. **Valoración** (#56): `shouldAskReview` es cierto tras una revisión (mes, día o anteriores) que cierra
+    todo, desde el día 3; falso en la misma versión, antes de 120 días, 24 h después de un toque de Pro, con
+    una hoja abierta, tras un error o en el primer arranque. `shouldShowBookCard`: no el mismo día que cerró
+    el primer mes, no con Pro, una vez y fuera tras 3 días. `shouldShowWinBack`: 7 días, buen momento, tope.
 21. **Almacén: carga, reparación y esquema** (#14, #15, #33), con `MemoryFiles`: principal ilegible y
     `.bak` buena, carga la `.bak` y repara el principal sin rotarla; los dos ilegibles, cuarentena,
     diario vacío y ningún fichero sobrescrito; ninguno, diario nuevo; cien cambios seguidos por
