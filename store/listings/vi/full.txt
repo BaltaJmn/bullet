@@ -1,0 +1,36 @@
+Mua một lần, không tài khoản, không quảng cáo. Bobbin là sổ bullet journal kỹ thuật số giữ nguyên phương pháp trên giấy: rapid logging, ba loại bullet, năm trạng thái của việc cần làm và chuyển việc bằng tay, từng mục một.
+
+Ứng dụng mở ở Hôm nay với bàn phím đã sẵn sàng. Viết một dòng, nhấn Enter, viết dòng tiếp theo. Không cần thiết lập, không mẫu, không hình dán: một ứng dụng bujo và planner hằng ngày trông như cuốn sổ của bạn.
+
+RAPID LOGGING CHÍNH GỐC
+Một dấu chấm cho việc cần làm, một vòng tròn cho sự kiện, một gạch ngang cho ghi chú. Gõ o, - hoặc dấu lề ở đầu dòng, bullet đổi theo ngay khi bạn viết. Một việc có thể đang mở, xong, đã chuyển, đã lên lịch hoặc đã bỏ, còn ưu tiên, cảm hứng và khám phá đánh dấu điều quan trọng. Bảng chú giải nêu rõ từng ký hiệu.
+
+DAILY LOG, MONTHLY LOG, FUTURE LOG VÀ MỤC LỤC
+Hôm nay là Daily Log. Tháng là Monthly Log: lịch dưới dạng danh sách các ngày, cùng việc của tháng. Tương lai là Future Log, chia theo từng khối tháng. Mục lục liệt kê mọi tháng đã viết và mọi danh sách, theo thứ tự bạn bắt đầu.
+
+CHUYỂN VIỆC BẰNG TAY
+Không có gì tự di chuyển. Việc còn mở của hôm qua không hiện sang hôm nay, tháng mới không sao chép tháng trước, và Future Log chờ bạn. Hết tháng, phần Xem lại cho bạn thấy từng việc còn mở: chuyển, lên lịch, đưa vào danh sách hoặc bỏ. Việc đã chuyển ba lần sẽ được ghi rõ, và đó là áp lực duy nhất Bobbin tạo ra.
+
+ĐỌC LẠI TRƯỚC KHI QUYẾT ĐỊNH
+Mỗi lần xem lại bắt đầu bằng việc đọc lại khoảng thời gian đó, kèm chỗ suy ngẫm ngắn. Lời nhắc hằng ngày là tùy chọn, mặc định tắt, nội dung cố định và không bao giờ trích nhật ký của bạn.
+
+DANH SÁCH VÀ BẢNG THEO DÕI
+Danh sách cho sách, chuyến đi hay bất cứ thứ gì có tên. Bảng theo dõi chỉ cần một lần chạm mỗi ngày cho các hàng bạn đặt, mỗi tháng một trang. Bobbin không thống kê thói quen, không có chuỗi ngày liên tiếp: cần việc đó thì có Quilt, ứng dụng cùng nhà, theo dõi thói quen với lời nhắc và thống kê.
+
+THÊM VỀ PHƯƠNG PHÁP
+Một danh sách có thể tiếp tục trong danh sách mới, liên kết hai chiều. Sổ mới dẫn bạn đi qua từng danh sách và từng việc, còn Mục lục gập sổ cũ lại mà không xóa gì. Ghi chú suy ngẫm có thể gợi ý một câu hỏi. Viết “ngày mai”, “thứ sáu” hay “14 tháng 3” sẽ hiện gợi ý lên lịch; ngày được đọc ngay trên điện thoại và không bao giờ tự áp dụng. Mục lục gắn được biểu tượng và chủ đề cho từng danh sách hoặc tháng, kèm bộ lọc theo chủ đề, và tháng đã qua mà mọi việc đều đã chuyển sẽ được gạch chân như trên giấy. Có thể nhập từng mục từ Purl, MoodTraker và Quilt.
+
+NHẬT KÝ Ở LẠI TRÊN ĐIỆN THOẠI
+Không tài khoản, không đám mây của chúng tôi, không phân tích. Xuất cả nhật ký thành zip kèm Markdown dễ đọc, nhập sang điện thoại khác không mất gì, và khóa bằng vân tay, khuôn mặt hoặc khóa màn hình. Chia sẻ một ngày, tháng hay danh sách dưới dạng trang chấm. Với Pro, đồng bộ tùy chọn qua đám mây của chính bạn, trong tệp bạn chọn, như Google Drive: không tài khoản, không máy chủ của chúng tôi, và nếu hai bên cùng thay đổi, ứng dụng hỏi trước.
+
+WIDGET VÀ MÁY TÍNH BẢNG
+Widget Hôm nay hiện số việc đang mở, đã xong và sự kiện, không hiện chữ của bạn. Trên máy tính bảng, Mục lục và Future Log mở thành hai trang đối diện, như planner kỹ thuật số đang mở.
+
+MIỄN PHÍ MÃI MÃI
+Toàn bộ phương pháp và mọi thứ trong “Thêm về phương pháp”, tìm kiếm, xuất và nhập, chia sẻ, lời nhắc, khóa và widget Hôm nay: miễn phí, không giới hạn.
+
+BOBBIN PRO, TRẢ MỘT LẦN
+Thêm bảy mẫu bìa, giấy kẻ dòng, kẻ ô và trống, nhiều hơn một bảng theo dõi, widget tháng, cuốn sổ dạng sách PDF, ghi nhanh từ Cài đặt nhanh, widget Viết hoặc ứng dụng khác, đồng bộ qua đám mây của chính bạn và tổng kết năm dạng văn bản. Trả một lần, không đăng ký định kỳ.
+
+NHỮNG THỨ BẠN SẼ KHÔNG THẤY
+Không lời hứa về sức khỏe tinh thần, không chuỗi ngày, không quảng cáo, không phân tích. Nhật ký để viết và quyết định, không phải sổ năng suất chấm điểm bạn. Nếu bạn muốn mỗi ngày một dòng để đọc lại mỗi năm, hãy thử Purl.
