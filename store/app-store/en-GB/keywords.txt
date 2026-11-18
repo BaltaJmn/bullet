@@ -1,1 +1,1 @@
-agenda,notepad,logbook,list,productivity,organiser,weekly,monthly,collection,index,paperless,ad-free
+notepad,logbook,list,tasks,calendar,habit,tracker,productivity,organiser,weekly,monthly,paperless

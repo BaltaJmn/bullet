@@ -18,7 +18,7 @@ Irreversibles en cuanto se publica la primera build (SPEC §8).
 | Qué | Valor |
 |---|---|
 | Nombre visible | `Bobbin` (todos los idiomas) |
-| Nombre de tienda | `Bobbin: Bullet Journal` |
+| Nombre de tienda | `Bobbin: Bullet Journal` (en inglés, `Bobbin: Bullet Journal Planner`, `SPEC.md` 8) |
 | `applicationId` y `namespace` de `androidApp` | `com.baltajmn.bullet` |
 | `namespace` de `shared` | `com.baltajmn.bullet.shared` |
 | Paquete Kotlin | `com.baltajmn.bullet` |

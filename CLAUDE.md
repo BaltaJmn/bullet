@@ -2,7 +2,7 @@
 
 Bullet Journal digital fiel al método de papel de Ryder Carroll: rapid logging, tres bullets, cinco
 estados de tarea, migración a mano y entrada por entrada. Android + iOS, Compose Multiplatform sobre
-Kotlin Multiplatform. Nombre de producto **Bobbin**, nombre de tienda **Bobbin: Bullet Journal**.
+Kotlin Multiplatform. Nombre de producto **Bobbin**, nombre de tienda **Bobbin: Bullet Journal** (en inglés, **Bobbin: Bullet Journal Planner**).
 Identificador en las dos tiendas: `com.baltajmn.bullet`. Repositorio `BaltaJmn/bullet`, **público**.
 
 Este fichero lo carga Claude Code solo en cualquier sesión abierta sobre este repositorio, desde

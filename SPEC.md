@@ -1020,7 +1020,10 @@ cinco idiomas y tiene pariente directo en tres (bobina, bobine).
 El **nombre de tienda** lleva el método detrás: `Bobbin: Bullet Journal`, 22 caracteres, dentro de
 los 30 de Play y de App Store. Llevar la keyword completa en el título es justo lo que hace subir a
 Buju en el ranking con muy pocas valoraciones (§1). El **subtítulo de App Store** es
-`Bujo, diario y agenda` (21 de 30).
+`Bujo, diario y agenda` (21 de 30). En inglés, desde noviembre de 2026, `Bobbin: Bullet Journal
+Planner` (30 de 30) en la App Store de en-US y en Play en-US y en-GB: suma *planner*, la palabra que
+más se busca junto a *bullet journal*. La App Store en-GB sigue con el nombre corto y lleva *planner*
+en el subtítulo.
 
 **Reservas, en este orden:** `Skein` y después `Selvage`. Si Bobbin choca con algo en la comprobación
 del autor (#1), se pasa a Skein sin reabrir ninguna otra issue: el nombre solo vive en los textos, la
@@ -1046,7 +1049,7 @@ con los derivados (bundle id del widget, kinds de WidgetKit, canal de notificaci
 | Qué | Valor |
 |---|---|
 | Nombre visible | `Bobbin`, en los cinco idiomas |
-| Nombre de tienda | `Bobbin: Bullet Journal` |
+| Nombre de tienda | `Bobbin: Bullet Journal` (en inglés, `Bobbin: Bullet Journal Planner`: ver arriba) |
 | Subtítulo de App Store | `Bujo, diario y agenda` (es); el de cada idioma, en `store/` (#57) |
 | `applicationId` de Android y bundle id de iOS | `com.baltajmn.bullet` |
 | App Group | `group.com.baltajmn.bullet` |

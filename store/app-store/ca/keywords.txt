@@ -1,1 +1,1 @@
-quadern,tasques,notes,planificador,privat,sense,compte,calendari,mòbil,hàbits,setmanal,mensual
+quadern,tasques,notes,organitzador,privat,sense,compte,calendari,mòbil,hàbits,setmanal,mensual
