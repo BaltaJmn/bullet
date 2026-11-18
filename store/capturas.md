@@ -37,8 +37,11 @@ porque Apple no admite un teclado ni una pantalla de inicio de Android. `todas.s
 
 La app es universal y App Store Connect no envía sin capturas de iPad de 13". Van solo en en-US, que
 la tienda enseña en los idiomas que no tienen las suyas, y crudas: la plantilla recorta para el ancho
-del iPhone. Son cinco, las escenas de iPhone en su orden menos los widgets, que no tienen cruda de
-iPad. Las crudas salen como las de iPhone (sección 5) en `tools/demo/salida/en-US/crudas-ipad/`; al
+del iPhone. Son cuatro, las escenas de iPhone en su orden menos los widgets, que no tienen cruda de
+iPad, y el papel: la cruda de iPad enseña entera la frase "Sage and dotted are free; the rest come with
+Bobbin Pro.", y Apple lee "free" en una captura como precio (2.3.7, rechazo de MoodTraker del
+18-11-2026). En iPhone y Play el recorte del papel acaba encima del nombre del estilo por lo mismo.
+Al cambiar este juego, el de la versión en preparación se borra entero y se suben estas cuatro. Las crudas salen como las de iPhone (sección 5) en `tools/demo/salida/en-US/crudas-ipad/`; al
 pasarlas a `store/screenshots/ipad/en-US/` se tapan con el color del papel las filas 0 a 70, la
 barra de estado, que el simulador pinta con la fecha en su propio idioma. Se suben con
 `APP_IPAD_PRO_3GEN_129`: `appstore.py capturas` solo sabe de iPhone.
@@ -56,7 +59,7 @@ ajustes por idioma donde una traducción alarga la pantalla o Ajustes queda en o
 | `03_revisar` | Revisión del mes anterior, abierta desde la tarjeta de Hoy | Pasado el releer con "Decidir las 4 tareas"; la primera tarea abierta, "Ya la has pasado 2 veces", con las cinco salidas y lo que deja cada una |
 | `04_indice` | Índice | Tres meses, dos listas y un seguimiento, en el orden en que se empezaron |
 | `05_widgets` | Segunda página del lanzador | El widget de hoy y el del mes, con Pro para que el del mes no salga bloqueado |
-| `06_cuaderno` | Ajustes, sección Cuaderno | La vista previa con una portada (lila) y un papel (cuadrícula) Pro mirados sin comprar, y la línea de qué es gratis |
+| `06_cuaderno` | Ajustes, sección Cuaderno | La vista previa con una portada (lila) y un papel (cuadrícula) Pro mirados sin comprar, hasta las baldosas del papel: la línea de qué es gratis queda fuera del recorte (2.3.7) |
 
 `crudas.py` busca cada botón por su texto en el árbol de accesibilidad, no por coordenadas, así que
 sirve igual en todos los idiomas. Lo que no hace solo:
