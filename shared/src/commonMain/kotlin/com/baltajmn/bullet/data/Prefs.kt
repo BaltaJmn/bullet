@@ -61,3 +61,6 @@ const val PREF_WINBACK_COUNT = "winbackCount"
 
 /** Set once the offer state exists; its absence marks the launch of an update or a new install, which stays quiet. */
 const val PREF_OFFERS_INIT = "offersInit"
+
+/** ISO day (logical) a Pro surface was last shown: the rating never shares it. */
+const val PREF_PRO_SEEN_DAY = "proSeenDay"

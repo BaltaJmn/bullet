@@ -19,6 +19,7 @@ import com.baltajmn.bullet.model.Entry
 import com.baltajmn.bullet.model.Journal
 import com.baltajmn.bullet.model.JournalJson
 import com.baltajmn.bullet.model.Place
+import com.baltajmn.bullet.model.TaskStatus
 import com.baltajmn.bullet.model.SCHEMA_VERSION
 import com.baltajmn.bullet.model.Settings
 import com.baltajmn.bullet.model.Signifier
@@ -264,7 +265,14 @@ object BobbinRepository {
     // 6.4), the UI entry points for ui/EntrySheet.kt (#22). Each reads the clock and a fresh id only
     // when the model function underneath actually needs one, then hands off to [Journal].
 
-    fun toggleDone(id: String) = edit { j -> j.toggleDone(id, now()) }
+    fun toggleDone(id: String) {
+        edit { j -> j.toggleDone(id, now()) }
+        // Getting something done is a good moment for the offers and the rating (data/StoreReview.kt).
+        if (journal.entries.firstOrNull { it.id == id }?.status == TaskStatus.DONE) {
+            val days = journal.entries.filter { !it.gone }.mapNotNull { (it.place as? Place.Daily)?.date }
+            Offers.taskCompleted(days, today())
+        }
+    }
     fun reopen(id: String) = edit { j -> j.reopen(id, now()) }
     fun toggleSignifier(id: String, s: Signifier) = edit { j -> j.toggleSignifier(id, s, now()) }
     fun discard(id: String) = edit { j -> j.discard(id, now()) }

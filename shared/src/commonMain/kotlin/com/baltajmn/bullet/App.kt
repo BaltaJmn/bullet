@@ -50,7 +50,10 @@ import com.baltajmn.bullet.data.BobbinRepository
 import com.baltajmn.bullet.data.Lock
 import com.baltajmn.bullet.data.PREF_GUIDE_SEEN
 import com.baltajmn.bullet.data.NEW_SESSION_AFTER_MINUTES
+import com.baltajmn.bullet.data.CALM_BEFORE_ASK_MS
 import com.baltajmn.bullet.data.Offers
+import com.baltajmn.bullet.data.RATING_WAIT_MS
+import com.baltajmn.bullet.data.askReviewIfDue
 import com.baltajmn.bullet.data.noteFirstLaunch
 import com.baltajmn.bullet.data.Prefs
 import com.baltajmn.bullet.data.Reminders
@@ -64,6 +67,7 @@ import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.model.monthOf
 import com.baltajmn.bullet.ui.CollectionScreen
 import com.baltajmn.bullet.ui.EntrySheetHost
+import com.baltajmn.bullet.ui.EntrySheetState
 import com.baltajmn.bullet.ui.FutureReviewScreen
 import com.baltajmn.bullet.ui.FutureScreen
 import com.baltajmn.bullet.ui.Glyph
@@ -115,6 +119,7 @@ import com.baltajmn.bullet.ui.theme.Type
 import com.baltajmn.bullet.ui.theme.activeCover
 import com.baltajmn.bullet.ui.theme.coverSoft
 import com.baltajmn.bullet.ui.theme.page
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -187,7 +192,7 @@ fun App() {
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         if (relocks(BobbinRepository.journal.settings.lockOn, backgroundAt?.elapsedNow())) locked = true
         // A long time away is a new session for the one-Pro-surface-per-session rule.
-        if ((backgroundAt?.elapsedNow() ?: Duration.ZERO) >= NEW_SESSION_AFTER_MINUTES.minutes) Offers.newSession()
+        backgroundAt?.let { Offers.resumed(away = it.elapsedNow() >= NEW_SESSION_AFTER_MINUTES.minutes) }
         backgroundAt = null
         val wasToday = viewedDay == today
         val wasThisWeek = viewedWeek == today
@@ -313,6 +318,19 @@ fun App() {
             weekMode -> weekMode = false
             else -> viewedDay = today
         }
+    }
+
+    // A task finished on a good day wants the rating; it waits for a calm screen (no keyboard, sheet,
+    // dialog or other screen) held for a moment, and the wait restarts if anything opens meanwhile.
+    val imeUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    val calm = !locked && overlay == null && receiving == null && receiveProblem == null && !imeUp &&
+        EntrySheetState.id == null && !Paywall.open && Sync.conflict == null
+    val ratingWanted = Offers.ratingWanted
+    LaunchedEffect(ratingWanted, calm) {
+        if (!ratingWanted || !calm) return@LaunchedEffect
+        delay(CALM_BEFORE_ASK_MS)
+        val fresh = kotlin.time.Clock.System.now().toEpochMilliseconds() - Offers.ratingWantedAtMs < RATING_WAIT_MS
+        askReviewIfDue(goodMoment = fresh, today = BobbinRepository.today(), overlayOpen = false)
     }
 
     /**

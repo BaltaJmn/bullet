@@ -3,7 +3,16 @@ package com.baltajmn.bullet
 import kotlinx.datetime.YearMonth
 import com.baltajmn.bullet.model.ReviewScope
 import com.baltajmn.bullet.data.shouldAskReview
+import com.baltajmn.bullet.data.OfferPrefs
+import com.baltajmn.bullet.data.Offers
+import com.baltajmn.bullet.data.PREF_BOOK_CARD_DAY
+import com.baltajmn.bullet.data.PREF_OFFERS_INIT
+import com.baltajmn.bullet.data.PREF_PRO_SEEN_MS
+import com.baltajmn.bullet.data.PREF_REVIEW_ASKED
+import com.baltajmn.bullet.data.PREF_REVIEW_LAST_MS
 import com.baltajmn.bullet.data.WINBACK_MAX
+import com.baltajmn.bullet.data.isGoodMoment
+import com.baltajmn.bullet.data.isWorkDay
 import com.baltajmn.bullet.data.shouldShowBookCard
 import com.baltajmn.bullet.data.shouldShowWinBack
 import com.baltajmn.bullet.data.shouldShowEarlyBookCard
@@ -136,16 +145,19 @@ class ReviewPromptTest {
         scope: ReviewScope = sep,
         decided: Int = 4,
         left: Int = 0,
+        good: Boolean = isGoodMoment(scope, decided, left),
         installedAt: Long? = installed,
         now: Long = later,
         lastAsk: Long? = null,
         lastVersion: String? = null,
         version: String = "1.1.0",
         touch: Long? = null,
+        proToday: Boolean = false,
         overlay: Boolean = false,
         error: Boolean = false,
         quiet: Boolean = false,
-    ) = shouldAskReview(scope, decided, left, installedAt, now, lastAsk, lastVersion, version, touch, overlay, error, quiet)
+        tried: Boolean = false,
+    ) = shouldAskReview(good, installedAt, now, lastAsk, lastVersion, version, touch, proToday, overlay, error, quiet, tried)
 
     @Test
     fun onlyAReviewThatClosesEverythingAsks() {
@@ -196,6 +208,27 @@ class ReviewPromptTest {
         assertFalse(ask(overlay = true))
         assertFalse(ask(error = true))
         assertFalse(ask(quiet = true))
+    }
+
+    @Test
+    fun aFinishedTaskOnTheThirdDayWithEntriesIsAGoodMomentToo() {
+        val d = (1..4).map { LocalDate(2026, 9, it) }
+        assertFalse(isWorkDay(d.take(2), d[1]))
+        assertTrue(isWorkDay(d.take(3), d[2]))
+        // Days after today and repeats do not count.
+        assertFalse(isWorkDay(listOf(d[0], d[0], d[1], d[3]), d[1]))
+        assertTrue(ask(good = isWorkDay(d, d[3])))
+        assertFalse(ask(good = false))
+    }
+
+    @Test
+    fun theRatingNeverSharesADayWithAProSurface() {
+        assertFalse(ask(proToday = true))
+    }
+
+    @Test
+    fun aFailedRequestIsNotRetriedInTheSameSession() {
+        assertFalse(ask(tried = true))
     }
 
     @Test
@@ -273,6 +306,13 @@ class EarlyBookCardTest {
     }
 
     @Test
+    fun theFirstAppearanceWaitsForAGoodMomentButTheStayDoesNot() {
+        assertFalse(shouldShowEarlyBookCard(false, false, days, 5, null, null, today, goodMoment = false))
+        assertTrue(shouldShowEarlyBookCard(false, false, days, 5, null, null, today, goodMoment = true))
+        assertTrue(shouldShowEarlyBookCard(false, false, days, 5, null, today, LocalDate(2026, 11, 6), goodMoment = false))
+    }
+
+    @Test
     fun sittingOnHoyOnLaterDaysIsNotForever() {
         assertTrue(show(shown = today, now = LocalDate(2026, 11, 7)))
         assertFalse(show(shown = today, now = LocalDate(2026, 11, 8)))
@@ -333,7 +373,7 @@ class FirstFortnightTest {
         assertTrue(shouldShowEarlyBookCard(false, false, entryDays.take(4), 16, null, null, cardDay))
         val touch = installed + 3 * dayMs
         // A Day review that same day is too soon after the touch; the next day it may ask.
-        fun ask(at: Long) = shouldAskReview(ReviewScope.Day(start), 3, 0, installed, at, null, null, "1.0.0", touch, false, false, false)
+        fun ask(at: Long) = shouldAskReview(true, installed, at, null, null, "1.0.0", touch, false, false, false, false, false)
         assertFalse(ask(touch + 5 * 60 * 60 * 1000))
         assertTrue(ask(touch + dayMs))
         // The card was left alone for three days and is gone; the return needs 7 days and a good moment.
@@ -343,5 +383,60 @@ class FirstFortnightTest {
         assertTrue(shouldShowWinBack(false, true, false, last, null, 0, null, start.plus(DatePeriod(days = 9)), last + 7 * dayMs))
         // The same day the rating was asked for, it stays away.
         assertFalse(shouldShowWinBack(false, true, true, last, null, 0, start.plus(DatePeriod(days = 9)), start.plus(DatePeriod(days = 9)), last + 7 * dayMs))
+    }
+}
+
+/** The quiet launch is one launch, and the keys of the 1.0.0 build migrate without spamming or locking out. */
+class OfferStateTest {
+    private class Fake(val m: MutableMap<String, String> = mutableMapOf()) : OfferPrefs {
+        override fun bool(key: String) = m[key] == "1"
+        override fun setBool(key: String, value: Boolean) { m[key] = if (value) "1" else "0" }
+        override fun string(key: String) = m[key]
+        override fun setString(key: String, value: String?) { if (value == null) m.remove(key) else m[key] = value }
+    }
+
+    @Test
+    fun theFirstLaunchIsQuietAndTheNextForegroundIsNot() {
+        Offers.resetForTest()
+        Offers.begin(1_000L, Fake())
+        assertTrue(Offers.quiet)
+        Offers.resumed(away = false)
+        assertFalse(Offers.quiet)
+        // A cold start with the flag already set is not quiet at all.
+        Offers.resetForTest()
+        Offers.begin(2_000L, Fake(mutableMapOf(PREF_OFFERS_INIT to "1")))
+        assertFalse(Offers.quiet)
+    }
+
+    @Test
+    fun aTaskDoneOnAGoodDayWantsTheRatingUnlessQuiet() {
+        val days = (1..3).map { LocalDate(2026, 9, it) }
+        Offers.resetForTest()
+        Offers.begin(1_000L, Fake(mutableMapOf(PREF_OFFERS_INIT to "1")))
+        Offers.taskCompleted(days.take(2), days[1])
+        assertFalse(Offers.ratingWanted)
+        Offers.taskCompleted(days, days[2])
+        assertTrue(Offers.ratingWanted)
+        assertTrue(Offers.goodMoment)
+        Offers.resetForTest()
+        Offers.begin(1_000L, Fake())
+        Offers.taskCompleted(days, days[2])
+        assertFalse(Offers.ratingWanted)
+    }
+
+    @Test
+    fun keysOfThe100BuildStartCountingFromTheUpdate() {
+        val old = Fake(mutableMapOf(PREF_REVIEW_ASKED to "1", PREF_BOOK_CARD_DAY to "2026-11-10"))
+        Offers.resetForTest()
+        Offers.begin(5_000L, old)
+        assertEquals("5000", old.string(PREF_REVIEW_LAST_MS))
+        assertEquals("5000", old.string(PREF_PRO_SEEN_MS))
+        assertTrue(old.bool(PREF_OFFERS_INIT))
+        // Someone who never saw either gets neither invented.
+        val fresh = Fake()
+        Offers.resetForTest()
+        Offers.begin(5_000L, fresh)
+        assertNull(fresh.string(PREF_REVIEW_LAST_MS))
+        assertNull(fresh.string(PREF_PRO_SEEN_MS))
     }
 }
