@@ -984,6 +984,8 @@ Compra única, sin suscripción.
 
 El método entero es gratis, y lo seguirá siendo.
 
+Condiciones de uso            Política de privacidad
+
                           Comprar por 4,99 EUR
                                      Restaurar
                                       Ahora no
@@ -999,7 +1001,10 @@ El método entero es gratis, y lo seguirá siendo.
 - Botones apilados a la derecha, uno por fila: `buy(precio)` (Comprar por 4,99 EUR) con el precio que
   devuelve la tienda, nunca uno escrito en el código; `restore` (Restaurar), siempre, también con Pro;
   `notNow` (Ahora no).
-- Sin tienda: `storeUnavailable` (La tienda no está disponible ahora.) y sin `buy`.
+- Bajo el texto, una fila con dos enlaces, `termsRow` (Condiciones de uso) y `privacyRow` (Política de privacidad); si no caben en una línea, el
+  segundo baja a otra. Bobbin no tiene términos propios (un pago, sin cuenta): `termsRow` abre los de la tienda, el acuerdo de licencia estándar de
+  Apple en iOS y las condiciones de Google Play en Android (`TERMS_URL`). `privacyRow` abre la política de `bullet.baltajmn.dev`.
+- Sin tienda: `storeUnavailable` (La tienda no está disponible ahora.) y, en el lugar de `buy`, `retry` (Reintentar), que vuelve a pedir el precio y pasa a `working` mientras espera, con la frase en su sitio.
 - Comprando: `buy` pasa a `working` (Un momento...). Éxito: se cierra y el choque que lo abrió se
   cumple (la portada elegida se guarda, el seguimiento se crea). Cancelado: nada. Error: `buyFailed`
   (No se ha podido completar la compra.) bajo las líneas. Cerrar sin comprar deja todo como estaba.

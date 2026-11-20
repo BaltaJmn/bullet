@@ -726,13 +726,17 @@ traducen como cualquier texto. `skip`, `previous` y `next` son los de las seccio
 | `proFree` | | The whole method is free, and it will stay that way. | El método entero es gratis, y lo seguirá siendo. | O método inteiro é grátis, e vai continuar assim. | Die ganze Methode ist kostenlos und bleibt es. | Toute la méthode est gratuite, et le restera. |
 | `buy`* | precio | Buy for 4.99 EUR | Comprar por 4,99 EUR | Comprar por 4,99 EUR | Für 4,99 EUR kaufen | Acheter pour 4,99 EUR |
 | `restore`* | | Restore | Restaurar | Restaurar | Wiederherstellen | Restaurer |
+| `retry`* | | Retry | Reintentar | Tentar novamente | Erneut versuchen | Réessayer |
 | `storeUnavailable` | | The store is not available right now. | La tienda no está disponible ahora. | A loja não está disponível agora. | Der Store ist gerade nicht verfügbar. | La boutique n'est pas disponible pour le moment. |
 | `buyFailed` | | The purchase could not be completed. | No se ha podido completar la compra. | Não foi possível concluir a compra. | Der Kauf konnte nicht abgeschlossen werden. | L'achat n'a pas pu être finalisé. |
+| `termsRow` | | Terms of use | Condiciones de uso | Termos de uso | Nutzungsbedingungen | Conditions d'utilisation |
 
 - El precio de `buy` es el texto que devuelve la tienda, tal cual; nunca uno escrito en el código.
 - `proLockWidget` solo sale en iOS. Cambiar esta lista toca en el mismo commit `SPEC.md` 7, las dos
   fichas y `store/revenuecat.md` (CLAUDE.md).
-- Los botones de abajo son `buy`, `restore` y `notNow`; comprando, `working`.
+- Los botones de abajo son `buy`, `restore` y `notNow`; comprando, `working`. Sin precio, `retry` ocupa el sitio de `buy`
+  (y `working` mientras vuelve a pedirlo).
+- Bajo el texto, los dos documentos: `termsRow` y `privacyRow` (esta es la misma clave que en Ajustes).
 
 ## 15. Importar, exportar y borrar
 

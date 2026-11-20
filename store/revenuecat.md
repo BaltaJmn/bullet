@@ -2,7 +2,7 @@
 
 El código lo deja escrito la issue #47 (`docs/tecnico.md` 6.16): `Billing` es el de line, busca un
 derecho llamado **exactamente `pro`** y coge el **primer paquete de la oferta actual**. Si el nombre no
-coincide o no hay oferta marcada como *Current*, el `ProDialog` sale sin precio y sin botón. Aquí queda
+coincide o no hay oferta marcada como *Current*, el `ProDialog` sale sin precio y con Reintentar en lugar del botón de compra. Aquí queda
 lo que no es código, en el orden en que se hace. Los menús de la Play Console con capturas de dónde
 está cada cosa: `../../HabitTracker/store/revenuecat.md`. Los pasos que ya se hicieron para Quilt,
 MoodTraker o Purl y sirven tal cual: `../line/store/revenuecat.md`.

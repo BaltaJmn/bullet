@@ -158,7 +158,7 @@ dice la tabla (`codePointCount`, `clampCodePoints` y `limitEdit` en `model/Entry
 | `data/Sharing.kt` | `expect fun ImageBitmap.encodeToPng()`, `expect object Sharing`, `ShareContent` (`dayShare`, `monthShare`, `collectionShare`), `asciiEntry`, `shareText`, `paginate` | A `line/.../share/Sharing.kt` |
 | `data/StoreReview.kt` | `expect object StoreReview`, `shouldAskReview`, `askReviewAfter` | N |
 | `data/Route.kt` | `object Route`: a qué pantalla pide ir un widget, un enlace o la notificación | A `line/.../data/Route.kt` |
-| `data/AppInfo.kt` | `PRIVACY_URL`, `SIBLINGS`, `expect object AppInfo` | A `line/.../data/AppInfo.kt` |
+| `data/AppInfo.kt` | `PRIVACY_URL`, `TERMS_URL`, `SIBLINGS`, `expect object AppInfo` | A `line/.../data/AppInfo.kt` |
 | `data/Sync.kt` | v1.2: `SYNC_NAME`, `Remote`, `expect object SyncFile`, `syncStep`, `SyncStep`, `object Sync` (12.7) | N |
 | `billing/Billing.kt` | `expect val revenueCatApiKey`, `object Billing` | A `line/.../billing/Billing.kt`: el derecho va a `Prefs`, no al diario |
 | `i18n/Strings.kt` | `expect fun systemLanguage()`, `expect fun systemFirstDayOfWeek()`, `object S` con `t(en, es, pt, de, fr, it, nl, pl, ru, tr, id, ja, ko, ar, zh, hi, vi)`, plurales y nombres de mes y día | A `line/.../i18n/Strings.kt` |
@@ -656,6 +656,7 @@ texto de más de 500 se acepta tal cual.
 | `APP_GROUP` | `"group.com.baltajmn.bullet"` | `data/Widgets.ios.kt`, `BobbinStore.swift` |
 | `URL_SCHEME` | `"bobbin"` | `data/Route.kt` |
 | `PRIVACY_URL` | `"https://bullet.baltajmn.dev/"` | `data/AppInfo.kt` |
+| `TERMS_URL` | iOS: el acuerdo estándar de Apple (`https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`); Android: `https://play.google.com/about/play-terms/`. Bobbin no tiene condiciones propias | `data/AppInfo.kt` |
 | `EXPORT_PREFIX` | `"bobbin"` | `data/Export.kt` |
 | `JOURNAL_NAME` | `"journal.json"` | `data/Export.kt`, `data/Storage.*.kt` |
 | `SHARE_W` / `SHARE_H` | `1080` / `1350` px | `ui/SharePage.kt` |
@@ -1492,7 +1493,10 @@ RevenueCat y en las tiendas, **nunca en el código**: cambiar el precio es tocar
 - `ProDialog` (`ui/Pro.kt`, de line): qué incluye, precio leído de la tienda
   (`Billing.proPackage()`), "compra única, sin suscripción" visible sin scroll, comprar, restaurar y
   cerrar. "Restaurar compras" siempre visible, también con Pro activo (requisito de Apple), aquí y en
-  Ajustes. Cerrar sin comprar deja todo como estaba.
+  Ajustes. Cerrar sin comprar deja todo como estaba. Bajo el texto, los dos documentos que piden las
+  tiendas junto a una compra: `termsRow` abre `TERMS_URL` y `privacyRow`, `PRIVACY_URL`. Sin precio (la
+  tienda no contestó), `retry` ocupa el sitio del botón de comprar y vuelve a pedir
+  `Billing.proPackage()`, con `working` mientras espera.
 - `object Paywall { open; show(onPro) }`: el diálogo no es una pantalla de la pila sino una ventana
   sobre lo que lo abrió, pintada por `App.kt` después de todo salvo `LockScreen`, así que abrirlo desde
   Ajustes no cierra Ajustes. `onPro` es el choque que lo abrió: si la compra o la restauración salen

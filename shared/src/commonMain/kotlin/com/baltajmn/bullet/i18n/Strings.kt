@@ -6009,6 +6009,25 @@ object S {
         "बहाल करें",
         "Khôi phục",
     )
+    val retry = t(
+        "Retry",
+        "Reintentar",
+        "Tentar novamente",
+        "Erneut versuchen",
+        "Réessayer",
+        "Riprova",
+        "Opnieuw proberen",
+        "Spróbuj ponownie",
+        "Повторить",
+        "Tekrar dene",
+        "Coba lagi",
+        "再試行",
+        "다시 시도",
+        "إعادة المحاولة",
+        "重试",
+        "फिर से कोशिश करें",
+        "Thử lại",
+    )
     val storeUnavailable = t(
         "The store is not available right now.",
         "La tienda no está disponible ahora.",
@@ -6046,6 +6065,25 @@ object S {
         "无法完成购买。",
         "खरीद पूरी नहीं हो सकी।",
         "Không thể hoàn tất giao dịch mua.",
+    )
+    val termsRow = t(
+        "Terms of use",
+        "Condiciones de uso",
+        "Termos de uso",
+        "Nutzungsbedingungen",
+        "Conditions d'utilisation",
+        "Termini di utilizzo",
+        "Gebruiksvoorwaarden",
+        "Warunki użytkowania",
+        "Условия использования",
+        "Kullanım koşulları",
+        "Ketentuan penggunaan",
+        "利用規約",
+        "이용 약관",
+        "شروط الاستخدام",
+        "使用条款",
+        "उपयोग की शर्तें",
+        "Điều khoản sử dụng",
     )
 
     // --- 15. Importar, exportar y borrar -------------------------------------------------------

@@ -3,6 +3,7 @@ package com.baltajmn.bullet.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -28,7 +29,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.baltajmn.bullet.billing.Billing
 import com.baltajmn.bullet.billing.PurchaseOutcome
+import com.baltajmn.bullet.data.AppInfo
 import com.baltajmn.bullet.data.Offers
+import com.baltajmn.bullet.data.PRIVACY_URL
+import com.baltajmn.bullet.data.TERMS_URL
 import com.baltajmn.bullet.data.onIos
 import com.baltajmn.bullet.i18n.S
 import com.baltajmn.bullet.model.Bullet
@@ -72,6 +76,8 @@ fun ProDialog() {
     val scope = rememberCoroutineScope()
     var pack by remember { mutableStateOf<Package?>(null) }
     var loading by remember { mutableStateOf(true) }
+    // The retry in flight: the sentence and the button stay where they are, so nothing under them moves.
+    var retrying by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(Unit) {
@@ -113,6 +119,12 @@ fun ProDialog() {
                 // With no store there is no price, and a button that cannot say what it costs is not an offer.
                 if (!loading && price == null) Text(S.storeUnavailable, style = Type.Secondary, modifier = Modifier.padding(top = 8.dp))
                 note?.let { Text(it, style = Type.Secondary, modifier = Modifier.padding(top = 8.dp)) }
+                // Both stores ask for the two documents next to a purchase. Bobbin has no terms page of its own, so the
+                // store's apply (TERMS_URL); a flow row because in some languages the two names do not fit one line.
+                FlowRow(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    QuietButton(S.termsRow, { AppInfo.open(TERMS_URL) })
+                    QuietButton(S.privacyRow, { AppInfo.open(PRIVACY_URL) })
+                }
             }
         },
         confirmButton = {
@@ -134,6 +146,16 @@ fun ProDialog() {
                                     note = S.buyFailed
                                 }
                             }
+                        }
+                    }
+                } else if (!loading) {
+                    // No price: the sentence above says why, and this asks the store again instead of leaving no button at all.
+                    DialogAction(if (retrying) S.working else S.retry, enabled = !busy && !retrying) {
+                        retrying = true
+                        note = null
+                        scope.launch {
+                            pack = Billing.proPackage()
+                            retrying = false
                         }
                     }
                 }

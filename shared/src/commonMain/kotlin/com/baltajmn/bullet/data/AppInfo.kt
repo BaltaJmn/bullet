@@ -8,6 +8,13 @@ import com.baltajmn.bullet.i18n.S
  */
 const val PRIVACY_URL = "https://bullet.baltajmn.dev/"
 
+/**
+ * The terms of use the paywall links to. Bobbin has no terms page of its own (one payment, no account), so the store's
+ * own apply: Apple's standard license agreement on iOS and the Google Play terms on Android.
+ */
+val TERMS_URL: String
+    get() = if (onIos) "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" else "https://play.google.com/about/play-terms/"
+
 /** This app's own page in the store of the platform, straight to writing a review where the store allows it. */
 expect val RATE_URL: String
 
