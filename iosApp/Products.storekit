@@ -1,0 +1,25 @@
+{
+  "identifier" : "B0BB1N01",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "3.99",
+      "familyShareable" : true,
+      "internalID" : "6900000301",
+      "localizations" : [
+        { "description" : "More covers and papers, trackers, the month widget, the A5 book, quick capture and sync, for good", "displayName" : "Bobbin Pro", "locale" : "en_US" }
+      ],
+      "productID" : "bullet_pro",
+      "referenceName" : "Bobbin Pro",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [],
+  "version" : { "major" : 3, "minor" : 0 }
+}

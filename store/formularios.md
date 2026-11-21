@@ -213,7 +213,7 @@ una instalación nueva no tiene días anteriores. `appstore.py notas` sube este 
 
 ```
 1. Screen recording
-The attached recording (physical iPhone, latest iOS) goes from launch through the first-run guide, writing a task, an event and a note, the entry sheet, the Key and Settings, a sandbox purchase of Bobbin Pro and a Pro feature (the notebook as a PDF book), then Week, Month, Future and Index. A fresh install has no earlier days, so the review is not in it: point 3 says where it opens. Restore purchase: point 5.
+The attached recording (physical iPhone, latest iOS) goes from launch through the first-run guide, writing a task, an event and a note, the entry sheet, the Key and Settings, a sandbox purchase of Bobbin Pro and a Pro feature (the notebook as a PDF book), then Week, Month, Future and Index. A fresh install has no earlier days, so the review is not in it: point 3 says where it opens. Restore purchase: point 7.
 
 2. Purpose and audience
 Bobbin is a digital bullet journal that follows Ryder Carroll's paper method: rapid logging with three bullets (task, event, note), five task states, and open tasks migrated by hand, one at a time. It is for anyone who keeps, or wants to keep, a bullet journal. There is no account and no server of ours: the journal is stored only on the device.
@@ -236,10 +236,10 @@ Not needed: Bobbin has no accounts and no sign-in.
 No analytics, no ads, no AI services, no server of ours. The journal leaves the device only in that iCloud Drive file and in exports the user makes.
 
 6. Regions and other
-Same everywhere; all countries but mainland China; 13 languages. No regulated industry, no third-party content, and nothing a user writes is shown to anyone else.
+Same everywhere; all countries but mainland China; 17 languages. No regulated industry, no third-party content, and nothing a user writes is shown to anyone else.
 
 7. In-App Purchase
-Bobbin Pro is a one-time non-consumable purchase (bullet_pro, 4.99 EUR); there is no subscription. It unlocks seven more covers, three papers, trackers past the first, the month widget and the lock screen widget, the notebook as a PDF book, "Note in Bobbin" in Siri and Shortcuts, iCloud Drive sync and the year summary. The whole method, export and import, sharing, the reminder, the lock and the Today widget are free. Pro opens from Settings > Bobbin Pro, from choosing a Pro cover or paper, from creating a second tracker, from a Pro widget and from the Pro rows in Settings. Restore purchase is in Settings and in the purchase dialog.
+Bobbin Pro is a one-time non-consumable purchase (bullet_pro, 4.99 EUR); there is no subscription. It unlocks seven more covers, three papers, trackers past the first, the month widget and the lock screen widget, the notebook as a PDF book, "Note in Bobbin" in Siri and Shortcuts, iCloud Drive sync and the year summary. The whole method, export and import, sharing, the reminder, the lock and the Today widget are free. Pro opens from Settings > Bobbin Pro, from choosing a Pro cover or paper, from creating a second tracker, from a Pro widget, from a "See Pro" card on Today, from receiving a list beyond the free limit and from the Pro rows in Settings. Restore purchase is in Settings and in the purchase dialog. The dialog shows the price on its buy button (Retry appears if the store does not answer) and links to the Terms of Use (Apple's standard EULA) and the privacy policy.
 ```
 
 Datos de contacto de la revisión: los mismos de las hermanas, copiados de su ficha en App Store
