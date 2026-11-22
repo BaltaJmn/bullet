@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bullet.baltajmn.dev/sitemap.xml
