@@ -146,7 +146,6 @@ class ReviewPromptTest {
         decided: Int = 4,
         left: Int = 0,
         good: Boolean = isGoodMoment(scope, decided, left),
-        installedAt: Long? = installed,
         now: Long = later,
         lastAsk: Long? = null,
         lastVersion: String? = null,
@@ -157,7 +156,7 @@ class ReviewPromptTest {
         error: Boolean = false,
         quiet: Boolean = false,
         tried: Boolean = false,
-    ) = shouldAskReview(good, installedAt, now, lastAsk, lastVersion, version, touch, proToday, overlay, error, quiet, tried)
+    ) = shouldAskReview(good, now, lastAsk, lastVersion, version, touch, proToday, overlay, error, quiet, tried)
 
     @Test
     fun onlyAReviewThatClosesEverythingAsks() {
@@ -169,18 +168,16 @@ class ReviewPromptTest {
     }
 
     @Test
-    fun aDayOrEarlierReviewThatClosesEverythingAsksOnDayThreeOrLater() {
+    fun aDayOrEarlierReviewThatClosesEverythingAsks() {
         assertTrue(ask(scope = day))
         assertTrue(ask(scope = earlier))
-        assertFalse(ask(scope = day, now = installed + dayMs))
     }
 
     @Test
-    fun needsTwoFullDaysSinceInstall() {
-        assertFalse(ask(now = installed + 2 * dayMs - 1))
-        assertTrue(ask(now = installed + 2 * dayMs))
-        // Without a stored first launch there is nothing to count from.
-        assertFalse(ask(installedAt = null))
+    fun aFreshInstallWithTheSuccessReachedIsDue() {
+        // V3: no wait since install.
+        assertTrue(ask(now = installed))
+        assertTrue(ask(now = installed + 1))
     }
 
     @Test
@@ -373,7 +370,7 @@ class FirstFortnightTest {
         assertTrue(shouldShowEarlyBookCard(false, false, entryDays.take(4), 16, null, null, cardDay))
         val touch = installed + 3 * dayMs
         // A Day review that same day is too soon after the touch; the next day it may ask.
-        fun ask(at: Long) = shouldAskReview(true, installed, at, null, null, "1.0.0", touch, false, false, false, false, false)
+        fun ask(at: Long) = shouldAskReview(true, at, null, null, "1.0.0", touch, false, false, false, false, false)
         assertFalse(ask(touch + 5 * 60 * 60 * 1000))
         assertTrue(ask(touch + dayMs))
         // The card was left alone for three days and is gone; the return needs 7 days and a good moment.

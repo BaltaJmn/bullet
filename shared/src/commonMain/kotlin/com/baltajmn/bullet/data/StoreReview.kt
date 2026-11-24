@@ -21,9 +21,6 @@ expect object StoreReview {
     fun request(onLaunched: (Boolean) -> Unit)
 }
 
-/** Whole days an install must have lived before the system prompt may be asked for (rule 11). */
-const val REVIEW_MIN_DAYS = 2
-
 /** The system prompt is asked at most once per app version and never twice within this many days. */
 const val REVIEW_GAP_DAYS = 120
 
@@ -66,10 +63,6 @@ fun noteFirstLaunch(nowMs: Long = nowMs()) {
     }
 }
 
-/** True once [REVIEW_MIN_DAYS] full days have passed since [installedAtMs]; an unknown date is not enough. */
-fun installedLongEnough(installedAtMs: Long?, nowMs: Long): Boolean =
-    installedAtMs != null && nowMs - installedAtMs >= REVIEW_MIN_DAYS * DAY_MS
-
 /** A review that ends with nothing left open, after deciding at least one task: the success the offers wait for. */
 fun isGoodMoment(scope: ReviewScope, decided: Int, left: Int): Boolean =
     (scope is ReviewScope.Month || scope is ReviewScope.Day || scope is ReviewScope.Earlier) && decided > 0 && left == 0
@@ -86,8 +79,8 @@ fun isWorkDay(entryDays: Collection<LocalDate>, today: LocalDate): Boolean =
 
 /**
  * Whether the system rating prompt may be asked for now. [goodMoment] is a review that closed everything
- * (see [isGoodMoment]) or a task finished on a day that is at least the 3rd with entries, from day 3 of
- * the install. Once per app version and 120 days apart ([lastAskMs], [lastAskVersion]; a missing value
+ * (see [isGoodMoment]) or a task finished on a day that is at least the 3rd with entries. No wait since
+ * install (store rating standard V3). Once per app version and 120 days apart ([lastAskMs], [lastAskVersion]; a missing value
  * counts as never). Nothing about Pro gates it, so someone who never buys is reached, and so is someone
  * who did. Kept away: within 24 hours of a new Pro touch ([lastProTouchMs]) or on a day a Pro surface was
  * shown ([proShownToday]), over any sheet or dialog, right after an error, on the launch that first ran
@@ -95,7 +88,6 @@ fun isWorkDay(entryDays: Collection<LocalDate>, today: LocalDate): Boolean =
  */
 fun shouldAskReview(
     goodMoment: Boolean,
-    installedAtMs: Long?,
     nowMs: Long,
     lastAskMs: Long?,
     lastAskVersion: String?,
@@ -107,7 +99,7 @@ fun shouldAskReview(
     quiet: Boolean,
     tried: Boolean,
 ): Boolean =
-    goodMoment && installedLongEnough(installedAtMs, nowMs) &&
+    goodMoment &&
         !overlayOpen && !recentError && !quiet && !tried && !proShownToday &&
         (lastAskMs == null || (version != lastAskVersion && nowMs - lastAskMs >= REVIEW_GAP_DAYS * DAY_MS)) &&
         (lastProTouchMs == null || nowMs - lastProTouchMs >= PRO_TOUCH_QUIET_HOURS * 60 * 60 * 1000L)
@@ -135,7 +127,6 @@ fun askReviewIfDue(goodMoment: Boolean, today: LocalDate, overlayOpen: Boolean) 
     val version = runCatching { AppInfo.version }.getOrDefault("")
     val ask = shouldAskReview(
         goodMoment = goodMoment,
-        installedAtMs = storedMs(PREF_FIRST_LAUNCH),
         nowMs = now,
         lastAskMs = storedMs(PREF_REVIEW_LAST_MS),
         lastAskVersion = runCatching { Prefs.string(PREF_REVIEW_VERSION) }.getOrNull(),
